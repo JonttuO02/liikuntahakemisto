@@ -3,35 +3,47 @@ import { supabase } from '@/lib/supabase'
 
 const API_KEY = process.env.GOOGLE_PLACES_API_KEY
 
-// Tampere keskusta
 const TAMPERE_LAT = 61.4978
 const TAMPERE_LNG = 23.761
 const HAKU_RADIUS_M = 15000
 
-const googleTypesToLaji: Record<string, string> = {
-  gym:             'kuntosali',
-  swimming_pool:   'uinti',
-  stadium:         'liikunta',
-  sports_complex:  'liikunta',
-  health:          'liikunta',
-}
-
 function detectLaji(types: string[]): string {
-  for (const t of types) {
-    if (googleTypesToLaji[t]) return googleTypesToLaji[t]
-  }
+  if (types.some(t => t === 'gym' || t === 'fitness_center')) return 'kuntosali'
+  if (types.includes('swimming_pool'))                         return 'uinti'
+  if (types.includes('tennis_court'))                         return 'tennis'
+  if (types.some(t => t === 'sports_club' || t === 'stadium')) return 'liikuntahalli'
   return 'liikunta'
 }
 
 function parseOsoite(name: string, formattedAddress: string): string | null {
   const parts = formattedAddress.split(', ')
-  // Poistetaan paikannimi alusta jos se toistuu osoitteessa
   const ilmanNimea = parts[0] === name ? parts.slice(1) : parts
-  // Poistetaan maa ja kaupunki lopusta
   const filtered = ilmanNimea.filter(
     p => p !== 'Finland' && p !== 'Suomi' && !/tampere/i.test(p)
   )
   return filtered[0]?.trim() ?? null
+}
+
+async function fetchPlaceDetails(
+  placeId: string
+): Promise<{ website: string | null; puhelin: string | null }> {
+  const url = new URL('https://maps.googleapis.com/maps/api/place/details/json')
+  url.searchParams.set('place_id', placeId)
+  url.searchParams.set('fields', 'website,formatted_phone_number')
+  url.searchParams.set('language', 'fi')
+  url.searchParams.set('key', API_KEY!)
+
+  try {
+    const res = await fetch(url.toString())
+    if (!res.ok) return { website: null, puhelin: null }
+    const data = await res.json()
+    return {
+      website: data.result?.website ?? null,
+      puhelin: data.result?.formatted_phone_number ?? null,
+    }
+  } catch {
+    return { website: null, puhelin: null }
+  }
 }
 
 interface PlacesResult {
@@ -50,7 +62,7 @@ export async function GET() {
     )
   }
 
-  // Google Places Text Search
+  // Text Search
   const url = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json')
   url.searchParams.set('query', 'liikuntapaikat Tampere')
   url.searchParams.set('location', `${TAMPERE_LAT},${TAMPERE_LNG}`)
@@ -95,24 +107,30 @@ export async function GET() {
   const results: PlacesResult[] = data.results ?? []
 
   if (results.length === 0) {
-    return NextResponse.json({ loydetty: 0, tallennettu: 0, ohitettu: 0 })
+    return NextResponse.json({ loydetty: 0, tallennettu: 0, ohitettu: 0, website_loydetty: 0 })
   }
 
-  // Muodostetaan rivit Supabase-tauluun
-  const rivit = results.map(p => ({
-    place_id:  p.place_id,
-    nimi:      p.name,
-    laji:      detectLaji(p.types),
-    osoite:    parseOsoite(p.name, p.formatted_address),
-    kaupunki:  'Tampere',
-    latitude:  p.geometry?.location?.lat ?? null,
-    longitude: p.geometry?.location?.lng ?? null,
+  // Haetaan Place Details kaikille paikoille rinnakkain
+  const details = await Promise.all(results.map(p => fetchPlaceDetails(p.place_id)))
+
+  const rivit = results.map((p, i) => ({
+    place_id:     p.place_id,
+    nimi:         p.name,
+    laji:         detectLaji(p.types),
+    osoite:       parseOsoite(p.name, p.formatted_address),
+    kaupunki:     'Tampere',
+    latitude:     p.geometry?.location?.lat ?? null,
+    longitude:    p.geometry?.location?.lng ?? null,
+    varauslinkki: details[i].website,
+    puhelin:      details[i].puhelin,
   }))
 
-  // Upsert: päivitä jos place_id on jo kannassa, lisää muuten
+  const websiteLoydetty = details.filter(d => d.website !== null).length
+
+  // Upsert: päivitä olemassa olevat, lisää uudet
   const { data: tallennettu, error } = await supabase
     .from('liikuntapaikat')
-    .upsert(rivit, { onConflict: 'place_id', ignoreDuplicates: true })
+    .upsert(rivit, { onConflict: 'place_id', ignoreDuplicates: false })
     .select('id')
 
   if (error) {
@@ -123,8 +141,8 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    loydetty:   results.length,
-    tallennettu: tallennettu?.length ?? 0,
-    ohitettu:   results.length - (tallennettu?.length ?? 0),
+    loydetty:        results.length,
+    tallennettu:     tallennettu?.length ?? 0,
+    website_loydetty: websiteLoydetty,
   })
 }
