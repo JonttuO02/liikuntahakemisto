@@ -1,3 +1,28 @@
+# Liikuntahakemisto — Project Guide
+
+## GSD Workflow
+
+This project uses the GSD (Get Shit Done) workflow. Planning artifacts live in `.planning/`.
+
+**Current state:** See `.planning/STATE.md` — always check this before starting work.
+**Roadmap:** `.planning/ROADMAP.md` — 5 phases, start with Phase 1.
+**Requirements:** `.planning/REQUIREMENTS.md` — 19 v1 requirements with REQ-IDs.
+
+**Phase workflow:**
+1. `/gsd:discuss-phase N` — gather context
+2. `/gsd:plan-phase N` — create PLAN.md
+3. `/gsd:execute-phase N` — run the plan
+4. `/gsd:verify-work N` — verify against success criteria
+
+**Key constraints from research:**
+- Fix Phase 1 (security + schema) before any feature work — critical bugs exist
+- URL routing: always use `?nakyma=kartta` (3 competing schemes exist — choose this one)
+- GPS: client-side only, never URL params, never auto-request on mount
+- AI widget: never SSR, use `/api/saasuositus` Route Handler, non-blocking load
+- Supabase writes: service role key only; anon key is read-only after RLS
+
+---
+
 # Liikuntahakemisto — Design Guidelines
 
 ## Color System
