@@ -15,3 +15,17 @@ export const lajiKonfig: Record<string, LajiKonfig> = {
 }
 
 export const LAJIT_FILTTERI = ['Kaikki', 'Padel', 'Tennis', 'Jooga', 'Kuntosali', 'Uinti', 'Liikuntahalli']
+
+// Used by Kartta.tsx InfoWindow — renders outside React DOM, Tailwind classes don't apply there
+export function getInfoWindowStyle(laji: string): { background: string; color: string } {
+  const styles: Record<string, { background: string; color: string }> = {
+    padel:         { background: '#dbeafe', color: '#1d4ed8' },
+    tennis:        { background: '#dcfce7', color: '#15803d' },
+    jooga:         { background: '#f3e8ff', color: '#7e22ce' },
+    kuntosali:     { background: '#ffedd5', color: '#c2410c' },
+    uinti:         { background: '#cffafe', color: '#0e7490' },
+    liikuntahalli: { background: '#e0e7ff', color: '#3730a3' },
+    liikunta:      { background: '#f3f4f6', color: '#374151' },
+  }
+  return styles[laji] ?? { background: '#f3f4f6', color: '#374151' }
+}

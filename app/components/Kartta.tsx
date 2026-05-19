@@ -2,17 +2,10 @@
 
 import { useState } from 'react'
 import { GoogleMap, Marker, InfoWindow, useJsApiLoader } from '@react-google-maps/api'
-import type { Liikuntapaikka } from './LiikuntapaikatLista'
+import { getInfoWindowStyle } from '@/lib/lajit'
+import type { Liikuntapaikka } from '@/lib/types'
 
 const TAMPERE = { lat: 61.4978, lng: 23.761 }
-
-const lajiVari: Record<string, { bg: string; color: string }> = {
-  padel:     { bg: '#dbeafe', color: '#1d4ed8' },
-  tennis:    { bg: '#dcfce7', color: '#15803d' },
-  jooga:     { bg: '#f3e8ff', color: '#7e22ce' },
-  kuntosali: { bg: '#ffedd5', color: '#c2410c' },
-  uinti:     { bg: '#cffafe', color: '#0e7490' },
-}
 
 export default function Kartta({ paikat }: { paikat: Liikuntapaikka[] }) {
   const { isLoaded } = useJsApiLoader({
@@ -76,8 +69,7 @@ export default function Kartta({ paikat }: { paikat: Liikuntapaikka[] }) {
                   padding: '2px 8px',
                   borderRadius: '9999px',
                   textTransform: 'capitalize',
-                  background: lajiVari[valittu.laji]?.bg ?? '#f3f4f6',
-                  color: lajiVari[valittu.laji]?.color ?? '#374151',
+                  ...getInfoWindowStyle(valittu.laji),
                   marginBottom: '6px',
                 }}
               >
