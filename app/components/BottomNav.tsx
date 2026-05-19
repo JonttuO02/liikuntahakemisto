@@ -62,12 +62,11 @@ function HeartIcon({ active }: { active: boolean }) {
 export default function BottomNav() {
   const pathname     = usePathname()
   const searchParams = useSearchParams()
-  const view         = searchParams.get('view')
-  const map          = searchParams.get('map')
+  const nakyma = searchParams.get('nakyma')
 
-  const isKoti     = pathname === '/' && !view && !map
-  const isKartta   = pathname === '/' && map === '1'
-  const isLista    = pathname === '/' && view === 'lista'
+  const isKoti     = pathname === '/' && !nakyma
+  const isKartta   = pathname === '/' && nakyma === 'kartta'
+  const isLista    = pathname === '/' && nakyma === 'lista'
   const isSuosikit = pathname === '/suosikit'
 
   return (
@@ -83,7 +82,7 @@ export default function BottomNav() {
         </Link>
 
         <Link
-          href="/?map=1"
+          href="/?nakyma=kartta"
           className={`flex flex-col items-center justify-center gap-1 [transition:color_150ms_var(--ease-out)] ${isKartta ? ACTIVE : INACTIVE}`}
         >
           <MapIcon active={isKartta} />
@@ -91,7 +90,7 @@ export default function BottomNav() {
         </Link>
 
         <Link
-          href="/?view=lista"
+          href="/?nakyma=lista"
           className={`flex flex-col items-center justify-center gap-1 [transition:color_150ms_var(--ease-out)] ${isLista ? ACTIVE : INACTIVE}`}
         >
           <ListIcon active={isLista} />

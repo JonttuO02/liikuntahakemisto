@@ -6,7 +6,7 @@ import LiikuntapaikatLista from './components/LiikuntapaikatLista'
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { view?: string; map?: string }
+  searchParams: { nakyma?: string }
 }) {
   const { data: paikat, error } = await supabase
     .from('liikuntapaikat')
@@ -23,7 +23,7 @@ export default async function Home({
 
   const data = paikat ?? []
 
-  if (searchParams.view === 'lista') {
+  if (searchParams.nakyma === 'lista' || searchParams.nakyma === 'kartta') {
     return (
       <Suspense>
         <LiikuntapaikatLista paikat={data} />
