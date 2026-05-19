@@ -8,7 +8,8 @@ import {
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api'
 import Link from 'next/link'
 import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
-import type { Liikuntapaikka } from './LiikuntapaikatLista'
+import { hintateksti } from '@/lib/utils'
+import type { Liikuntapaikka } from '@/lib/types'
 
 const TAMPERE    = { lat: 61.4978, lng: 23.761 }
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
@@ -37,13 +38,6 @@ function parseSaa(code: number) {
   if (code <= 67)  return { ikoni: '🌧️', ehdotus: 'Uimahalli odottaa 🏊' }
   if (code <= 77)  return { ikoni: '❄️', ehdotus: 'Uimahalli odottaa 🏊' }
   return           { ikoni: '🌦️', ehdotus: 'Hyvä päivä sisäliikunnalle 🏋️' }
-}
-
-function hintateksti(min: number | null, max: number | null) {
-  if (min != null && max != null) return `${min}–${max} €`
-  if (min != null)                return `alkaen ${min} €`
-  if (max != null)                return `max ${max} €`
-  return ''
 }
 
 /* ── Component ────────────────────────────────────────────────────── */

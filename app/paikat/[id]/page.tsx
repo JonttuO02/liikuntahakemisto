@@ -2,14 +2,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { lajiKonfig } from '@/lib/lajit'
+import { hintateksti } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
-
-function hintateksti(min: number | null, max: number | null): string {
-  if (min != null && max != null) return `${min}–${max} €`
-  if (min != null) return `alkaen ${min} €`
-  if (max != null) return `max ${max} €`
-  return ''
-}
 
 export default async function PaikkaPage({ params }: { params: { id: string } }) {
   const id = Number(params.id)

@@ -9,20 +9,8 @@ import PaikkaKortti, { korttiVariants } from './PaikkaKortti'
 
 const Kartta = lazy(() => import('./Kartta'))
 
-export type Liikuntapaikka = {
-  id: number
-  nimi: string
-  laji: string
-  osoite: string | null
-  kaupunki: string | null
-  latitude: number | null
-  longitude: number | null
-  hinta_min: number | null
-  hinta_max: number | null
-  varauslinkki: string | null
-  kuvaus: string | null
-  puhelin: string | null
-}
+import type { Liikuntapaikka } from '@/lib/types'
+export type { Liikuntapaikka } from '@/lib/types'
 
 type Nakyma = 'lista' | 'kartta'
 

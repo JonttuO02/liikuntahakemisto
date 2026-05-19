@@ -3,7 +3,8 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import Link from 'next/link'
 import { lajiKonfig } from '@/lib/lajit'
-import type { Liikuntapaikka } from './LiikuntapaikatLista'
+import { hintateksti } from '@/lib/utils'
+import type { Liikuntapaikka } from '@/lib/types'
 
 // Strong ease-out: starts fast, decelerates naturally
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
@@ -17,13 +18,6 @@ export const korttiVariants = {
     scale: 1,
     transition: { duration: 0.28, ease: EASE_OUT },
   },
-}
-
-function hintateksti(min: number | null, max: number | null): string {
-  if (min != null && max != null) return `${min}–${max} €`
-  if (min != null) return `alkaen ${min} €`
-  if (max != null) return `max ${max} €`
-  return ''
 }
 
 export default function PaikkaKortti({ paikka }: { paikka: Liikuntapaikka }) {
