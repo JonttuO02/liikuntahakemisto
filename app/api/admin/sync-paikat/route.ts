@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 const API_KEY = process.env.GOOGLE_PLACES_API_KEY
 
@@ -61,6 +61,7 @@ export async function GET(req: Request) {
   if (req.headers.get('authorization') !== `Bearer ${process.env.ADMIN_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
   if (!API_KEY) {
     return NextResponse.json(
       { error: 'GOOGLE_PLACES_API_KEY puuttuu ympäristömuuttujista' },
@@ -116,7 +117,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ loydetty: 0, tallennettu: 0, ohitettu: 0, website_loydetty: 0 })
   }
 
-  // Haetaan Place Details kaikille paikoille rinnakkain
   const details = await Promise.all(results.map(p => fetchPlaceDetails(p.place_id)))
 
   const rivit = results.map((p, i) => ({
@@ -133,7 +133,6 @@ export async function GET(req: Request) {
 
   const websiteLoydetty = details.filter(d => d.website !== null).length
 
-  // Upsert: päivitä olemassa olevat, lisää uudet
   const { data: tallennettu, error } = await supabaseAdmin
     .from('liikuntapaikat')
     .upsert(rivit, { onConflict: 'place_id', ignoreDuplicates: false })
