@@ -1,0 +1,32 @@
+## Design Health Score
+
+| # | Heuristic | Score | Key Issue |
+|---|---|---|---|
+| 1 | Visibility of System Status | 3 | No result count after filtering |
+| 2 | Match System / Real World | 4 | Finnish throughout, natural labels |
+| 3 | User Control and Freedom | 3 | Reset works, no filter breadcrumb |
+| 4 | Consistency and Standards | 3 | CTA copy differs: "Varaa" vs "Varaa aika →" |
+| 5 | Error Prevention | 3 | Forgiving search, easy reset |
+| 6 | Recognition Rather Than Recall | 3 | Filters visible, no pill scroll indicator |
+| 7 | Flexibility and Efficiency | 2 | Price filter absent despite product brief promise |
+| 8 | Aesthetic and Minimalist Design | 3 | Clean cards, hero heavy on mobile |
+| 9 | Error Recovery | 3 | "Ei tuloksia" + reset covers the main case |
+| 10 | Help and Documentation | 4 | Self-explanatory |
+| **Total** | | **31/40** | **Good** |
+
+## Anti-Patterns Verdict
+
+Deliberate indigo palette — flagged by detector but intentional (Wolt reference). 1 detector finding: ai-color-palette. Not true slop.
+
+## Priority Issues
+
+- [P1] No result count after filtering — add `{suodatettu.length} paikkaa` under filters
+- [P1] Price filter absent — product brief promises it, add range toggle
+- [P2] Detail page has no map — users new to Tampere can't orient from address text alone
+- [P2] CTA inconsistency — "Varaa" on card vs "Varaa aika →" on detail
+- [P3] NavBar emoji 🏃 — replace with SVG or remove
+
+## Persona Red Flags
+
+- Impulse user: no result count, no price filter, no map on detail
+- Mobile commuter: can't sort/filter by price, must open multiple cards
