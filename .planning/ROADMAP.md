@@ -4,7 +4,7 @@
 
 ### Phases
 
-- [ ] **Phase 1: Foundation & Security** — Fix critical bugs, lock down APIs, migrate schema
+- [x] **Phase 1: Foundation & Security** — Fix critical bugs, lock down APIs, migrate schema
 - [ ] **Phase 2: Map & GPS** — Complete map UX with real GPS and distance display
 - [ ] **Phase 3: Data Enrichment** — Opening hours, multi-sport coverage, manual pricing
 - [ ] **Phase 4: Service Information UI** — Surface enriched data on cards and detail pages
@@ -25,7 +25,7 @@
 3. Connecting to Supabase with the anon key allows reading venue rows but rejects any insert, update, or delete attempt
 4. Navigating to a broken route or triggering a runtime error shows a friendly Finnish error page, not a Next.js stack trace or blank screen
 5. The Supabase `paikat` table contains the columns `hinta_kuvaus text`, `aukioloajat jsonb`, `lajit_lista jsonb`, and `featured boolean` — existing rows are not broken by the migration
-**Plans:** TBD
+**Plans:** `.planning/phases/01-foundation-and-security/01-PLAN.md` (14 plans, P-01–P-13 + P-10b)
 **UI hint:** yes
 
 ### Phase 2: Map & GPS
@@ -83,7 +83,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Security | 0/? | Not started | - |
+| 1. Foundation & Security | 0/14 | Planned | - |
 | 2. Map & GPS | 0/? | Not started | - |
 | 3. Data Enrichment | 0/? | Not started | - |
 | 4. Service Information UI | 0/? | Not started | - |
