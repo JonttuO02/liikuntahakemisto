@@ -5,7 +5,7 @@
 ### Phases
 
 - [x] **Phase 1: Foundation & Security** — Fix critical bugs, lock down APIs, migrate schema
-- [ ] **Phase 2: Map & GPS** — Complete map UX with real GPS and distance display
+- [x] **Phase 2: Map & GPS** — Complete map UX with real GPS and distance display
 - [ ] **Phase 3: Data Enrichment** — Opening hours, multi-sport coverage, manual pricing
 - [ ] **Phase 4: Service Information UI** — Surface enriched data on cards and detail pages
 - [ ] **Phase 5: AI Weather Widget** — Differentiating AI recommendation feature
@@ -83,8 +83,8 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Security | 0/14 | Planned | - |
-| 2. Map & GPS | 0/6 | Planned | - |
+| 1. Foundation & Security | 14/14 | Complete | 2026-05-19 |
+| 2. Map & GPS | 3/3 | Complete | 2026-05-21 |
 | 3. Data Enrichment | 0/? | Not started | - |
 | 4. Service Information UI | 0/? | Not started | - |
 | 5. AI Weather Widget | 0/? | Not started | - |
