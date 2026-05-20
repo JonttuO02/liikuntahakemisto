@@ -17,7 +17,7 @@ This project uses the GSD (Get Shit Done) workflow. Planning artifacts live in `
 **Key constraints from research:**
 - Fix Phase 1 (security + schema) before any feature work — critical bugs exist
 - URL routing: always use `?nakyma=kartta` (3 competing schemes exist — choose this one)
-- GPS: client-side only, never URL params, never auto-request on mount
+- GPS: client-side only, never URL params — auto-requests on mount, map centers on user automatically
 - AI widget: never SSR, use `/api/saasuositus` Route Handler, non-blocking load
 - Supabase writes: service role key only; anon key is read-only after RLS
 
