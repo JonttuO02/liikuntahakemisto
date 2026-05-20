@@ -23,7 +23,7 @@ export default async function Home({
 
   const data = paikat ?? []
 
-  if (searchParams.nakyma === 'lista' || searchParams.nakyma === 'kartta') {
+  if (searchParams.nakyma === 'lista') {
     return (
       <Suspense>
         <LiikuntapaikatLista paikat={data} />

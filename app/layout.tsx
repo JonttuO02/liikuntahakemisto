@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { Suspense } from 'react'
+import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import NavBar from './components/NavBar'
-import BottomNav from './components/BottomNav'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
+const inter    = Inter({ subsets: ['latin'], variable: '--font-sans' })
+const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-serif' })
 
 export const metadata: Metadata = {
   title: 'Liikuntahakemisto',
@@ -15,15 +14,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fi" className={cn('font-sans', inter.variable)}>
-      <body className="antialiased bg-indigo-50 text-gray-900">
+    <html lang="fi" className={cn('font-sans', inter.variable, playfair.variable)}>
+      <body className="antialiased bg-white text-[#111111]">
         <NavBar />
-        <main className="pb-16 sm:pb-0">
+        <main>
           {children}
         </main>
-        <Suspense fallback={<div className="h-16 sm:hidden" />}>
-          <BottomNav />
-        </Suspense>
       </body>
     </html>
   )

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 60" width="80" height="60" role="img" aria-label="ACTA symbol">
+  <title>ACTA symbol</title>
+  <!-- < -->
+  <polyline points="34,6 6,30 34,54" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- > -->
+  <polyline points="46,6 74,30 46,54" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

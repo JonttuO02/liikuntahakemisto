@@ -9,6 +9,7 @@ import { Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-
 import type { LucideIcon } from 'lucide-react'
 import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
+import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
 import { DAY_MAP_STYLES, NIGHT_MAP_STYLES, isNightHour } from '@/lib/mapStyles'
 
@@ -16,7 +17,6 @@ const TAMPERE = { lat: 61.4978, lng: 23.761 }
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
 const EASE_MAP:   [number, number, number, number] = [0.4, 0, 0.2, 1]
 const NAV_H      = 56
-const BOTTOM_NAV = 64
 
 const ICON_SVG: Record<string, string> = {
   padel:         `<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>`,
@@ -82,8 +82,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
   useEffect(() => {
     const update = () => {
-      const mobile = window.innerWidth < 640
-      setFullH(window.innerHeight - NAV_H - (mobile ? BOTTOM_NAV : 0))
+      setFullH(window.innerHeight - NAV_H)
     }
     update()
     window.addEventListener('resize', update)
@@ -166,44 +165,82 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
   return (
     <>
+      {/* ── Night mode background overlays ──────────────────────────── */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          zIndex: 0,
+          background: 'linear-gradient(to bottom, #dde0ef 0%, #8a94b3 32%, #1d2038 62%, #07090f 100%)',
+          backgroundAttachment: 'fixed',
+          opacity: isDark ? 1 : 0,
+          transition: 'opacity 800ms ease',
+        }}
+        aria-hidden
+      />
+      <div
+        className="fixed inset-0 pointer-events-none night-stars"
+        style={{
+          zIndex: 0,
+          opacity: isDark ? 1 : 0,
+          transition: 'opacity 1000ms ease',
+        }}
+        aria-hidden
+      />
+
       {/* ── Main layout ─────────────────────────────────────────────── */}
       <div
-        className="px-4 pt-4 pb-4 flex flex-col gap-3"
+        className="px-4 pt-4 pb-4 flex flex-col gap-3 relative z-[1]"
         style={{ height: `calc(100svh - ${NAV_H}px)` }}
       >
 
-        {/* AI Widget — narrow typewriter bar */}
-        <div
-          className="glass rounded-2xl flex items-center px-4 gap-3 shrink-0"
-          style={{ height: 52 }}
-        >
+        {/* AI Widget — auto height, grows with content */}
+        <div className="glass rounded-2xl flex items-center px-4 py-3.5 gap-3 shrink-0">
           <div className="flex-1 min-w-0 flex items-center">
-            <span className="text-sm font-medium text-[#111111] truncate">{typedText}</span>
+            <span className="text-sm font-medium text-[#111111]">{typedText}</span>
             {!typedDone && <span className="typewriter-cursor ml-0.5 shrink-0" />}
           </div>
-          {saa && (
-            <div className="shrink-0 flex items-center gap-1.5">
-              <span className="text-base leading-none select-none" aria-hidden>
-                {getWeatherEmoji(saa.code)}
-              </span>
-              <span className="text-sm font-semibold text-[#111111] tabular-nums">
-                {saa.temp}°
-              </span>
-            </div>
-          )}
+          <div className="shrink-0 flex items-center gap-2">
+            {saa && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-base leading-none select-none" aria-hidden>
+                  {getWeatherEmoji(saa.code)}
+                </span>
+                <span className="text-sm font-semibold text-[#111111] tabular-nums">
+                  {saa.temp}°
+                </span>
+              </div>
+            )}
+            <motion.button
+              whileTap={{ scale: 0.88 }}
+              onClick={() => setIsDark(d => !d)}
+              className="glass-btn flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
+              style={{ color: isDark ? '#a0a0cc' : '#475569' }}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {isDark ? (
+                  <motion.span key="sun" className="flex items-center gap-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+                    <Sun className="w-3 h-3" /> Päivä
+                  </motion.span>
+                ) : (
+                  <motion.span key="moon" className="flex items-center gap-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+                    <Moon className="w-3 h-3" /> Yö
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          </div>
         </div>
 
-        {/* Ad placeholder — fills all space between AI widget and map peek */}
-        <div className="glass rounded-2xl flex-1 flex items-center justify-center min-h-0">
-          <span className="text-[11px] font-medium text-[rgba(17,17,17,0.28)] tracking-widest uppercase">
-            Mainostila — 320×90
-          </span>
-        </div>
+        {/* Expansion space — absorbs AI widget growth (≈ 2 lines of text) */}
+        <div className="shrink-0" style={{ height: 40 }} />
+
+        {/* Ad carousel */}
+        <Karuselli isDark={isDark} />
 
         {/* ── Map preview ─────────────────────────────────────────────
             Fixed height placeholder; the actual map is always position:fixed
             below and overlaps this space exactly.                      */}
-        <div className="shrink-0 mx-0 sm:mx-16" style={{ height: 310 }} aria-hidden />
+        <div className="shrink-0 mx-0 sm:mx-16" style={{ height: 200 }} aria-hidden />
       </div>
 
       {/* ── Map widget — always fixed, animates from small to fullscreen */}
@@ -213,7 +250,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           <motion.div
             key="preview"
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            className="fixed left-0 right-0 bottom-16 sm:bottom-0 z-40 mx-0 sm:mx-16 cursor-pointer"
+            className={`fixed left-0 right-0 bottom-0 z-40 mx-0 sm:mx-16 cursor-pointer${isDark ? ' map-night-fade-top' : ''}`}
             style={{
               height: 370,
               borderRadius: 24,
@@ -236,6 +273,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                     fullscreenControl: false,
                     zoomControl:       false,
                     disableDefaultUI:  true,
+                    keyboardShortcuts: false,
                     clickableIcons:    false,
                     gestureHandling:   'none',
                     styles:            (isDark ? NIGHT_MAP_STYLES : DAY_MAP_STYLES) as google.maps.MapTypeStyle[],
@@ -254,16 +292,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 <div className="w-full h-full bg-[#f0f0f0]" />
               )}
 
-              {/* "Avaa kartta" overlay */}
-              <div
-                className="absolute inset-0 z-10 flex flex-col items-center justify-end pb-5"
-                style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.22) 0%, transparent 60%)' }}
-              >
-                <div className="glass flex items-center gap-2 px-4 py-2 rounded-full">
-                  <MapPin className="w-3.5 h-3.5 text-[rgba(17,17,17,0.55)]" />
-                  <span className="text-xs font-semibold text-[#111111]">Avaa kartta</span>
-                </div>
-              </div>
             </div>
           </motion.div>
         )}
@@ -274,7 +302,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           /* ── Wrapper: height 260 → fullH ──────────────────────────── */
           <motion.div
             key="fullscreen"
-            className="fixed left-0 right-0 bottom-16 sm:bottom-0 z-50 overflow-hidden"
+            className="fixed left-0 right-0 bottom-0 z-50 overflow-hidden"
             initial={{ height: 310 }}
             animate={{ height: fullH }}
             exit={{ height: 370, opacity: 0 }}
@@ -311,10 +339,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   center={TAMPERE}
                   zoom={14}
                   options={{
-                    streetViewControl: false,
-                    mapTypeControl:    false,
-                    fullscreenControl: false,
-                    zoomControl:       true,
+                    disableDefaultUI:  true,
+                    keyboardShortcuts: false,
                     clickableIcons:    false,
                     gestureHandling:   'greedy',
                     styles:            (isDark ? NIGHT_MAP_STYLES : DAY_MAP_STYLES) as google.maps.MapTypeStyle[],

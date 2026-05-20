@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Skill(claude-api)",
-      "Skill(emil-design-eng)"
+      "Skill(emil-design-eng)",
+      "Skill(gsd-plan-phase)"
     ]
   }
 }

@@ -1,94 +1,94 @@
 'use client'
 
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { MapPin, Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
 import type { Liikuntapaikka } from '@/lib/types'
 
-// Strong ease-out: starts fast, decelerates naturally
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
 
-// Entry: never from scale(0) — start from 0.97 + opacity per skill
 export const korttiVariants = {
-  hidden: { opacity: 0, y: 12, scale: 0.97 },
+  hidden: { opacity: 0, y: 14 },
   show: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    transition: { duration: 0.28, ease: EASE_OUT },
+    transition: { duration: 0.22, ease: EASE_OUT },
   },
 }
 
+const SPORT_ICONS: Record<string, LucideIcon> = {
+  padel:         Zap,
+  kuntosali:     Dumbbell,
+  jooga:         Leaf,
+  uinti:         Waves,
+  tennis:        Target,
+  liikuntahalli: Building2,
+  liikunta:      Activity,
+}
+
 export default function PaikkaKortti({ paikka }: { paikka: Liikuntapaikka }) {
-  const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'bg-gray-100 text-gray-600', accentBg: 'bg-gray-400' }
-  const hinta        = hintateksti(paikka.hinta_min, paikka.hinta_max)
-  const osoite       = [paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')
-  const reduceMotion = useReducedMotion()
+  const laji   = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
+  const hinta  = hintateksti(paikka.hinta_min, paikka.hinta_max)
+  const osoite = [paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')
+  const Icon   = SPORT_ICONS[paikka.laji] ?? Activity
 
   return (
     <motion.div
       variants={korttiVariants}
-      // Lift + shadow deepening — only on pointer devices, respects reduced-motion
-      whileHover={
-        reduceMotion
-          ? undefined
-          : { y: -4, transition: { duration: 0.18, ease: EASE_OUT } }
-      }
-      // Shadow via CSS (off main thread), transform via Framer Motion
-      className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.07)] hover:shadow-[0_8px_24px_rgba(79,70,229,0.15)] [transition:box-shadow_200ms_var(--ease-out)] flex flex-col overflow-hidden"
+      className="glass glass-hover rounded-2xl flex flex-col overflow-hidden cursor-default"
+      whileHover={{ y: -2, transition: { duration: 0.18, ease: EASE_OUT } }}
     >
-      {/* Sport colour bar */}
-      <div className={`h-2 w-full ${laji.accentBg}`} />
+      <div className="p-4 flex flex-col gap-2.5 flex-1">
 
-      <div className="p-5 flex flex-col gap-2.5 flex-1">
-        {/* Badge */}
-        <span className={`self-start text-xs font-semibold px-2.5 py-1 rounded-full ${laji.badgeTw}`}>
+        {/* Badge with sport icon */}
+        <span
+          className="self-start inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full text-white"
+          style={{ backgroundColor: laji.color }}
+        >
+          <Icon className="w-3 h-3" />
           {laji.label}
         </span>
 
-        {/* Name — links to detail page */}
+        {/* Name */}
         <Link href={`/paikat/${paikka.id}`}>
-          <h3 className="font-bold text-[#1E1B4B] text-[17px] leading-snug tracking-tight hover:text-indigo-600 [transition:color_150ms_var(--ease-out)]">
+          <h3 className="font-semibold text-[#111111] text-[15px] leading-snug hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]">
             {paikka.nimi}
           </h3>
         </Link>
 
         {/* Address */}
         {osoite && (
-          <div className="flex items-center gap-1.5 text-sm text-[#6B7280]">
-            <svg className="w-3.5 h-3.5 shrink-0 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+          <div className="flex items-center gap-1.5 text-sm text-[rgba(17,17,17,0.45)]">
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
             <span>{osoite}</span>
           </div>
         )}
 
         {/* Description */}
         {paikka.kuvaus && (
-          <p className="text-sm text-[#6B7280] line-clamp-2 leading-relaxed">{paikka.kuvaus}</p>
+          <p className="text-sm text-[rgba(17,17,17,0.5)] line-clamp-2 leading-relaxed">{paikka.kuvaus}</p>
         )}
 
-        {/* Bottom row: CTA + price — price big and right-aligned per spec */}
-        <div className="mt-auto flex items-center justify-between gap-3 pt-2 border-t border-gray-50">
+        {/* Bottom row */}
+        <div className="mt-auto flex items-center justify-between gap-3 pt-2.5 border-t border-[rgba(0,0,0,0.07)]">
           {paikka.varauslinkki ? (
             <motion.a
               href={paikka.varauslinkki}
               target="_blank"
               rel="noopener noreferrer"
               whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
-              className="bg-[#6366F1] hover:bg-indigo-600 text-white text-sm font-semibold py-2 px-5 rounded-full [transition:background-color_150ms_var(--ease-out)]"
+              className="bg-[#111111] hover:bg-[#333333] text-white text-sm font-semibold py-2 px-4 rounded-full [transition:background-color_150ms_var(--ease-out)]"
             >
-              Varaa aika →
+              Varaa →
             </motion.a>
           ) : (
             <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}>
               <Link
                 href={`/paikat/${paikka.id}`}
-                className="border border-indigo-200 text-indigo-600 hover:bg-indigo-50 text-sm font-medium py-2 px-5 rounded-full [transition:background-color_150ms_var(--ease-out),border-color_150ms_var(--ease-out)]"
+                className="border border-[rgba(0,0,0,0.12)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.25)] text-sm font-medium py-2 px-4 rounded-full [transition:color_150ms_var(--ease-out),border-color_150ms_var(--ease-out)]"
               >
                 Näytä tiedot
               </Link>
@@ -96,11 +96,11 @@ export default function PaikkaKortti({ paikka }: { paikka: Liikuntapaikka }) {
           )}
 
           {hinta ? (
-            <span className="text-lg font-bold text-indigo-600 shrink-0 tabular-nums">
+            <span className="text-sm font-semibold text-[#111111] shrink-0 tabular-nums">
               {hinta}
             </span>
           ) : (
-            <span className="text-xs text-[#9CA3AF] shrink-0 italic">
+            <span className="text-xs text-[rgba(17,17,17,0.35)] shrink-0">
               Lisätään pian
             </span>
           )}
