@@ -9,8 +9,7 @@ import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
 import type { Liikuntapaikka } from '@/lib/types'
 import { DAY_MAP_STYLES, NIGHT_MAP_STYLES, isNightHour } from '@/lib/mapStyles'
-
-const TAMPERE = { lat: 61.4978, lng: 23.761 }
+import { TAMPERE } from '@/lib/constants'
 
 const SPORT_ICONS: Record<string, LucideIcon> = {
   padel: Zap, kuntosali: Dumbbell, jooga: Leaf,

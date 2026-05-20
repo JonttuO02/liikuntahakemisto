@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { TAMPERE } from '@/lib/constants'
 
 const API_KEY = process.env.GOOGLE_PLACES_API_KEY
 
-const TAMPERE_LAT = 61.4978
-const TAMPERE_LNG = 23.761
 const HAKU_RADIUS_M = 15000
 
 function detectLaji(types: string[]): string {
@@ -72,7 +71,7 @@ export async function GET(req: Request) {
   // Text Search
   const url = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json')
   url.searchParams.set('query', 'liikuntapaikat Tampere')
-  url.searchParams.set('location', `${TAMPERE_LAT},${TAMPERE_LNG}`)
+  url.searchParams.set('location', `${TAMPERE.lat},${TAMPERE.lng}`)
   url.searchParams.set('radius', String(HAKU_RADIUS_M))
   url.searchParams.set('language', 'fi')
   url.searchParams.set('region', 'fi')

@@ -12,8 +12,7 @@ import { hintateksti } from '@/lib/utils'
 import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
 import { DAY_MAP_STYLES, NIGHT_MAP_STYLES, isNightHour } from '@/lib/mapStyles'
-
-const TAMPERE = { lat: 61.4978, lng: 23.761 }
+import { TAMPERE } from '@/lib/constants'
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
 const EASE_MAP:   [number, number, number, number] = [0.4, 0, 0.2, 1]
 const NAV_H      = 56
