@@ -1,232 +1,267 @@
-<!-- refreshed: 2026-05-19 -->
+<!-- refreshed: 2026-05-20 -->
 # Architecture
 
-**Analysis Date:** 2026-05-19
+**Analysis Date:** 2026-05-20
 
 ## System Overview
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        Next.js App Router (SSR)                         │
-│                                                                         │
-│   app/layout.tsx         app/page.tsx        app/paikat/[id]/page.tsx   │
-│   (NavBar + BottomNav)   (Home — SSR)        (Detail — SSR)             │
-└──────────────┬──────────────────┬───────────────────────┬───────────────┘
-               │                  │                       │
-               ▼                  ▼                       ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        Client Components                                │
-│                                                                         │
-│  Etusivu.tsx         LiikuntapaikatLista.tsx    NavBar.tsx              │
-│  (map+AI widget)     (list/map toggle)          BottomNav.tsx           │
-│                      PaikkaKortti.tsx           Kartta.tsx              │
-└──────────────────────────────────┬──────────────────────────────────────┘
-                                   │
-                    ┌──────────────┼──────────────┐
-                    ▼              ▼              ▼
-           ┌─────────────┐  ┌──────────┐  ┌──────────────────┐
-           │  Supabase   │  │ Google   │  │  Open-Meteo API  │
-           │ (Postgres)  │  │  Maps /  │  │  (weather, CSR)  │
-           │  lib/       │  │  Places  │  └──────────────────┘
-           │  supabase.ts│  └──────────┘
-           └─────────────┘
-                    ▲
-                    │
-     ┌──────────────────────────┐
-     │  app/api/hae-paikat/     │
-     │  route.ts (API Route)    │
-     │  Google Places → upsert  │
-     └──────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                         Browser (Client)                                  │
+│                                                                            │
+│  NavBar ('use client', sticky)        BottomNav ('use client', mobile)    │
+├────────────────────┬──────────────────┬───────────────────────────────────┤
+│   / (default)      │  /?nakyma=lista  │   /paikat/[id]   │  /suosikit    │
+│   Etusivu          │  LiikuntapaikatL │   PaikkaPage      │  SuosikitPage │
+│   ('use client')   │  ('use client')  │   (server)        │  (server)     │
+│   GoogleMap embed  │  PaikkaKortti×N  │                   │               │
+│   Karuselli        │  ('use client')  │                   │               │
+│   Bottom sheet     │                  │                   │               │
+└────────────────────┴──────────────────┴───────────────────┴───────────────┘
+         │                         │
+         │ Server Fetch (SSR)       │ Server Fetch (SSR)
+         ▼                         ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│             Server Components (data-fetching shell)                       │
+│  app/page.tsx             — fetches all venues, routes by ?nakyma=       │
+│  app/paikat/[id]/page.tsx — fetches single venue by ID                   │
+│  Uses: supabase (anon key, RLS-enforced read)                            │
+└──────────────────────────────┬───────────────────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                  Supabase (PostgreSQL + RLS)                              │
+│                  Table: liikuntapaikat                                    │
+│                  RLS: public SELECT ✓, authenticated writes only         │
+└──────────────────────────────┬───────────────────────────────────────────┘
+                               ▲
+                               │ supabaseAdmin (service role, bypasses RLS)
+┌──────────────────────────────┴───────────────────────────────────────────┐
+│                    API Route Handlers (server-only)                       │
+│                                                                            │
+│  GET /api/admin/sync-paikat — Bearer token auth, calls Google Places,    │
+│                               upserts into Supabase via service role     │
+│  GET /api/hae-paikat        — Identical duplicate of sync-paikat         │
+└──────────────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    External Services                                       │
+│  Google Places API   (server-side, GOOGLE_PLACES_API_KEY — no referer)  │
+│  Google Maps JS API  (client-side, NEXT_PUBLIC_GOOGLE_MAPS_API_KEY)     │
+│  Open-Meteo          (client-side fetch in Etusivu, no key required)    │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Component Responsibilities
 
-| Component | Responsibility | File |
-|-----------|----------------|------|
-| RootLayout | Font, global CSS, NavBar, BottomNav wrapper | `app/layout.tsx` |
-| Home (page) | SSR data fetch from Supabase, route to Etusivu or LiikuntapaikatLista | `app/page.tsx` |
-| PaikkaPage | SSR single-venue detail fetch, static detail UI | `app/paikat/[id]/page.tsx` |
-| SuosikitPage | Placeholder page (not implemented) | `app/suosikit/page.tsx` |
-| Etusivu | Default home view: scroll-driven map expand, AI weather widget, filter pills, bottom sheet | `app/components/Etusivu.tsx` |
-| LiikuntapaikatLista | List/map toggle view with search, sport filters, price filters, staggered card grid | `app/components/LiikuntapaikatLista.tsx` |
-| PaikkaKortti | Individual venue card with sport accent bar, badge, CTA button | `app/components/PaikkaKortti.tsx` |
-| Kartta | Standalone Google Map with markers + InfoWindow for the list view's map tab | `app/components/Kartta.tsx` |
-| NavBar | Sticky top nav with logo link | `app/components/NavBar.tsx` |
-| BottomNav | Fixed mobile nav (4 tabs), reads URL params to determine active tab | `app/components/BottomNav.tsx` |
-| hae-paikat route | API route: fetches Google Places API, upserts results into Supabase | `app/api/hae-paikat/route.ts` |
+| Component | Rendering | Responsibility | File |
+|-----------|-----------|----------------|------|
+| `RootLayout` | Server | Font loading (Inter + Playfair Display), NavBar, global CSS | `app/layout.tsx` |
+| `Home (page)` | Server | Fetches all venues from Supabase, routes to Etusivu or LiikuntapaikatLista via `?nakyma=` | `app/page.tsx` |
+| `PaikkaPage` | Server | Fetches single venue by ID, renders detail view | `app/paikat/[id]/page.tsx` |
+| `SuosikitPage` | Server | Favorites placeholder (not yet implemented) | `app/suosikit/page.tsx` |
+| `Etusivu` | Client | Homepage — 3D map widget (preview + fullscreen expand), ad carousel, weather, night mode toggle | `app/components/Etusivu.tsx` |
+| `LiikuntapaikatLista` | Client | Venue list with text search, sport filters, price filters, staggered card grid | `app/components/LiikuntapaikatLista.tsx` |
+| `PaikkaKortti` | Client | Single venue card — sport badge, name, address, description, price, CTA | `app/components/PaikkaKortti.tsx` |
+| `Kartta` | Client | Standalone map with OverlayView pins and bottom sheet (currently unused — not imported anywhere) | `app/components/Kartta.tsx` |
+| `Karuselli` | Client | 3D rotating ad carousel (placeholder content, no real ads yet) | `app/components/Karuselli.tsx` |
+| `NavBar` | Client | Sticky top nav, centered ACTA logo, hamburger dropdown with search/favorites links | `app/components/NavBar.tsx` |
+| `BottomNav` | Client | Mobile-only fixed bottom tabs — reads `?nakyma=` from URL for active state | `app/components/BottomNav.tsx` |
+| `ActaLogo` | Client | Animated SVG brand mark with entrance animation | `app/components/ActaLogo.tsx` |
+| `sync-paikat` | Route Handler | Auth-guarded Google Places → Supabase sync (service role upsert) | `app/api/admin/sync-paikat/route.ts` |
+| `hae-paikat` | Route Handler | Identical duplicate of sync-paikat | `app/api/hae-paikat/route.ts` |
 
 ## Pattern Overview
 
-**Overall:** SSR data-fetch shell + hydrated client component tree
+**Overall:** Next.js 14 App Router with server component data-fetching shell + client component UI islands.
 
 **Key Characteristics:**
-- All database reads happen in server components (`app/page.tsx`, `app/paikat/[id]/page.tsx`). Data is fetched once at request time and passed down as props.
-- Client components handle all interactivity: filtering, search, view toggles, animations, map state.
-- The `Liikuntapaikka` TypeScript type is defined once in `app/components/LiikuntapaikatLista.tsx` and imported by other components (`PaikkaKortti.tsx`, `Etusivu.tsx`, `Kartta.tsx`).
-- URL search params drive view mode and BottomNav active state — no external state management library.
+- Server components fetch Supabase data once at SSR time and pass it as props — no client-side data fetching for the main listing
+- All filtering (sport, price, text search) runs in-memory on the client via `useMemo` — no refetch on filter change
+- View state (`?nakyma=lista` / no param) lives in the URL, enabling BottomNav deep-linking
+- All map logic is client-side; the Google Maps JS API is loaded via `useJsApiLoader` inside client components
+- `Kartta.tsx` exists as a standalone component but is not currently used — `Etusivu.tsx` contains its own inline map implementation
 
 ## Layers
 
 **Server Layer (data fetching):**
-- Purpose: Fetch data from Supabase, pass to client components as props
+- Purpose: Fetch Supabase data at request time; no client roundtrip needed for initial page load
 - Location: `app/page.tsx`, `app/paikat/[id]/page.tsx`
-- Contains: `async` page components, Supabase queries, `notFound()` calls
-- Depends on: `lib/supabase.ts`, `lib/lajit.ts`
-- Used by: Next.js App Router
+- Contains: `async` React server components, Supabase anon client queries
+- Depends on: `lib/supabase.ts` (`supabase` anon client), `lib/lajit.ts`, `lib/utils.ts`
+- Used by: Client component tree receives data as props
 
-**Client Layer (UI + interactivity):**
-- Purpose: All rendered UI, filtering, animation, map interaction
+**Client Component Layer (UI + interactivity):**
+- Purpose: All interactivity — filtering, map, animations, state management
 - Location: `app/components/`
-- Contains: `'use client'` components, framer-motion animations, Google Maps integration, local state
-- Depends on: Props from server layer, `lib/lajit.ts`, `components/ui/`
-- Used by: Server page components (rendered as children)
+- Contains: `'use client'` components, Framer Motion animations, Google Maps integration, local `useState`/`useMemo`
+- Depends on: `lib/lajit.ts`, `lib/types.ts`, `lib/utils.ts`, `lib/mapStyles.ts`, `components/ui/`
+- Used by: Rendered inside `<Suspense>` wrappers in server components
 
-**Library Layer (shared utilities):**
-- Purpose: Shared constants, clients, and helpers
+**API Route Layer (admin writes):**
+- Purpose: Sync venue data from Google Places into Supabase
+- Location: `app/api/admin/sync-paikat/route.ts`, `app/api/hae-paikat/route.ts`
+- Contains: GET handlers with Bearer auth guard, Google Places Text Search + Details calls, Supabase upsert
+- Depends on: `lib/supabase.ts` (`supabaseAdmin` service role client), `ADMIN_SECRET` env var, `GOOGLE_PLACES_API_KEY` env var
+- Used by: External HTTP clients (cron jobs, manual curl) — not called by the app UI
+
+**Library Layer:**
+- Purpose: Shared utilities, types, constants — no business logic
 - Location: `lib/`
-- Contains: Supabase client singleton, sport type config, `cn()` utility
-- Depends on: Environment variables
-- Used by: Both server and client layers
-
-**API Route Layer (admin/data ingestion):**
-- Purpose: Server-side integration with Google Places API to populate Supabase
-- Location: `app/api/hae-paikat/route.ts`
-- Contains: `GET` handler, Places text search, place detail fetching, Supabase upsert
-- Depends on: `GOOGLE_PLACES_API_KEY` (server-only), `lib/supabase.ts`
-- Used by: Manual trigger (not called by the app UI)
+- Contains: Supabase clients, TypeScript types, sport config, map styles, `cn()` + `hintateksti()` utilities
+- Depends on: Only external packages (no intra-lib circular imports)
 
 **UI Primitives Layer:**
-- Purpose: Headless UI components with CVA variants
+- Purpose: Headless / CVA-variant base UI components
 - Location: `components/ui/`
 - Contains: `Button`/`buttonVariants` (CVA), `Input` (Base UI), `Badge` (Base UI + CVA)
 - Depends on: `@base-ui/react`, `class-variance-authority`, `lib/utils.ts`
-- Used by: App components and server pages
 
 ## Data Flow
 
-### Primary Request Path (home page, default view)
+### Primary Request Path (homepage, default view)
 
-1. Browser requests `/` → Next.js App Router invokes `app/page.tsx` (server)
-2. `app/page.tsx` calls `supabase.from('liikuntapaikat').select(...).order('nimi')` — full table fetch
-3. If `searchParams.view === 'lista'`, renders `<LiikuntapaikatLista paikat={data} />`, otherwise `<Etusivu paikat={data} />`
-4. Client component hydrates; filtering (sport, price, text search) runs entirely in-browser via `useMemo`
-5. No subsequent server fetches for filtering — all data is in memory client-side
+1. Browser requests `/` — Next.js invokes `app/page.tsx` (server) (`app/page.tsx:6`)
+2. Server queries Supabase with anon key: `.from('liikuntapaikat').select(...).order('nimi')` (`app/page.tsx:11`)
+3. `searchParams.nakyma` is `undefined` — renders `<Etusivu paikat={data} />` (`app/page.tsx:34`)
+4. `Etusivu` hydrates client-side; Google Maps JS API loads via `useJsApiLoader` (`app/components/Etusivu.tsx:60`)
+5. Weather fetched client-side from Open-Meteo on mount (`app/components/Etusivu.tsx:93`)
+
+### List View Path
+
+1. Browser navigates to `/?nakyma=lista`
+2. Server re-runs `app/page.tsx`, checks `searchParams.nakyma === 'lista'`, renders `<LiikuntapaikatLista paikat={data} />` (`app/page.tsx:26`)
+3. Client filters run in-memory via `useMemo` — no additional server fetches (`app/components/LiikuntapaikatLista.tsx:32`)
 
 ### Detail Page Path
 
-1. Browser requests `/paikat/[id]` → `app/paikat/[id]/page.tsx` (server)
-2. Validates `id` is a positive integer, else `notFound()`
-3. `supabase.from('liikuntapaikat').select('*').eq('id', id).single()` — single row fetch
-4. Renders static detail UI with `lajiKonfig` lookup for sport badge/colors
-5. No client component — entire page is a server component
+1. Browser requests `/paikat/[id]`
+2. `app/paikat/[id]/page.tsx` (server) validates ID is a positive integer, then: `.select('*').eq('id', id).single()` (`app/paikat/[id]/page.tsx:13`)
+3. Calls `notFound()` if ID is invalid or row is missing
 
-### Data Ingestion Path (admin only)
+### Admin Sync Path
 
-1. GET request to `/api/hae-paikat` (manual trigger, e.g., curl or browser)
-2. Calls Google Places Text Search API: `"liikuntapaikat Tampere"`, radius 15km
-3. For each result, calls Google Place Details API in parallel (`Promise.all`) for website + phone
-4. Upserts all rows into Supabase `liikuntapaikat` table on conflict `place_id`
-5. Returns JSON summary: `{ loydetty, tallennettu, website_loydetty }`
-
-### Weather Fetch (Etusivu, client-side)
-
-1. `Etusivu` mounts → `useEffect` fetches `https://api.open-meteo.com/v1/forecast` with Tampere coordinates
-2. Parses `temperature_2m` and `weather_code` into emoji + activity suggestion
-3. Weather data drives the AI widget and the Dynamic Island pill
+1. HTTP `GET /api/admin/sync-paikat` with `Authorization: Bearer <ADMIN_SECRET>`
+2. Route handler validates token (`app/api/admin/sync-paikat/route.ts:61`)
+3. Calls Google Places Text Search: "liikuntapaikat Tampere", 15km radius from `61.4978,23.761`
+4. `Promise.all` fetches Place Details for each result (website, phone number)
+5. Upserts rows via `supabaseAdmin` (service role, bypasses RLS) using `place_id` as upsert conflict key
 
 **State Management:**
-- Filter state (sport, price, search text): `useState` inside `LiikuntapaikatLista`
-- View mode (lista/kartta): URL search param `?nakyma=kartta`, read via `useSearchParams`, written via `useRouter.push`
-- Selected map marker: `useState<Liikuntapaikka | null>` inside `Etusivu` and `Kartta`
-- Scroll-driven animation state: Framer Motion `useScroll` + `useTransform` inside `Etusivu`
-- BottomNav active tab: derived from `usePathname()` + `useSearchParams()` — no local state
+- View toggle: URL param `?nakyma=lista` / no param — written by BottomNav links, read by `app/page.tsx` (server) and `BottomNav` (client via `useSearchParams`)
+- Filter state (sport, price, search text): `useState` local to `LiikuntapaikatLista`
+- Map open/closed: `useState` local to `Etusivu` (`kartaAuki`)
+- Selected map marker: `useState<Liikuntapaikka | null>` local to `Etusivu` (`valittu`) and `Kartta` (`valittu`)
+- Night/day mode: `useState` initialized from `isNightHour()`, polled every 60s via `setInterval`
+- BottomNav active tab: derived from `usePathname()` + `useSearchParams()` — no local state needed
 
 ## Key Abstractions
 
 **`Liikuntapaikka` type:**
-- Purpose: Single source-of-truth TypeScript type for venue data
-- Defined in: `app/components/LiikuntapaikatLista.tsx` (exported)
-- Used by: `PaikkaKortti.tsx`, `Etusivu.tsx`, `Kartta.tsx`, `app/paikat/[id]/page.tsx`
-- Shape: `{ id, nimi, laji, osoite, kaupunki, latitude, longitude, hinta_min, hinta_max, varauslinkki, kuvaus, puhelin }`
+- Purpose: Single source of truth for venue data shape across all server and client code
+- Location: `lib/types.ts`
+- Pattern: Exported interface; Phase 1 added optional fields (`hinta_kuvaus`, `aukioloajat`, `lajit_lista`, `featured`) marked optional for forward compatibility
 
-**`lajiKonfig` / `LajiKonfig`:**
-- Purpose: Maps sport slug → display label, badge Tailwind classes, accent color class
-- Defined in: `lib/lajit.ts`
-- Used by: All components that show sport badges or color bars
-- Rule: Never inline sport colors in components — always use `lajiKonfig`
+**`lajiKonfig` / `LAJIT_FILTTERI`:**
+- Purpose: Maps sport slug (`'padel'`, `'kuntosali'`, etc.) to display label, Tailwind badge classes, and hex accent color
+- Location: `lib/lajit.ts`
+- Pattern: Record lookup by `paikka.laji` string. Never inline sport colors in components — always derive from `lajiKonfig[paikka.laji]`
 
-**`buttonVariants` (CVA):**
-- Purpose: Consistent button styling via class-variance-authority
-- Defined in: `components/ui/button.tsx`
-- Used on `<a>` tags as well as `<button>` tags (e.g., `app/paikat/[id]/page.tsx` uses `buttonVariants()` on an `<a>`)
+**`supabase` vs `supabaseAdmin`:**
+- `supabase` — anon key, subject to RLS; used in server components for public reads
+- `supabaseAdmin` — service role key, bypasses RLS; used only in API route handlers for writes
+- Location: both exported from `lib/supabase.ts:6,10`
+- Rule: Never import `supabaseAdmin` in any file that could be bundled client-side
+
+**`DAY_MAP_STYLES` / `NIGHT_MAP_STYLES` / `isNightHour`:**
+- Purpose: Custom Google Maps theme arrays; `isNightHour()` returns `true` when hour < 7 or >= 20
+- Location: `lib/mapStyles.ts`
+- Used by: `Etusivu.tsx` and `Kartta.tsx`
 
 ## Entry Points
 
-**App Shell:**
+**Root Layout:**
 - Location: `app/layout.tsx`
 - Triggers: Every page load
-- Responsibilities: Applies Inter font, global CSS, renders `NavBar`, `BottomNav` (in `Suspense`), and `<main>` with `pb-16 sm:pb-0`
+- Responsibilities: Inter + Playfair Display fonts, `NavBar` (always visible), global CSS, body antialiasing
 
-**Home Page:**
+**Homepage:**
 - Location: `app/page.tsx`
-- Triggers: Route `/`
-- Responsibilities: Full Supabase fetch, conditional render of `Etusivu` (default) or `LiikuntapaikatLista` (when `?view=lista`)
+- Triggers: GET `/`
+- Responsibilities: Full Supabase venue fetch, view routing by `searchParams.nakyma`
 
-**Detail Page:**
+**Venue Detail:**
 - Location: `app/paikat/[id]/page.tsx`
-- Triggers: Route `/paikat/[id]`
-- Responsibilities: Single venue fetch, `notFound()` on invalid id or missing row
+- Triggers: GET `/paikat/:id`
+- Responsibilities: Single venue fetch by ID, `notFound()` on invalid ID or missing row
 
-**API Route:**
-- Location: `app/api/hae-paikat/route.ts`
-- Triggers: `GET /api/hae-paikat` (manual admin trigger)
-- Responsibilities: Google Places ingestion pipeline, Supabase upsert
+**Admin Sync:**
+- Location: `app/api/admin/sync-paikat/route.ts`
+- Triggers: `GET /api/admin/sync-paikat` with Bearer token
+- Responsibilities: Google Places → Supabase ingestion pipeline
+
+## URL Routing Scheme
+
+The `?nakyma=` query param is the single authoritative view-toggle mechanism.
+
+| URL | View | Rendered Component |
+|-----|------|--------------------|
+| `/` | Homepage with 3D map widget | `Etusivu` (client) |
+| `/?nakyma=lista` | Venue list with filters | `LiikuntapaikatLista` (client) |
+| `/paikat/[id]` | Venue detail | `PaikkaPage` (server) |
+| `/suosikit` | Favorites stub | `SuosikitPage` (server) |
+
+**Note:** The map is embedded inside `Etusivu` (default `/` view) — there is no separate `?nakyma=kartta` route. BottomNav "Koti" links to `/`; "Lista" links to `/?nakyma=lista`.
 
 ## Architectural Constraints
 
-- **Rendering:** `app/page.tsx` and `app/paikat/[id]/page.tsx` are async server components — they run at request time (SSR), not build time (SSG). There is no `generateStaticParams` or `cache`/`revalidate` config, so all pages are dynamically rendered on every request.
-- **Supabase client:** A single module-level singleton exported from `lib/supabase.ts` using the public anon key. This client is imported in both server components and the API route — the anon key is safe for public reads, but there is no server-only (service role) client.
-- **Global state:** No global state store (no Redux, Zustand, Context). All state is local to components or encoded in URL params.
-- **Lazy loading:** `Kartta` is lazy-loaded in `LiikuntapaikatLista.tsx` via `React.lazy` + `Suspense` to avoid loading the Google Maps JS bundle until the map tab is activated.
-- **BottomNav Suspense:** `BottomNav` uses `useSearchParams` which requires `Suspense` wrapping. It is wrapped in `app/layout.tsx`.
-- **Font:** Inter loaded via `next/font/google` in `app/layout.tsx`, applied as CSS variable `--font-sans` to the `<html>` element.
+- **Threading:** Single-threaded Node.js event loop. No worker threads.
+- **Global state:** No global React context, Redux, or Zustand. All state is component-local or URL-encoded.
+- **`supabaseAdmin` encapsulation:** Enforced by convention via comment in `lib/supabase.ts:8`. No automated bundle analysis to prevent accidental client import.
+- **RLS:** Phase 1 migration (`supabase/migrations/20260519000001_enable_rls.sql`) enables RLS on `liikuntapaikat`. Public `SELECT` is allowed; all writes require the `authenticated` role. The anon key (used in server components) can only read. The service role key (used in API routes) bypasses RLS entirely.
+- **Google Maps duplication:** `Etusivu.tsx` and `Kartta.tsx` both implement Google Maps with markers, day/night themes, and bottom sheets. `Kartta.tsx` is the newer, cleaner implementation (uses `OverlayView` instead of encoded SVG `data:` URLs for markers) but is not currently rendered.
+- **No `generateStaticParams`:** All pages are dynamically rendered on every request — no ISR or SSG.
+- **BottomNav Suspense:** Required because `BottomNav` uses `useSearchParams`. Currently wrapped in layout — but `app/layout.tsx` does NOT currently include `BottomNav` (it was removed). BottomNav is only rendered if re-added to the layout.
 
 ## Anti-Patterns
 
-### Duplicate `hintateksti` helper
+### Duplicate API Route
 
-**What happens:** The `hintateksti` formatting function is defined identically in three files: `app/components/Etusivu.tsx`, `app/components/PaikkaKortti.tsx`, and `app/paikat/[id]/page.tsx`.
-**Why it's wrong:** Any change to price display logic must be made in three places.
-**Do this instead:** Extract to `lib/utils.ts` or a new `lib/format.ts` and import from there.
+**What happens:** `app/api/hae-paikat/route.ts` is a line-for-line copy of `app/api/admin/sync-paikat/route.ts`.
+**Why it's wrong:** Bug fixes and feature changes must be applied twice; routes will inevitably diverge.
+**Do this instead:** Delete `app/api/hae-paikat/route.ts`. Use only `app/api/admin/sync-paikat/route.ts`.
 
-### Sport colors duplicated in `Kartta.tsx`
+### Map Logic Duplicated Between Etusivu and Kartta
 
-**What happens:** `app/components/Kartta.tsx` defines its own `lajiVari` object with inline color hex values for the InfoWindow badge.
-**Why it's wrong:** Violates the CLAUDE.md rule that sport colors must come from `lib/lajit.ts`. These colors can drift from the canonical `lajiKonfig`.
-**Do this instead:** Derive InfoWindow badge styles from `lajiKonfig[laji].badgeTw` or add hex values to `LajiKonfig` in `lib/lajit.ts`.
+**What happens:** `Etusivu.tsx` contains a full inline Google Maps implementation (1,300+ lines total). `Kartta.tsx` is a separate component with overlapping capability. `Kartta.tsx` is not rendered anywhere.
+**Why it's wrong:** Phase 2 GPS work must touch `Etusivu.tsx` (the active map) — the cleaner `Kartta.tsx` abstractions are wasted. Any fix applied to one is not applied to the other.
+**Do this instead:** Migrate `Etusivu` to use `Kartta` (or a shared `<MapWidget>` primitive) for the map portion, then delete the inline map code from `Etusivu.tsx`.
 
-### `Liikuntapaikka` type defined in a component file
+### Anon Client in Server Components for Critical Data Path
 
-**What happens:** The canonical `Liikuntapaikka` type is exported from `app/components/LiikuntapaikatLista.tsx`, which is a UI component.
-**Why it's wrong:** Types for domain data should not be colocated with UI components; it creates a confusing import dependency where `Etusivu.tsx` and `PaikkaKortti.tsx` import a type from a sibling component.
-**Do this instead:** Move the type to `lib/types.ts` or `lib/supabase.ts`.
+**What happens:** `app/page.tsx` and `app/paikat/[id]/page.tsx` use `supabase` (anon key) to fetch data that drives the entire page render.
+**Why it's wrong:** If the `public_read` RLS policy is tightened or accidentally removed, server-side reads return empty data silently — no error thrown, just an empty venue list.
+**Do this instead:** Server components that own critical data should use `supabaseAdmin` (service role) to guarantee reads are never gated by RLS policy changes. Reserve the anon client for future client-side calls that should respect user auth context.
 
 ## Error Handling
 
-**Strategy:** Minimal — errors surface as inline JSX or trigger Next.js `notFound()`.
+**Strategy:** Next.js built-in error boundaries + explicit `notFound()`.
 
 **Patterns:**
-- Supabase error on home page: renders an inline `<p className="text-red-500">` error message in place of the full page
-- Missing venue on detail page: calls `notFound()` which triggers Next.js 404
-- Google Places API errors in the route handler: returns structured `NextResponse.json({ error })` with appropriate HTTP status codes (500, 502, 403)
-- Weather fetch failure in `Etusivu`: silently caught (`.catch(() => {})`) — widget stays in skeleton state
+- `app/error.tsx` — catches uncaught runtime errors; shows Finnish "Jotain meni pieleen" UI with retry and home button (`'use client'`)
+- `app/not-found.tsx` — shown when `notFound()` is called (invalid venue ID, missing DB row)
+- `app/loading.tsx` — skeleton UI shown during server component suspense (animated card placeholders)
+- API routes return JSON `{ error: string }` with appropriate HTTP status codes (401, 403, 500, 502)
+- Supabase query errors in `app/page.tsx` render an inline `<p className="text-red-500">` error (not routed to `error.tsx`)
+- Weather fetch failure in `Etusivu` is silently swallowed (`.catch(() => {})`) — widget stays in initial state
 
 ## Cross-Cutting Concerns
 
-**Logging:** No logging framework — `console` not used. Errors are returned as HTTP responses from the API route.
-**Validation:** Input validation is minimal: `id` param is checked with `Number.isInteger` + `id >= 1` on the detail page. No Zod or similar schema validation.
-**Authentication:** None — all pages are fully public. Supabase is accessed with the anon key only. No auth routes or protected pages.
+**Logging:** `console.error(error)` in `app/error.tsx`. No structured logging framework or external error service.
+**Validation:** ID validated in `app/paikat/[id]/page.tsx` (`Number.isInteger(id) && id >= 1`). No Zod or runtime schema validation on API inputs or Supabase responses.
+**Authentication:** Admin API routes require `Authorization: Bearer ${ADMIN_SECRET}`. All venue data is public (no user login). Supabase RLS enforces this at the DB level.
 
 ---
 
-*Architecture analysis: 2026-05-19*
+*Architecture analysis: 2026-05-20*

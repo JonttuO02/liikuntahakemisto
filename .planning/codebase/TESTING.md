@@ -1,14 +1,14 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-05-19
+**Analysis Date:** 2026-05-20
 
 ## Test Framework
 
-**Runner:** None — no test runner is installed or configured.
+**Runner:** None — no automated test runner is installed or configured.
 
-**Assertion Library:** None.
+**Assertion library:** None.
 
-**Config files present:** None. There is no `jest.config.*`, `vitest.config.*`, or any other test runner configuration file in the project root.
+**Config files present:** None. No `jest.config.*`, `vitest.config.*`, or `playwright.config.*` exists in the project root.
 
 **Test-related devDependencies in `package.json`:** None. The devDependencies are:
 - `@types/node`, `@types/react`, `@types/react-dom` — TypeScript types only
@@ -18,89 +18,124 @@
 
 ## Test File Coverage
 
-**Application source tests:** Zero. There are no `*.test.ts`, `*.test.tsx`, `*.spec.ts`, or `*.spec.tsx` files anywhere under the project source directories (`app/`, `lib/`, `components/`).
+**Application source tests:** Zero. No `*.test.ts`, `*.test.tsx`, `*.spec.ts`, or `*.spec.tsx` files exist under `app/`, `lib/`, or `components/`.
 
-**`__tests__` directories:** None in the project source. The only `__tests__` folders that exist are inside `node_modules/` (third-party packages).
+**`__tests__` directories:** None in project source. Only inside `node_modules/` (third-party packages).
 
-## What Is and Is Not Tested
+## UAT Methodology (Phase 1)
 
-**Tested:** Nothing in this codebase is tested.
+Phase 1 used structured manual UAT documented in `.planning/phases/01-foundation-and-security/01-UAT.md`. This is the established quality gate pattern for all phases.
 
-**Untested areas (full list):**
+**Format:** Each test has:
+- A numbered name
+- An `expected:` description (specific, observable, often includes a curl command or exact URL)
+- A `result: pass | fail`
+- Optional `note:` for clarifications
 
-| Area | Files | Risk |
-|------|-------|------|
-| Data filtering logic | `app/components/LiikuntapaikatLista.tsx` | High — `suodatettu` useMemo combines laji, text search, and price filters; edge cases not exercised |
-| Price formatting helper | `app/components/PaikkaKortti.tsx`, `app/components/Etusivu.tsx`, `app/paikat/[id]/page.tsx` | Medium — `hintateksti()` duplicated across three files, null combinations untested |
-| Sport type detection | `app/api/hae-paikat/route.ts` | Medium — `detectLaji()` maps Google Places `types[]` to Finnish sport slugs; incorrect mappings would silently corrupt data |
-| Address parsing | `app/api/hae-paikat/route.ts` | Medium — `parseOsoite()` applies string manipulation that could break on unexpected Google formats |
-| API route happy path and error branches | `app/api/hae-paikat/route.ts` | High — external API error handling (502, 403, 500 paths) untested |
-| Weather code parsing | `app/components/Etusivu.tsx` | Low — `parseSaa()` simple range checks |
-| Scroll-driven transforms | `app/components/Etusivu.tsx` | Low — animation values, not logic |
-| Navigation active-state logic | `app/components/BottomNav.tsx` | Medium — `isKoti`, `isKartta`, `isLista` flags depend on pathname + searchParam combinations |
-| Supabase client initialisation | `lib/supabase.ts` | Low — thin wrapper, but missing env vars would panic at runtime |
-| `cn()` utility | `lib/utils.ts` | Low — standard clsx + tailwind-merge composition |
-| `lajiKonfig` lookup fallback | `lib/lajit.ts` | Low — fallback `?? { label: ..., badgeTw: ..., accentBg: ... }` applied in three components |
+**Phase 1 tests (11/11 passed):**
 
-## Coverage Gaps — Priority
+| # | Test | Method |
+|---|------|--------|
+| 1 | Cold start smoke test | Manual — browser + console |
+| 2 | `/api/hae-paikat` returns 401 without auth | `curl` HTTP status check |
+| 3 | `/api/admin/sync-paikat` returns 401 without auth | `curl` HTTP status check |
+| 4 | `?nakyma=kartta` shows map view | Browser navigation |
+| 5 | `?nakyma=lista` shows list view | Browser navigation |
+| 6 | `/` without params shows Etusivu | Browser navigation |
+| 7 | BottomNav active states correct on mobile viewport | Chrome DevTools device emulation |
+| 8 | Loading skeleton on slow network | Chrome DevTools → Slow 3G throttle |
+| 9 | Finnish 404 page | Browser navigation to non-existent route |
+| 10 | Finnish error boundary page exists | File existence + visual confirmation |
+| 11 | Schema columns + RLS | Supabase SQL Editor query |
 
-**High priority (logic bugs would be silent or hard to detect):**
+**UAT document location pattern:** `.planning/phases/NN-phase-name/NN-UAT.md`
 
-1. **`suodatettu` filter chain** in `app/components/LiikuntapaikatLista.tsx` — the combined laji + search text + price filter useMemo is the core UX feature. Cases to cover: empty search string, null `hinta_min`/`hinta_max`, case-insensitive laji match, filter reset.
-
-2. **`detectLaji()`** and **`parseOsoite()`** in `app/api/hae-paikat/route.ts` — pure functions with clear inputs and outputs, easy to unit test, high impact if wrong (corrupts the Supabase dataset).
-
-3. **API route error paths** in `app/api/hae-paikat/route.ts` — missing `GOOGLE_PLACES_API_KEY`, network failure, Places API non-OK status, `REQUEST_DENIED`, Supabase upsert error. These currently rely entirely on the conditional branching being correct.
-
-**Medium priority:**
-
-4. **`hintateksti()`** — duplicated verbatim in three files (`PaikkaKortti.tsx`, `Etusivu.tsx`, `paikat/[id]/page.tsx`). Should be extracted to `lib/` and tested once for all four cases: both null, min only, max only, both set.
-
-5. **BottomNav active-state flags** — requires URL/pathname mocking but catches navigation regressions.
-
-**Low priority:**
-
-6. `parseSaa()`, `cn()`, `lajiKonfig` fallback — simple enough to verify by inspection.
-
-## Recommended Testing Approach
-
-Given the Next.js 14 App Router architecture, the recommended setup is:
-
-**Unit testing (pure functions):**
-- Install `vitest` — works without a DOM, fast, integrates with TypeScript out of the box
-- Test `detectLaji`, `parseOsoite`, `hintateksti` (after extraction to `lib/`), `parseSaa`, `cn`
-- Place test files co-located as `lib/lajit.test.ts`, `lib/utils.test.ts`, etc.
-
-**API route integration testing:**
-- Use `vitest` with `fetch` mocking (`vi.fn()`) to test the `GET` handler in `app/api/hae-paikat/route.ts`
-- Mock `@supabase/supabase-js` to avoid real database calls
-
-**Component testing:**
-- If component tests are added, use `@testing-library/react` with `vitest` and `jsdom`
-- Priority: `LiikuntapaikatLista` filter behaviour, `BottomNav` active-state computation
-
-**What NOT to test:**
-- Framer Motion animation values — visual regression territory
-- Supabase query shape — integration concern, better handled by type safety
-- Tailwind class output — visual regression territory
-
-**Minimum viable test command setup (not yet present):**
-```bash
-# Would need to be added to package.json:
-"test": "vitest run"
-"test:watch": "vitest"
-"test:coverage": "vitest run --coverage"
-```
+**Status field:** `status: complete` in the YAML frontmatter when all tests pass.
 
 ## Current Quality Gate
 
-The only automated quality check currently configured is `next lint` (ESLint with `next/core-web-vitals` and `next/typescript` rulesets). This provides:
-- TypeScript type checking via `tsc --noEmit` (strict mode)
+The only automated quality check is `next lint` (ESLint with `next/core-web-vitals` and `next/typescript` rulesets), which provides:
+- TypeScript type checking via strict mode (`"strict": true` in `tsconfig.json`)
 - React hooks rule enforcement
-- Next.js-specific rules (no `<img>` without Next Image, etc.)
+- Next.js-specific rules (no raw `<img>` tags, etc.)
 
 There is no pre-commit hook, no CI configuration, and no coverage threshold.
 
+## What Is Not Tested
+
+No automated tests exist. The following areas carry risk:
+
+| Area | Files | Risk |
+|------|-------|------|
+| Combined filter logic | `app/components/LiikuntapaikatLista.tsx` | High — `suodatettu` useMemo combines laji + text search + price; edge cases untested |
+| `detectLaji()` | `app/api/hae-paikat/route.ts`, `app/api/admin/sync-paikat/route.ts` | High — silently maps Google Places types to Finnish sport slugs; wrong mapping corrupts DB |
+| `parseOsoite()` | `app/api/hae-paikat/route.ts`, `app/api/admin/sync-paikat/route.ts` | Medium — string manipulation that could break on unexpected Google address formats |
+| API route error paths | `app/api/hae-paikat/route.ts` | High — missing env var, network failure, `REQUEST_DENIED`, Supabase error branches untested |
+| `hintateksti()` | `lib/utils.ts` | Medium — 4 null combinations; used in 3 render paths |
+| BottomNav active-state flags | `app/components/BottomNav.tsx` | Medium — `isKoti`, `isLista`, `isSuosikit` depend on pathname + searchParam combinations |
+| `getInfoWindowStyle()` fallback | `lib/lajit.ts` | Low — simple Record lookup with fallback |
+| `cn()` utility | `lib/utils.ts` | Low — standard clsx + tailwind-merge |
+
+**Note:** `detectLaji()` and `parseOsoite()` are duplicated verbatim across both route handlers (`app/api/hae-paikat/route.ts` and `app/api/admin/sync-paikat/route.ts`). Extraction to `lib/` is a prerequisite for testing them once.
+
+## Coverage Gaps — Priority
+
+**High priority (silent logic bugs):**
+
+1. **`suodatettu` filter chain** (`LiikuntapaikatLista.tsx`) — core UX feature. Cases: empty search, null `hinta_min`/`hinta_max`, case-insensitive laji match, all-null prices with active price filter, filter reset.
+
+2. **`detectLaji()`** — pure function with clear inputs/outputs, easy to unit test, high impact if wrong (corrupts Supabase dataset on every sync).
+
+3. **`parseOsoite()`** — string manipulation on Google Places addresses; unexpected formats would silently store malformed addresses.
+
+4. **API route error branches** (`hae-paikat/route.ts`) — all conditional return paths (missing key, 502, 403, `REQUEST_DENIED`, Supabase error) are untested.
+
+**Medium priority:**
+
+5. **`hintateksti()`** — already in `lib/utils.ts`; test all four null combinations: both null, min only, max only, both set.
+
+6. **BottomNav active-state flags** — requires pathname + search param mocking; prevents navigation regression.
+
+**Low priority:**
+
+7. `cn()`, `lajiKonfig` fallback, `getInfoWindowStyle()` — simple enough to verify by inspection.
+
+## Recommended Testing Approach
+
+**Unit testing (pure functions) — add first:**
+- Install `vitest` — no DOM required, fast, native TypeScript, works in Next.js projects
+- Co-locate test files: `lib/utils.test.ts`, `lib/lajit.test.ts`
+- For route handler helpers: extract `detectLaji` and `parseOsoite` from both route files into `lib/places.ts`, then test in `lib/places.test.ts`
+
+**Component testing — add second:**
+- `@testing-library/react` with `vitest` and `jsdom`
+- Priority: `LiikuntapaikatLista` filter behaviour, `BottomNav` active-state computation
+
+**API route integration testing:**
+- `vitest` with `fetch` mocking (`vi.fn()`) and mocked `@supabase/supabase-js`
+- Test all error branches in `app/api/hae-paikat/route.ts`
+
+**What NOT to test:**
+- Framer Motion animation values — visual regression territory
+- Tailwind class output — visual regression territory
+- Supabase query shape — covered by TypeScript types
+
+**Minimum viable setup (not yet present):**
+```bash
+# To add to package.json scripts:
+"test":          "vitest run"
+"test:watch":    "vitest"
+"test:coverage": "vitest run --coverage"
+```
+
+**To add to devDependencies:**
+```json
+"vitest": "^1.x",
+"@testing-library/react": "^14.x",
+"@testing-library/jest-dom": "^6.x",
+"jsdom": "^24.x"
+```
+
 ---
 
-*Testing analysis: 2026-05-19*
+*Testing analysis: 2026-05-20*

@@ -1,212 +1,264 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-05-19
+**Analysis Date:** 2026-05-20
 
 ## Directory Layout
 
 ```
 liikuntahakemisto/
-├── app/                          # Next.js App Router root
+├── app/                                  # Next.js App Router root
 │   ├── api/
+│   │   ├── admin/
+│   │   │   └── sync-paikat/
+│   │   │       └── route.ts              # GET: Bearer-guarded Google Places → Supabase sync
 │   │   └── hae-paikat/
-│   │       └── route.ts          # GET: Google Places → Supabase ingestion
-│   ├── components/               # Client components (all 'use client')
-│   │   ├── BottomNav.tsx         # Fixed mobile bottom navigation (4 tabs)
-│   │   ├── Etusivu.tsx           # Default home: scroll-driven map + AI widget
-│   │   ├── Kartta.tsx            # Standalone Google Map (list view map tab)
-│   │   ├── LiikuntapaikatLista.tsx  # List/map toggle view with filters
-│   │   ├── NavBar.tsx            # Sticky top navigation bar
-│   │   └── PaikkaKortti.tsx      # Venue card component
-│   ├── fonts/                    # (directory present, font loaded via next/font)
+│   │       └── route.ts                  # GET: Identical duplicate of sync-paikat (unused)
+│   ├── components/                       # Feature client components (all 'use client')
+│   │   ├── ActaLogo.tsx                  # Animated SVG brand mark with entrance animation
+│   │   ├── BottomNav.tsx                 # Fixed mobile bottom tabs (sm:hidden)
+│   │   ├── Etusivu.tsx                   # Homepage — 3D map widget, carousel, weather, night mode
+│   │   ├── Kartta.tsx                    # Standalone Google Map component (currently unused)
+│   │   ├── Karuselli.tsx                 # 3D rotating ad carousel
+│   │   ├── LiikuntapaikatLista.tsx       # Venue list with search + sport/price filters
+│   │   ├── NavBar.tsx                    # Sticky top nav with hamburger dropdown
+│   │   └── PaikkaKortti.tsx              # Single venue card
+│   ├── fonts/                            # Local font files (GeistVF.woff, GeistMonoVF.woff)
 │   ├── paikat/
 │   │   └── [id]/
-│   │       └── page.tsx          # SSR venue detail page
+│   │       └── page.tsx                  # SSR venue detail page
 │   ├── suosikit/
-│   │   └── page.tsx              # Favourites placeholder page (not implemented)
-│   ├── favicon.ico               # App favicon
-│   ├── globals.css               # Tailwind directives + CSS custom properties
-│   └── layout.tsx                # Root layout: font, NavBar, BottomNav, <main>
+│   │   └── page.tsx                      # Favorites placeholder (stub, not implemented)
+│   ├── acta-logo-full.svg               # Brand asset (dark)
+│   ├── acta-logo-full-white.svg         # Brand asset (light)
+│   ├── acta-symbol.svg                  # Brand asset (dark)
+│   ├── acta-symbol-white.svg            # Brand asset (light)
+│   ├── error.tsx                         # Error boundary UI (Finnish copy, 'use client')
+│   ├── favicon.ico
+│   ├── globals.css                       # Tailwind directives + CSS custom properties
+│   ├── layout.tsx                        # Root layout: fonts, NavBar, <main>
+│   ├── loading.tsx                       # Skeleton loading UI (server component)
+│   ├── not-found.tsx                     # 404 page (Finnish copy)
+│   └── page.tsx                          # Homepage: SSR Supabase fetch, view routing
 ├── components/
-│   └── ui/                       # Shared UI primitives (shadcn-style, Base UI)
-│       ├── badge.tsx             # Badge with CVA variants (Base UI useRender)
-│       ├── button.tsx            # Button + buttonVariants (CVA)
-│       └── input.tsx             # Input wrapper around @base-ui/react/input
-├── lib/                          # Shared utilities and configuration
-│   ├── lajit.ts                  # Sport type config: labels, badge classes, accent colors
-│   ├── supabase.ts               # Supabase client singleton (anon key)
-│   └── utils.ts                  # cn() helper (clsx + tailwind-merge)
-├── public/                       # Static assets (currently default Next.js files)
-├── CLAUDE.md                     # Project design guidelines and conventions
-├── DESIGN.md                     # Design reference document
-├── PRODUCT.md                    # Product description document
-├── components.json               # shadcn component config
-├── next.config.mjs               # Next.js config (empty/default)
-├── next-env.d.ts                 # Next.js TypeScript env types (generated)
-├── package.json                  # Dependencies and scripts
-├── postcss.config.mjs            # PostCSS config (Tailwind plugin)
-├── tailwind.config.ts            # Tailwind v3 config (content paths, theme extend)
-├── tsconfig.json                 # TypeScript config with path alias @/ → root
-└── tsconfig.tsbuildinfo          # TypeScript incremental build cache (generated)
+│   └── ui/                               # Shared UI primitives (no business logic)
+│       ├── badge.tsx                     # Badge with CVA variants
+│       ├── button.tsx                    # Button + buttonVariants (CVA)
+│       └── input.tsx                     # Input wrapping @base-ui/react
+├── lib/                                  # Shared utilities and configuration
+│   ├── lajit.ts                          # Sport type config: labels, colors, filter list
+│   ├── mapStyles.ts                      # Google Maps day/night themes + isNightHour()
+│   ├── supabase.ts                       # Supabase anon client + supabaseAdmin (service role)
+│   ├── types.ts                          # Liikuntapaikka TypeScript interface
+│   └── utils.ts                          # cn() (clsx+twMerge) + hintateksti() formatter
+├── supabase/
+│   └── migrations/
+│       ├── 20260519000000_add_phase1_columns.sql  # Phase 1: hinta_kuvaus, aukioloajat, lajit_lista, featured
+│       └── 20260519000001_enable_rls.sql          # Phase 1: RLS enable + public_read policy
+├── .planning/                            # GSD planning artifacts (committed)
+│   ├── codebase/                         # Codebase maps (this directory)
+│   ├── phases/                           # Phase plans
+│   └── research/                         # Research notes
+├── components.json                       # shadcn CLI configuration
+├── CLAUDE.md                             # Project guidelines and design system
+├── next.config.ts                        # Next.js config (minimal, no customization)
+├── package.json                          # Dependencies and scripts
+├── postcss.config.mjs                    # PostCSS (Tailwind plugin)
+├── tailwind.config.ts                    # Tailwind v3 content paths + theme
+└── tsconfig.json                         # TypeScript config, @/ alias → project root
 ```
 
 ## Directory Purposes
 
 **`app/` — Next.js App Router:**
-- All routing is file-system based using the App Router convention.
-- Page files (`page.tsx`) at each route segment are server components by default.
-- `layout.tsx` wraps all routes.
+- File-system routing. Files named `page.tsx` define routes; `layout.tsx` wraps all routes.
+- Page files are server components by default (async, no `'use client'`).
+- `error.tsx` and `not-found.tsx` are special Next.js error boundary files.
 
 **`app/components/` — Feature client components:**
-- All files have `'use client'` at the top.
-- These are feature-level components, not generic primitives — they contain business logic (filtering, map state, animations).
-- The `Liikuntapaikka` TypeScript type is exported from `LiikuntapaikatLista.tsx` and imported by sibling components.
+- All files begin with `'use client'`.
+- Feature-level components — they contain domain logic (filtering, map state, sport config lookups, animations).
+- Not generic UI primitives; they import from `lib/` and know about `Liikuntapaikka`.
 
-**`app/api/` — API Routes:**
-- Follows Next.js App Router API route convention: `route.ts` files export HTTP method handlers (`GET`, `POST`, etc.).
-- `hae-paikat` is an admin-only data ingestion endpoint, not called by the app UI.
+**`app/api/` — API Route Handlers:**
+- Follows Next.js App Router convention: `route.ts` exports named HTTP method handlers.
+- Both routes are admin-only data ingestion endpoints, not called by the app UI.
+- `app/api/admin/sync-paikat/route.ts` is the canonical implementation; `app/api/hae-paikat/route.ts` is an unused duplicate.
 
 **`components/ui/` — Shared UI primitives:**
-- Generic, reusable components with no business logic.
-- `button.tsx` uses `class-variance-authority` (CVA) for variants, manually authored (not generated by shadcn CLI).
-- `input.tsx` and `badge.tsx` wrap `@base-ui/react` primitives.
-- These are imported by feature components and server pages alike.
+- Generic, reusable components with no business logic or domain knowledge.
+- `button.tsx` uses CVA for type-safe variant classes; `input.tsx` and `badge.tsx` wrap `@base-ui/react`.
+- Import these in both feature components and server pages.
 
 **`lib/` — Shared library code:**
-- Framework-agnostic utilities safe to import from both server and client code.
-- `lajit.ts` is the canonical source of truth for sport type display config — never duplicate its values in components.
-- `supabase.ts` exports a module-level singleton (created once per Node.js module load).
+- Framework-agnostic; safe to import from server components, client components, and API routes alike.
+- No circular imports within this directory.
+- `lajit.ts` is the canonical source of truth for sport display config — never duplicate its values in components.
+- `supabase.ts` exports two clients: `supabase` (anon, read-only after RLS) and `supabaseAdmin` (service role, server-only).
+
+**`supabase/migrations/` — Database schema:**
+- SQL migrations tracked in source control.
+- Apply manually via Supabase CLI or dashboard.
 
 ## Key File Locations
 
 **Entry Points:**
-- `app/layout.tsx`: Root HTML shell, fonts, global components (NavBar, BottomNav)
-- `app/page.tsx`: Home page — SSR Supabase fetch, conditional render
-- `app/paikat/[id]/page.tsx`: Venue detail — SSR single-row fetch
-- `app/suosikit/page.tsx`: Favourites route — static placeholder
+- `app/layout.tsx` — Root HTML shell, fonts, NavBar
+- `app/page.tsx` — Homepage SSR fetch + view routing
+- `app/paikat/[id]/page.tsx` — Venue detail SSR
+- `app/suosikit/page.tsx` — Favorites stub
 
 **Configuration:**
-- `tailwind.config.ts`: Tailwind v3 content paths (`app/**`, `components/**`, `pages/**`)
-- `app/globals.css`: CSS custom properties (`--ease-out`, `--ease-in-out`, shadcn HSL vars), Tailwind directives
-- `tsconfig.json`: `@/` path alias pointing to project root
-- `components.json`: shadcn CLI configuration
+- `tailwind.config.ts` — Tailwind v3 content paths (`app/**`, `components/**`, `lib/**`)
+- `app/globals.css` — Tailwind directives, CSS custom properties (`--ease-out`, `--font-sans`, `--font-serif`, glassmorphism classes)
+- `tsconfig.json` — `@/` path alias maps to project root
+- `components.json` — shadcn CLI config
 
-**Core Logic:**
-- `lib/lajit.ts`: Sport type definitions — extend here to add new sport types
-- `lib/supabase.ts`: Database client — all Supabase queries flow through this
-- `app/api/hae-paikat/route.ts`: Data pipeline from Google Places to Supabase
+**Core Library:**
+- `lib/lajit.ts` — Extend here to add new sport types
+- `lib/types.ts` — `Liikuntapaikka` interface — extend here for new DB columns
+- `lib/supabase.ts` — All Supabase access goes through this module
+- `lib/mapStyles.ts` — Map theme arrays; extend here for new map styling
+- `lib/utils.ts` — `cn()` and `hintateksti()` — add generic formatters here
 
-**Feature Components:**
-- `app/components/Etusivu.tsx`: Most complex component (~400 lines) — scroll-driven map, weather, filters, bottom sheet
-- `app/components/LiikuntapaikatLista.tsx`: Second-most complex — list/map toggle, search, staggered grid
-- `app/components/PaikkaKortti.tsx`: Venue card — consumed by `LiikuntapaikatLista`
-- `app/components/Kartta.tsx`: Lazy-loaded map — only bundled when map tab is opened
+**Feature Components (by complexity):**
+- `app/components/Etusivu.tsx` — Largest component (~530 lines); homepage with inline Google Maps, carousel, weather, night mode
+- `app/components/LiikuntapaikatLista.tsx` — Venue list with all filter logic (~175 lines)
+- `app/components/Kartta.tsx` — Standalone map component (~285 lines); not currently rendered
+- `app/components/PaikkaKortti.tsx` — Venue card (~115 lines)
+- `app/components/Karuselli.tsx` — Ad carousel (~110 lines)
+- `app/components/NavBar.tsx` — Top nav (~80 lines)
+- `app/components/BottomNav.tsx` — Mobile tabs (~50 lines)
+- `app/components/ActaLogo.tsx` — Logo animation (~75 lines)
 
-## Component Hierarchy and Relationships
+**Admin & Data Ingestion:**
+- `app/api/admin/sync-paikat/route.ts` — The only production admin endpoint; requires `ADMIN_SECRET` Bearer token
+
+## Component Hierarchy
 
 ```
 app/layout.tsx (server)
-├── NavBar.tsx (client)
-├── <main>
-│   ├── app/page.tsx (server) — renders one of:
-│   │   ├── Etusivu.tsx (client)
-│   │   │   └── GoogleMap + Marker (from @react-google-maps/api)
-│   │   └── LiikuntapaikatLista.tsx (client)
-│   │       ├── PaikkaKortti.tsx (client) × N
-│   │       └── Kartta.tsx (client, lazy) — only when nakyma=kartta
-│   │           └── GoogleMap + Marker + InfoWindow
-│   ├── app/paikat/[id]/page.tsx (server)  — no client children
-│   └── app/suosikit/page.tsx (server)     — no client children
-└── BottomNav.tsx (client, in <Suspense>)
+└── NavBar.tsx (client, sticky z-50)
+    └── ActaLogo.tsx (client, animated SVG)
+app/layout.tsx → <main>
+├── app/page.tsx (server) — one of:
+│   ├── Etusivu.tsx (client)          [default /]
+│   │   └── Karuselli.tsx (client)
+│   │   └── GoogleMap × 2 (preview + fullscreen, inline in Etusivu)
+│   └── LiikuntapaikatLista.tsx (client)    [/?nakyma=lista]
+│       └── PaikkaKortti.tsx (client) × N
+├── app/paikat/[id]/page.tsx (server)
+└── app/suosikit/page.tsx (server)
+BottomNav.tsx (client, sm:hidden, fixed bottom)   [NOTE: not in layout.tsx currently]
 ```
 
-**Import direction rules (actual, observed):**
-- Server pages (`app/page.tsx`, `app/paikat/[id]/page.tsx`) import from `lib/` and `app/components/`
-- Client components import from `lib/`, `components/ui/`, and sibling `app/components/` (for the `Liikuntapaikka` type)
-- `components/ui/` imports only from `lib/utils.ts` and external packages
-- No component imports from `app/api/`
+**Note:** `Kartta.tsx` exists at `app/components/Kartta.tsx` but is not imported by any active component. It is a standalone map implementation intended to replace the inline map in `Etusivu.tsx`.
 
-## Where Business Logic Lives vs UI vs Data Layer
+## Import Direction Rules
+
+- Server pages (`app/page.tsx`, `app/paikat/[id]/page.tsx`) import from: `lib/`, `app/components/`, `components/ui/`
+- Client components import from: `lib/`, `components/ui/`, and sibling `app/components/` files
+- `components/ui/` imports from: `lib/utils.ts` and external packages only
+- `lib/` imports from: external packages only
+- No component imports from `app/api/`
+- `supabaseAdmin` from `lib/supabase.ts` must only be imported in `app/api/` route handlers
+
+## Where Business Logic Lives
 
 | Concern | Location |
 |---------|----------|
-| Database queries | `app/page.tsx`, `app/paikat/[id]/page.tsx`, `app/api/hae-paikat/route.ts` |
+| Supabase DB queries (reads) | `app/page.tsx`, `app/paikat/[id]/page.tsx` |
+| Supabase DB writes (upserts) | `app/api/admin/sync-paikat/route.ts` |
 | Sport type config (labels, colors) | `lib/lajit.ts` — single source of truth |
 | Filter logic (sport, text, price) | `app/components/LiikuntapaikatLista.tsx` (`useMemo`) |
-| URL state (view mode) | `app/components/LiikuntapaikatLista.tsx` (reads + writes `?nakyma`) |
-| Map state (selected marker) | `app/components/Etusivu.tsx` and `app/components/Kartta.tsx` (`useState`) |
+| Map state (selected pin, open/close) | `app/components/Etusivu.tsx` (`useState`) |
+| Map themes (day/night styles) | `lib/mapStyles.ts` |
 | Weather data fetch | `app/components/Etusivu.tsx` (`useEffect` → Open-Meteo) |
-| Animation logic | `app/components/Etusivu.tsx`, `app/components/LiikuntapaikatLista.tsx`, `app/components/PaikkaKortti.tsx` |
-| External API integration | `app/api/hae-paikat/route.ts` |
-| Generic UI primitives | `components/ui/` |
-| Utility functions | `lib/utils.ts` |
+| Night mode detection | `lib/mapStyles.ts` (`isNightHour()`) |
+| Admin auth guard | `app/api/admin/sync-paikat/route.ts` (Bearer token check) |
+| Google Places integration | `app/api/admin/sync-paikat/route.ts` |
+| Utility functions (formatting) | `lib/utils.ts` |
+| Generic UI components | `components/ui/` |
+| Venue TypeScript types | `lib/types.ts` |
 
 ## Naming Conventions
 
 **Files:**
-- Page files: lowercase `page.tsx`, `layout.tsx`, `route.ts` (Next.js convention)
-- React components: PascalCase — `NavBar.tsx`, `PaikkaKortti.tsx`, `LiikuntapaikatLista.tsx`
-- Library modules: camelCase — `lajit.ts`, `supabase.ts`, `utils.ts`
-- UI primitives: lowercase — `button.tsx`, `input.tsx`, `badge.tsx`
+- Next.js special files: lowercase (`page.tsx`, `layout.tsx`, `route.ts`, `error.tsx`, `not-found.tsx`, `loading.tsx`)
+- React feature components: PascalCase (`Etusivu.tsx`, `PaikkaKortti.tsx`, `NavBar.tsx`)
+- Library modules: camelCase (`lajit.ts`, `supabase.ts`, `utils.ts`, `mapStyles.ts`, `types.ts`)
+- UI primitives: lowercase (`button.tsx`, `input.tsx`, `badge.tsx`)
 
-**Components:**
-- Finnish naming for feature/domain components: `Etusivu` (home), `Kartta` (map), `PaikkaKortti` (venue card), `LiikuntapaikatLista` (venue list), `BottomNav`, `NavBar`
-- English naming for generic UI primitives: `Button`, `Input`, `Badge`
-
-**Variables and props:**
-- camelCase for all TypeScript identifiers
-- Finnish naming for domain variables: `paikat` (places), `laji` (sport type), `aktiivinen` (active), `valittu` (selected), `suodatettu` (filtered), `nakyma` (view)
-- Constants: `SCREAMING_SNAKE_CASE` — `TAMPERE`, `SCROLL_END`, `LAJIT_FILTTERI`, `EASE_OUT`
-
-**Types/Interfaces:**
-- PascalCase: `Liikuntapaikka`, `LajiKonfig`, `Nakyma`, `SaaTiedot`, `PlacesResult`
+**Components and identifiers:**
+- Feature/domain components: Finnish names (`Etusivu` = home, `Kartta` = map, `PaikkaKortti` = venue card, `Karuselli` = carousel)
+- Generic UI primitives: English names (`Button`, `Input`, `Badge`)
+- Domain variables: Finnish camelCase (`paikat`, `laji`, `aktiivinen`, `valittu`, `suodatettu`, `kartaAuki`, `nakyma`)
+- Constants: `SCREAMING_SNAKE_CASE` (`TAMPERE`, `LAJIT_FILTTERI`, `EASE_MAP`, `NAV_H`)
+- Types/Interfaces: PascalCase (`Liikuntapaikka`, `LajiKonfig`, `SaaTiedot`, `PlacesResult`)
 
 ## Where to Add New Code
 
 **New page/route:**
-- Create `app/[route-name]/page.tsx` for server-rendered routes
-- Create `app/[route-name]/layout.tsx` only if the route needs its own layout shell
+- Create `app/[route-name]/page.tsx` (server component by default)
+- Create `app/[route-name]/layout.tsx` only if that route needs its own layout wrapper
 
 **New feature component (interactive, uses hooks):**
-- Create `app/components/ComponentName.tsx` with `'use client'` at the top
-- Import `Liikuntapaikka` type from `app/components/LiikuntapaikatLista.tsx` until it is moved to `lib/`
+- Create `app/components/ComponentName.tsx` with `'use client'` as the first line
+- Import `Liikuntapaikka` type from `lib/types.ts`
+- Import sport config from `lib/lajit.ts` — never inline sport colors
 
-**New shared UI primitive (no business logic):**
+**New shared UI primitive:**
 - Create `components/ui/component-name.tsx`
-- Use CVA for variants, Base UI for accessible headless primitives
+- Use CVA for variant props; wrap `@base-ui/react` for accessible headless behavior
+- No domain knowledge, no Supabase imports
 
 **New sport type:**
-- Add entry to `lajiKonfig` in `lib/lajit.ts`
-- Add to `LAJIT_FILTTERI` array in `lib/lajit.ts` if it should appear in filter UI
-- Do not add color/label anywhere else
+- Add entry to `lajiKonfig` in `lib/lajit.ts` with `label`, `badgeTw`, `accentBg`, `color`
+- Add sport slug to `LAJIT_FILTTERI` array in `lib/lajit.ts` to expose in filter UI
+- Do not add color or label anywhere else
+
+**New DB column:**
+- Add to the `Liikuntapaikka` interface in `lib/types.ts`
+- Add as optional (`field?: type | null`) for forward compatibility while the migration rolls out
+- Add a SQL migration file in `supabase/migrations/`
+
+**New admin API endpoint:**
+- Create `app/api/admin/[endpoint-name]/route.ts`
+- Add Bearer token guard at the top of the handler (same pattern as `sync-paikat`)
+- Use `supabaseAdmin` for writes, never the anon `supabase` client
 
 **New utility function:**
-- Add to `lib/utils.ts` for generic utilities (e.g., formatting helpers like `hintateksti` should be extracted here)
+- Add to `lib/utils.ts` for generic pure functions (formatting, class merging)
 
-**New API route:**
-- Create `app/api/[route-name]/route.ts` and export named HTTP method handlers
+**New map theme:**
+- Add style array to `lib/mapStyles.ts` following the existing `DAY_MAP_STYLES` / `NIGHT_MAP_STYLES` pattern
 
 ## Special Directories
 
 **`.planning/`:**
-- Purpose: GSD planning documents (codebase maps, phase plans)
-- Generated: No — hand/agent curated
-- Committed: Yes (tracked in git)
+- Purpose: GSD workflow artifacts (codebase maps, phase plans, research)
+- Generated: No — maintained by agents and humans
+- Committed: Yes
 
 **`.next/`:**
-- Purpose: Next.js build output and cache
+- Purpose: Next.js build output and dev cache
 - Generated: Yes
 - Committed: No (in `.gitignore`)
 
 **`node_modules/`:**
-- Purpose: npm dependencies
-- Generated: Yes (via `npm install`)
+- Purpose: npm packages
+- Generated: Yes (`npm install`)
 - Committed: No
 
-**`public/`:**
-- Purpose: Static files served at `/` (favicon, images, etc.)
-- Generated: Partially (default Next.js files)
-- Committed: Yes
+**`supabase/migrations/`:**
+- Purpose: SQL schema migrations — version-controlled DB changes
+- Generated: No — hand-authored
+- Committed: Yes; apply via `supabase db push` or Supabase dashboard
+
+**`app/fonts/`:**
+- Purpose: Local font files (`GeistVF.woff`, `GeistMonoVF.woff`)
+- Generated: No
+- Committed: Yes (bundled with app)
 
 ---
 
-*Structure analysis: 2026-05-19*
+*Structure analysis: 2026-05-20*

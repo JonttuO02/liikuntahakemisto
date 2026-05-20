@@ -1,48 +1,56 @@
 # External Integrations
 
-**Analysis Date:** 2026-05-19
+**Analysis Date:** 2026-05-20
 
 ## APIs & External Services
 
 ### Google Maps JavaScript API
 
-- **Purpose:** Renders interactive maps with custom markers and InfoWindows inside the app UI
+- **Purpose:** Renders interactive maps with custom sport pins and bottom-sheet popups
 - **SDK/Client:** `@react-google-maps/api` 2.20.8 — React wrapper around the Google Maps JS SDK
 - **Auth:** `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (client-side; HTTP referrer restrictions are safe here)
-- **Used in:**
-  - `app/components/Kartta.tsx` — standalone map view with marker + InfoWindow per place
-  - `app/components/Etusivu.tsx` — scroll-driven map expansion (peek → full screen); uses `useJsApiLoader`, `GoogleMap`, `Marker`
+- **Used in:** `app/components/Kartta.tsx` — full map view with animated `OverlayView` sport pins and glass bottom sheet
 - **Initialization pattern:**
   ```tsx
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '',
   })
   ```
-- **Map options used:** Custom `styles` array (POI hidden, muted palette in Etusivu), `streetViewControl: false`, `gestureHandling: 'greedy'`
+- **Map themes:** Custom day/night styles defined in `lib/mapStyles.ts` — Aubergine night style, muted day style. Auto-switches on hour boundary via 60s `setInterval`.
+- **Map options:** `streetViewControl: false`, `mapTypeControl: false`, `fullscreenControl: false`, `zoomControl: true`
 
 ### Google Places API (server-side only)
 
 - **Purpose:** Fetches sports venues in Tampere via Text Search and Place Details; results are stored in Supabase
 - **SDK/Client:** Native `fetch` (no SDK — raw REST calls to `maps.googleapis.com`)
-- **Auth:** `GOOGLE_PLACES_API_KEY` — server-only env var (no `NEXT_PUBLIC_` prefix); safe because server calls carry no `Referer` header
-- **Used in:** `app/api/hae-paikat/route.ts` (GET handler)
+- **Auth:** `GOOGLE_PLACES_API_KEY` — server-only env var (no `NEXT_PUBLIC_` prefix); safe because server route calls carry no `Referer` header
+- **Used in:**
+  - `app/api/admin/sync-paikat/route.ts` — protected admin sync route (requires `Authorization: Bearer $ADMIN_SECRET`)
+  - `app/api/hae-paikat/route.ts` — duplicate of the above (legacy; both routes implement identical logic)
 - **Endpoints called:**
   - `https://maps.googleapis.com/maps/api/place/textsearch/json` — searches "liikuntapaikat Tampere" within 15km radius
   - `https://maps.googleapis.com/maps/api/place/details/json` — fetches `website` and `formatted_phone_number` for each result; called in parallel via `Promise.all`
 - **Data fields extracted:** `place_id`, `name`, `formatted_address`, `geometry.location`, `types`, `website`, `formatted_phone_number`
 - **Tampere coordinates hardcoded:** `lat: 61.4978, lng: 23.761`, radius 15 000 m
 
-### Open-Meteo Weather API
+### Open-Meteo Weather API (planned — Phase 5)
 
-- **Purpose:** Fetches current temperature and weather code for Tampere to display in the AI widget on the home screen
-- **SDK/Client:** Native browser `fetch` (client-side, no auth required)
-- **Auth:** None — Open-Meteo is a free, no-key API
-- **Used in:** `app/components/Etusivu.tsx` (inside `useEffect`)
-- **Endpoint:**
+- **Purpose:** Fetch current temperature and weather code for Tampere for the AI weather widget
+- **SDK/Client:** Native `fetch` (no auth required — free, no-key API)
+- **Auth:** None
+- **Planned endpoint:**
   ```
   https://api.open-meteo.com/v1/forecast?latitude=61.4978&longitude=23.7610&current=temperature_2m,weather_code
   ```
-- **Data used:** `current.temperature_2m` (rounded to integer), `current.weather_code` (mapped to emoji + exercise suggestion via `parseSaa()`)
+- **Status:** Not yet implemented in the codebase; planned for Phase 5 alongside the Claude AI widget
+
+### Claude AI API (planned — Phase 5)
+
+- **Purpose:** Generate personalised sport recommendations based on user location, weather, and preferences
+- **SDK/Client:** Anthropic SDK or direct REST — TBD
+- **Auth:** `ANTHROPIC_API_KEY` (server-only env var) — not yet present in codebase
+- **Planned route:** `/api/saasuositus` (Route Handler, non-blocking, never SSR)
+- **Status:** Not yet implemented
 
 ## Data Storage
 
@@ -50,22 +58,35 @@
 
 - **Purpose:** Primary database — stores all sports venue records fetched from Google Places
 - **Client package:** `@supabase/supabase-js` 2.105.4
-- **Client setup:** `lib/supabase.ts` — single shared `createClient` instance exported as `supabase`
+- **Client setup:** `lib/supabase.ts` exports two clients:
+
+  **Anon client (read-only after RLS):**
   ```ts
-  import { createClient } from '@supabase/supabase-js'
   export const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
   ```
+  Used in: `app/page.tsx`, `app/paikat/[id]/page.tsx` — server-side data fetching for page renders.
+
+  **Admin client (bypasses RLS — server-only):**
+  ```ts
+  export const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  ```
+  Used in: `app/api/admin/sync-paikat/route.ts`, `app/api/hae-paikat/route.ts` — write operations (upsert).
+  NEVER import `supabaseAdmin` in client components — it holds the service role key.
+
 - **Auth env vars:**
   - `NEXT_PUBLIC_SUPABASE_URL` — project URL (client + server)
-  - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — anon/public key (client + server)
-- **Both vars are public** — suitable for anon read access; row-level security (RLS) should be configured in Supabase dashboard
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — anon key, read-only after RLS (client + server)
+  - `SUPABASE_SERVICE_ROLE_KEY` — service role key for writes (server-only, no `NEXT_PUBLIC_` prefix)
+
+- **RLS status:** Enabled (Phase 1 complete) — anon key can only read; writes require service role key
 
 **Table: `liikuntapaikat`**
-
-Inferred schema from query and upsert operations across `app/page.tsx`, `app/paikat/[id]/page.tsx`, and `app/api/hae-paikat/route.ts`:
 
 | Column | Type | Source |
 |--------|------|--------|
@@ -79,22 +100,30 @@ Inferred schema from query and upsert operations across `app/page.tsx`, `app/pai
 | `longitude` | float \| null | `geometry.location.lng` |
 | `varauslinkki` | text \| null | Google Places `website` |
 | `puhelin` | text \| null | Google Places `formatted_phone_number` |
-| `hinta_min` | numeric \| null | Not populated by API route (manual or future) |
-| `hinta_max` | numeric \| null | Not populated by API route (manual or future) |
-| `kuvaus` | text \| null | Not populated by API route (manual or future) |
+| `hinta_min` | numeric \| null | Manual / future |
+| `hinta_max` | numeric \| null | Manual / future |
+| `kuvaus` | text \| null | Manual / future |
+| `hinta_kuvaus` | text \| null | Phase 1 addition (DATA-04) |
+| `aukioloajat` | jsonb \| null | Phase 1 addition — `Record<string, {open, close}>` |
+| `lajit_lista` | text[] \| null | Phase 1 addition — array of sport slugs |
+| `featured` | boolean \| null | Phase 1 addition — promoted listing flag |
 
-- **Upsert conflict key:** `place_id` — deduplicates on repeated API calls
-- **Read operations:** `app/page.tsx` selects all rows ordered by `nimi`; `app/paikat/[id]/page.tsx` selects `*` by `id`
+TypeScript type: `lib/types.ts` → `Liikuntapaikka`
 
-**File Storage:** Not used — no Supabase Storage or S3/R2 integration detected.
+- **Upsert conflict key:** `place_id` — deduplicates on repeated API sync calls
+- **Read operations:** `app/page.tsx` selects named columns ordered by `nimi`; `app/paikat/[id]/page.tsx` selects `*` by `id`
+
+**File Storage:** Not used.
 
 **Caching:** None — data is fetched fresh on each server render; no Redis or in-memory cache.
 
 ## Authentication & Identity
 
-**No user authentication.** The app is entirely public-read. No login, sessions, or Supabase Auth integration is present. The Supabase anon key is used for all DB access.
+**No user authentication.** The app is entirely public-read. No login, sessions, or Supabase Auth integration present.
 
-The `/suosikit` (favourites) page at `app/suosikit/page.tsx` is a stub with "coming soon" messaging — no favourites persistence is implemented.
+**Admin route protection:** `app/api/admin/sync-paikat/route.ts` requires `Authorization: Bearer <ADMIN_SECRET>` header. `ADMIN_SECRET` is a server-only env var. Missing or mismatched header returns HTTP 401.
+
+The `/suosikit` (favourites) page (`app/suosikit/page.tsx`) is a stub — no favourites persistence implemented.
 
 ## Monitoring & Observability
 
@@ -106,24 +135,41 @@ The `/suosikit` (favourites) page at `app/suosikit/page.tsx` is a stub with "com
 
 ## CI/CD & Deployment
 
-**Hosting:** No deployment config committed (no `vercel.json`, `Dockerfile`, or platform-specific files). Vercel is the natural target for Next.js 14 App Router with zero-config deployment.
+**Hosting:** No deployment config committed (no `vercel.json`, `Dockerfile`, or platform-specific files). Vercel is the natural target for Next.js 14 App Router.
 
-**CI Pipeline:** None configured (no GitHub Actions workflows, CircleCI, or similar).
+**CI Pipeline:** None configured.
 
 ## Environment Configuration
 
 **Required environment variables:**
 
-| Variable | Side | Required | Purpose |
-|----------|------|----------|---------|
-| `NEXT_PUBLIC_SUPABASE_URL` | client + server | Yes | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | client + server | Yes | Supabase anon key for DB reads/writes |
-| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | client only | Yes | Google Maps JS API for map rendering |
-| `GOOGLE_PLACES_API_KEY` | server only | Yes | Google Places REST API for venue import |
+| Variable | Side | Purpose |
+|----------|------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | client + server | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | client + server | Supabase anon key — read-only after RLS |
+| `SUPABASE_SERVICE_ROLE_KEY` | server only | Supabase service role key — bypasses RLS for writes |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | client only | Google Maps JS API for map rendering |
+| `GOOGLE_PLACES_API_KEY` | server only | Google Places REST API for venue import/sync |
+| `ADMIN_SECRET` | server only | Bearer token guarding `/api/admin/sync-paikat` |
 
-**Secrets location:** `.env.local` (gitignored, not committed). No `.env.example` file found.
+**Secrets location:** `.env.local` (gitignored, not committed). No `.env.example` file present.
 
-**Note:** All four vars are required for full functionality. Missing `GOOGLE_PLACES_API_KEY` causes the `/api/hae-paikat` route to return HTTP 500. Missing map key causes maps to load in development mode with a watermark.
+**Critical rules:**
+- `SUPABASE_SERVICE_ROLE_KEY` must never have `NEXT_PUBLIC_` prefix — it would be exposed in the browser bundle
+- `GOOGLE_PLACES_API_KEY` must never have `NEXT_PUBLIC_` prefix — it has no referrer restriction and would be abused
+- `ADMIN_SECRET` must never have `NEXT_PUBLIC_` prefix
+
+## Internal API Routes
+
+**`GET /api/admin/sync-paikat`** (`app/api/admin/sync-paikat/route.ts`):
+- Protected: requires `Authorization: Bearer <ADMIN_SECRET>` header
+- Flow: Google Places Text Search → Place Details (parallel) → Supabase upsert via `supabaseAdmin`
+- Returns JSON: `{ loydetty, tallennettu, website_loydetty }` on success
+- Error states: 401 (bad auth), 500 (missing API key / server config), 502 (Google unreachable), 403 (API key rejected)
+
+**`GET /api/hae-paikat`** (`app/api/hae-paikat/route.ts`):
+- Identical logic to `sync-paikat` — also protected with `ADMIN_SECRET`
+- Legacy route; may be consolidated with `sync-paikat` in a future phase
 
 ## Webhooks & Callbacks
 
@@ -131,14 +177,6 @@ The `/suosikit` (favourites) page at `app/suosikit/page.tsx` is a stub with "com
 
 **Outgoing webhooks:** None.
 
-## Internal API Routes
-
-**`GET /api/hae-paikat`** (`app/api/hae-paikat/route.ts`):
-- Trigger: Manual HTTP GET (no UI button — intended to be called during data seeding)
-- Flow: Google Places Text Search → Place Details (parallel) → Supabase upsert
-- Returns JSON: `{ loydetty, tallennettu, website_loydetty }` on success
-- Error states: 500 (missing API key), 502 (Google unreachable or HTTP error), 403 (API key rejected)
-
 ---
 
-*Integration audit: 2026-05-19*
+*Integration audit: 2026-05-20*

@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Analysis Date:** 2026-05-19
+**Analysis Date:** 2026-05-20
 
 ## Languages
 
@@ -13,7 +13,7 @@
 ## Runtime
 
 **Environment:**
-- Node.js (no explicit version pinned; no `.nvmrc` or `.node-version` file)
+- Node.js (LTS recommended; no version pinned — no `.nvmrc` or `.node-version` file)
 - Target: browser + Node.js server (Next.js hybrid — server components run on Node, client components in browser)
 
 **Package Manager:**
@@ -48,7 +48,6 @@
 - `clsx` 2.1.1 — conditional class names
 - `tailwind-merge` 3.6.0 — resolves conflicting Tailwind classes
 - Combined in `lib/utils.ts` as `cn()` function
-- `tw-animate-css` 1.4.0 — installed but not actively used (Tailwind v3 incompatible; see CONCERNS)
 
 ## UI Component Libraries
 
@@ -59,27 +58,36 @@
 
 **shadcn CLI (4.7.0, devDependency):**
 - Used to scaffold components into `components/ui/`
-- Components present: `components/ui/badge.tsx`, `components/ui/button.tsx`, `components/ui/input.tsx`
 - `buttonVariants()` from `components/ui/button.tsx` used on `<a>` tags (not `asChild`)
 
 **lucide-react 1.16.0:**
-- SVG icon library; used in some components (direct SVG inlining is also common)
+- SVG icon library; used throughout map pins and UI components
 
 ## Animation
 
 **Framer Motion 12.38.0:**
 - Primary animation library for all interactive animations
-- Used APIs: `motion`, `AnimatePresence`, `useScroll`, `useTransform`, `useMotionValueEvent`, `useReducedMotion`, `useSpring` (available but scroll-driven transforms are the main pattern)
-- Scroll-driven map expansion in `app/components/Etusivu.tsx` uses `useScroll` + `useTransform`
+- Used APIs: `motion`, `AnimatePresence`, `useScroll`, `useTransform`
 - Stagger grid animations via `variants` + `staggerChildren` in `app/components/LiikuntapaikatLista.tsx`
-- All durations follow the Emil Kowalski philosophy (see `.agents/skills/emil-design-eng/SKILL.md`): hover 180ms, card enter 280-350ms, view transitions 150ms, drawers 380ms
+- Map pin entrance animations in `app/components/Kartta.tsx`
+- All durations follow Emil Kowalski philosophy: hover 180ms, card enter 280-350ms, view transitions 150ms
 
 ## State Management
 
 **No global state library.** State is managed via:
-- React `useState` / `useMemo` / `useReducer` (local component state)
+- React `useState` / `useMemo` (local component state)
 - URL search params (`useSearchParams`, `useRouter`) for view mode (`?nakyma=kartta`)
 - Supabase data fetched server-side in `app/page.tsx` and `app/paikat/[id]/page.tsx` and passed as props
+
+## Mapping
+
+**`@react-google-maps/api` 2.20.8:**
+- React wrapper for Google Maps JS API
+- Used in `app/components/Kartta.tsx` with `GoogleMap`, `OverlayView`, `useJsApiLoader`
+- Custom day/night map themes defined in `lib/mapStyles.ts` (Aubergine night style)
+
+**`@googlemaps/markerclusterer` 2.6.2:**
+- Installed; not yet actively wired into the map component
 
 ## Build Tooling
 
@@ -101,12 +109,12 @@
 | `@base-ui/react` | ^1.4.1 | Headless UI primitives |
 | `@supabase/supabase-js` | ^2.105.4 | Database client |
 | `@react-google-maps/api` | ^2.20.8 | Google Maps React wrapper |
+| `@googlemaps/markerclusterer` | ^2.6.2 | Marker clustering |
 | `clsx` | ^2.1.1 | Conditional class names |
 | `tailwind-merge` | ^3.6.0 | Tailwind class deduplication |
 | `class-variance-authority` | ^0.7.1 | Component variant styling (shadcn) |
 | `lucide-react` | ^1.16.0 | Icons |
 | `shadcn` | ^4.7.0 | Component scaffolding CLI |
-| `tw-animate-css` | ^1.4.0 | Installed but unused (v4 incompatible) |
 
 ## TypeScript Configuration
 
@@ -122,13 +130,13 @@
 **Development:**
 - Node.js (LTS recommended; no version pinned)
 - npm
-- Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `GOOGLE_PLACES_API_KEY`
+- `.env.local` with all required env vars (see INTEGRATIONS.md)
 
 **Production:**
 - Any Node.js-capable hosting (Vercel is the natural target for Next.js 14 App Router)
-- Supabase project (PostgreSQL backend)
-- Google Cloud project with Places API and Maps JS API enabled
+- Supabase project (PostgreSQL backend with RLS enabled)
+- Google Cloud project with Maps JS API and Places API enabled
 
 ---
 
-*Stack analysis: 2026-05-19*
+*Stack analysis: 2026-05-20*
