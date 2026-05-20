@@ -16,8 +16,8 @@ progress:
 
 ## Current Status
 
-Phase: Phase 1 complete — Phase 2 ready to start
-Last updated: 2026-05-19
+Phase: Phase 2 planned — ready to execute
+Last updated: 2026-05-20
 
 ## Project Reference
 
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-05-19)
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Phase 1 — Foundation & Security | Complete | All 11 UAT tests passed; schema migration applied in Supabase |
-| Phase 2 — Map & GPS | Not started | Blocked until Phase 1 done |
+| Phase 2 — Map & GPS | Planned | 3 plans (6 tasks) ready to execute |
 | Phase 3 — Data Enrichment | Not started | Blocked until Phase 1 done |
 | Phase 4 — Service Information UI | Not started | Blocked until Phase 3 done |
 | Phase 5 — AI Weather Widget | Not started | Blocked until Phase 4 done |
@@ -64,4 +64,4 @@ See: .planning/PROJECT.md (updated 2026-05-19)
 
 ## Session Continuity
 
-- Start next session: Run /gsd:plan-phase 2 — Phase 2 (Map & GPS) is next
+- Start next session: Run /gsd:execute-phase 2 — Phase 2 (Map & GPS) is planned, 3 plans ready

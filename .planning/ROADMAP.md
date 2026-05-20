@@ -38,7 +38,7 @@
 2. If location permission is denied or unavailable, the map silently centers on Tampere city center — no error message, no broken state
 3. Every venue card in list and map view shows a distance string ("1,2 km") that updates when the user's location changes
 4. The map renders without the double-load flash that occurred with the previous library — pins appear in a single paint cycle
-**Plans:** TBD
+**Plans:** `.planning/phases/02-map-and-gps/02-01-PLAN.md`, `02-02-PLAN.md`, `02-03-PLAN.md` (6 tasks, 3 waves)
 **UI hint:** yes
 
 ### Phase 3: Data Enrichment
@@ -84,7 +84,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Security | 0/14 | Planned | - |
-| 2. Map & GPS | 0/? | Not started | - |
+| 2. Map & GPS | 0/6 | Planned | - |
 | 3. Data Enrichment | 0/? | Not started | - |
 | 4. Service Information UI | 0/? | Not started | - |
 | 5. AI Weather Widget | 0/? | Not started | - |
