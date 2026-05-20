@@ -29,7 +29,7 @@ const SPORT_ICONS: Record<string, LucideIcon> = {
   liikunta:      Activity,
 }
 
-export default function PaikkaKortti({ paikka }: { paikka: Liikuntapaikka }) {
+export default function PaikkaKortti({ paikka, distanceStr }: { paikka: Liikuntapaikka; distanceStr?: string }) {
   const laji   = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
   const hinta  = hintateksti(paikka.hinta_min, paikka.hinta_max)
   const osoite = [paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')
@@ -95,15 +95,19 @@ export default function PaikkaKortti({ paikka }: { paikka: Liikuntapaikka }) {
             </motion.div>
           )}
 
-          {hinta ? (
-            <span className="text-sm font-semibold text-[#111111] shrink-0 tabular-nums">
-              {hinta}
-            </span>
-          ) : (
-            <span className="text-xs text-[rgba(17,17,17,0.35)] shrink-0">
-              Lisätään pian
-            </span>
-          )}
+          <div className="flex flex-col items-end gap-0.5 shrink-0">
+            {hinta ? (
+              <span className="text-sm font-semibold text-[#111111] tabular-nums">{hinta}</span>
+            ) : (
+              <span className="text-xs text-[rgba(17,17,17,0.35)]">Lisätään pian</span>
+            )}
+            {distanceStr && (
+              <span className="text-xs text-[rgba(17,17,17,0.4)] tabular-nums flex items-center gap-0.5">
+                <MapPin className="w-3 h-3 shrink-0" />
+                {distanceStr}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>

@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, MapPin, Moon, Sun } from 'lucide-react'
-import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api'
+import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
 import { Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -16,16 +16,6 @@ import { TAMPERE } from '@/lib/constants'
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
 const EASE_MAP:   [number, number, number, number] = [0.4, 0, 0.2, 1]
 const NAV_H      = 56
-
-const ICON_SVG: Record<string, string> = {
-  padel:         `<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>`,
-  kuntosali:     `<path d="M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z"/><path d="m2.5 21.5 1.4-1.4"/><path d="m20.1 3.9 1.4-1.4"/><path d="M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z"/><path d="m9.6 14.4 4.8-4.8"/>`,
-  jooga:         `<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>`,
-  uinti:         `<path d="M2 12q2.5 2 5 0t5 0 5 0 5 0"/><path d="M2 19q2.5 2 5 0t5 0 5 0 5 0"/><path d="M2 5q2.5 2 5 0t5 0 5 0 5 0"/>`,
-  tennis:        `<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>`,
-  liikuntahalli: `<path d="M10 12h4"/><path d="M10 8h4"/><path d="M14 21v-3a2 2 0 0 0-4 0v3"/><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/>`,
-  liikunta:      `<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>`,
-}
 
 const SPORT_ICONS: Record<string, LucideIcon> = {
   padel: Zap, kuntosali: Dumbbell, jooga: Leaf,
@@ -43,6 +33,27 @@ function getWeatherEmoji(code: number): string {
   return '⛅'
 }
 
+function MapStyleController({ isDark }: { isDark: boolean }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!map) return
+    map.setOptions({ styles: (isDark ? NIGHT_MAP_STYLES : DAY_MAP_STYLES) as google.maps.MapTypeStyle[] })
+  }, [map, isDark])
+  return null
+}
+
+function SimplePin({ laji }: { laji: string }) {
+  const color = (lajiKonfig as Record<string, { color: string }>)[laji]?.color ?? '#6b7280'
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 38" width={28} height={38} style={{ display: 'block' }}>
+      <path
+        d="M14 0C6.268 0 0 6.268 0 14c0 5.25 2.875 9.83 7.125 12.3L14 38l6.875-11.7C25.125 23.83 28 19.25 28 14 28 6.268 21.732 0 14 0Z"
+        fill={color}
+      />
+    </svg>
+  )
+}
+
 export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [saa, setSaa]               = useState<SaaTiedot | null>(null)
   const [valittu, setValittu]       = useState<Liikuntapaikka | null>(null)
@@ -53,30 +64,9 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [fullH, setFullH]           = useState(600)
   const [isDark, setIsDark]         = useState(isNightHour)
 
-  const mapInstanceRef    = useRef<google.maps.Map | null>(null)
-  const previewMapRef     = useRef<google.maps.Map | null>(null)
-
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '',
-  })
-
   useEffect(() => {
     const id = setInterval(() => setIsDark(isNightHour()), 60_000)
     return () => clearInterval(id)
-  }, [])
-
-  useEffect(() => {
-    const styles = (isDark ? NIGHT_MAP_STYLES : DAY_MAP_STYLES) as google.maps.MapTypeStyle[]
-    mapInstanceRef.current?.setOptions({ styles })
-    previewMapRef.current?.setOptions({ styles })
-  }, [isDark])
-
-  const onFullscreenMapLoad = useCallback((map: google.maps.Map) => {
-    mapInstanceRef.current = map
-  }, [])
-
-  const onPreviewMapLoad = useCallback((map: google.maps.Map) => {
-    previewMapRef.current = map
   }, [])
 
   useEffect(() => {
@@ -142,25 +132,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     ),
     [suodatettu]
   )
-
-  const getMarkerIcon = (paikka: Liikuntapaikka, isActive: boolean) => {
-    if (!isLoaded) return undefined
-    const color    = lajiKonfig[paikka.laji]?.color ?? '#6b7280'
-    const iconPath = ICON_SVG[paikka.laji] ?? ICON_SVG.liikunta
-    const w = isActive ? 36 : 28
-    const h = isActive ? 49 : 38
-    const svg = encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 38" width="${w}" height="${h}">` +
-      `<path d="M14 0C6.268 0 0 6.268 0 14c0 5.25 2.875 9.83 7.125 12.3L14 38l6.875-11.7C25.125 23.83 28 19.25 28 14 28 6.268 21.732 0 14 0Z" fill="${color}"/>` +
-      `<svg x="5" y="5" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconPath}</svg>` +
-      `</svg>`
-    )
-    return {
-      url: `data:image/svg+xml;charset=UTF-8,${svg}`,
-      scaledSize: new window.google.maps.Size(w, h),
-      anchor:     new window.google.maps.Point(w / 2, h),
-    }
-  }
 
   return (
     <>
@@ -261,36 +232,26 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           >
             {/* clip-path clips at render level — the only reliable way to round Google Maps corners */}
             <div style={{ width: '100%', height: '100%', clipPath: 'inset(0 round 24px)', position: 'relative' }}>
-              {isLoaded ? (
-                <GoogleMap
-                  mapContainerStyle={{ width: '100%', height: '100%' }}
-                  center={TAMPERE}
-                  zoom={12}
-                  options={{
-                    streetViewControl: false,
-                    mapTypeControl:    false,
-                    fullscreenControl: false,
-                    zoomControl:       false,
-                    disableDefaultUI:  true,
-                    keyboardShortcuts: false,
-                    clickableIcons:    false,
-                    gestureHandling:   'none',
-                    styles:            (isDark ? NIGHT_MAP_STYLES : DAY_MAP_STYLES) as google.maps.MapTypeStyle[],
-                  }}
-                  onLoad={onPreviewMapLoad}
-                >
-                  {paikatKartalla.map(p => (
-                    <Marker
-                      key={p.id}
-                      position={{ lat: p.latitude, lng: p.longitude }}
-                      icon={getMarkerIcon(p, false)}
-                    />
-                  ))}
-                </GoogleMap>
-              ) : (
-                <div className="w-full h-full bg-[#f0f0f0]" />
-              )}
-
+              <Map
+                mapId="DEMO_MAP_ID"
+                defaultCenter={TAMPERE}
+                defaultZoom={12}
+                style={{ width: '100%', height: '100%' }}
+                disableDefaultUI
+                gestureHandling="none"
+                clickableIcons={false}
+                keyboardShortcuts={false}
+              >
+                {paikatKartalla.map(p => (
+                  <AdvancedMarker
+                    key={p.id}
+                    position={{ lat: p.latitude, lng: p.longitude }}
+                  >
+                    <SimplePin laji={p.laji} />
+                  </AdvancedMarker>
+                ))}
+                <MapStyleController isDark={isDark} />
+              </Map>
             </div>
           </motion.div>
         )}
@@ -326,39 +287,30 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 borderRadius: 24,
               }}
               transition={{ duration: 0.45, ease: EASE_MAP }}
-              onAnimationComplete={() => {
-                if (kartaAuki && mapInstanceRef.current) {
-                  window.google.maps.event.trigger(mapInstanceRef.current, 'resize')
-                }
-              }}
             >
-              {isLoaded && (
-                <GoogleMap
-                  mapContainerStyle={{ width: '100%', height: '100%' }}
-                  center={TAMPERE}
-                  zoom={14}
-                  options={{
-                    disableDefaultUI:  true,
-                    keyboardShortcuts: false,
-                    clickableIcons:    false,
-                    gestureHandling:   'greedy',
-                    styles:            (isDark ? NIGHT_MAP_STYLES : DAY_MAP_STYLES) as google.maps.MapTypeStyle[],
-                  }}
-                  onClick={() => setValittu(null)}
-                  onLoad={onFullscreenMapLoad}
-                >
-                  {paikatKartalla.map(p => (
-                    <Marker
-                      key={p.id}
-                      position={{ lat: p.latitude, lng: p.longitude }}
-                      title={p.nimi}
-                      icon={getMarkerIcon(p, valittu?.id === p.id)}
-                      zIndex={valittu?.id === p.id ? 10 : 1}
-                      onClick={() => setValittu(p)}
-                    />
-                  ))}
-                </GoogleMap>
-              )}
+              <Map
+                mapId="DEMO_MAP_ID"
+                defaultCenter={TAMPERE}
+                defaultZoom={14}
+                style={{ width: '100%', height: '100%' }}
+                disableDefaultUI
+                gestureHandling="greedy"
+                clickableIcons={false}
+                keyboardShortcuts={false}
+                onClick={() => setValittu(null)}
+              >
+                {paikatKartalla.map(p => (
+                  <AdvancedMarker
+                    key={p.id}
+                    position={{ lat: p.latitude, lng: p.longitude }}
+                    zIndex={valittu?.id === p.id ? 10 : 1}
+                    onClick={() => setValittu(p)}
+                  >
+                    <SimplePin laji={p.laji} />
+                  </AdvancedMarker>
+                ))}
+                <MapStyleController isDark={isDark} />
+              </Map>
 
               {/* X close button */}
               <button

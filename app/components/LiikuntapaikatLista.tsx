@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search } from 'lucide-react'
+import { Search, MapPin } from 'lucide-react'
+import { useGPS } from '@/hooks/useGPS'
+import { haversineKm, formatDistance } from '@/lib/geo'
 import { Input } from '@/components/ui/input'
 import { LAJIT_FILTTERI } from '@/lib/lajit'
 import PaikkaKortti, { korttiVariants } from './PaikkaKortti'
@@ -28,6 +30,18 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
   const [haku, setHaku]               = useState('')
   const [aktiivinen, setAktiivinen]   = useState('Kaikki')
   const [aktiivHinta, setAktiivHinta] = useState<number | null>(null)
+
+  const { status, coords, requestLocation } = useGPS()
+
+  const distancesMap = useMemo<Record<string, number>>(() => {
+    if (!coords) return {}
+    return Object.fromEntries(
+      paikat
+        .filter((p): p is typeof p & { latitude: number; longitude: number } =>
+          p.latitude != null && p.longitude != null)
+        .map(p => [p.id, haversineKm(coords.lat, coords.lng, p.latitude, p.longitude)])
+    )
+  }, [coords, paikat])
 
   const suodatettu = useMemo(() =>
     paikat.filter(p => {
@@ -100,6 +114,21 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
                   {laji}
                 </motion.button>
               ))}
+              <motion.button
+                onClick={requestLocation}
+                disabled={status === 'requesting'}
+                whileTap={{ scale: 0.95, transition: { duration: 0.1 } }}
+                className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold
+                  [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
+                  disabled:opacity-50
+                  ${status === 'granted'
+                    ? 'bg-[#111111] text-white'
+                    : 'border border-[rgba(0,0,0,0.1)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.2)]'
+                  }`}
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                {status === 'requesting' ? 'Haetaan...' : status === 'granted' ? 'Sijainti päällä' : 'Etäisyydet'}
+              </motion.button>
             </div>
           </div>
 
@@ -146,7 +175,11 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
             animate="show"
           >
             {suodatettu.map(p => (
-              <PaikkaKortti key={p.id} paikka={p} />
+              <PaikkaKortti
+                key={p.id}
+                paikka={p}
+                distanceStr={distancesMap[p.id] != null ? formatDistance(distancesMap[p.id]) : undefined}
+              />
             ))}
           </motion.div>
         ) : (

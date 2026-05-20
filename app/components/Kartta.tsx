@@ -11,6 +11,7 @@ import type { Liikuntapaikka } from '@/lib/types'
 import { DAY_MAP_STYLES, NIGHT_MAP_STYLES, isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
 import { useGPS } from '@/hooks/useGPS'
+import { haversineKm, formatDistance } from '@/lib/geo'
 
 const SPORT_ICONS: Record<string, LucideIcon> = {
   padel: Zap, kuntosali: Dumbbell, jooga: Leaf,
@@ -252,6 +253,13 @@ export default function Kartta({ paikat }: { paikat: Liikuntapaikka[] }) {
                     <p className="mt-1 flex items-center gap-1.5 text-xs text-[rgba(17,17,17,0.45)]">
                       <MapPin className="w-3 h-3 shrink-0" />
                       {[valittu.osoite, valittu.kaupunki].filter(Boolean).join(', ')}
+                    </p>
+                  )}
+
+                  {coords && valittu?.latitude != null && valittu?.longitude != null && (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs text-[rgba(17,17,17,0.45)]">
+                      <MapPin className="w-3 h-3 shrink-0" />
+                      {formatDistance(haversineKm(coords.lat, coords.lng, valittu.latitude, valittu.longitude))}
                     </p>
                   )}
 
