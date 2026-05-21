@@ -105,9 +105,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       .then(r => r.json())
       .then((d: { text: string; temp: number; code: number; fallback?: boolean }) => {
         setAiTeksti(d.text)
-        if (!d.fallback) {
-          try { sessionStorage.setItem(key, d.text) } catch {}
-        }
+        try { sessionStorage.setItem(key, d.text) } catch {}
       })
       .catch(() => {
         setAiTeksti(getTimeBasedFallback())
