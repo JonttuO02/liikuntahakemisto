@@ -142,12 +142,18 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     [paikat, aktiivinen]
   )
 
+  const lajitKartalla = useMemo(
+    () => new Set(LAJIT_FILTTERI.filter(l => l !== 'Kaikki').map(l => l.toLowerCase())),
+    []
+  )
+
   const paikatKartalla = useMemo(
     () => suodatettu.filter(
       (p): p is Liikuntapaikka & { latitude: number; longitude: number } =>
-        p.latitude != null && p.longitude != null && p.laji in lajiKonfig
+        p.latitude != null && p.longitude != null &&
+        lajitKartalla.has(p.laji.toLowerCase())
     ),
-    [suodatettu]
+    [suodatettu, lajitKartalla]
   )
 
   return (
