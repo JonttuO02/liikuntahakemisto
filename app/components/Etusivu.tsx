@@ -13,6 +13,7 @@ import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
 import { DAY_MAP_STYLES, NIGHT_MAP_STYLES, isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
+import { useGPS } from '@/hooks/useGPS'
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
 const EASE_MAP:   [number, number, number, number] = [0.4, 0, 0.2, 1]
 const NAV_H      = 56
@@ -42,15 +43,30 @@ function MapStyleController({ isDark }: { isDark: boolean }) {
   return null
 }
 
+function MapPanController({ coords }: { coords: { lat: number; lng: number } | null }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!map || !coords) return
+    map.panTo(coords)
+  }, [map, coords])
+  return null
+}
+
 function SimplePin({ laji }: { laji: string }) {
   const color = (lajiKonfig as Record<string, { color: string }>)[laji]?.color ?? '#6b7280'
+  const Icon = SPORT_ICONS[laji] ?? Activity
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 38" width={28} height={38} style={{ display: 'block' }}>
-      <path
-        d="M14 0C6.268 0 0 6.268 0 14c0 5.25 2.875 9.83 7.125 12.3L14 38l6.875-11.7C25.125 23.83 28 19.25 28 14 28 6.268 21.732 0 14 0Z"
-        fill={color}
-      />
-    </svg>
+    <div style={{ position: 'relative', width: 32, height: 42 }}>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 38" width={32} height={42} style={{ display: 'block' }}>
+        <path
+          d="M14 0C6.268 0 0 6.268 0 14c0 5.25 2.875 9.83 7.125 12.3L14 38l6.875-11.7C25.125 23.83 28 19.25 28 14 28 6.268 21.732 0 14 0Z"
+          fill={color}
+        />
+      </svg>
+      <div style={{ position: 'absolute', top: 5, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
+        <Icon size={16} color="white" strokeWidth={2.5} />
+      </div>
+    </div>
   )
 }
 
@@ -63,6 +79,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [typedDone, setTypedDone]   = useState(false)
   const [fullH, setFullH]           = useState(600)
   const [isDark, setIsDark]         = useState(isNightHour)
+  const { coords }                  = useGPS()
 
   useEffect(() => {
     const id = setInterval(() => setIsDark(isNightHour()), 60_000)
@@ -128,7 +145,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const paikatKartalla = useMemo(
     () => suodatettu.filter(
       (p): p is Liikuntapaikka & { latitude: number; longitude: number } =>
-        p.latitude != null && p.longitude != null
+        p.latitude != null && p.longitude != null && p.laji in lajiKonfig
     ),
     [suodatettu]
   )
@@ -251,6 +268,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   </AdvancedMarker>
                 ))}
                 <MapStyleController isDark={isDark} />
+                <MapPanController coords={coords} />
               </Map>
             </div>
           </motion.div>
@@ -310,6 +328,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   </AdvancedMarker>
                 ))}
                 <MapStyleController isDark={isDark} />
+                <MapPanController coords={coords} />
               </Map>
 
               {/* X close button */}
