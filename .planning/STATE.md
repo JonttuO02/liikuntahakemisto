@@ -2,7 +2,7 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in_progress
+status: complete
 last_updated: "2026-05-21T11:00:00Z"
 progress:
   total_phases: 5
@@ -16,7 +16,7 @@ progress:
 
 ## Current Status
 
-Phase: Phase 5 — planned (2 plans ready to execute)
+Phase: Milestone v1.0 — ALL 5 PHASES COMPLETE
 Last updated: 2026-05-21
 
 ## Project Reference
@@ -24,7 +24,7 @@ Last updated: 2026-05-21
 See: .planning/PROJECT.md (updated 2026-05-19)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 5 — AI Weather Widget
+**Current focus:** Verification + launch prep
 
 ## Phase Progress
 

@@ -6,6 +6,7 @@ import { MapPin, Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 
 import type { LucideIcon } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
+import { getOpenStatus } from '@/lib/aukiolo'
 import type { Liikuntapaikka } from '@/lib/types'
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
@@ -29,10 +30,19 @@ const SPORT_ICONS: Record<string, LucideIcon> = {
   liikunta:      Activity,
 }
 
-export default function PaikkaKortti({ paikka, distanceStr }: { paikka: Liikuntapaikka; distanceStr?: string }) {
-  const laji   = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
-  const hinta  = hintateksti(paikka.hinta_min, paikka.hinta_max)
-  const osoite = [paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')
+interface PaikkaKorttiProps {
+  paikka: Liikuntapaikka
+  distanceStr?: string
+  aukinyt?: boolean
+}
+
+export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false }: PaikkaKorttiProps) {
+  const laji        = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
+  const openStatus  = getOpenStatus(paikka.aukioloajat)
+  const hasDropIn   = paikka.hinta_kuvaus?.toLowerCase().includes('kertakäynti') ?? false
+  const hintaTeksti = hintateksti(paikka.hinta_min, paikka.hinta_max)
+  const priceToShow = paikka.hinta_kuvaus || (hintaTeksti !== '' ? hintaTeksti : null)
+  const osoite      = [paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')
   const Icon   = SPORT_ICONS[paikka.laji] ?? Activity
 
   return (
@@ -43,14 +53,21 @@ export default function PaikkaKortti({ paikka, distanceStr }: { paikka: Liikunta
     >
       <div className="p-4 flex flex-col gap-2.5 flex-1">
 
-        {/* Badge with sport icon */}
-        <span
-          className="self-start inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full text-white"
-          style={{ backgroundColor: laji.color }}
-        >
-          <Icon className="w-3 h-3" />
-          {laji.label}
-        </span>
+        {/* Badge with sport icon + optional drop-in badge */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full text-white"
+            style={{ backgroundColor: laji.color }}
+          >
+            <Icon className="w-3 h-3" />
+            {laji.label}
+          </span>
+          {hasDropIn && (
+            <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-[rgba(17,17,17,0.06)] text-[rgba(17,17,17,0.55)]">
+              Kertakäynti OK
+            </span>
+          )}
+        </div>
 
         {/* Name */}
         <Link href={`/paikat/${paikka.id}`}>
@@ -58,6 +75,26 @@ export default function PaikkaKortti({ paikka, distanceStr }: { paikka: Liikunta
             {paikka.nimi}
           </h3>
         </Link>
+
+        {/* Open status */}
+        {openStatus.status === 'open' && (
+          <div className="inline-flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+            <span className="text-xs font-bold text-green-700">
+              Auki nyt · {openStatus.hours}
+            </span>
+          </div>
+        )}
+        {openStatus.status === 'closed' && (
+          <div className="inline-flex items-center gap-2">
+            <span className="text-xs text-[rgba(17,17,17,0.45)]">Suljettu</span>
+          </div>
+        )}
+        {openStatus.status === 'no-data' && (
+          <span className="text-xs text-[rgba(17,17,17,0.35)]">
+            {aukinyt ? 'Aukioloajat tuntematon' : 'Aukioloajat lisätään pian'}
+          </span>
+        )}
 
         {/* Address */}
         {osoite && (
@@ -82,7 +119,7 @@ export default function PaikkaKortti({ paikka, distanceStr }: { paikka: Liikunta
               whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
               className="bg-[#111111] hover:bg-[#333333] text-white text-sm font-semibold py-2 px-4 rounded-full [transition:background-color_150ms_var(--ease-out)]"
             >
-              Varaa →
+              Varaa aika →
             </motion.a>
           ) : (
             <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}>
@@ -96,8 +133,8 @@ export default function PaikkaKortti({ paikka, distanceStr }: { paikka: Liikunta
           )}
 
           <div className="flex flex-col items-end gap-0.5 shrink-0">
-            {hinta ? (
-              <span className="text-sm font-semibold text-[#111111] tabular-nums">{hinta}</span>
+            {priceToShow ? (
+              <span className="text-sm font-bold text-[#111111] tabular-nums">{priceToShow}</span>
             ) : (
               <span className="text-xs text-[rgba(17,17,17,0.35)]">Lisätään pian</span>
             )}

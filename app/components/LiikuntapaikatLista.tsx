@@ -2,11 +2,12 @@
 
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, MapPin } from 'lucide-react'
+import { Search, MapPin, Clock } from 'lucide-react'
 import { useGPS } from '@/hooks/useGPS'
 import { haversineKm, formatDistance } from '@/lib/geo'
 import { Input } from '@/components/ui/input'
 import { LAJIT_FILTTERI } from '@/lib/lajit'
+import { getOpenStatus } from '@/lib/aukiolo'
 import PaikkaKortti, { korttiVariants } from './PaikkaKortti'
 
 import type { Liikuntapaikka } from '@/lib/types'
@@ -30,6 +31,7 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
   const [haku, setHaku]               = useState('')
   const [aktiivinen, setAktiivinen]   = useState('Kaikki')
   const [aktiivHinta, setAktiivHinta] = useState<number | null>(null)
+  const [aukinyt, setAukinyt]         = useState(false)
 
   const { status, coords, requestLocation } = useGPS()
 
@@ -50,9 +52,10 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
       const matchesHaku  = !haku || p.nimi.toLowerCase().includes(q) || p.kuvaus?.toLowerCase().includes(q) || p.osoite?.toLowerCase().includes(q)
       const hintaRef     = p.hinta_min ?? p.hinta_max
       const matchesHinta = aktiivHinta === null || hintaRef == null || hintaRef <= aktiivHinta
-      return matchesLaji && matchesHaku && matchesHinta
+      const matchesAuki  = !aukinyt || getOpenStatus(p.aukioloajat).status !== 'closed'
+      return matchesLaji && matchesHaku && matchesHinta && matchesAuki
     }),
-    [paikat, aktiivinen, haku, aktiivHinta]
+    [paikat, aktiivinen, haku, aktiivHinta, aukinyt]
   )
 
   return (
@@ -161,6 +164,23 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
               {suodatettu.length} paikkaa
             </motion.span>
           </div>
+
+          {/* Row 3: Auki nyt toggle */}
+          <div>
+            <motion.button
+              onClick={() => setAukinyt(v => !v)}
+              whileTap={{ scale: 0.95, transition: { duration: 0.1 } }}
+              className={`shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold
+                [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
+                ${aukinyt
+                  ? 'bg-[#111111] text-white'
+                  : 'glass-btn text-[rgba(17,17,17,0.6)] hover:text-[#111111]'
+                }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              Auki nyt
+            </motion.button>
+          </div>
         </div>
       </div>
 
@@ -168,7 +188,7 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
       <div className="max-w-5xl mx-auto px-4 pb-10">
         {suodatettu.length > 0 ? (
           <motion.div
-            key={`grid-${aktiivinen}-${aktiivHinta ?? 'all'}`}
+            key={`grid-${aktiivinen}-${aktiivHinta ?? 'all'}-${aukinyt}`}
             className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4"
             variants={gridVariants}
             initial="hidden"
@@ -179,6 +199,7 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
                 key={p.id}
                 paikka={p}
                 distanceStr={distancesMap[p.id] != null ? formatDistance(distancesMap[p.id]) : undefined}
+                aukinyt={aukinyt}
               />
             ))}
           </motion.div>
@@ -191,7 +212,7 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
           >
             <p className="text-[rgba(17,17,17,0.5)] text-lg">Ei tuloksia</p>
             <motion.button
-              onClick={() => { setHaku(''); setAktiivinen('Kaikki'); setAktiivHinta(null) }}
+              onClick={() => { setHaku(''); setAktiivinen('Kaikki'); setAktiivHinta(null); setAukinyt(false) }}
               whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
               className="mt-3 text-[#111111] text-sm font-medium underline underline-offset-2"
             >

@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Phone, MapPin, CircleDollarSign, Info, ChevronLeft } from 'lucide-react'
+import { Phone, MapPin, CircleDollarSign, Info, ChevronLeft, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
+import { formatGroupedHours } from '@/lib/aukiolo'
+import HoursTable from '@/app/components/HoursTable'
 import { buttonVariants } from '@/components/ui/button'
 
 export default async function PaikkaPage({ params }: { params: { id: string } }) {
@@ -18,9 +20,11 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
 
   if (!paikka) notFound()
 
-  const laji       = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
-  const hinta      = hintateksti(paikka.hinta_min, paikka.hinta_max)
-  const osoiteRivi = [paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')
+  const laji        = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
+  const hoursGroups = formatGroupedHours(paikka.aukioloajat ?? null)
+  const hintaTeksti = hintateksti(paikka.hinta_min, paikka.hinta_max)
+  const priceToShow = paikka.hinta_kuvaus || (hintaTeksti !== '' ? hintaTeksti : null)
+  const osoiteRivi  = [paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')
 
   return (
     <div className="min-h-screen bg-white">
@@ -75,6 +79,12 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
               </Row>
             )}
 
+            {hoursGroups.length > 0 && (
+              <Row icon={<Clock className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Aukioloajat">
+                <HoursTable groups={hoursGroups} />
+              </Row>
+            )}
+
             {paikka.puhelin && (
               <Row icon={<Phone className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Puhelin">
                 <a href={`tel:${paikka.puhelin}`}
@@ -84,9 +94,13 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
               </Row>
             )}
 
-            {hinta && (
+            {priceToShow && (
               <Row icon={<CircleDollarSign className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Hinta">
-                <span className="font-serif text-xl font-bold text-[#111111]">{hinta}</span>
+                {paikka.hinta_kuvaus ? (
+                  <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed">{paikka.hinta_kuvaus}</p>
+                ) : (
+                  <span className="font-serif text-xl font-bold text-[#111111]">{priceToShow}</span>
+                )}
               </Row>
             )}
 
