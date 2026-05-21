@@ -46,9 +46,11 @@ Declared values (multiples of 4):
 
 Exceptions:
 - Filter pill height: `py-2 px-4` (8px / 16px) — not a full scale step but established pattern
-- Card bottom row separator: `pt-2.5` (10px) — existing pattern, do not change
+- Card bottom row separator: `pt-3` (12px) — replaces former `pt-2.5` (10px was off-scale)
 - Touch targets: minimum 44px tall for all tappable controls (dropdowns, filter buttons, CTA)
-- AI widget padding: `px-4 py-3.5` (16px / 14px) — established, do not change
+- AI widget padding: `px-4 py-3` (16px / 12px) — replaces former `py-3.5` (14px was off-scale)
+- Sponsoroitu badge: `py-1` (4px) — replaces former `py-0.5` (2px was off-scale)
+- Price row gap: `gap-2` (8px) — replaces former `gap-1.5` (6px was off-scale)
 
 **Source:** CLAUDE.md, direct inspection of PaikkaKortti.tsx and LiikuntapaikatLista.tsx
 
@@ -56,21 +58,24 @@ Exceptions:
 
 ## Typography
 
+**Declared sizes (4 maximum):**
+
 | Role | Size | Weight | Line Height | Class / Usage |
 |------|------|--------|-------------|---------------|
-| Body / description | 14px | 400 (normal) | 1.625 (relaxed) | `text-sm leading-relaxed` — card descriptions, address rows |
-| UI label | 11px | 600 (semibold) | 1 | `text-[11px] font-semibold` — sport type badge, price badge |
-| Card name | 15px | 600 (semibold) | snug | `text-[15px] font-semibold leading-snug` — venue name in list card |
-| Section heading | 36–60px | 700 (bold) | tight | `text-4xl sm:text-6xl font-bold font-serif` — lista page H1 |
-| Profile heading | 30–36px | 700 (bold) | tight | `text-3xl sm:text-4xl font-bold font-serif` — profile page H1 |
-| Price display (card) | 14px | 700 (bold) | 1 | `text-sm font-bold tabular-nums` — card bottom-row price |
-| Price display (profile) | 20px | 700 (bold) | 1 | `text-xl font-bold font-serif` — profile price row |
-| Micro label / caps | 10px | 700 (bold) | 1 | `text-[10px] font-bold uppercase tracking-widest` — Row label in profile |
-| Muted / secondary | 14px | 400 | 1 | `text-sm text-[rgba(17,17,17,0.45)]` — addresses, subtitles |
+| Micro label / badge | 10px | 700 (bold) | 1 | `text-[10px] font-bold` — sport type badge, price badge, Sponsoroitu badge, profile row caps (`uppercase tracking-widest`) |
+| Body / UI label | 14px | 400 (normal) | 1.625 (relaxed) | `text-sm leading-relaxed` — card descriptions, address rows, muted secondary text, card names, price display values |
+| Subheading / price (profile) | 20px | 700 (bold) | 1 | `text-xl font-bold` — profile price row |
+| Display heading | 30–36px (responsive) | 700 (bold) | tight | `text-3xl sm:text-4xl font-bold font-serif` — all H1 headings (lista page and profile page) |
 
-**Active weights:** 400 (normal) and 600–700 (semibold/bold) only. No 500 medium in this phase.
+**Active weights:** 400 (normal) and 700 (bold) only. Semibold (600) is not used in this phase — elements formerly at 600 are upgraded to 700 where emphasis is required, or kept at 400 where they are secondary.
+
+**Weight assignment by role:**
+- Bold (700): venue name in card, price values, micro badge labels, section headings, sport dropdown text
+- Normal (400): addresses, descriptions, muted subtitles, "vain jäsenyys" text, city name in AI widget weather line
 
 **Font family:** Inter for all UI text. `font-serif` (default system serif) for display headings and bold price values on the profile page — this is an existing project pattern; do not replace with Inter.
+
+**Note on 60px removal:** The previous `text-6xl` (60px) declaration was collapsed into the responsive `text-3xl sm:text-4xl` display size. No heading in this phase requires a size beyond 36px.
 
 **Source:** Direct inspection of PaikkaKortti.tsx, LiikuntapaikatLista.tsx, app/paikat/[id]/page.tsx, CLAUDE.md
 
@@ -92,6 +97,8 @@ Exceptions:
 | Open status | #16a34a | `bg-green-500 text-green-700` | "Auki nyt" indicator dot + text |
 | Destructive | #dc2626 | `text-red-600` | Not present in this phase |
 
+**Primary focal point:** Venue name in each card (bold, 14px, `text-[#111111]`). Secondary focal point: price row immediately below the name — price is bold and visually distinct from address/description text.
+
 **Sport-type colors:** Defined exclusively in `lib/lajit.ts` via `lajiKonfig[laji].color`. Always applied via `style={{ backgroundColor: laji.color }}` — never hardcode hex values for sport badges in component JSX.
 
 **Accent reserved for:**
@@ -103,7 +110,7 @@ Exceptions:
 - Background: `bg-amber-100` (#fef3c7)
 - Text: `text-amber-700` (#b45309)
 - Border: `border border-amber-200` (#fde68a)
-- Size: `text-[10px] font-bold px-2 py-0.5 rounded-full`
+- Size: `text-[10px] font-bold px-2 py-1 rounded-full`
 - Amber is semantically correct for "sponsored" and does not conflict with the #111111 primary system. This is the only amber usage in the project.
 
 **GDPR page:**
@@ -134,7 +141,7 @@ bg-white min-h-screen
         └── <p> text-sm text-[rgba(17,17,17,0.65)] leading-relaxed mb-4
 ```
 
-**Navigation link:** Add a "Tietosuoja" text link to the NavBar (small, muted — `text-xs text-[rgba(17,17,17,0.45)]`) or as a footer link inside `LiikuntapaikatLista`. Do NOT add a BottomNav tab. Exact placement: footer area at the bottom of `LiikuntapaikatLista` content section, after the venue grid.
+**Navigation link:** Add a "Tietosuoja" text link to the NavBar (small, muted — `text-[10px] text-[rgba(17,17,17,0.45)]`) or as a footer link inside `LiikuntapaikatLista`. Do NOT add a BottomNav tab. Exact placement: footer area at the bottom of `LiikuntapaikatLista` content section, after the venue grid.
 
 **Content sections to include:**
 1. Rekisterinpitäjä (controller identity — project/developer name)
@@ -154,7 +161,7 @@ bg-white min-h-screen
 
 ```tsx
 {paikka.featured && (
-  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
     Sponsoroitu
   </span>
 )}
@@ -192,7 +199,7 @@ Price moves from the bottom row (right side of CTA row) to a dedicated position 
 ```tsx
 {/* Walk-in price at top */}
 {priceDisplay && (
-  <div className="flex items-baseline gap-1.5">
+  <div className="flex items-baseline gap-2">
     <span className="text-sm font-bold text-[#111111] tabular-nums">{priceDisplay}</span>
   </div>
 )}
@@ -217,7 +224,7 @@ Price moves from the bottom row (right side of CTA row) to a dedicated position 
 <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}>
   <Link
     href={`/paikat/${paikka.id}`}
-    className="border border-[rgba(0,0,0,0.12)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.25)] text-sm font-medium py-2 px-4 rounded-full [transition:color_150ms_var(--ease-out),border-color_150ms_var(--ease-out)]"
+    className="border border-[rgba(0,0,0,0.12)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.25)] text-sm font-bold py-2 px-4 rounded-full [transition:color_150ms_var(--ease-out),border-color_150ms_var(--ease-out)]"
   >
     Näytä tiedot
   </Link>
@@ -233,7 +240,7 @@ Price moves from the bottom row (right side of CTA row) to a dedicated position 
       href={paikka.varauslinkki}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-sm text-[#111111] font-medium underline underline-offset-2 break-all hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]"
+      className="text-sm text-[#111111] font-bold underline underline-offset-2 break-all hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]"
     >
       {paikka.varauslinkki}
     </a>
@@ -243,7 +250,7 @@ Price moves from the bottom row (right side of CTA row) to a dedicated position 
 
 The `Row` for booking URL goes after the Hinta row and before the Kuvaus row. Add `ExternalLink` to the import from `lucide-react` in `app/paikat/[id]/page.tsx`.
 
-**Etusivu bottom-sheet:** The "Varaa →" button in the map bottom-sheet (Etusivu.tsx lines ~485–502) is NOT removed — it is a different context (in-map quick action) and is not a "list card." Leave the bottom-sheet CTA unchanged.
+**Etusivu bottom-sheet:** The "Varaa →" button in the map bottom-sheet (Etusivu.tsx lines ~485–502) is NOT removed — it is a different context (in-map quick action, not a standalone CTA) and is not a "list card." The shortened label without explicit noun is acceptable here because the button appears immediately adjacent to the venue name and price, making the object of the action visually self-evident. Leave the bottom-sheet CTA unchanged.
 
 ---
 
@@ -259,7 +266,8 @@ The `Row` for booking URL goes after the Hinta row and before the Kuvaus row. Ad
 <select
   value={aktiivinen}
   onChange={e => setAktiivinen(e.target.value)}
-  className="h-10 rounded-full border border-[rgba(0,0,0,0.12)] bg-white px-4 text-sm font-semibold text-[#111111] focus:outline-none focus:ring-1 focus:ring-[#111111] [transition:border-color_150ms_var(--ease-out)] cursor-pointer"
+  aria-label="Suodata lajin mukaan"
+  className="h-10 rounded-full border border-[rgba(0,0,0,0.12)] bg-white px-4 text-sm font-bold text-[#111111] focus:outline-none focus:ring-1 focus:ring-[#111111] [transition:border-color_150ms_var(--ease-out)] cursor-pointer"
 >
   {LAJIT_FILTTERI.map(l => (
     <option key={l} value={l}>{l}</option>
@@ -298,7 +306,7 @@ Row 1: [City dropdown]  [Sport dropdown]  [Etäisyydet button]
   value={aktiivKaupunki}
   onChange={e => setAktiivKaupunki(e.target.value)}
   aria-label="Suodata kaupungin mukaan"
-  className="h-10 rounded-full border border-[rgba(0,0,0,0.12)] bg-white px-4 text-sm font-semibold text-[#111111] focus:outline-none focus:ring-1 focus:ring-[#111111] [transition:border-color_150ms_var(--ease-out)] cursor-pointer"
+  className="h-10 rounded-full border border-[rgba(0,0,0,0.12)] bg-white px-4 text-sm font-bold text-[#111111] focus:outline-none focus:ring-1 focus:ring-[#111111] [transition:border-color_150ms_var(--ease-out)] cursor-pointer"
 >
   {kaupungit.map(k => (
     <option key={k} value={k}>{k}</option>
@@ -331,7 +339,7 @@ const kaupungit = useMemo(
 **Spec:**
 
 ```tsx
-<span className="text-sm font-semibold text-[#111111] tabular-nums">
+<span className="text-sm font-bold text-[#111111] tabular-nums">
   {saa.temp}°{' '}
   <span className="font-normal text-[rgba(17,17,17,0.45)]">Tampere</span>
 </span>
@@ -346,7 +354,7 @@ City string is hardcoded as `"Tampere"` for Phase 6. Weather fetch is hardcoded 
 | Element | Copy | Notes |
 |---------|------|-------|
 | List card CTA | "Näytä tiedot" | Replaces "Varaa aika →" — always shown |
-| Map bottom-sheet CTA (booking) | "Varaa →" | Unchanged — kept in bottom-sheet context |
+| Map bottom-sheet CTA (booking) | "Varaa →" | Unchanged — in-map quick action; label without explicit noun is acceptable because venue name and price are immediately adjacent, making the action object visually self-evident |
 | Map bottom-sheet CTA (no booking) | "Näytä tiedot" | Unchanged |
 | Profile booking row label | "Varaussivu" | Row label (caps: "VARAUSSIVU") |
 | Membership-only price | "vain jäsenyys" | Lowercase. Shown only when hinta_kuvaus contains "jäsenyys" |
