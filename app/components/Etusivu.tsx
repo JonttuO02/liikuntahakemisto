@@ -14,7 +14,7 @@ import type { Liikuntapaikka } from '@/lib/types'
 import { DAY_MAP_STYLES, NIGHT_MAP_STYLES, isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
 import { useGPS } from '@/hooks/useGPS'
-import { pinUrl } from '@/lib/sportPins'
+import { pinUrl, userLocationPinUrl } from '@/lib/sportPins'
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
 const EASE_MAP:   [number, number, number, number] = [0.4, 0, 0.2, 1]
 const NAV_H      = 56
@@ -266,6 +266,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                     />
                   )
                 })}
+                {coords && (
+                  <Marker
+                    position={coords}
+                    icon={{ url: userLocationPinUrl(), scaledSize: new google.maps.Size(24, 24), anchor: new google.maps.Point(12, 12) }}
+                    zIndex={20}
+                    clickable={false}
+                  />
+                )}
                 <MapStyleController isDark={isDark} />
                 <MapPanController coords={coords} />
               </Map>
@@ -327,6 +335,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                     />
                   )
                 })}
+                {coords && (
+                  <Marker
+                    position={coords}
+                    icon={{ url: userLocationPinUrl(), scaledSize: new google.maps.Size(24, 24), anchor: new google.maps.Point(12, 12) }}
+                    zIndex={20}
+                    clickable={false}
+                  />
+                )}
                 <MapStyleController isDark={isDark} />
                 <MapPanController coords={coords} />
               </Map>
