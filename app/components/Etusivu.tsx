@@ -256,7 +256,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             {/* clip-path clips at render level — the only reliable way to round Google Maps corners */}
             <div style={{ width: '100%', height: '100%', clipPath: 'inset(0 round 24px)', position: 'relative' }}>
               <Map
-                mapId="DEMO_MAP_ID"
+                mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID"}
                 defaultCenter={TAMPERE}
                 defaultZoom={12}
                 style={{ width: '100%', height: '100%' }}
@@ -313,7 +313,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               transition={{ duration: 0.45, ease: EASE_MAP }}
             >
               <Map
-                mapId="DEMO_MAP_ID"
+                mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID"}
                 defaultCenter={TAMPERE}
                 defaultZoom={14}
                 style={{ width: '100%', height: '100%' }}

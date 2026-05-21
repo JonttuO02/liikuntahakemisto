@@ -150,7 +150,7 @@ export default function Kartta({ paikat }: { paikat: Liikuntapaikka[] }) {
   return (
     <div className="relative w-full h-[calc(100svh-56px)] mt-0">
       <Map
-        mapId="DEMO_MAP_ID"
+        mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID"}
         defaultCenter={TAMPERE}
         defaultZoom={14}
         style={{ width: '100%', height: '100%' }}
