@@ -5,8 +5,8 @@
 This project uses the GSD (Get Shit Done) workflow. Planning artifacts live in `.planning/`.
 
 **Current state:** See `.planning/STATE.md` — always check this before starting work.
-**Roadmap:** `.planning/ROADMAP.md` — 5 phases, start with Phase 1.
-**Requirements:** `.planning/REQUIREMENTS.md` — 19 v1 requirements with REQ-IDs.
+**Roadmap:** `.planning/ROADMAP.md` — Phases 6–11 (v1.1 active milestone).
+**Requirements:** `.planning/REQUIREMENTS.md` — 19 v1.1 requirements with REQ-IDs.
 
 **Phase workflow:**
 1. `/gsd:discuss-phase N` — gather context
@@ -14,12 +14,13 @@ This project uses the GSD (Get Shit Done) workflow. Planning artifacts live in `
 3. `/gsd:execute-phase N` — run the plan
 4. `/gsd:verify-work N` — verify against success criteria
 
-**Key constraints from research:**
-- Fix Phase 1 (security + schema) before any feature work — critical bugs exist
+**Key constraints (v1.0 shipped, v1.1 active):**
 - URL routing: always use `?nakyma=kartta` (3 competing schemes exist — choose this one)
 - GPS: client-side only, never URL params — auto-requests on mount, map centers on user automatically
 - AI widget: never SSR, use `/api/saasuositus` Route Handler, non-blocking load
 - Supabase writes: service role key only; anon key is read-only after RLS
+- LEGAL-01 must be live (Phase 6) before auth (Phase 9) ships
+- AdvancedMarker migration is a Phase 7 prerequisite — no new map features before it
 
 ---
 
@@ -27,28 +28,41 @@ This project uses the GSD (Get Shit Done) workflow. Planning artifacts live in `
 
 ## Color System
 
-Primary palette is indigo. Never substitute other blues.
+The project uses a custom glassmorphism design system. Primary visual primitives are the `.glass`, `.glass-hover`, `.glass-btn`, and `.glass-nav` utility classes defined in `app/globals.css` — always use these, never replicate them inline.
 
-| Token | Tailwind class | Hex | Usage |
+| Role | Value | Tailwind / class | Usage |
 |---|---|---|---|
-| Background | `bg-indigo-50` | `#EEF2FF` | Page background, wave SVG fill |
-| Hero / NavBar | `bg-indigo-600` | `#4F46E5` | Top nav, hero sections |
-| Accent | `bg-indigo-500` | `#6366F1` | Active buttons, CTA, active nav tabs |
-| Accent hover | `hover:bg-indigo-600` | `#4F46E5` | Button hover state |
-| Card background | `bg-white` | `#FFFFFF` | All cards |
-| Heading text | `text-indigo-950` | `#1E1B4B` | Card titles |
-| Muted text | `text-indigo-300` | `#A5B4FC` | Hero subtitles, addresses in hero |
-| Filter active | `bg-indigo-500 text-white` | — | Active laji filter pill |
+| Page background | `#ffffff` | `bg-white` | Page backgrounds, card backgrounds |
+| Card / widget surface | `rgba(255,255,255,0.60–0.95)` | `.glass` | PaikkaKortti, AI widget, profile content card |
+| Foreground primary | `#111111` | `text-[#111111]` | Headings, active buttons, CTA labels |
+| Foreground muted | `rgba(17,17,17,0.45)` | `text-[rgba(17,17,17,0.45)]` | Addresses, subtitles, secondary text |
+| Foreground disabled | `rgba(17,17,17,0.35)` | `text-[rgba(17,17,17,0.35)]` | "Lisätään pian" placeholders |
+| Accent — interactive | `#111111` | `bg-[#111111]` | Active filter pills, primary CTA buttons, active nav states |
+| Accent hover | `#333333` | `hover:bg-[#333333]` | Button hover state |
+| Border default | `rgba(0,0,0,0.07)` | `border-[rgba(0,0,0,0.07)]` | Card separators, container borders |
+| Border interactive | `rgba(0,0,0,0.12)` | `border-[rgba(0,0,0,0.12)]` | Input fields, outlined buttons |
+| Open status | `#16a34a` | `bg-green-500 text-green-700` | "Auki nyt" indicator dot + text |
+| Sponsored badge | `#fef3c7` / `#b45309` | `bg-amber-100 text-amber-700 border-amber-200` | "Sponsoroitu" badge — the only amber in the project |
+| Destructive | `#dc2626` | `text-red-600` | Destructive actions |
+
+**NavBar and hero sections** still use the legacy indigo palette from v1.0 (`bg-indigo-600`, `bg-indigo-800`) — these are not part of the glassmorphism system and should not be changed outside a dedicated nav redesign phase.
 
 Sport-type colors (accent bars and badges) are defined in `lib/lajit.ts`. Do not inline sport colors in components.
 
 ## Typography
 
-- Font: Inter (`next/font/google`), variable `--font-sans`
-- Hero heading: `text-3xl sm:text-4xl font-extrabold text-white leading-tight tracking-tight`
-- Card title: `font-bold text-indigo-950 text-[15px] leading-snug`
-- Label caps: `text-xs font-bold text-gray-400 uppercase tracking-wide`
-- Price: `text-xl font-bold text-indigo-600`
+- Font: Inter (`next/font/google`), variable `--font-sans`; `font-serif` (system serif) for display headings and profile price — existing pattern, do not replace
+- **4 sizes only** — never declare more than 4 distinct font sizes in a phase:
+  - Micro / badge: `text-[10px] font-bold` — sport pill, Sponsoroitu badge, caps labels
+  - Body / UI label: `text-sm font-bold` or `text-sm` (400) — card names, descriptions, addresses, price values
+  - Subheading / profile price: `text-xl font-bold`
+  - Display heading: `text-3xl sm:text-4xl font-bold font-serif`
+- **2 weights only**: 400 (normal) and 700 (bold). Never use 600 (semibold).
+- Hero heading: `text-3xl sm:text-4xl font-bold text-white leading-tight tracking-tight`
+- Card title: `font-bold text-[#111111] text-sm`
+- Label caps: `text-[10px] font-bold text-[#111111] uppercase tracking-widest`
+- Price (card): `text-sm font-bold text-[#111111] tabular-nums`
+- Price (profile): `text-xl font-bold text-[#111111]`
 
 ## Animation Principles (Emil Kowalski style)
 
@@ -84,19 +98,21 @@ Wrap lista/kartta with `<AnimatePresence mode="wait">`. Each child gets `initial
 ## Card Structure (PaikkaKortti)
 
 ```
-rounded-2xl shadow-sm → hover:shadow-xl (transition-shadow duration-300)
-├── h-2 accent bar (sport color from lajiKonfig.accentBg)
-└── p-5 flex flex-col gap-3
-    ├── name + badge row
+.glass rounded-2xl (glassmorphism surface)
+└── p-4 flex flex-col gap-3
+    ├── badge row: [sport pill] [Sponsoroitu?] [Kertakäynti OK?]
+    ├── venue name link (text-sm font-bold text-[#111111])
+    ├── open status indicator
+    ├── price row (text-sm font-bold text-[#111111] tabular-nums)
+    │   └── "vain jäsenyys" if hinta_kuvaus contains "jäsenyys" (muted, not bold)
     ├── address row (optional)
-    ├── price (optional, text-indigo-600 font-bold)
     ├── description (line-clamp-2, optional)
-    └── CTA button (mt-auto, rounded-full)
-        ├── if varauslinkki: filled indigo-600 "Varaa aika →"
-        └── else: outlined indigo "Lue lisää →"
+    └── bottom row (mt-auto)
+        ├── CTA: outlined "Näytä tiedot" (border-[rgba(0,0,0,0.12)], rounded-full)
+        └── distance string (right side, if available)
 ```
 
-Cards always `flex flex-col` so the CTA sticks to the bottom with `mt-auto`.
+Cards always `flex flex-col` so the CTA sticks to the bottom with `mt-auto`. "Varaa aika" button is not shown on list cards — booking URL appears as plain text on the profile page only.
 
 ## Hero + Wave Divider
 
