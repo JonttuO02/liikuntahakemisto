@@ -1,523 +1,873 @@
-# Architecture Patterns
+# Architecture Patterns: v1.1 Feature Integration
 
-**Domain:** Finnish sports venue discovery app (location-aware, weather-informed, AI-assisted)
-**Researched:** 2026-05-19
-**Overall confidence:** HIGH — based on direct codebase analysis + verified Next.js 14 and Supabase documentation
-
----
-
-## Current Architecture (as-built)
-
-```
-Browser
-  └── Next.js App Router (Next 14, SSR)
-        ├── app/page.tsx (server component, SSR)
-        │     └── supabase.from('liikuntapaikat').select(...).order('nimi')
-        │           ├── → <Etusivu paikat={data} />    (default view)
-        │           └── → <LiikuntapaikatLista paikat={data} />  (?view=lista)
-        │
-        ├── app/paikat/[id]/page.tsx (server component, SSR per request)
-        │
-        └── app/api/hae-paikat/route.ts  (admin-only, manual trigger)
-              Google Places Text Search → Place Details (parallel)
-              → supabase.upsert(rivit, { onConflict: 'place_id' })
-
-Client components (all 'use client'):
-  Etusivu.tsx        — scroll-driven map expand, weather widget (Open-Meteo), filter pills
-  LiikuntapaikatLista.tsx — list/map toggle, text search, sport/price filters
-  PaikkaKortti.tsx   — venue card
-  Kartta.tsx         — standalone Google Map (lazy-loaded)
-  NavBar.tsx / BottomNav.tsx
-
-External APIs:
-  Supabase (Postgres) — venue data store
-  Google Maps JS API  — map rendering (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY)
-  Google Places API   — data ingestion only (GOOGLE_PLACES_API_KEY, server-only)
-  Open-Meteo          — weather, fetched client-side in Etusivu useEffect
-```
-
-Current Supabase schema (inferred from select queries and upsert payload):
-```
-liikuntapaikat
-  id            serial PK
-  place_id      text UNIQUE  -- Google Places ID, upsert conflict key
-  nimi          text
-  laji          text         -- sport slug: 'kuntosali', 'uinti', 'padel', etc.
-  osoite        text
-  kaupunki      text
-  latitude      float8
-  longitude     float8
-  hinta_min     numeric
-  hinta_max     numeric
-  varauslinkki  text
-  kuvaus        text
-  puhelin       text
-```
+**Project:** Liikuntahakemisto v1.1  
+**Base:** Next.js 14 App Router + Supabase + @vis.gl/react-google-maps  
+**Researched:** 2026-05-21  
+**Confidence:** HIGH (verified against official Supabase docs, @vis.gl docs, Next.js docs)
 
 ---
 
-## Question 1: GPS Architecture — Server vs Client, URL vs State
+## Existing Architecture Snapshot
 
-**Answer: Client-only via `navigator.geolocation`, stored in React state, NOT in URL.**
+The v1.0 codebase has a clear server/client split:
 
-**Rationale (from Next.js official docs):**
-Browser-only APIs — including `Navigator.geolocation` — cannot run in server components. There is no server-side GPS; the server has no access to the user's physical location. GPS must live in a client component.
+- `app/page.tsx` — async Server Component, fetches `liikuntapaikat` with anon key, passes data down as props
+- `app/components/Etusivu.tsx` — large `'use client'` component, owns all map + AI widget state
+- `app/components/LiikuntapaikatLista.tsx` — `'use client'`, owns list/filter state
+- `lib/supabase.ts` — exports `supabase` (anon, client+server) and `supabaseAdmin` (service role, server-only)
+- `app/components/MapProvider.tsx` — thin `'use client'` wrapper for `APIProvider`, in `layout.tsx`
+- `hooks/useGPS.ts` — `'use client'` hook, auto-requests on mount, returns `{ status, coords, requestLocation }`
+- `lib/sportPins.ts` — generates SVG data-URLs for map pins (existing `Marker`, not `AdvancedMarker`)
 
-**Decision: React state, not URL params.**
+**Critical constraint:** the current map uses the legacy `Marker` component (deprecated as of Google Maps API v3.56). All v1.1 map features (clustering, accuracy ring, "Näytä kartalla" focus) require migrating to `AdvancedMarker`. This migration is a prerequisite for MAP-04, MAP-05, MAP-06, MAP-07.
 
-URL params are appropriate for shareable/bookmarkable state (view mode, filters). GPS coordinates should NOT go in the URL because:
-1. The location changes on every visit and is personal — sharing a GPS-parameterized URL would expose the user's location to the recipient.
-2. The Geolocation API is permission-gated and async — there is no value to read from the URL before permission is granted.
-3. Coordinates in URLs create ugly, non-shareable URLs.
+---
 
-GPS state belongs in the component that owns the map. That is `Etusivu.tsx`.
+## Feature 1: Supabase Auth (AUTH-01, AUTH-02, AUTH-03)
 
-**Implementation pattern:**
+**Pattern:** `@supabase/ssr` middleware + server-side session, client-side `onAuthStateChange`.
 
-```tsx
-// Inside Etusivu.tsx (already 'use client')
+### Package change
 
-type GpsStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable'
+```bash
+npm install @supabase/ssr
+```
 
-const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle')
-const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+`@supabase/ssr` replaces the deprecated `@supabase/auth-helpers-nextjs`. The existing `@supabase/supabase-js` (already installed) stays — `@supabase/ssr` wraps it with cookie-aware clients for the App Router's three environments: browser, Server Component, and middleware.
 
-function requestGps() {
-  if (!navigator.geolocation) {
-    setGpsStatus('unavailable')
-    return
-  }
-  setGpsStatus('requesting')
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude })
-      setGpsStatus('granted')
-    },
-    () => setGpsStatus('denied'),
-    { timeout: 8000, maximumAge: 60_000 }
+### New files
+
+| File | Type | Purpose |
+|------|------|---------|
+| `lib/supabase-server.ts` | Server util | `createServerClient` for Server Components and Route Handlers |
+| `lib/supabase-middleware.ts` | Middleware util | `createServerClient` configured for middleware cookie write |
+| `middleware.ts` (project root) | Next.js middleware | Session refresh on every request before Server Components run |
+| `app/auth/callback/route.ts` | Route Handler | OAuth PKCE code exchange, redirects to `/` after |
+| `app/auth/login/page.tsx` | Server Component | Login page shell (thin, renders AuthModal) |
+| `app/components/AuthModal.tsx` | Client Component | Email + Google OAuth sign-in UI, calls `signInWithOAuth` |
+| `app/components/AuthProvider.tsx` | Client Component | React context providing `{ user, supabase }` to all client components |
+| `hooks/useAuth.ts` | Client hook | Reads `{ user, supabase }` from AuthProvider context |
+
+### Middleware pattern (HIGH confidence — official Supabase docs)
+
+```typescript
+// middleware.ts
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({ request })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return request.cookies.getAll() },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+  // MUST call getUser() — this is what actually refreshes the session token
+  await supabase.auth.getUser()
+  return supabaseResponse
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+}
+```
+
+**Why middleware is required:** Server Components can read cookies but cannot write them. The middleware is the only place in the request lifecycle where the auth token can be refreshed and the updated cookie written to the response before it reaches the browser or any Server Component.
+
+### Server Component client
+
+```typescript
+// lib/supabase-server.ts
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export function createSupabaseServer() {
+  const cookieStore = cookies()
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll() },
+        setAll(cookiesToSet) {
+          // Errors here are safe to ignore when middleware is running
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {}
+        },
+      },
+    }
   )
 }
 ```
 
-**No-GPS graceful degradation:**
-- `idle`: Show "Käytä sijaintiani" button (GPS never requested).
-- `requesting`: Show spinner on the button, disable it.
-- `granted`: Show blue dot on map, center map on user, show nearby venues first.
-- `denied`: Show subtle inline message "Sijaintia ei saatu — näytetään Tampere" — do NOT block the UI or show modal.
-- `unavailable`: Same as `denied`. Fall back silently to Tampere center coordinates.
+Always use `supabase.auth.getUser()` (not `getSession()`) in Server Components — `getUser()` validates the JWT signature cryptographically against Supabase's published public keys; `getSession()` only reads the cookie without validation.
 
-**User marker on map:** Render a distinct marker (blue circle with white ring, distinct from venue indigo markers) at `userLocation`. Do not use `google.maps.SymbolPath.CIRCLE` with the same style as venues — users must instantly distinguish "this is me" from "this is a venue."
+### Client Component auth (AuthProvider)
 
-**Distance sorting:** Once GPS is granted, sort `suodatettu` venues by distance from `userLocation` using the Haversine formula (a ~10-line pure function in `lib/utils.ts`). This replaces the current `order('nimi')` ordering in the client-side filter memo. The SSR sort-by-name remains as the initial state before GPS.
+```typescript
+// app/components/AuthProvider.tsx
+'use client'
+import { createBrowserClient } from '@supabase/ssr'
+import { useEffect, useState, createContext, useContext } from 'react'
+import { useRouter } from 'next/navigation'
+import type { User } from '@supabase/supabase-js'
+
+// Create ONCE at module level — never inside a component render
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+export const AuthContext = createContext<{ user: User | null; supabase: typeof supabase }>({
+  user: null, supabase,
+})
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null)
+      router.refresh()  // triggers Server Components to re-fetch with new session
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return <AuthContext.Provider value={{ user, supabase }}>{children}</AuthContext.Provider>
+}
+```
+
+**Important:** Do NOT create multiple `createBrowserClient` instances across different components. A single instance at module scope is correct. Multiple instances open duplicate realtime connections.
+
+Add `<AuthProvider>` to `app/layout.tsx` wrapping `<main>`.
+
+### OAuth callback route
+
+```typescript
+// app/auth/callback/route.ts
+import { NextResponse } from 'next/server'
+import { createSupabaseServer } from '@/lib/supabase-server'
+
+export async function GET(request: Request) {
+  const { searchParams, origin } = new URL(request.url)
+  const code = searchParams.get('code')
+  if (code) {
+    const supabase = createSupabaseServer()
+    await supabase.auth.exchangeCodeForSession(code)
+  }
+  return NextResponse.redirect(origin)
+}
+```
+
+**Google Cloud Console:** Add `https://yourdomain.com/auth/callback` to Authorized Redirect URIs.  
+**Supabase Dashboard:** Auth → URL Configuration → add the same callback URL to Redirect URLs.
+
+### Impact on existing `lib/supabase.ts`
+
+The existing `supabase` export (anon browser client) continues to work for read-only public data in Server Components — it is used in `app/page.tsx` for listing venues and does not need auth context. It does NOT refresh session cookies; that is the middleware's job.
+
+For auth-gated pages (suosikit), replace the anon client with `createSupabaseServer()` from `lib/supabase-server.ts`.
 
 ---
 
-## Question 2: AI Weather Recommendation Pipeline
+## Feature 2: Favorites Table (AUTH-02)
 
-**Answer: Weather fetch is client-side (already is). AI call must be an API Route. Render is client-side with skeleton states.**
-
-**Why the AI call must be an API Route:**
-The Claude API key is secret — it must never appear in client bundle or browser network tabs. Next.js only hides environment variables from the client bundle if they are NOT prefixed with `NEXT_PUBLIC_`. The AI call must happen server-side. API Routes are the correct mechanism in App Router for this: they run in Node.js, have access to non-prefixed env vars, and can be called by client components via `fetch('/api/...')`.
-
-**Why NOT SSR (server component) for the AI widget:**
-SSR renders at request time on the server. To SSR the AI recommendation, `app/page.tsx` would need to:
-1. Fetch weather from Open-Meteo (server-side).
-2. Call Claude with weather data.
-3. Block the entire page render on the AI response.
-
-This would add 500–2000ms to Time-To-First-Byte for every page load. The weather widget is progressive enhancement — it should not gate the rest of the page. Client-side fetch with skeleton state is the correct pattern here.
-
-**Pipeline flow:**
-
-```
-Etusivu mounts (client)
-  │
-  ├── useEffect #1: fetch Open-Meteo (direct, public API, no key needed)
-  │     → setSaa({ temp, code })
-  │     → show weather icon + temp immediately
-  │
-  └── useEffect #2: triggered once saa is set
-        fetch('/api/saa-suositus', { method: 'POST', body: JSON.stringify({ temp, code }) })
-          │
-          └── app/api/saa-suositus/route.ts (server)
-                Calls Claude API with CLAUDE_API_KEY (non-public env var)
-                Prompt: "Given weather code {code} and temp {temp}°C in Tampere,
-                         recommend ONE specific sport activity in Finnish. 1 sentence."
-                Returns: { suositus: "Tänään sopii erinomaisesti..." }
-          │
-          └── setSuositus(data.suositus)
-                Replace current hard-coded parseSaa() suggestion with AI text
-```
-
-**Skeleton states (already partially implemented):**
-- Weather loading: animated pulse divs already in Etusivu.tsx — keep as-is.
-- AI suggestion loading: show the hard-coded `parseSaa()` suggestion as immediate fallback, then replace with AI text when it arrives. This means users always see something useful, never a blank widget.
-
-**Latency budget:**
-- Open-Meteo: ~100–200ms
-- Claude API: ~500–1500ms
-- Total before AI widget is "complete": ~700–1700ms from mount
-
-Show Open-Meteo data immediately. Show AI text as progressive enhancement. Never block.
-
-**New API route to create:**
-```
-app/api/saa-suositus/route.ts
-  POST body: { temp: number, code: number }
-  Calls Claude API (Anthropic SDK or direct fetch)
-  Returns: { suositus: string }
-  Error: returns parseSaa() fallback text so client always has something
-```
-
-**Environment variable to add:**
-```
-CLAUDE_API_KEY=sk-ant-...   (server-only, no NEXT_PUBLIC_ prefix)
-```
-
----
-
-## Question 3: Supabase Schema Changes
-
-### New columns for `liikuntapaikat`
-
-Add via Supabase SQL editor (ALTER TABLE). The upsert in `hae-paikat/route.ts` will continue to work — new columns not in the upsert payload will default to NULL without conflict.
+### Schema migration
 
 ```sql
--- Drop-in pricing (kertakäyntihinta)
--- hinta_min and hinta_max already exist, covers the core case.
--- Add a text label for when price is not numeric (e.g. "Jäsenmaksu vaaditaan"):
-ALTER TABLE liikuntapaikat
-  ADD COLUMN IF NOT EXISTS hinta_kuvaus text;
+-- supabase/migrations/YYYYMMDDHHMMSS_add_suosikit.sql
 
--- Opening hours (aukioloajat)
--- Use JSONB for structured weekly schedule.
--- Structure: { "ma": "06:00-22:00", "ti": "06:00-22:00", ... "su": "suljettu" }
--- JSONB is queryable if needed later; text is not.
-ALTER TABLE liikuntapaikat
-  ADD COLUMN IF NOT EXISTS aukioloajat jsonb;
+CREATE TABLE suosikit (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  paikka_id   integer NOT NULL REFERENCES liikuntapaikat(id) ON DELETE CASCADE,
+  created_at  timestamptz DEFAULT now(),
+  UNIQUE (user_id, paikka_id)  -- prevent duplicate favorites
+);
 
--- Sport category (for future multi-sport venues)
--- Current 'laji' is a single text slug. Keep it — it drives filtering.
--- Add 'lajit_lista' as jsonb array for venues that serve multiple sports.
-ALTER TABLE liikuntapaikat
-  ADD COLUMN IF NOT EXISTS lajit_lista jsonb;  -- e.g. ["padel", "tennis", "kuntosali"]
+ALTER TABLE suosikit ENABLE ROW LEVEL SECURITY;
 
--- Is currently open? (computed field, not stored — derive from aukioloajat client-side)
--- Do NOT add an 'avoinna_nyt' boolean column — it would be stale immediately.
--- Compute it in the client from aukioloajat + current time.
+-- Index on user_id — every favorites query filters by this column
+CREATE INDEX suosikit_user_id_idx ON suosikit(user_id);
 
--- Ad slot / featured flag (mainostila)
-ALTER TABLE liikuntapaikat
-  ADD COLUMN IF NOT EXISTS featured boolean DEFAULT false;
-ALTER TABLE liikuntapaikat
-  ADD COLUMN IF NOT EXISTS featured_expires_at timestamptz;
+-- RLS: users see and manage only their own favorites
+-- (SELECT auth.uid()) caches the call per statement for performance
+CREATE POLICY "suosikit_select" ON suosikit
+  FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "suosikit_insert" ON suosikit
+  FOR INSERT TO authenticated
+  WITH CHECK ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "suosikit_delete" ON suosikit
+  FOR DELETE TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
+-- No UPDATE policy needed — favorites are insert/delete only (toggle)
 ```
 
-### Updated `Liikuntapaikka` TypeScript type
+**Design notes:**
+- `(SELECT auth.uid())` wrapping — Postgres optimizer caches this per statement, not per row. This matters at scale.
+- Both FK columns have `ON DELETE CASCADE` — deleting a user or a venue cleans up favorites automatically.
+- No UPDATE policy — the toggle pattern (add/remove) does not need UPDATE.
+- Anon users cannot access this table — policies are `TO authenticated` only, so unauthenticated attempts silently return no rows.
 
-Move from `LiikuntapaikatLista.tsx` to `lib/types.ts` (fixes existing anti-pattern):
+### Data flow
+
+```
+hooks/useSuosikit.ts (client)
+  → useAuth() → gets supabase client + user
+  → supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
+  → local Set<number> of favorited paikka_ids
+  → toggle(id): optimistic update → insert or delete → rollback on error
+```
+
+Favorites are NOT fetched server-side on the public listing page. They are user-specific client state, loaded after hydration and auth check. This avoids blocking the SSR render for anonymous users (the majority).
+
+### Modified files
+- `app/suosikit/page.tsx` — replace placeholder with auth-gated page; fetch `suosikit` joined with `liikuntapaikat`
+- `app/components/PaikkaKortti.tsx` — add heart toggle button (visible only when `user !== null`)
+- `hooks/useSuosikit.ts` — new hook: fetch user's favorites, optimistic toggle
+
+---
+
+## Feature 3: Map Clustering (MAP-06)
+
+**Package:** `@googlemaps/markerclusterer` is already in `package.json` (v2.6.2). No new installs needed.
+
+**Prerequisite:** Migrate fullscreen map's `Marker` to `AdvancedMarker`. The `@googlemaps/markerclusterer` v2 expects `AdvancedMarkerElement` objects; passing legacy `Marker` elements causes silent failures.
+
+### Clustering pattern (HIGH confidence — visgl official example + Discussion #325)
+
+The clusterer is created imperatively (not declaratively) because `MarkerClusterer` does not have a React wrapper — it is a vanilla JS class. The React integration uses `useRef` + `useEffect` to manage its lifecycle, and a `setMarkerRef` callback to register/unregister each `AdvancedMarker` as it mounts/unmounts.
 
 ```typescript
-// lib/types.ts
-export type AukioloajatMap = Partial<Record<
-  'ma' | 'ti' | 'ke' | 'to' | 'pe' | 'la' | 'su',
-  string  // "09:00-21:00" | "suljettu"
->>
+// Extract into app/components/ClusteredMarkers.tsx (new)
+'use client'
+import { AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
+import { MarkerClusterer } from '@googlemaps/markerclusterer'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
-export type Liikuntapaikka = {
-  id: number
-  place_id: string | null
-  nimi: string
-  laji: string
-  lajit_lista: string[] | null      // new: multi-sport
-  osoite: string | null
-  kaupunki: string | null
-  latitude: number | null
-  longitude: number | null
-  hinta_min: number | null
-  hinta_max: number | null
-  hinta_kuvaus: string | null       // new: "Jäsenmaksu vaaditaan"
-  aukioloajat: AukioloajatMap | null  // new: weekly schedule
-  varauslinkki: string | null
-  kuvaus: string | null
-  puhelin: string | null
-  featured: boolean                  // new: ad slot
-  featured_expires_at: string | null // new: ISO timestamp
+export function ClusteredMarkers({ paikat, onSelect }: {
+  paikat: Array<Liikuntapaikka & { latitude: number; longitude: number }>
+  onSelect: (p: Liikuntapaikka) => void
+}) {
+  const map = useMap()
+  const [markers, setMarkers] = useState<Record<number, google.maps.marker.AdvancedMarkerElement>>({})
+  const clustererRef = useRef<MarkerClusterer | null>(null)
+
+  useEffect(() => {
+    if (!map) return
+    if (!clustererRef.current) {
+      clustererRef.current = new MarkerClusterer({ map })
+    }
+  }, [map])
+
+  useEffect(() => {
+    clustererRef.current?.clearMarkers()
+    clustererRef.current?.addMarkers(Object.values(markers))
+  }, [markers])
+
+  const setMarkerRef = useCallback(
+    (marker: google.maps.marker.AdvancedMarkerElement | null, id: number) => {
+      setMarkers(prev => {
+        if (marker && prev[id] === marker) return prev
+        if (!marker && !prev[id]) return prev
+        const next = { ...prev }
+        if (marker) next[id] = marker
+        else delete next[id]
+        return next
+      })
+    },
+    []
+  )
+
+  return (
+    <>
+      {paikat.map(p => {
+        const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
+        return (
+          <AdvancedMarker
+            key={p.id}
+            position={{ lat: p.latitude, lng: p.longitude }}
+            ref={marker => setMarkerRef(marker, p.id)}
+            onClick={() => onSelect(p)}
+          >
+            <div dangerouslySetInnerHTML={{ __html: pinSvgString(color, p.laji) }} />
+          </AdvancedMarker>
+        )
+      })}
+    </>
+  )
 }
 ```
 
-### Updated SSR Supabase select query
+`pinSvgString()` is a new variant of the existing `pinUrl()` in `lib/sportPins.ts` that returns raw SVG markup instead of a data URL, since `AdvancedMarker` accepts DOM children rather than `icon` URLs.
+
+### Zoom-dependent info cards
+
+Listen to `onCameraChanged` on the `<Map>` component to track current zoom. At `zoom >= 15`, render a small info card as children of the `AdvancedMarker` instead of just the pin. MarkerClusterer automatically disbands clusters at high zoom; individual markers appear and can show richer content.
 
 ```typescript
-// app/page.tsx
-await supabase
-  .from('liikuntapaikat')
-  .select(`
-    id, place_id, nimi, laji, lajit_lista,
-    osoite, kaupunki, latitude, longitude,
-    hinta_min, hinta_max, hinta_kuvaus,
-    aukioloajat,
-    varauslinkki, kuvaus, puhelin,
-    featured, featured_expires_at
-  `)
-  .order('featured', { ascending: false })  // featured venues first
-  .order('nimi')
+// In Etusivu.tsx:
+const [zoom, setZoom] = useState(14)
+// On Map: onCameraChanged={(ev) => setZoom(ev.detail.zoom)}
+
+// In ClusteredMarkers AdvancedMarker children:
+{zoom >= 15 ? <VenueInfoCard paikka={p} /> : <PinSvg color={color} laji={p.laji} />}
 ```
+
+`VenueInfoCard` is a small, self-contained card: venue name, sport badge, price. Tapping it opens the bottom sheet (calls `onSelect`).
+
+### Modified files
+- `app/components/Etusivu.tsx` — remove fullscreen map's `Marker` imports, add `ClusteredMarkers`, add zoom state, add `onCameraChanged`
+- `app/components/ClusteredMarkers.tsx` — new component
+- `lib/sportPins.ts` — add `pinSvgString()` returning raw SVG (alongside existing `pinUrl()`)
 
 ---
 
-## Question 4: Performance — Lazy Loading, Skeletons, Optimistic GPS
+## Feature 4: Re-center Button (MAP-04)
 
-### Map lazy loading (already implemented correctly)
-
-`Kartta.tsx` in `LiikuntapaikatLista` is already lazy-loaded via `React.lazy` + `Suspense`. Do not change this pattern.
-
-The `Etusivu.tsx` map (`@react-google-maps/api` `GoogleMap`) is NOT lazy-loaded — it loads the Maps JS bundle eagerly on the home page. This is acceptable because the map is the primary feature of `Etusivu`. However, the `useJsApiLoader` hook already handles the async load gracefully (renders a pulse skeleton while `isLoaded` is false).
-
-### Skeleton states
-
-Current skeleton in `Etusivu` covers weather. Extend this pattern:
-- GPS button: show "Käytä sijaintiani" immediately (no GPS latency to wait for).
-- AI widget: show `parseSaa()` text immediately, replace with Claude response when ready — never show an empty `<p>` or spinner where text will appear.
-- Opening hours: show "Ladataan..." only if data is expected but missing. If `aukioloajat` is NULL in the database, show "Aukioloajat tulossa" inline — never a spinner for missing data.
-
-### Optimistic GPS pattern
-
-Do NOT make the GPS request on mount automatically. Users must opt in by tapping a button. Browser permission dialogs that appear without user interaction are jarring and often dismissed — resulting in a permanent `denied` state that cannot be re-requested without the user going to browser settings.
-
-Pattern:
-1. On mount: render "Käytä sijaintiani" button (no GPS request yet).
-2. On button tap: call `requestGps()`, show spinner on button.
-3. On permission grant: remove button, show blue dot on map, sort venues by distance.
-4. On permission deny: show subtle "Sijainti ei käytettävissä" text near the button area, fall back to Tampere center.
-
-### Venue card "open now" indicator
-
-Compute `isAvoinnaNyt(aukioloajat: AukioloajatMap | null): boolean` in `lib/utils.ts`. This is a pure function — no hooks needed. Called during card rendering. Shows a green "Auki" or gray "Suljettu" badge on `PaikkaKortti`. Do not store this in state — recompute on each render (cheap operation).
-
----
-
-## Question 5: Data Pipeline Architecture
-
-### Current pipeline (as-built)
-
-```
-Manual trigger: GET /api/hae-paikat
-  → Google Places Text Search "liikuntapaikat Tampere" (15km radius)
-  → Promise.all: Place Details for website + phone
-  → supabase.upsert(rivit, { onConflict: 'place_id' })
-```
-
-### Gaps and recommended extensions
-
-**Gap 1: Opening hours not fetched from Google**
-Google Place Details API returns `opening_hours.periods` — structured weekly schedule. The current `fetchPlaceDetails()` only fetches `website,formatted_phone_number`. Extend to also request `opening_hours` and map it to the `aukioloajat` JSONB structure.
+`useMap()` returns the raw `google.maps.Map` instance. Call `map.panTo()` from a button inside the `<Map>` element tree. The existing `MapPanController` already uses this exact pattern — the re-center button is a minor addition to the same approach.
 
 ```typescript
-// In fetchPlaceDetails(), add to fields:
-url.searchParams.set('fields', 'website,formatted_phone_number,opening_hours')
+// app/components/MapReCenterButton.tsx (new, extracted)
+'use client'
+import { useMap } from '@vis.gl/react-google-maps'
+import { Crosshair } from 'lucide-react'
 
-// Then parse periods:
-function parseAukioloajat(periods: google.maps.PlaceOpeningHoursPeriod[]): AukioloajatMap {
-  // Map Google's numeric day (0=Sunday) to Finnish abbreviations
-  // periods[].open.time: "0900", periods[].close.time: "2100"
+export function MapReCenterButton({ coords }: { coords: { lat: number; lng: number } | null }) {
+  const map = useMap()
+  if (!coords) return null
+  return (
+    <button
+      onClick={() => { map?.panTo(coords); map?.setZoom(15) }}
+      className="absolute bottom-20 right-4 z-10 w-10 h-10 glass-btn rounded-full flex items-center justify-center"
+      aria-label="Palaa omaan sijaintiisi"
+    >
+      <Crosshair className="w-4 h-4" />
+    </button>
+  )
 }
 ```
 
-**Gap 2: Manual enrichment workflow**
-Kertakäyntihinta will NOT come from Google — it requires direct outreach to venues. Recommended workflow:
+Place `<MapReCenterButton coords={coords} />` inside the fullscreen `<Map>` element in `Etusivu.tsx`. It must be inside `<Map>` (or at least inside `<APIProvider>`) for `useMap()` to find the map instance.
 
-1. Run `/api/hae-paikat` to auto-populate all Google-available fields.
-2. Use Supabase Table Editor (dashboard) to manually fill `hinta_min`, `hinta_max`, `hinta_kuvaus` row by row.
-3. Alternatively, build a minimal admin form at `/admin/paika/[id]/muokkaa` (a protected page, POST to a new API route) — but this is scope creep for v1. Use the Supabase dashboard.
+### Modified files
+- `app/components/Etusivu.tsx` — add `<MapReCenterButton>` inside fullscreen map
+- `app/components/MapReCenterButton.tsx` — new component
 
-**Gap 3: Multi-query ingestion**
-Current single query ("liikuntapaikat Tampere") misses specialized venues. Add multiple targeted queries:
+---
+
+## Feature 5: GPS Accuracy Ring (MAP-05)
+
+**Problem:** The current `userLocationPinUrl()` in `sportPins.ts` renders a baked SVG data-URL passed to a legacy `Marker`. A static SVG cannot scale with zoom level — the accuracy ring must grow/shrink as the user zooms in and out.
+
+**Solution:** Migrate the user location marker to `AdvancedMarker` with an HTML `div` child. The accuracy ring is an absolutely-positioned circle whose pixel radius is calculated from `GeolocationCoordinates.accuracy` (meters) mapped to screen pixels at the current zoom level.
 
 ```typescript
-const HAKU_KYSELYT = [
-  'liikuntapaikat Tampere',
-  'kuntosali Tampere',
-  'uimahalli Tampere',
-  'padel Tampere',
-  'tennis Tampere',
-  'jooga Tampere',
-  'liikuntahalli Tampere',
-]
+// app/components/UserLocationMarker.tsx (new)
+'use client'
+import { AdvancedMarker } from '@vis.gl/react-google-maps'
+
+// Convert accuracy in meters to screen pixels at a given zoom + latitude
+function metersToPixels(meters: number, lat: number, zoom: number): number {
+  const earthCircumference = 40075016
+  const metersPerPx = (earthCircumference * Math.cos((lat * Math.PI) / 180)) /
+    (256 * Math.pow(2, zoom))
+  return meters / metersPerPx
+}
+
+export function UserLocationMarker({
+  coords,
+  accuracy,
+  zoom,
+}: {
+  coords: { lat: number; lng: number }
+  accuracy: number  // meters
+  zoom: number      // current map zoom level
+}) {
+  const ringPx = metersToPixels(accuracy, coords.lat, zoom)
+
+  return (
+    <AdvancedMarker position={coords} zIndex={20} clickable={false}>
+      <div style={{ position: 'relative', width: 0, height: 0 }}>
+        {/* Accuracy ring — scales with zoom */}
+        <div style={{
+          position: 'absolute',
+          width: ringPx * 2, height: ringPx * 2,
+          left: -ringPx, top: -ringPx,
+          borderRadius: '50%',
+          background: 'rgba(66,133,244,0.12)',
+          border: '1.5px solid rgba(66,133,244,0.35)',
+          pointerEvents: 'none',
+          transition: 'width 0.2s, height 0.2s, left 0.2s, top 0.2s',
+        }} />
+        {/* Blue dot */}
+        <div style={{
+          position: 'absolute', width: 18, height: 18,
+          left: -9, top: -9, borderRadius: '50%',
+          background: '#4285F4', border: '2.5px solid white',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+        }} />
+      </div>
+    </AdvancedMarker>
+  )
+}
 ```
 
-Run sequentially (not in parallel — Places API rate limits) and deduplicate by `place_id` before upsert.
+**`useGPS` change required:** The hook currently does not expose `accuracy`. Add it:
 
-**Recommended pipeline architecture (extended):**
+```typescript
+// hooks/useGPS.ts additions
+export interface GPSState {
+  status: GPSStatus
+  coords: { lat: number; lng: number } | null
+  accuracy: number | null  // NEW — from GeolocationCoordinates.accuracy
+  requestLocation: () => void
+}
+// In success callback:
+setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+setAccuracy(pos.coords.accuracy)  // NEW state
+```
+
+### Modified files
+- `hooks/useGPS.ts` — expose `accuracy: number | null`
+- `app/components/UserLocationMarker.tsx` — new component
+- `app/components/Etusivu.tsx` — replace `Marker` + `userLocationPinUrl()` with `<UserLocationMarker>`, pass `zoom` state (already being tracked for clustering)
+
+---
+
+## Feature 6: "Näytä kartalla" — Focus Venue on Map (MAP-07)
+
+**URL design:** `/?nakyma=kartta&id=<paikka_id>` — consistent with existing `?nakyma=kartta` scheme. Integer IDs (not UUIDs) since `liikuntapaikat.id` is a serial integer.
+
+### Data flow
 
 ```
-app/api/hae-paikat/route.ts (extended)
-  ├── Loop over HAKU_KYSELYT (sequential)
-  │     Google Places Text Search per query
-  │     Collect all results, deduplicate by place_id
-  ├── Promise.all: Place Details (website, phone, opening_hours) per unique place
-  ├── Map opening_hours → AukioloajatMap
-  └── supabase.upsert(rivit, { onConflict: 'place_id', ignoreDuplicates: false })
-        ignoreDuplicates: false → always update existing rows with fresher data
+/paikat/[id] profile page
+  → <Link href={`/?nakyma=kartta&id=${paikka.id}`}>Näytä kartalla</Link>
+
+app/page.tsx (Server Component)
+  → reads searchParams.id
+  → passes focusId={Number(searchParams.id)} to <Etusivu>
+
+Etusivu.tsx
+  → useEffect when kartaAuki + map ready:
+      setKartaAuki(true)
+      map.panTo({ lat: target.latitude, lng: target.longitude })
+      map.setZoom(16)
+      setValittu(target)  // opens bottom sheet
+```
+
+```typescript
+// app/page.tsx — extend searchParams type
+searchParams: { nakyma?: string; id?: string }
+
+// Pass to Etusivu:
+<Etusivu paikat={data} focusId={searchParams.id ? Number(searchParams.id) : undefined} />
+
+// Etusivu.tsx — new prop + effect
+const { focusId } = props  // number | undefined
+
+useEffect(() => {
+  if (!focusId || !kartaAuki) return
+  const target = paikat.find(p => p.id === focusId)
+  if (!target?.latitude || !target?.longitude) return
+  map?.panTo({ lat: target.latitude, lng: target.longitude })
+  map?.setZoom(16)
+  setValittu(target)
+}, [focusId, kartaAuki, map])
+
+// Separate effect: open map when focusId is present on mount
+useEffect(() => {
+  if (focusId) setKartaAuki(true)
+}, [focusId])
+```
+
+**Note on routing:** The profile-page link causes a full navigation to `/?nakyma=kartta&id=X`. The server re-renders `app/page.tsx` with the new searchParams — this is correct and intentional, as the server needs to pass `focusId` to `Etusivu`. Do not attempt `window.history.pushState` here; it would update the URL client-side without giving the Server Component access to the new param.
+
+### Modified files
+- `app/paikat/[id]/page.tsx` — change "Näytä kartalla" from external Google Maps link to `/?nakyma=kartta&id=${paikka.id}`
+- `app/page.tsx` — add `id` to `searchParams` type, pass `focusId` prop to Etusivu
+- `app/components/Etusivu.tsx` — accept `focusId?: number`, add two focus effects
+
+---
+
+## Feature 7: Kaupunki Field + City Filter (DATA-07, AI-04)
+
+**Schema status:** `kaupunki` column already exists in `liikuntapaikat` (present in `page.tsx` SELECT and `lib/types.ts`). No migration needed.
+
+### City filter in LiikuntapaikatLista
+
+```typescript
+// LiikuntapaikatLista.tsx additions
+const kaupungit = useMemo(() =>
+  ['Kaikki', ...Array.from(new Set(paikat.map(p => p.kaupunki).filter(Boolean))).sort()],
+  [paikat]
+)
+const [aktiivKaupunki, setAktiivKaupunki] = useState('Kaikki')
+
+// Add to suodatettu filter:
+const matchesKaupunki = aktiivKaupunki === 'Kaikki' || p.kaupunki === aktiivKaupunki
+```
+
+Render as a dropdown `<select>` (UI-08 wants the laji filter as dropdown too; same pattern). A native `<select>` on mobile opens the OS picker — appropriate for city selection.
+
+### AI widget city integration (AI-04)
+
+The `/api/saasuositus` route hardcodes Tampere coordinates and "Tampere" in the Claude prompt. For multi-city, accept an optional `?kaupunki=Helsinki` query param.
+
+```typescript
+// api/saasuositus/route.ts additions
+const KAUPUNKI_COORDS: Record<string, [number, number]> = {
+  Tampere:  [61.4978, 23.7610],
+  Helsinki: [60.1699, 24.9384],
+  Turku:    [60.4518, 22.2666],
+}
+
+export async function GET(request: Request) {
+  const kaupunki = new URL(request.url).searchParams.get('kaupunki') ?? 'Tampere'
+  const [lat, lng] = KAUPUNKI_COORDS[kaupunki] ?? KAUPUNKI_COORDS['Tampere']
+  // Use lat/lng for Open-Meteo fetch and kaupunki name in Claude prompt
+}
+```
+
+The client (`Etusivu.tsx`) passes the active kaupunki filter:
+
+```typescript
+fetch(`/api/saasuositus?kaupunki=${encodeURIComponent(aktiivKaupunki)}`)
+```
+
+The sessionStorage cache key should include the city:
+
+```typescript
+const key = `saasuositus-${new Date().toISOString().slice(0, 10)}-${aktiivKaupunki}`
+```
+
+### Modified files
+- `app/components/LiikuntapaikatLista.tsx` — add kaupunki filter state + dropdown UI
+- `app/components/Etusivu.tsx` — pass active city to AI widget fetch, update sessionStorage key
+- `app/api/saasuositus/route.ts` — accept `kaupunki` param, parameterize coords + Claude prompt
+
+---
+
+## Feature 8: PWA (PWA-01, PWA-02)
+
+**Package:** Use `@serwist/next` — the actively maintained successor to both `next-pwa` (unmaintained) and `@ducanh2912/next-pwa` (deprecated in favor of serwist), created by the same author. HIGH confidence.
+
+```bash
+npm install @serwist/next serwist
+```
+
+### next.config.mjs
+
+```javascript
+import withSerwist from '@serwist/next'
+
+const withPWA = withSerwist({
+  swSrc: 'app/sw.ts',
+  swDest: 'public/sw.js',
+  disable: process.env.NODE_ENV === 'development',
+})
+
+export default withPWA({})
+```
+
+### Service worker caching strategy (`app/sw.ts`)
+
+```typescript
+import { defaultCache } from '@serwist/next/worker'
+import { installSerwist } from 'serwist'
+
+installSerwist({
+  precacheEntries: self.__SW_MANIFEST,
+  skipWaiting: true,
+  clientsClaim: true,
+  runtimeCaching: [
+    // Navigation (pages): NetworkFirst — fresh content wins, falls back offline
+    {
+      matcher: ({ request }) => request.mode === 'navigate',
+      handler: 'NetworkFirst',
+      options: { cacheName: 'pages', networkTimeoutSeconds: 3 },
+    },
+    // Static assets (JS/CSS/fonts): CacheFirst — content-hashed filenames guarantee freshness
+    {
+      matcher: ({ request }) => ['style', 'script', 'font'].includes(request.destination),
+      handler: 'CacheFirst',
+      options: { cacheName: 'static-assets', expiration: { maxAgeSeconds: 30 * 24 * 60 * 60 } },
+    },
+    // Supabase API: NetworkFirst — stale venue data is acceptable offline
+    {
+      matcher: ({ url }) => url.hostname.endsWith('.supabase.co'),
+      handler: 'NetworkFirst',
+      options: { cacheName: 'supabase', networkTimeoutSeconds: 5 },
+    },
+    // Open-Meteo weather: StaleWhileRevalidate — slightly stale weather is fine
+    {
+      matcher: ({ url }) => url.hostname === 'api.open-meteo.com',
+      handler: 'StaleWhileRevalidate',
+      options: { cacheName: 'weather', expiration: { maxEntries: 5, maxAgeSeconds: 1800 } },
+    },
+    // Google Maps tiles: CacheFirst — tiles rarely change
+    {
+      matcher: ({ url }) => url.hostname.includes('maps.googleapis.com') ||
+                             url.hostname.includes('maps.gstatic.com'),
+      handler: 'CacheFirst',
+      options: { cacheName: 'maps', expiration: { maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 } },
+    },
+  ],
+})
+```
+
+**Do NOT cache:** `/api/saasuositus` (Claude API — costs money, personalized), `/api/admin/*` (admin routes).
+
+### Web App Manifest
+
+Next.js 14 App Router has built-in manifest support. Create `app/manifest.ts`:
+
+```typescript
+import type { MetadataRoute } from 'next'
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'Liikuntahakemisto',
+    short_name: 'ACTA',
+    description: 'Löydä liikuntapaikat läheltäsi',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#ffffff',
+    theme_color: '#111111',
+    icons: [
+      { src: '/acta-symbol.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
+      { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+  }
+}
+```
+
+SVG source (`acta-symbol.svg`, `acta-symbol-white.svg`) already exists in `app/`. PNG icons (192×192, 512×512) need to be generated from the SVG — a one-time asset task.
+
+**Offline fallback:** Create `app/~offline/page.tsx` — rendered when user is offline and the requested page is not cached.
+
+### Modified files
+- `next.config.mjs` — wrap with `withSerwist`
+- `app/manifest.ts` — new (Next.js built-in, replaces any manual `public/manifest.json`)
+- `app/sw.ts` — new service worker entry point
+- `app/~offline/page.tsx` — new offline fallback page
+- `public/icon-192.png`, `public/icon-512.png` — new generated assets
+
+---
+
+## Feature 9: GDPR Page (LEGAL-01)
+
+Static Server Component, no data fetching, no client JS.
+
+```
+app/tietosuoja/page.tsx  — new page
+```
+
+**Required content:** what data is collected (GPS — browser-only, not sent to server; sessionStorage for AI cache; Supabase auth session cookie if user signs in), third parties (Google Maps JS API, Open-Meteo, Anthropic/Claude), no persistent tracking without auth, cookie policy (session cookie only, set by Supabase Auth), contact email, how to request data deletion.
+
+Link from `NavBar.tsx` dropdown menu and from the auth sign-up UI.
+
+### Modified files
+- `app/tietosuoja/page.tsx` — new
+- `app/components/NavBar.tsx` — add tietosuoja link in hamburger dropdown
+
+---
+
+## Feature 10: "Sponsoroitu" Badge (ADS-02)
+
+`featured` boolean already exists in the schema (ADS-01), is already selected in `page.tsx`, and is already in `Liikuntapaikka` type. This is a pure UI addition.
+
+**List view:** In `PaikkaKortti.tsx`, if `paikka.featured === true`, render a small "Sponsoroitu" pill — e.g., a star icon + text in a gold/amber color, placed in the card's name row.
+
+**Map view:** In `Etusivu.tsx` (or `ClusteredMarkers.tsx`), featured venues get a gold star overlay on their map pin. Add a `featured` param to `pinSvgString()` in `sportPins.ts`:
+
+```typescript
+// lib/sportPins.ts
+export function pinSvgString(color: string, laji: string, featured = false): string {
+  const starOverlay = featured
+    ? `<text x="22" y="6" font-size="10" fill="#FBBF24" font-family="sans-serif">★</text>`
+    : ''
+  // ... rest of existing SVG template + starOverlay
+}
+```
+
+No new data fetching, no schema changes.
+
+### Modified files
+- `app/components/PaikkaKortti.tsx` — add featured badge
+- `lib/sportPins.ts` — add `featured` param to `pinSvgString()`
+- `app/components/Etusivu.tsx` / `ClusteredMarkers.tsx` — pass `featured` to pin renderer
+
+---
+
+## Component Boundary Map
+
+```
+layout.tsx (Server)
+  └── MapProvider (Client) — APIProvider wraps entire tree [unchanged]
+      └── AuthProvider (Client) — NEW, provides { user, supabase } context
+          └── NavBar (Client) — add tietosuoja link; auth-aware UI [modified]
+          └── <main>
+              └── page.tsx (Server, async) — fetches paikat, reads searchParams.nakyma + searchParams.id
+                  └── Etusivu (Client) — receives paikat + focusId [modified]
+                      ├── ClusteredMarkers (Client) — NEW, extracted from Etusivu
+                      ├── UserLocationMarker (Client) — NEW
+                      ├── MapReCenterButton (Client) — NEW
+                      └── bottom sheet (inline in Etusivu) — unchanged
+                  OR
+                  └── LiikuntapaikatLista (Client) — add kaupunki filter [modified]
+                      └── PaikkaKortti (Client) — add heart + sponsored badge [modified]
+
+          └── app/suosikit/page.tsx (Server, auth-gated via createSupabaseServer)
+              └── SuosikitLista (Client) — NEW
+          └── app/auth/login/page.tsx (Server, thin shell)
+              └── AuthModal (Client) — NEW
+          └── app/tietosuoja/page.tsx (Server, static) — NEW
+          └── app/auth/callback/route.ts (Route Handler) — NEW
+          └── app/api/saasuositus/route.ts (Route Handler) — add kaupunki param [modified]
+
+middleware.ts (runs before every request) — NEW, refreshes session token
 ```
 
 ---
 
-## Component Boundaries (new features)
+## Schema Migrations Required
 
-```
-app/page.tsx (server)
-  Supabase query (extended columns)
-  → <Etusivu paikat={data} />
+| File | Change | Dependency |
+|------|--------|------------|
+| `YYYYMMDDHHMMSS_add_suosikit.sql` | Create `suosikit` table, RLS policies, `user_id` index | AUTH-02 blocked until this runs |
+| (none) | `kaupunki` column already exists | — |
+| (none) | `featured` column already exists | — |
 
-Etusivu.tsx (client)
-  ├── GPS state (useState: idle/requesting/granted/denied/unavailable)
-  ├── userLocation state (useState: {lat, lng} | null)
-  ├── saa state (useState: SaaTiedot | null)           — Open-Meteo
-  ├── suositus state (useState: string | null)          — Claude AI response
-  ├── Weather fetch (useEffect → Open-Meteo direct)
-  ├── AI fetch (useEffect → POST /api/saa-suositus when saa is set)
-  ├── GPS request function (called on button tap only)
-  ├── Distance-sorted venues (useMemo, depends on userLocation + suodatettu)
-  └── GoogleMap
-        ├── Venue markers (indigo)
-        └── User location marker (blue, only if gpsStatus === 'granted')
-
-app/api/saa-suositus/route.ts (NEW — server API route)
-  POST { temp: number, code: number }
-  → Claude API (CLAUDE_API_KEY env var, server-only)
-  → return { suositus: string }
-
-lib/types.ts (NEW — move Liikuntapaikka type here)
-
-lib/utils.ts (extend)
-  ├── hintateksti() — move from 3 component files
-  ├── haversineEtaisyys(a, b) — distance calculation
-  └── isAvoinnaNyt(aukioloajat) — "open now" checker
-```
-
-**Communication direction (one-way, no circular dependencies):**
-```
-app/page.tsx → Etusivu.tsx (props: paikat)
-Etusivu.tsx → Open-Meteo (fetch, direct)
-Etusivu.tsx → /api/saa-suositus (fetch POST)
-app/api/saa-suositus → Claude API (server fetch)
-app/api/hae-paikat → Google Places API (server fetch)
-app/api/hae-paikat → Supabase (upsert)
-app/page.tsx → Supabase (read, server component)
-```
+The `liikuntapaikat` table does NOT need schema changes for any v1.1 feature. Only the new `suosikit` table is required.
 
 ---
 
-## Architectural Constraints and Rules
+## Build Order (Risk-Minimizing)
 
-### What must stay client-side (browser APIs)
-- `navigator.geolocation` — always client, always user-initiated
-- `@react-google-maps/api` GoogleMap — always client
-- Framer Motion animations — always client
-- `useSearchParams`, `useRouter` — always client
-- Open-Meteo weather fetch (currently in useEffect — this is fine, it is a public API)
+Features are ordered by dependency and change risk.
 
-### What must stay server-side (secret keys)
-- `GOOGLE_PLACES_API_KEY` — already server-only (no NEXT_PUBLIC_ prefix), used only in `/api/hae-paikat`
-- `CLAUDE_API_KEY` — new, must be server-only, only accessed in `/api/saa-suositus`
-- Supabase anon key (`NEXT_PUBLIC_SUPABASE_ANON_KEY`) — public read is safe for anon key with RLS; this is the current and correct pattern
+### Group 1 — Pure UI, zero dependencies (build first)
 
-### State management rule
-No global state store. GPS state, weather state, and AI suggestion state all live in `Etusivu.tsx` — they are logically cohesive (all feed the same widget and map). Only push state to URL if it must survive navigation or be shareable (current: view mode via `?nakyma=kartta`). GPS and weather are ephemeral per session.
+1. **ADS-02** Sponsoroitu badge — `featured` in data already, pure CSS addition. ~30 min.
+2. **LEGAL-01** GDPR page — static content, no deps. ~1 hour.
+3. **DATA-07** Kaupunki filter — column exists, add dropdown in LiikuntapaikatLista. ~2 hours.
+4. **AI-04** Kaupunki in AI widget — small route change + sessionStorage key update. ~1 hour.
 
----
+### Group 2 — Map infrastructure (prerequisite for all other map features)
 
-## Build Order Implications (Feature Dependencies)
+5. **Marker → AdvancedMarker migration** — Migrate fullscreen map's `Marker` to `AdvancedMarker`. Must be done before clustering, accuracy ring, and focus. Test carefully; it touches the core interaction. ~3-4 hours.
+6. **MAP-04** Re-center button — trivial after AdvancedMarker migration (`useMap` + `panTo`). ~1 hour.
 
-The following dependency graph determines implementation order:
+### Group 3 — Map features (after Group 2)
 
-```
-1. lib/types.ts (move Liikuntapaikka type)
-   ← Blocks: all components that import this type
+7. **MAP-05** GPS accuracy ring — requires AdvancedMarker + `accuracy` from `useGPS`. ~2-3 hours.
+8. **MAP-07** "Näytä kartalla" URL focus — requires programmatic `setKartaAuki` + `panTo` + `setValittu`. ~2 hours.
+9. **MAP-06** Clustering — highest-complexity map feature, build when map is otherwise stable. ~4-6 hours.
 
-2. Supabase schema migration (ALTER TABLE)
-   ← Blocks: showing hinta_kuvaus, aukioloajat, featured in UI
+### Group 4 — Auth infrastructure (before favorites)
 
-3. lib/utils.ts extensions (hintateksti, haversineEtaisyys, isAvoinnaNyt)
-   ← Blocks: GPS distance sort, open-now badge, price display refactor
+10. **AUTH-01** Supabase Auth — install `@supabase/ssr`, write middleware, AuthProvider, login page, OAuth callback. ~4-6 hours.
+11. **AUTH-02** Suosikit — run migration, write RLS, `useSuosikit` hook, heart button in PaikkaKortti, suosikit page. Blocked on AUTH-01. ~4-5 hours.
+12. **AUTH-03** Personalized AI — extend `/api/saasuositus` to accept user's favorite lajit and bias the Claude prompt. Blocked on AUTH-02. ~2 hours.
 
-4. GPS in Etusivu.tsx
-   ← Depends on: lib/utils.ts (haversineEtaisyys)
-   ← Blocks: "nearby venues" sort, user marker on map
+### Group 5 — PWA (build last, wraps stable feature set)
 
-5. Opening hours in hae-paikat/route.ts
-   ← Depends on: Supabase schema migration
-   ← Blocks: showing real aukioloajat data on cards
+13. **PWA-02** Web App Manifest — `app/manifest.ts`, generate PNG icons. ~1 hour. Can move earlier if desired.
+14. **PWA-01** Service worker — install serwist, configure caching, offline fallback. Best done last when all API routes and caching requirements are known. ~3-4 hours.
 
-6. Opening hours display in PaikkaKortti + detail page
-   ← Depends on: Supabase schema migration, lib/utils.ts (isAvoinnaNyt)
-
-7. app/api/saa-suositus/route.ts (Claude AI endpoint)
-   ← Depends on: CLAUDE_API_KEY env var
-   ← Blocks: AI-generated recommendation text
-
-8. AI widget upgrade in Etusivu.tsx
-   ← Depends on: /api/saa-suositus route
-
-9. Featured/ad slot display in LiikuntapaikatLista + Etusivu
-   ← Depends on: Supabase schema migration
-   ← This is a standalone feature, no ordering constraint relative to GPS/AI
-```
-
-**Recommended phase sequence based on dependency graph:**
-
-- **Phase A (Foundation):** lib/types.ts + lib/utils.ts + Supabase migration. No UI changes yet. Unblocks everything else.
-- **Phase B (Data enrichment):** Extend hae-paikat to fetch opening hours; manual hinta enrichment via Supabase dashboard.
-- **Phase C (GPS):** GPS detection in Etusivu, user marker, distance sort, graceful deny state.
-- **Phase D (AI widget):** /api/saa-suositus + AI text in Etusivu, replacing hard-coded parseSaa suggestions.
-- **Phase E (UI enrichment):** Opening hours display on cards + detail page; hinta_kuvaus display; open-now badge.
-- **Phase F (Ad slots):** Featured flag UI in list and home views.
+**Total:** approximately 30-35 hours of implementation.
 
 ---
 
-## Anti-Patterns to Avoid in New Features
+## Anti-Patterns to Avoid
 
-### Do not put GPS coordinates in URL params
-**Why bad:** Exposes user location in browser history, sharing links, server logs. Location is personal and ephemeral — it has no value in the URL.
+### 1. Multiple `createBrowserClient` instances
+**What:** Creating a new Supabase browser client inside each component that needs auth.  
+**Why bad:** Each instance opens a separate realtime WebSocket connection and registers a duplicate `onAuthStateChange` listener.  
+**Instead:** Create once at module level in `AuthProvider.tsx`, export via React context.
 
-### Do not call Claude API from client component directly
-**Why bad:** API key would appear in browser network tab. Any user can see it, rotate it, and burn API credits.
+### 2. `getSession()` for auth validation in Server Components
+**What:** Using `supabase.auth.getSession()` to check whether a user is logged in server-side.  
+**Why bad:** `getSession()` reads the session from the cookie without validating the JWT signature. A forged cookie would pass.  
+**Instead:** Always use `supabase.auth.getUser()` in Server Components — it validates the JWT against Supabase's public keys on every call.
 
-### Do not SSR the AI widget
-**Why bad:** Blocks Time-To-First-Byte by 500–2000ms on every home page load. The AI suggestion is enhancement, not core content.
+### 3. Clustering with legacy `Marker`
+**What:** Adding legacy `Marker` instances to `MarkerClusterer`.  
+**Why bad:** `@googlemaps/markerclusterer` v2 performs an `Object.is()` check expecting `AdvancedMarkerElement` objects. Legacy Markers silently fail.  
+**Instead:** Migrate to `AdvancedMarker` before adding clustering (Group 2 in build order).
 
-### Do not auto-request GPS on mount
-**Why bad:** Browser permission prompt without user intent → high dismiss rate → permanent `denied` state. Users can never re-grant without going to browser settings manually.
+### 4. Blocking SSR on auth state
+**What:** Calling `createSupabaseServer().auth.getUser()` in `app/page.tsx` before rendering the venue list.  
+**Why bad:** Adds a network round-trip to every anonymous page load (the majority). The public listing requires no auth.  
+**Instead:** Fetch `liikuntapaikat` anonymously (existing pattern). Auth-specific UI (heart buttons, personalized AI) loads client-side after hydration.
 
-### Do not store `avoinna_nyt` as a database column
-**Why bad:** It becomes stale the moment it is written. Derive it at render time from `aukioloajat` + `new Date()`.
+### 5. Caching `/api/saasuositus` in the service worker
+**What:** Adding a SW caching rule for the AI route.  
+**Why bad:** Claude API calls cost money, the response is time- and weather-sensitive, and a cached response from one user could be served to another.  
+**Instead:** The existing `sessionStorage` cache per calendar day (AI-03) is the right caching layer. Do not add SW caching for this route.
 
-### Do not define `Liikuntapaikka` type in a UI component file (existing anti-pattern)
-**Why bad:** Creates circular-looking import dependency where `Etusivu.tsx` imports a type from `LiikuntapaikatLista.tsx`. Move to `lib/types.ts` as part of Phase A.
+### 6. Using `window.history.pushState` for the "Näytä kartalla" navigation
+**What:** Setting `?nakyma=kartta&id=X` via pushState from the profile page.  
+**Why bad:** `window.history.pushState` updates the browser URL client-side but does not trigger a server render. The Server Component (`app/page.tsx`) never sees the new `id` param and cannot pass `focusId` to Etusivu.  
+**Instead:** Use `<Link href="/?nakyma=kartta&id=X">` — full navigation, server renders with correct `searchParams`.
 
-### Do not duplicate `hintateksti()` across three files (existing anti-pattern)
-**Why bad:** Price formatting logic must be changed in three places if requirements change. Consolidate in `lib/utils.ts` as part of Phase A.
+### 7. Hardcoding accuracy ring size in the SVG data URL
+**What:** Adding the accuracy ring as a fixed-size element in `userLocationPinUrl()`.  
+**Why bad:** The ring must resize as the user zooms the map; a baked-in SVG cannot do this.  
+**Instead:** Use `AdvancedMarker` with an HTML child whose dimensions are computed from `metersToPixels()` on every zoom change.
 
 ---
 
-## Scalability Considerations
+## Confidence Assessment
 
-| Concern | At current scale (< 200 venues) | At larger scale (> 2000 venues) |
-|---------|----------------------------------|----------------------------------|
-| SSR full-table fetch | Fine — fast query, small payload | Add pagination or bounding-box filter |
-| Client-side filter (useMemo) | Fine — 200 items is trivial | Still fine up to ~5000; beyond that, move to server-side filtered queries |
-| GPS distance sort | O(n) — trivial | O(n log n) with sort — still fast at 5000 |
-| Claude API calls | 1 call per Etusivu mount | Consider caching response per (code, temp) pair in Supabase or KV for 30min |
-| Google Places ingestion | Single run, ~20 results | Multiple queries × 20 results — add rate limit handling + pagination |
+| Area | Confidence | Source |
+|------|------------|--------|
+| Supabase Auth (`@supabase/ssr`, middleware, callback) | HIGH | Official Supabase server-side Next.js guide |
+| RLS policy design for suosikit | HIGH | Official Supabase RLS docs |
+| `@googlemaps/markerclusterer` + `AdvancedMarker` | HIGH | visgl official example + Discussion #325 |
+| `useMap` + `panTo` for re-center | HIGH | visgl Discussion #250, official API reference |
+| `AdvancedMarker` HTML child for accuracy ring | HIGH | Google Maps Platform docs (AdvancedMarkerElement custom HTML) |
+| `@serwist/next` for PWA | HIGH | Active maintenance confirmed; recommended over next-pwa and @ducanh2912/next-pwa |
+| Service worker caching strategy (specific timeouts) | MEDIUM | Serwist docs + community; tune after production traffic observed |
+| City-to-coords lookup for AI widget | HIGH | Static table, no external dep |
+| "Näytä kartalla" URL param routing | HIGH | Standard Next.js App Router `searchParams` pattern |
 
 ---
 
 ## Sources
 
-- Next.js official docs: Server and Client Components (verified 2026-05-18, version 16.2.6): https://nextjs.org/docs/app/getting-started/server-and-client-components
-- Next.js official docs: Route Handlers (verified 2026-05-18): https://nextjs.org/docs/app/api-reference/file-conventions/route
-- Direct codebase analysis: `app/components/Etusivu.tsx`, `app/api/hae-paikat/route.ts`, `app/page.tsx`, `lib/lajit.ts`, `package.json` — HIGH confidence (first-hand source)
-- `navigator.geolocation` browser API: standard Web API, works in all modern browsers (Chrome, Safari, Firefox) with HTTPS. No library required.
-- Open-Meteo API: free, no API key required, public endpoint — used correctly as-is
-- Supabase upsert with `onConflict`: already in use in `hae-paikat/route.ts`, pattern is validated
+- [Setting up Server-Side Auth for Next.js — Supabase Docs](https://supabase.com/docs/guides/auth/server-side/nextjs)
+- [Creating a Supabase client for SSR — Supabase Docs](https://supabase.com/docs/guides/auth/server-side/creating-a-client)
+- [Row Level Security — Supabase Docs](https://supabase.com/docs/guides/database/postgres/row-level-security)
+- [Login with Google OAuth — Supabase Docs](https://supabase.com/docs/guides/auth/social-login/auth-google)
+- [Marker Clustering example — visgl React Google Maps](https://visgl.github.io/react-google-maps/examples/marker-clustering)
+- [AdvancedMarker Component API — visgl](https://visgl.github.io/react-google-maps/docs/api-reference/components/advanced-marker)
+- [Using cluster with AdvancedMarker + InfoWindow — visgl Discussion #325](https://github.com/visgl/react-google-maps/discussions/325)
+- [panTo with useMap — visgl Discussion #250](https://github.com/visgl/react-google-maps/discussions/250)
+- [Building a PWA with Serwist — Medium](https://javascript.plainenglish.io/building-a-progressive-web-app-pwa-in-next-js-with-serwist-next-pwa-successor-94e05cb418d7)
+- [PWA Guides — Next.js Docs](https://nextjs.org/docs/app/guides/progressive-web-apps)
+- [useSearchParams — Next.js Docs](https://nextjs.org/docs/app/api-reference/functions/use-search-params)
+- [AdvancedMarkerElement custom HTML — Google Maps Platform](https://developers.google.com/maps/documentation/javascript/advanced-markers/graphic-markers)
