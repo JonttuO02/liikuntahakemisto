@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, MapPin, Moon, Sun } from 'lucide-react'
 import { Map, Marker, useMap } from '@vis.gl/react-google-maps'
@@ -54,13 +54,19 @@ function MapPanController({ coords }: { coords: { lat: number; lng: number } | n
 }
 
 
+function getTimeBasedFallback(): string {
+  const h = new Date().getHours()
+  if (h >= 6 && h < 11)  return 'Huomenta · Löydä paras liikuntapaikka Tampereelta'
+  if (h >= 11 && h < 17) return 'Hei · Löydä paras liikuntapaikka Tampereelta'
+  return 'Iltaa · Löydä paras liikuntapaikka Tampereelta'
+}
+
 export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [saa, setSaa]               = useState<SaaTiedot | null>(null)
+  const [aiTeksti, setAiTeksti]     = useState<string | null>(null)
   const [valittu, setValittu]       = useState<Liikuntapaikka | null>(null)
   const [aktiivinen, setAktiivinen] = useState('Kaikki')
   const [kartaAuki, setKartaAuki]   = useState(false)
-  const [typedText, setTypedText]   = useState('')
-  const [typedDone, setTypedDone]   = useState(false)
   const [fullH, setFullH]           = useState(600)
   const [isDark, setIsDark]         = useState(isNightHour)
   const { coords }                  = useGPS()
@@ -86,24 +92,27 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       .catch(() => {})
   }, [])
 
-  const aiTeksti = useMemo(() => {
-    const h = new Date().getHours()
-    if (h >= 6 && h < 11)  return 'Huomenta · Löydä paras liikuntapaikka Tampereelta'
-    if (h >= 11 && h < 17) return 'Hei · Löydä paras liikuntapaikka Tampereelta'
-    return 'Iltaa · Löydä paras liikuntapaikka Tampereelta'
-  }, [])
-
   useEffect(() => {
-    setTypedText('')
-    setTypedDone(false)
-    let i = 0
-    const timer = setInterval(() => {
-      i++
-      setTypedText(aiTeksti.slice(0, i))
-      if (i >= aiTeksti.length) { clearInterval(timer); setTypedDone(true) }
-    }, 55)
-    return () => clearInterval(timer)
-  }, [aiTeksti])
+    const key = 'saasuositus-' + new Date().toISOString().slice(0, 10)
+    try {
+      const cached = sessionStorage.getItem(key)
+      if (cached) {
+        setAiTeksti(cached)
+        return
+      }
+    } catch {}
+    fetch('/api/saasuositus')
+      .then(r => r.json())
+      .then((d: { text: string; temp: number; code: number }) => {
+        setAiTeksti(d.text)
+        try { sessionStorage.setItem(key, d.text) } catch {}
+      })
+      .catch(() => {
+        const fallback = getTimeBasedFallback()
+        setAiTeksti(fallback)
+        try { sessionStorage.setItem(key, fallback) } catch {}
+      })
+  }, [])
 
   // Browser back closes fullscreen map
   useEffect(() => {
@@ -173,8 +182,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         {/* AI Widget — auto height, grows with content */}
         <div className="glass rounded-2xl flex items-center px-4 py-3.5 gap-3 shrink-0">
           <div className="flex-1 min-w-0 flex items-center">
-            <span className="text-sm font-medium text-[#111111]">{typedText}</span>
-            {!typedDone && <span className="typewriter-cursor ml-0.5 shrink-0" />}
+            {aiTeksti && <span className="text-sm font-medium text-[#111111]">{aiTeksti}</span>}
           </div>
           <div className="shrink-0 flex items-center gap-2">
             {saa && (
