@@ -31,9 +31,9 @@
 
 ### AI Widget
 
-- [ ] **AI-01**: Etusivun AI-widget näyttää sääpohjaisen suosituksen (Claude Haiku + Open-Meteo) suomeksi
-- [ ] **AI-02**: AI-widget latautuu ei-blokkaavasti — staattinen fallback näkyy heti, AI-teksti täydentää kun valmis
-- [ ] **AI-03**: AI-widgetin vastaus tallennetaan `sessionStorage`-välimuistiin — saman päivän uudelleenlataukset eivät hae API:sta uudestaan
+- [x] **AI-01**: Etusivun AI-widget näyttää sääpohjaisen suosituksen (Claude Haiku + Open-Meteo) suomeksi
+- [x] **AI-02**: AI-widget latautuu ei-blokkaavasti — staattinen fallback näkyy heti, AI-teksti täydentää kun valmis
+- [x] **AI-03**: AI-widgetin vastaus tallennetaan `sessionStorage`-välimuistiin — saman päivän uudelleenlataukset eivät hae API:sta uudestaan
 
 ### Ad Placeholder
 
@@ -87,9 +87,9 @@ Nämä ovat tunnistettuja jatkokehityskohteita jotka eivät kuulu v1:een.
 | UI-02 | Phase 4 | Pending |
 | UI-03 | Phase 4 | Pending |
 | UI-04 | Phase 4 | Pending |
-| AI-01 | Phase 5 | Pending |
-| AI-02 | Phase 5 | Pending |
-| AI-03 | Phase 5 | Pending |
+| AI-01 | Phase 5 | Complete |
+| AI-02 | Phase 5 | Complete |
+| AI-03 | Phase 5 | Complete |
 
 ---
 

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-21T10:45:03Z"
+last_updated: "2026-05-21T11:00:00Z"
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 12
-  completed_plans: 10
-  percent: 83
+  completed_plans: 12
+  percent: 100
 ---
 
 # Project State
@@ -34,7 +34,7 @@ See: .planning/PROJECT.md (updated 2026-05-19)
 | Phase 2 — Map & GPS | Complete | All 3 plans done; @vis.gl migration, GPS, distance strings |
 | Phase 3 — Data Enrichment | Complete | Both plans executed; run sync + seed scripts to populate DB |
 | Phase 4 — Service Information UI | Complete | All 4 plans executed; lib/aukiolo.ts + badges + filter + profile hours |
-| Phase 5 — AI Weather Widget | In Progress | 05-01 complete (Route Handler + page.tsx fix); 05-02 (Etusivu wiring) next |
+| Phase 5 — AI Weather Widget | Complete | Both plans done; /api/saasuositus Route Handler + Etusivu.tsx sessionStorage-cached widget |
 
 ## Active Decisions
 
@@ -49,6 +49,8 @@ See: .planning/PROJECT.md (updated 2026-05-19)
 - ANTHROPIC_API_KEY is server-only env var — SDK reads it automatically, never NEXT_PUBLIC_ (05-01)
 - Open-Meteo failure defaults to temp=15, code=0 so Claude still runs with sensible values (05-01)
 - Claude failure returns time-based Finnish fallback — widget is always non-blocking HTTP 200 (05-01)
+- aiTeksti initialized as null — widget text area is empty on first render, no flash of stale text (05-02)
+- sessionStorage cache key scoped to calendar day (YYYY-MM-DD); .catch() caches fallback so no same-day retry (05-02)
 
 ## Accumulated Context
 
@@ -74,7 +76,7 @@ See: .planning/PROJECT.md (updated 2026-05-19)
 
 ## Session Continuity
 
-- Last session: 05-01 executed — page.tsx select fix + @anthropic-ai/sdk + /api/saasuositus Route Handler (2026-05-21)
-- Stopped at: 05-01 complete; 05-02 (Etusivu wiring — useEffect fetch + widget UI) is next
-- Start next session: /gsd:execute-phase 5 (05-02 plan ready)
+- Last session: 05-02 executed — Etusivu.tsx AI widget wired with sessionStorage cache to /api/saasuositus (2026-05-21)
+- Stopped at: Phase 5 complete — all 12 plans across 5 phases executed
+- Start next session: /gsd:verify-work 5 — smoke test AI widget (widget empty on load, shows text after ~2s, cached on reload)
 - Data ops still recommended: /api/admin/sync-paikat + npx tsx scripts/seed-hinnat.ts to populate Phase 4 UI live data

@@ -8,7 +8,7 @@
 - [x] **Phase 2: Map & GPS** — Complete map UX with real GPS and distance display
 - [x] **Phase 3: Data Enrichment** — Opening hours, multi-sport coverage, manual pricing
 - [x] **Phase 4: Service Information UI** — Surface enriched data on cards and detail pages
-- [ ] **Phase 5: AI Weather Widget** — Differentiating AI recommendation feature
+- [x] **Phase 5: AI Weather Widget** — Differentiating AI recommendation feature (completed 2026-05-21)
 
 ---
 
@@ -79,7 +79,10 @@ Plans:
 1. On first visit the homepage shows a static placeholder immediately, then replaces it with a Finnish-language sport recommendation that references today's weather (e.g. "Tänään sataa — hyvä päivä sisäliikuntalajille")
 2. Reloading the page within the same day shows the AI recommendation instantly from cache — no network request to Claude API is made
 3. If the Claude API or Open-Meteo API fails, the widget falls back gracefully to a static default text — the rest of the page is fully usable
-**Plans:** TBD
+**Plans:** 2/2 plans complete
+Plans:
+- [x] 05-01-PLAN.md — Phase 4 bug fix (page.tsx select) + @anthropic-ai/sdk install + /api/saasuositus Route Handler
+- [x] 05-02-PLAN.md — Etusivu.tsx: remove typewriter, add non-blocking AI fetch + sessionStorage cache
 **UI hint:** yes
 
 ---
@@ -92,4 +95,4 @@ Plans:
 | 2. Map & GPS | 3/3 | Complete | 2026-05-21 |
 | 3. Data Enrichment | 2/2 | Complete | 2026-05-21 |
 | 4. Service Information UI | 4/4 | Complete | 2026-05-21 |
-| 5. AI Weather Widget | 0/? | Not started | - |
+| 5. AI Weather Widget | 2/2 | Complete   | 2026-05-21 |
