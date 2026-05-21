@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: complete
-last_updated: "2026-05-21T11:00:00Z"
+milestone_name: MVP
+status: archived
+last_updated: "2026-05-21T19:30:00Z"
 progress:
   total_phases: 5
   completed_phases: 5
@@ -16,7 +16,7 @@ progress:
 
 ## Current Status
 
-Phase: Milestone v1.0 — ALL 5 PHASES COMPLETE
+Phase: Milestone v1.0 — ARCHIVED 2026-05-21
 Last updated: 2026-05-21
 
 ## Project Reference
@@ -24,7 +24,7 @@ Last updated: 2026-05-21
 See: .planning/PROJECT.md (updated 2026-05-19)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Verification + launch prep
+**Current focus:** v1.0 archived — run /gsd:new-milestone for v1.1
 
 ## Phase Progress
 
