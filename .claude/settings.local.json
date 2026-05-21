@@ -3,7 +3,8 @@
     "allow": [
       "Skill(claude-api)",
       "Skill(emil-design-eng)",
-      "Skill(gsd-plan-phase)"
+      "Skill(gsd-plan-phase)",
+      "WebSearch"
     ]
   }
 }
