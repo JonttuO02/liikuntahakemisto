@@ -6,8 +6,8 @@
 
 - [x] **Phase 1: Foundation & Security** — Fix critical bugs, lock down APIs, migrate schema
 - [x] **Phase 2: Map & GPS** — Complete map UX with real GPS and distance display
-- [ ] **Phase 3: Data Enrichment** — Opening hours, multi-sport coverage, manual pricing
-- [ ] **Phase 4: Service Information UI** — Surface enriched data on cards and detail pages
+- [x] **Phase 3: Data Enrichment** — Opening hours, multi-sport coverage, manual pricing
+- [x] **Phase 4: Service Information UI** — Surface enriched data on cards and detail pages
 - [ ] **Phase 5: AI Weather Widget** — Differentiating AI recommendation feature
 
 ---
@@ -64,10 +64,10 @@
 4. The venue profile page shows a full weekly opening hours schedule and the price description in readable Finnish text
 **Plans:** 4 plans
 Plans:
-- [ ] 04-01-PLAN.md — Vitest setup + lib/aukiolo.ts utility (getOpenStatus, formatGroupedHours) with TDD
-- [ ] 04-02-PLAN.md — PaikkaKortti.tsx: open status badge, drop-in badge, hinta_kuvaus price, CTA fix
-- [ ] 04-03-PLAN.md — LiikuntapaikatLista.tsx: "Auki nyt" filter toggle row with lenient mode
-- [ ] 04-04-PLAN.md — HoursTable.tsx (new) + profile page: grouped weekly hours Row + price update
+- [x] 04-01-PLAN.md — Vitest setup + lib/aukiolo.ts utility (getOpenStatus, formatGroupedHours) with TDD
+- [x] 04-02-PLAN.md — PaikkaKortti.tsx: open status badge, drop-in badge, hinta_kuvaus price, CTA fix
+- [x] 04-03-PLAN.md — LiikuntapaikatLista.tsx: "Auki nyt" filter toggle row with lenient mode
+- [x] 04-04-PLAN.md — HoursTable.tsx (new) + profile page: grouped weekly hours Row + price update
 **UI hint:** yes
 
 ### Phase 5: AI Weather Widget
@@ -91,5 +91,5 @@ Plans:
 | 1. Foundation & Security | 14/14 | Complete | 2026-05-19 |
 | 2. Map & GPS | 3/3 | Complete | 2026-05-21 |
 | 3. Data Enrichment | 2/2 | Complete | 2026-05-21 |
-| 4. Service Information UI | 0/4 | Planned | - |
+| 4. Service Information UI | 4/4 | Complete | 2026-05-21 |
 | 5. AI Weather Widget | 0/? | Not started | - |

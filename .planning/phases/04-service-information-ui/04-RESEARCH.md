@@ -723,17 +723,13 @@ Phase 4 is purely client-side display logic with no new API routes, no authentic
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Are any seeded venues actually 24/7 (open: "00:00", close: "00:00")?**
-   - What we know: No 24/7 seeded venues appear in the hinta seed data; gym venues typically have real closing times
-   - What's unclear: Whether the Google Places ingestion produces "00:00"/"00:00" for any venue
-   - Recommendation: Implement the after-midnight guard (handles it correctly regardless); log a warning if this pattern is encountered
+   - RESOLVED: The after-midnight guard in `getOpenStatus()` handles this correctly regardless — if `closeMins === openMins === 0`, the venue is treated as open (24/7 pattern). No seeded venue has this pattern, so it is a theoretical edge case handled preemptively.
 
 2. **Vitest vs Jest — which test runner to use?**
-   - What we know: No test infrastructure exists; package.json has no test script
-   - What's unclear: Team preference
-   - Recommendation: Use Vitest — it has native ESM support, works with TypeScript without babel, and is the modern choice for Next.js projects with no legacy Jest config
+   - RESOLVED: Vitest chosen — native ESM support, works with TypeScript without babel, modern choice for Next.js 14 projects with no legacy Jest config. Wave 0 in Plan 04-01 installs and configures Vitest.
 
 ---
 
