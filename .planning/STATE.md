@@ -3,20 +3,20 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-21T03:54:17.237Z"
+last_updated: "2026-05-21T10:00:00.000Z"
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 4
-  completed_plans: 3
-  percent: 20
+  completed_phases: 3
+  total_plans: 6
+  completed_plans: 6
+  percent: 60
 ---
 
 # Project State
 
 ## Current Status
 
-Phase: Phase 2 — complete (all 3 plans done)
+Phase: Phase 3 — complete (both plans executed)
 Last updated: 2026-05-21
 
 ## Project Reference
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-05-19)
 |-------|--------|-------|
 | Phase 1 — Foundation & Security | Complete | All 11 UAT tests passed; schema migration applied in Supabase |
 | Phase 2 — Map & GPS | Complete | All 3 plans done; @vis.gl migration, GPS, distance strings |
-| Phase 3 — Data Enrichment | Not started | Blocked until Phase 1 done |
+| Phase 3 — Data Enrichment | Complete | Both plans executed; run sync + seed scripts to populate DB |
 | Phase 4 — Service Information UI | Not started | Blocked until Phase 3 done |
 | Phase 5 — AI Weather Widget | Not started | Blocked until Phase 4 done |
 
@@ -68,5 +68,6 @@ See: .planning/PROJECT.md (updated 2026-05-19)
 
 ## Session Continuity
 
-- Last session: Executed 02-03-PLAN.md — Etusivu migrated to @vis.gl, distance strings on cards, @react-google-maps/api removed
-- Start next session: Run /gsd:execute-phase 3 — Phase 3 (Data Enrichment) is next
+- Last session: Executed Phase 3 — ingestion routes upgraded (opening hours + multi-sport), seed script created
+- Start next session: Run /gsd:discuss-phase 4 or /gsd:plan-phase 4 — Phase 4 (Service Information UI) is next
+- Data ops still needed: call /api/admin/sync-paikat (with Bearer token) to populate DB, then run npx tsx scripts/seed-hinnat.ts

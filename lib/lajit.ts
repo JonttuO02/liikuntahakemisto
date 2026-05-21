@@ -11,11 +11,13 @@ export const lajiKonfig: Record<string, LajiKonfig> = {
   jooga:         { label: 'Jooga',         badgeTw: 'text-white', accentBg: 'bg-[#8b5cf6]', color: '#8b5cf6' },
   kuntosali:     { label: 'Kuntosali',     badgeTw: 'text-white', accentBg: 'bg-[#f97316]', color: '#f97316' },
   uinti:         { label: 'Uinti',         badgeTw: 'text-white', accentBg: 'bg-[#06b6d4]', color: '#06b6d4' },
+  kiipeily:      { label: 'Kiipeily',      badgeTw: 'text-white', accentBg: 'bg-[#84cc16]', color: '#84cc16' },
+  jääkiekko:     { label: 'Jääkiekko',     badgeTw: 'text-white', accentBg: 'bg-[#0ea5e9]', color: '#0ea5e9' },
   liikuntahalli: { label: 'Liikuntahalli', badgeTw: 'text-white', accentBg: 'bg-[#6b7280]', color: '#6b7280' },
   liikunta:      { label: 'Liikunta',      badgeTw: 'text-white', accentBg: 'bg-[#6b7280]', color: '#6b7280' },
 }
 
-export const LAJIT_FILTTERI = ['Kaikki', 'Padel', 'Tennis', 'Jooga', 'Kuntosali', 'Uinti', 'Liikuntahalli']
+export const LAJIT_FILTTERI = ['Kaikki', 'Padel', 'Tennis', 'Jooga', 'Kuntosali', 'Uinti', 'Kiipeily', 'Jääkiekko', 'Liikuntahalli']
 
 // Used by Kartta.tsx InfoWindow — renders outside React DOM, Tailwind classes don't apply there
 export function getInfoWindowStyle(laji: string): { background: string; color: string } {
@@ -25,6 +27,8 @@ export function getInfoWindowStyle(laji: string): { background: string; color: s
     jooga:         { background: '#ede9fe', color: '#6d28d9' },
     kuntosali:     { background: '#ffedd5', color: '#c2410c' },
     uinti:         { background: '#cffafe', color: '#0e7490' },
+    kiipeily:      { background: '#ecfccb', color: '#3f6212' },
+    jääkiekko:     { background: '#e0f2fe', color: '#0369a1' },
     liikuntahalli: { background: '#f3f4f6', color: '#374151' },
     liikunta:      { background: '#f3f4f6', color: '#374151' },
   }

@@ -24,7 +24,7 @@ function MapStyleController({ isDark }: { isDark: boolean }) {
   const map = useMap()
   useEffect(() => {
     if (!map) return
-    map.setOptions({ styles: (isDark ? NIGHT_MAP_STYLES : DAY_MAP_STYLES) as google.maps.MapTypeStyle[] })
+    map.setOptions({ styles: isDark ? NIGHT_MAP_STYLES : DAY_MAP_STYLES })
   }, [map, isDark])
   return null
 }

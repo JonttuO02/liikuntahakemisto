@@ -50,7 +50,7 @@
 1. Running the Places ingestion script for any venue populates the `aukioloajat` column in Supabase with structured weekly hours from Google Place Details
 2. The database contains venues across at least 7 sport categories: kuntosali, padel, uinti, jooga, kiipeily, jääkiekko, and one additional category
 3. The top 20 Tampere venues each have a non-null `hinta_kuvaus` value visible in the Supabase dashboard
-**Plans:** TBD
+**Plans:** `.planning/phases/03-data-enrichment/03-01-PLAN.md`, `03-02-PLAN.md` (3 tasks, 2 waves)
 
 ### Phase 4: Service Information UI
 **Goal:** Users can see opening status and pricing directly on venue cards and get full detail on the profile page — no clicks required to answer "is it open?" and "how much does it cost?"
@@ -85,6 +85,6 @@
 |-------|----------------|--------|-----------|
 | 1. Foundation & Security | 14/14 | Complete | 2026-05-19 |
 | 2. Map & GPS | 3/3 | Complete | 2026-05-21 |
-| 3. Data Enrichment | 0/? | Not started | - |
+| 3. Data Enrichment | 2/2 | Complete | 2026-05-21 |
 | 4. Service Information UI | 0/? | Not started | - |
 | 5. AI Weather Widget | 0/? | Not started | - |
