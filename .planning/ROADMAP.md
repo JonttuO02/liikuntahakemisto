@@ -62,7 +62,12 @@
 2. A venue card with a currently open venue shows a green "Auki nyt" badge; a closed venue shows "Suljettu"; tapping a filter button hides all closed venues from the list
 3. Venues that allow drop-in visits show a "Kertakäynti OK" badge on their card
 4. The venue profile page shows a full weekly opening hours schedule and the price description in readable Finnish text
-**Plans:** TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 04-01-PLAN.md — Vitest setup + lib/aukiolo.ts utility (getOpenStatus, formatGroupedHours) with TDD
+- [ ] 04-02-PLAN.md — PaikkaKortti.tsx: open status badge, drop-in badge, hinta_kuvaus price, CTA fix
+- [ ] 04-03-PLAN.md — LiikuntapaikatLista.tsx: "Auki nyt" filter toggle row with lenient mode
+- [ ] 04-04-PLAN.md — HoursTable.tsx (new) + profile page: grouped weekly hours Row + price update
 **UI hint:** yes
 
 ### Phase 5: AI Weather Widget
@@ -86,5 +91,5 @@
 | 1. Foundation & Security | 14/14 | Complete | 2026-05-19 |
 | 2. Map & GPS | 3/3 | Complete | 2026-05-21 |
 | 3. Data Enrichment | 2/2 | Complete | 2026-05-21 |
-| 4. Service Information UI | 0/? | Not started | - |
+| 4. Service Information UI | 0/4 | Planned | - |
 | 5. AI Weather Widget | 0/? | Not started | - |
