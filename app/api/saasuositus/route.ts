@@ -51,8 +51,8 @@ export async function GET() {
     const block = msg.content[0]
     text = block.type === 'text' ? block.text.trim() : getTimeBasedFallback()
   } catch {
-    text = getTimeBasedFallback()
+    return NextResponse.json({ text: getTimeBasedFallback(), temp, code, fallback: true })
   }
 
-  return NextResponse.json({ text, temp, code })
+  return NextResponse.json({ text, temp, code, fallback: false })
 }

@@ -103,14 +103,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     } catch {}
     fetch('/api/saasuositus')
       .then(r => r.json())
-      .then((d: { text: string; temp: number; code: number }) => {
+      .then((d: { text: string; temp: number; code: number; fallback?: boolean }) => {
         setAiTeksti(d.text)
-        try { sessionStorage.setItem(key, d.text) } catch {}
+        if (!d.fallback) {
+          try { sessionStorage.setItem(key, d.text) } catch {}
+        }
       })
       .catch(() => {
-        const fallback = getTimeBasedFallback()
-        setAiTeksti(fallback)
-        try { sessionStorage.setItem(key, fallback) } catch {}
+        setAiTeksti(getTimeBasedFallback())
       })
   }, [])
 
