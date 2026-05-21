@@ -3,20 +3,20 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-21T13:00:00.000Z"
+last_updated: "2026-05-21T10:45:03Z"
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 10
+  total_plans: 12
   completed_plans: 10
-  percent: 80
+  percent: 83
 ---
 
 # Project State
 
 ## Current Status
 
-Phase: Phase 4 — complete (all 4 plans executed)
+Phase: Phase 5 — planned (2 plans ready to execute)
 Last updated: 2026-05-21
 
 ## Project Reference
@@ -24,7 +24,7 @@ Last updated: 2026-05-21
 See: .planning/PROJECT.md (updated 2026-05-19)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 4 — Service Information UI
+**Current focus:** Phase 5 — AI Weather Widget
 
 ## Phase Progress
 
@@ -34,7 +34,7 @@ See: .planning/PROJECT.md (updated 2026-05-19)
 | Phase 2 — Map & GPS | Complete | All 3 plans done; @vis.gl migration, GPS, distance strings |
 | Phase 3 — Data Enrichment | Complete | Both plans executed; run sync + seed scripts to populate DB |
 | Phase 4 — Service Information UI | Complete | All 4 plans executed; lib/aukiolo.ts + badges + filter + profile hours |
-| Phase 5 — AI Weather Widget | Not started | Blocked until Phase 4 done — now unblocked |
+| Phase 5 — AI Weather Widget | In Progress | 05-01 complete (Route Handler + page.tsx fix); 05-02 (Etusivu wiring) next |
 
 ## Active Decisions
 
@@ -46,6 +46,9 @@ See: .planning/PROJECT.md (updated 2026-05-19)
 - lib/aukiolo.ts is single source of truth for open-status + grouped-hours logic (04-01)
 - "Auki nyt" filter is lenient: null aukioloajat passes through, shows "Aukioloajat tuntematon" (04-03 D-08)
 - HoursTable.tsx is a 'use client' island — today-highlighting uses browser local time not server UTC (04-04)
+- ANTHROPIC_API_KEY is server-only env var — SDK reads it automatically, never NEXT_PUBLIC_ (05-01)
+- Open-Meteo failure defaults to temp=15, code=0 so Claude still runs with sensible values (05-01)
+- Claude failure returns time-based Finnish fallback — widget is always non-blocking HTTP 200 (05-01)
 
 ## Accumulated Context
 
@@ -71,7 +74,7 @@ See: .planning/PROJECT.md (updated 2026-05-19)
 
 ## Session Continuity
 
-- Last session: Phase 4 fully executed — vitest (11/11), tsc clean, all 4 plans done
-- Start next session: /gsd:discuss-phase 5 or /gsd:plan-phase 5 (AI Weather Widget — now unblocked)
-- Data ops can run in parallel: call /api/admin/sync-paikat (Bearer token) + npx tsx scripts/seed-hinnat.ts to populate aukioloajat + hinta_kuvaus — needed for Phase 4 UI to show live data, not blocking Phase 5
-- Phase 4 UAT: ACCEPTED WITH CAVEAT — code verified, visual confirmation pending data population
+- Last session: 05-01 executed — page.tsx select fix + @anthropic-ai/sdk + /api/saasuositus Route Handler (2026-05-21)
+- Stopped at: 05-01 complete; 05-02 (Etusivu wiring — useEffect fetch + widget UI) is next
+- Start next session: /gsd:execute-phase 5 (05-02 plan ready)
+- Data ops still recommended: /api/admin/sync-paikat + npx tsx scripts/seed-hinnat.ts to populate Phase 4 UI live data
