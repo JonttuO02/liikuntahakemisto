@@ -3,7 +3,7 @@ import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import NavBar from './components/NavBar'
-import { APIProvider } from '@vis.gl/react-google-maps'
+import MapProvider from './components/MapProvider'
 
 const inter    = Inter({ subsets: ['latin'], variable: '--font-sans' })
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-serif' })
@@ -17,10 +17,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fi" className={cn('font-sans', inter.variable, playfair.variable)}>
       <body className="antialiased bg-white text-[#111111]">
-        <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''}>
+        <MapProvider>
           <NavBar />
           <main>{children}</main>
-        </APIProvider>
+        </MapProvider>
       </body>
     </html>
   )
