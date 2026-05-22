@@ -409,22 +409,25 @@ Current SELECT: `'id, nimi, laji, osoite, kaupunki, latitude, longitude, hinta_m
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the city name in the AI widget be dynamic (reflecting the selected city filter)?**
    - What we know: Weather fetch is hardcoded to Tampere lat/lng; DATA-07 city filter state lives in `LiikuntapaikatLista` (a sibling component, not ancestor of `Etusivu`)
    - What's unclear: Whether "Tampere" hardcoded is good enough for Phase 6, or if the widget should reflect whatever city the user has filtered to
    - Recommendation: Hardcode "Tampere" in Phase 6. Update in Phase 10 when multi-city data is live and weather API calls become city-aware.
+   - RESOLVED: see D-24 — `const WEATHER_CITY = 'Tampere'` hardcoded at top of Etusivu.tsx.
 
 2. **What GDPR content is required for the `/tietosuoja` page?**
    - What we know: The app currently collects no personal data (no auth until Phase 9). Phase 9 adds Supabase Auth which will store email/password.
    - What's unclear: Whether the policy should be forward-looking (mention planned auth) or minimal (current state only)
    - Recommendation: Write a minimal policy covering current state (no personal data collected, no cookies beyond sessionStorage for AI cache), with a note that the policy will be updated when accounts are added in Phase 9.
+   - RESOLVED: see D-03 — minimal current-state scope; include a note the policy updates when Phase 9 auth ships.
 
 3. **How should "vain jäsenyys" be detected — via heuristic or a new DB column?**
    - What we know: `hinta_kuvaus` is free text; no boolean `membership_only` column exists
    - What's unclear: Whether text heuristic (`hinta_kuvaus` contains "jäsenyys") is reliable for all current records
    - Recommendation: Use text heuristic for Phase 6. If unreliable, add a `membership_only boolean` column in a follow-up migration.
+   - RESOLVED: see D-11 — show "vain jäsenyys" only when `hinta_kuvaus` exists AND contains "jäsenyys" (case-insensitive); null price rows use existing "Lisätään pian" fallback.
 
 ---
 

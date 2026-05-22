@@ -1,9 +1,9 @@
 ---
 phase: 6
 slug: ui-polish-and-data-foundation
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: approved
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-05-21
 ---
 
@@ -38,14 +38,17 @@ created: 2026-05-21
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 6-01-01 | 01 | 1 | LEGAL-01 | — | Server component, no dangerouslySetInnerHTML | smoke (manual) | `next build` compiles page | ❌ W0 — manual verify | ⬜ pending |
-| 6-02-01 | 02 | 1 | ADS-02 | — | anon key RLS SELECT-only; featured not writable | unit | `npx vitest run lib/` | ❌ W0 | ⬜ pending |
-| 6-03-01 | 03 | 1 | UI-05 | — | N/A | unit | `npx vitest run lib/` | ❌ W0 | ⬜ pending |
-| 6-03-02 | 03 | 1 | UI-06 | — | N/A | smoke (manual) | manual browser check | ❌ W0 | ⬜ pending |
-| 6-03-03 | 03 | 1 | UI-07 | — | N/A | smoke (manual) | manual browser check | ❌ W0 | ⬜ pending |
-| 6-04-01 | 04 | 1 | UI-08 | — | N/A | smoke (manual) | manual browser check | ❌ W0 | ⬜ pending |
-| 6-05-01 | 05 | 1 | AI-04 | — | N/A | smoke (manual) | manual browser check | ❌ W0 | ⬜ pending |
-| 6-06-01 | 06 | 2 | DATA-07 | — | N/A | unit | `npx vitest run lib/` | ❌ W0 | ⬜ pending |
+| 06-01-T1 | 06-01 | 1 | ADS-02 | T-06-01 | anon key RLS SELECT-only; `featured` not writable by anon | source assertion | node -e grep on app/page.tsx SELECT string | ❌ created by task | ⬜ pending |
+| 06-02-T1 | 06-02 | 1 | LEGAL-01 | T-06-02 | server component, no dangerouslySetInnerHTML, no 'use client' | source + smoke | node -e + manual /tietosuoja | ❌ new file | ⬜ pending |
+| 06-03-T1 | 06-03 | 1 | UI-07 | T-06-03 | rel="noopener noreferrer" on external link | source assertion | node -e grep on app/paikat/[id]/page.tsx | ❌ existing edit | ⬜ pending |
+| 06-04-T1 | 06-04 | 1 | UI-05 | — | N/A | unit | `npx vitest run lib/priceUtils.test.ts` | ❌ W0 — created by this task | ⬜ pending |
+| 06-04-T2 | 06-04 | 1 | DATA-07 | — | N/A | unit | `npx vitest run lib/cityFilter.test.ts` | ❌ W0 — created by this task | ⬜ pending |
+| 06-05-T1 | 06-05 | 2 | UI-05, UI-06, UI-07, ADS-02 | T-06-07 | no dangerouslySetInnerHTML; price display from DB, not user input | source + smoke | node -e grep + manual card inspect | ❌ existing edit | ⬜ pending |
+| 06-06-T1 | 06-06 | 2 | UI-08 | T-06-11 | React escapes option values (kaupunki strings) | source assertion | node -e grep on LiikuntapaikatLista.tsx | ❌ existing edit | ⬜ pending |
+| 06-06-T2 | 06-06 | 2 | DATA-07 | T-06-11 | as above | source + test | node -e grep + npx vitest run | ❌ existing edit | ⬜ pending |
+| 06-06-T3 | 06-06 | 2 | LEGAL-01 | T-06-12 | intentional public link | source assertion | node -e grep on LiikuntapaikatLista.tsx | ❌ existing edit | ⬜ pending |
+| 06-07-T1 | 06-07 | 2 | AI-04 | — | N/A | source + smoke | node -e grep + manual widget inspect | ❌ existing edit | ⬜ pending |
+| 06-07-T2 | 06-07 | 2 | ADS-02 | T-06-16 | React escapes featured check | source assertion | node -e grep on Etusivu.tsx | ❌ existing edit | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -79,4 +82,4 @@ created: 2026-05-21
 - [ ] Feedback latency < 10s
 - [ ] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved
