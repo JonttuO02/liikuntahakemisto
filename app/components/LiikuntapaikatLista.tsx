@@ -96,43 +96,37 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
       <div className="max-w-5xl mx-auto px-4 pt-5 pb-2">
         <div className="flex flex-col gap-3">
 
-          {/* Row 1: sport filters */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {/* Row 1: city + sport dropdowns + Etäisyydet */}
+          <div className="flex flex-wrap items-center gap-2">
 
-            {/* Sport filters */}
-            <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 sm:flex-wrap [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-              <p className="sr-only">LAJIT</p>
-              {LAJIT_FILTTERI.map(laji => (
-                <motion.button
-                  key={laji}
-                  onClick={() => setAktiivinen(laji)}
-                  whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
-                  className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold
-                    [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
-                    ${aktiivinen === laji
-                      ? 'bg-[#111111] text-white'
-                      : 'glass-btn text-[rgba(17,17,17,0.6)] hover:text-[#111111]'
-                    }`}
-                >
-                  {laji}
-                </motion.button>
+            {/* Sport select (UI-08) */}
+            <select
+              value={aktiivinen}
+              onChange={e => setAktiivinen(e.target.value)}
+              aria-label="Suodata lajin mukaan"
+              className="h-10 rounded-full border border-[rgba(0,0,0,0.12)] bg-white px-4 text-sm font-bold text-[#111111] focus:outline-none focus:ring-1 focus:ring-[#111111] [transition:border-color_150ms_var(--ease-out)] cursor-pointer"
+            >
+              {LAJIT_FILTTERI.map(l => (
+                <option key={l} value={l}>{l}</option>
               ))}
-              <motion.button
-                onClick={requestLocation}
-                disabled={status === 'requesting'}
-                whileTap={{ scale: 0.95, transition: { duration: 0.1 } }}
-                className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold
-                  [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
-                  disabled:opacity-50
-                  ${status === 'granted'
-                    ? 'bg-[#111111] text-white'
-                    : 'border border-[rgba(0,0,0,0.1)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.2)]'
-                  }`}
-              >
-                <MapPin className="w-3.5 h-3.5" />
-                {status === 'requesting' ? 'Haetaan...' : status === 'granted' ? 'Sijainti päällä' : 'Etäisyydet'}
-              </motion.button>
-            </div>
+            </select>
+
+            {/* Etäisyydet */}
+            <motion.button
+              onClick={requestLocation}
+              disabled={status === 'requesting'}
+              whileTap={{ scale: 0.95, transition: { duration: 0.1 } }}
+              className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-bold
+                [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
+                disabled:opacity-50
+                ${status === 'granted'
+                  ? 'bg-[#111111] text-white'
+                  : 'border border-[rgba(0,0,0,0.1)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.2)]'
+                }`}
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              {status === 'requesting' ? 'Haetaan...' : status === 'granted' ? 'Sijainti päällä' : 'Etäisyydet'}
+            </motion.button>
           </div>
 
           {/* Row 2: price filters + result count */}
