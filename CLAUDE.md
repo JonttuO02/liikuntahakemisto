@@ -15,7 +15,7 @@ This project uses the GSD (Get Shit Done) workflow. Planning artifacts live in `
 4. `/gsd:verify-work N` — verify against success criteria
 
 **Key constraints (v1.0 shipped, v1.1 active):**
-- URL routing: always use `?nakyma=kartta` (3 competing schemes exist — choose this one)
+- URL routing: `/` and `/?nakyma=kartta` both render Etusivu (map is the homepage); `/?nakyma=lista` renders LiikuntapaikatLista — `?nakyma=kartta` is a dead parameter, never generate it in new code
 - GPS: client-side only, never URL params — auto-requests on mount, map centers on user automatically
 - AI widget: never SSR, use `/api/saasuositus` Route Handler, non-blocking load
 - Supabase writes: service role key only; anon key is read-only after RLS
