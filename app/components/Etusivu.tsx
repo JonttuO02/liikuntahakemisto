@@ -78,6 +78,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [kartaAuki, setKartaAuki]   = useState(false)
   const [fullH, setFullH]           = useState(600)
   const [isDark, setIsDark]         = useState(false)
+  const [zoomLevel, setZoomLevel]   = useState(14)
   const { coords }                  = useGPS({ autoRequest: true })
 
   useEffect(() => {
@@ -337,6 +338,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 clickableIcons={false}
                 keyboardShortcuts={false}
                 onClick={() => setValittu(null)}
+                onCameraChanged={(ev) => setZoomLevel(ev.detail.zoom)}
               >
                 {paikatKartalla.map(p => {
                   const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
