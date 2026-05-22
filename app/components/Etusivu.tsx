@@ -78,6 +78,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [kartaAuki, setKartaAuki]   = useState(false)
   const [fullH, setFullH]           = useState(600)
   const [isDark, setIsDark]         = useState(false)
+  const [zoomLevel, setZoomLevel]   = useState(14)
   const { coords }                  = useGPS({ autoRequest: true })
 
   useEffect(() => {
@@ -278,7 +279,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 })}
                 {coords && (
                   <AdvancedMarker position={coords} zIndex={20}>
-                    <div style={{ width: 24, height: 24, position: 'relative' }}>
+                    <div style={{ width: 24, height: 24, position: 'relative', overflow: 'visible' }}>
+                      <motion.div
+                        style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.7)', pointerEvents: 'none' }}
+                        animate={{ scale: [0.5, 2], opacity: [0.6, 0] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+                      />
                       <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(66,133,244,0.18)' }} />
                       <div style={{ position: 'absolute', inset: 3, borderRadius: '50%', background: '#4285F4', border: '2.5px solid white' }} />
                     </div>
@@ -332,6 +338,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 clickableIcons={false}
                 keyboardShortcuts={false}
                 onClick={() => setValittu(null)}
+                onCameraChanged={(ev) => setZoomLevel(ev.detail.zoom)}
               >
                 {paikatKartalla.map(p => {
                   const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
@@ -343,7 +350,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 })}
                 {coords && (
                   <AdvancedMarker position={coords} zIndex={20}>
-                    <div style={{ width: 24, height: 24, position: 'relative' }}>
+                    <div style={{ width: 24, height: 24, position: 'relative', overflow: 'visible' }}>
+                      <motion.div
+                        style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.7)', pointerEvents: 'none' }}
+                        animate={{ scale: [0.5, 2], opacity: [0.6, 0] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+                      />
                       <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(66,133,244,0.18)' }} />
                       <div style={{ position: 'absolute', inset: 3, borderRadius: '50%', background: '#4285F4', border: '2.5px solid white' }} />
                     </div>
