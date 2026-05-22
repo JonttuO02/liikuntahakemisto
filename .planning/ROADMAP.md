@@ -65,7 +65,7 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
   2. A re-center button is visible on the map; tapping it moves the map view back to the user's GPS position
   3. `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_DAY` and `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_NIGHT` env vars are documented and both Map components pass `mapId`
 **Plans:** 2 plans
-  - [ ] 07-01-PLAN.md — AdvancedMarker migration, mapId switching, remove MapStyleController, env var docs
+  - [x] 07-01-PLAN.md — AdvancedMarker migration, mapId switching, remove MapStyleController, env var docs
   - [ ] 07-02-PLAN.md — Add RecenterButton (MAP-04) to fullscreen map
 **UI hint**: yes
 
