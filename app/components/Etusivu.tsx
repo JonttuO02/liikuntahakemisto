@@ -18,6 +18,7 @@ import { pinUrl, userLocationPinUrl } from '@/lib/sportPins'
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
 const EASE_MAP:   [number, number, number, number] = [0.4, 0, 0.2, 1]
 const NAV_H      = 56
+const WEATHER_CITY = 'Tampere'
 
 const SPORT_ICONS: Record<string, LucideIcon> = {
   padel: Zap, kuntosali: Dumbbell, jooga: Leaf,
@@ -188,8 +189,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 <span className="text-base leading-none select-none" aria-hidden>
                   {getWeatherEmoji(saa.code)}
                 </span>
-                <span className="text-sm font-semibold text-[#111111] tabular-nums">
-                  {saa.temp}°
+                <span className="text-sm font-bold text-[#111111] tabular-nums">
+                  {saa.temp}°{' '}<span className="font-normal text-[rgba(17,17,17,0.45)]">{WEATHER_CITY}</span>
                 </span>
               </div>
             )}
@@ -459,6 +460,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   </span>
                 )
               })()}
+              {valittu.featured && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200 ml-1.5">
+                  Sponsoroitu
+                </span>
+              )}
 
               <h2 className="mt-2 font-serif text-xl font-bold text-[#111111] leading-snug">
                 {valittu.nimi}
