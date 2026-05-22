@@ -16,10 +16,10 @@ progress:
 
 ## Current Position
 
-Phase: 6 — UI Polish & Data Foundation (all plans complete — verifying)
+Phase: 6 — UI Polish & Data Foundation (human_needed — awaiting live DB smoke tests)
 Plan: 7 plans in 2 waves (7/7 complete)
-Status: Verifying
-Last activity: 2026-05-22 — Wave 2 complete (7/7 plans merged, 29 tests passing)
+Status: human_needed
+Last activity: 2026-05-22 — All plans executed and verified; 5 items need live DB/server confirmation
 
 ## Project Reference
 
