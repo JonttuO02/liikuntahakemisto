@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
 status: active
-last_updated: "2026-05-22T18:00:00.000Z"
-last_activity: 2026-05-22 — Phase 8 planned; 3/3 plans created (08-01, 08-02, 08-03); ready to execute
+last_updated: "2026-05-22T14:47:44.216Z"
+last_activity: 2026-05-22 — Phase 8 all plans executed; verifying
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 14
-  completed_plans: 9
-  percent: 50
+  completed_phases: 2
+  total_plans: 12
+  completed_plans: 11
+  percent: 33
 ---
 
 # Project State
@@ -35,7 +35,7 @@ See: .planning/PROJECT.md
 |-------|--------|-------|
 | 6. UI Polish & Data Foundation | ✅ Complete | UAT passed; 1 inline fix (city filter sentinel off-by-one) |
 | 7. Map Infrastructure | ✅ Complete | 2/2 plans done; 4 manual UAT checks pending (GPS + day/night + preview button absent) |
-| 8. Map Features | 🗂 Planned | 3 plans ready (GPS ring, zoom cards, URL focus) |
+| 8. Map Features | ✅ Complete | 3/3 plans done; 4 manual UAT checks pending |
 | 9. Auth & Favorites | Not started | Highest systemic risk; LEGAL-01 now live (Phase 6) |
 | 10. City Expansion | Not started | Fix sync-paikat hardcoded Tampere first |
 | 11. PWA | Not started | Must be last — needs complete API surface |
@@ -100,11 +100,11 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- Last session: Phase 8 planned — 3 plans created and verified
-- Stopped at: Phase 8 ready to execute; Phase 7 manual UAT still pending (4 checks)
-- Phase 7 manual UAT still needed:
-  1. Tap re-center button with GPS active → map pans to user position
-  2. Tap re-center with GPS denied → silent no-op (no error/toast)
-  3. Toggle day/night → Cloud Console map styles switch correctly
-  4. Confirm no re-center button on 3D preview map
-- Start next session: /gsd:execute-phase 8
+- Last session: Phase 8 executed — GPS ring, pin→card, map focus URL all complete
+- Stopped at: Phase 8 verification passed (10/10 automated checks); 4 manual UAT pending
+- Phase 8 manual UAT needed:
+  1. GPS ring animates visually on the user location dot
+  2. Tapping a pin at zoom <16 pans+zooms to 16 (no bottom sheet)
+  3. "Näytä kartalla" on profile navigates to /?id=N and opens map on venue
+  4. Bottom sheet scrolls within 90vh and shows all content sections
+- Start next session: /gsd:verify-work 8 or proceed to Phase 9
