@@ -2,7 +2,7 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Käyttäjät, Kartta & Laatu
-status: planning
+status: executing
 last_updated: "2026-05-22T00:00:00Z"
 progress:
   total_phases: 6
@@ -16,10 +16,10 @@ progress:
 
 ## Current Position
 
-Phase: 6 — UI Polish & Data Foundation (planned — ready to execute)
-Plan: 7 plans in 2 waves
-Status: Ready to execute
-Last activity: 2026-05-22 — Phase 6 planned (7 plans)
+Phase: 6 — UI Polish & Data Foundation (executing — Wave 2 in progress)
+Plan: 7 plans in 2 waves (4/7 complete)
+Status: Executing
+Last activity: 2026-05-22 — Wave 1 complete (4 plans merged, 29 tests passing)
 
 ## Project Reference
 

@@ -47,10 +47,10 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
   5. AI widget shows the city name next to the temperature reading
   6. User can filter venues by city using a city selector in the UI
 **Plans:** 7 plans
-  - [ ] 06-01-PLAN.md — Add featured column to SELECT (ADS-02 data unblock)
-  - [ ] 06-02-PLAN.md — Create /tietosuoja GDPR page (LEGAL-01)
-  - [ ] 06-03-PLAN.md — Replace Varaa aika button with Varaussivu Row on profile page (UI-07 profile half)
-  - [ ] 06-04-PLAN.md — TDD lib/priceUtils.ts and lib/cityFilter.ts helpers (UI-05/DATA-07 logic + tests)
+  - [x] 06-01-PLAN.md — Add featured column to SELECT (ADS-02 data unblock)
+  - [x] 06-02-PLAN.md — Create /tietosuoja GDPR page (LEGAL-01)
+  - [x] 06-03-PLAN.md — Replace Varaa aika button with Varaussivu Row on profile page (UI-07 profile half)
+  - [x] 06-04-PLAN.md — TDD lib/priceUtils.ts and lib/cityFilter.ts helpers (UI-05/DATA-07 logic + tests)
   - [ ] 06-05-PLAN.md — PaikkaKortti: Sponsoroitu badge, price-at-top, Näytä tiedot CTA (ADS-02/UI-05/UI-06/UI-07 list half)
   - [ ] 06-06-PLAN.md — LiikuntapaikatLista: sport dropdown, city dropdown, Tietosuoja footer (UI-08/DATA-07/LEGAL-01 wiring)
   - [ ] 06-07-PLAN.md — Etusivu: WEATHER_CITY label + bottom-sheet Sponsoroitu badge (AI-04/ADS-02 map half)
