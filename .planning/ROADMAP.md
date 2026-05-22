@@ -80,7 +80,7 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 **Plans:** 3 plans
   - [x] 08-01-PLAN.md — GPS accuracy ring + zoom state infrastructure (MAP-05, MAP-06 groundwork)
   - [x] 08-02-PLAN.md — Pin-to-mini-card transformation + expanded bottom sheet (MAP-06)
-  - [ ] 08-03-PLAN.md — Map focus via URL + profile page link change (MAP-07)
+  - [x] 08-03-PLAN.md — Map focus via URL + profile page link change (MAP-07)
 **UI hint**: yes
 
 ### Phase 9: Auth & Favorites
@@ -128,7 +128,7 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 5. AI Weather Widget | v1.0 | 2/2 | ✅ Complete | 2026-05-21 |
 | 6. UI Polish & Data Foundation | v1.1 | 7/7 | ✅ Complete | 2026-05-22 |
 | 7. Map Infrastructure | v1.1 | 2/2 | ✅ Complete | - |
-| 8. Map Features | v1.1 | 2/3 | In progress | - |
+| 8. Map Features | v1.1 | 3/3 | Complete | 2026-05-22 |
 | 9. Auth & Favorites | v1.1 | 0/? | Not started | - |
 | 10. City Expansion | v1.1 | 0/? | Not started | - |
 | 11. PWA | v1.1 | 0/? | Not started | - |
