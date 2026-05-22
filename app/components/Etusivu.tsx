@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MapPin, Moon, Sun } from 'lucide-react'
-import { Map, Marker, useMap } from '@vis.gl/react-google-maps'
+import { X, MapPin, Moon, Sun, Locate } from 'lucide-react'
+import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
 import { Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -11,13 +11,18 @@ import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
 import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
-import { DAY_MAP_STYLES, NIGHT_MAP_STYLES, isNightHour } from '@/lib/mapStyles'
+import { isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
+import { isSafeUrl } from '@/lib/urlUtils'
 import { useGPS } from '@/hooks/useGPS'
-import { pinUrl, userLocationPinUrl } from '@/lib/sportPins'
+import { pinUrl } from '@/lib/sportPins'
+
+const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
+
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
 const EASE_MAP:   [number, number, number, number] = [0.4, 0, 0.2, 1]
 const NAV_H      = 56
+const WEATHER_CITY = 'Tampere'
 
 const SPORT_ICONS: Record<string, LucideIcon> = {
   padel: Zap, kuntosali: Dumbbell, jooga: Leaf,
@@ -35,15 +40,6 @@ function getWeatherEmoji(code: number): string {
   return '⛅'
 }
 
-function MapStyleController({ isDark }: { isDark: boolean }) {
-  const map = useMap()
-  useEffect(() => {
-    if (!map) return
-    map.setOptions({ styles: (isDark ? NIGHT_MAP_STYLES : DAY_MAP_STYLES) as google.maps.MapTypeStyle[] })
-  }, [map, isDark])
-  return null
-}
-
 function MapPanController({ coords }: { coords: { lat: number; lng: number } | null }) {
   const map = useMap()
   useEffect(() => {
@@ -53,6 +49,19 @@ function MapPanController({ coords }: { coords: { lat: number; lng: number } | n
   return null
 }
 
+function RecenterButton({ coords }: { coords: { lat: number; lng: number } | null }) {
+  const map = useMap()
+  return (
+    <motion.button
+      whileTap={{ scale: 0.95 }}
+      onClick={() => { if (map && coords) map.panTo(coords) }}
+      className="absolute bottom-16 right-4 z-10 w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.6)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+      aria-label="Palaa omalle sijainnille"
+    >
+      <Locate className="w-4 h-4" />
+    </motion.button>
+  )
+}
 
 function getTimeBasedFallback(): string {
   const h = new Date().getHours()
@@ -68,8 +77,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [aktiivinen, setAktiivinen] = useState('Kaikki')
   const [kartaAuki, setKartaAuki]   = useState(false)
   const [fullH, setFullH]           = useState(600)
-  const [isDark, setIsDark]         = useState(isNightHour)
-  const { coords }                  = useGPS()
+  const [isDark, setIsDark]         = useState(false)
+  const { coords }                  = useGPS({ autoRequest: true })
+
+  useEffect(() => {
+    setIsDark(isNightHour())
+  }, [])
 
   useEffect(() => {
     const id = setInterval(() => setIsDark(isNightHour()), 60_000)
@@ -188,15 +201,15 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 <span className="text-base leading-none select-none" aria-hidden>
                   {getWeatherEmoji(saa.code)}
                 </span>
-                <span className="text-sm font-semibold text-[#111111] tabular-nums">
-                  {saa.temp}°
+                <span className="text-sm font-bold text-[#111111] tabular-nums">
+                  {saa.temp}°{' '}<span className="font-normal text-[rgba(17,17,17,0.45)]">{WEATHER_CITY}</span>
                 </span>
               </div>
             )}
             <motion.button
               whileTap={{ scale: 0.88 }}
               onClick={() => setIsDark(d => !d)}
-              className="glass-btn flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
+              className="glass-btn flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold"
               style={{ color: isDark ? '#a0a0cc' : '#475569' }}
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -248,6 +261,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <Map
                 defaultCenter={TAMPERE}
                 defaultZoom={12}
+                mapId={MAP_ID} colorScheme={isDark ? 'DARK' : 'LIGHT'}
                 style={{ width: '100%', height: '100%' }}
                 disableDefaultUI
                 gestureHandling="none"
@@ -257,22 +271,24 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 {paikatKartalla.map(p => {
                   const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
                   return (
-                    <Marker
-                      key={p.id}
-                      position={{ lat: p.latitude, lng: p.longitude }}
-                      icon={pinUrl(color, p.laji)}
-                    />
+                    <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }}>
+                      <img src={pinUrl(color, p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
+                    </AdvancedMarker>
                   )
                 })}
                 {coords && (
-                  <Marker
-                    position={coords}
-                    icon={{ url: userLocationPinUrl(), scaledSize: new google.maps.Size(24, 24), anchor: new google.maps.Point(12, 12) }}
-                    zIndex={20}
-                    clickable={false}
-                  />
+                  <AdvancedMarker position={coords} zIndex={20}>
+                    <div style={{ width: 24, height: 24, position: 'relative', overflow: 'visible' }}>
+                      <motion.div
+                        style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.7)', pointerEvents: 'none' }}
+                        animate={{ scale: [0.5, 2], opacity: [0.6, 0] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+                      />
+                      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(66,133,244,0.18)' }} />
+                      <div style={{ position: 'absolute', inset: 3, borderRadius: '50%', background: '#4285F4', border: '2.5px solid white' }} />
+                    </div>
+                  </AdvancedMarker>
                 )}
-                <MapStyleController isDark={isDark} />
                 <MapPanController coords={coords} />
               </Map>
             </div>
@@ -314,6 +330,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <Map
                 defaultCenter={TAMPERE}
                 defaultZoom={14}
+                mapId={MAP_ID} colorScheme={isDark ? 'DARK' : 'LIGHT'}
                 style={{ width: '100%', height: '100%' }}
                 disableDefaultUI
                 gestureHandling="greedy"
@@ -324,25 +341,26 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 {paikatKartalla.map(p => {
                   const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
                   return (
-                    <Marker
-                      key={p.id}
-                      position={{ lat: p.latitude, lng: p.longitude }}
-                      zIndex={valittu?.id === p.id ? 10 : 1}
-                      icon={pinUrl(color, p.laji)}
-                      onClick={() => setValittu(p)}
-                    />
+                    <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1} onClick={() => setValittu(p)}>
+                      <img src={pinUrl(color, p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
+                    </AdvancedMarker>
                   )
                 })}
                 {coords && (
-                  <Marker
-                    position={coords}
-                    icon={{ url: userLocationPinUrl(), scaledSize: new google.maps.Size(24, 24), anchor: new google.maps.Point(12, 12) }}
-                    zIndex={20}
-                    clickable={false}
-                  />
+                  <AdvancedMarker position={coords} zIndex={20}>
+                    <div style={{ width: 24, height: 24, position: 'relative', overflow: 'visible' }}>
+                      <motion.div
+                        style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.7)', pointerEvents: 'none' }}
+                        animate={{ scale: [0.5, 2], opacity: [0.6, 0] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+                      />
+                      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(66,133,244,0.18)' }} />
+                      <div style={{ position: 'absolute', inset: 3, borderRadius: '50%', background: '#4285F4', border: '2.5px solid white' }} />
+                    </div>
+                  </AdvancedMarker>
                 )}
-                <MapStyleController isDark={isDark} />
                 <MapPanController coords={coords} />
+                <RecenterButton coords={coords} />
               </Map>
 
               {/* X close button */}
@@ -357,7 +375,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={() => setIsDark(d => !d)}
-                className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-2 rounded-full glass-btn text-xs font-semibold"
+                className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-2 rounded-full glass-btn text-xs font-bold"
                 style={{ color: isDark ? '#a0a0cc' : '#475569' }}
               >
                 <AnimatePresence mode="wait" initial={false}>
@@ -390,7 +408,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                           key={laji}
                           onClick={() => setAktiivinen(laji)}
                           whileTap={{ scale: 0.95, transition: { duration: 0.1 } }}
-                          className={`shrink-0 px-3.5 py-2 rounded-full text-sm font-semibold
+                          className={`shrink-0 px-3.5 py-2 rounded-full text-sm font-bold
                             [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
                             ${aktiivinen === laji
                               ? 'bg-[#111111] text-white shadow-lg'
@@ -451,7 +469,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 const Icon = SPORT_ICONS[valittu.laji] ?? Activity
                 return (
                   <span
-                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full text-white"
+                    className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full text-white"
                     style={{ backgroundColor: laji.color }}
                   >
                     <Icon className="w-3 h-3" />
@@ -459,6 +477,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   </span>
                 )
               })()}
+              {valittu.featured && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200 ml-1.5">
+                  Sponsoroitu
+                </span>
+              )}
 
               <h2 className="mt-2 font-serif text-xl font-bold text-[#111111] leading-snug">
                 {valittu.nimi}
@@ -473,22 +496,22 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
               <div className="mt-4 flex items-center justify-between gap-3">
                 <div>
-                  {hintateksti(valittu.hinta_min, valittu.hinta_max) ? (
-                    <p className="font-serif text-xl font-bold text-[#111111] tabular-nums">
-                      {hintateksti(valittu.hinta_min, valittu.hinta_max)}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-[rgba(17,17,17,0.4)]">Lisätään pian</p>
-                  )}
+                  {(() => {
+                    const priceStr = hintateksti(valittu.hinta_min, valittu.hinta_max)
+                    const displayPrice = valittu.hinta_kuvaus || priceStr || null
+                    return displayPrice
+                      ? <p className="font-serif text-xl font-bold text-[#111111] tabular-nums">{displayPrice}</p>
+                      : <p className="text-sm text-[rgba(17,17,17,0.4)]">Lisätään pian</p>
+                  })()}
                 </div>
 
-                {valittu.varauslinkki ? (
+                {isSafeUrl(valittu.varauslinkki) ? (
                   <motion.a
                     href={valittu.varauslinkki}
                     target="_blank"
                     rel="noopener noreferrer"
                     whileTap={{ scale: 0.97 }}
-                    className="shrink-0 bg-[#111111] hover:bg-[#333333] text-white font-semibold text-sm px-6 py-3 rounded-full [transition:background-color_150ms_var(--ease-out)]"
+                    className="shrink-0 bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-6 py-3 rounded-full [transition:background-color_150ms_var(--ease-out)]"
                   >
                     Varaa →
                   </motion.a>
