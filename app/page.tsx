@@ -25,14 +25,16 @@ export default async function Home({
 
   if (searchParams.nakyma === 'lista') {
     return (
-      <Suspense>
+      <Suspense fallback={<div className="min-h-screen bg-white" />}>
         <LiikuntapaikatLista paikat={data} />
       </Suspense>
     )
   }
 
+  // nakyma=kartta also renders Etusivu — Etusivu has an integrated fullscreen map.
+  // Wire to a standalone Kartta component in Phase 7 when AdvancedMarker migration is done.
   return (
-    <Suspense>
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
       <Etusivu paikat={data} />
     </Suspense>
   )

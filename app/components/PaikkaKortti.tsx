@@ -43,10 +43,12 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false }: P
   const hasDropIn    = paikka.hinta_kuvaus?.toLowerCase().includes('kertakäynti') ?? false
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
   const membershipOnly = isMembershipOnly(paikka)
-  const priceLines   = paikka.hinta_kuvaus?.includes('\n')
+  const priceLines   = !membershipOnly && paikka.hinta_kuvaus?.includes('\n')
     ? paikka.hinta_kuvaus.split('\n')
     : null
-  const priceText    = paikka.hinta_kuvaus ?? (hintaTeksti !== '' ? hintaTeksti : null)
+  const priceText    = !membershipOnly
+    ? (paikka.hinta_kuvaus ?? (hintaTeksti !== '' ? hintaTeksti : null))
+    : null
   const osoite       = [paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')
   const Icon         = SPORT_ICONS[paikka.laji] ?? Activity
 

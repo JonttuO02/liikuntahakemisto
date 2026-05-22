@@ -4,6 +4,7 @@ import { Phone, MapPin, CircleDollarSign, Info, ChevronLeft, Clock, ExternalLink
 import { supabase } from '@/lib/supabase'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
+import { isSafeUrl } from '@/lib/urlUtils'
 import { formatGroupedHours } from '@/lib/aukiolo'
 import HoursTable from '@/app/components/HoursTable'
 
@@ -103,7 +104,7 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
               </Row>
             )}
 
-            {paikka.varauslinkki && (
+            {isSafeUrl(paikka.varauslinkki) && (
               <Row icon={<ExternalLink className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Varaussivu">
                 <a
                   href={paikka.varauslinkki}

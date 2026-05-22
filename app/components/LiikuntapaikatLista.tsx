@@ -56,7 +56,8 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
       const q              = haku.toLowerCase()
       const matchesHaku    = !haku || p.nimi.toLowerCase().includes(q) || p.kuvaus?.toLowerCase().includes(q) || p.osoite?.toLowerCase().includes(q)
       const hintaRef       = p.hinta_min ?? p.hinta_max
-      const matchesHinta   = aktiivHinta === null || hintaRef == null || hintaRef <= aktiivHinta
+      const matchesHinta   = aktiivHinta === null
+        || (hintaRef != null && hintaRef <= aktiivHinta)
       const matchesAuki    = !aukinyt || getOpenStatus(p.aukioloajat).status !== 'closed'
       const matchesKaupunki = aktiivKaupunki === 'Kaikki' || p.kaupunki === aktiivKaupunki
       return matchesLaji && matchesHaku && matchesHinta && matchesAuki && matchesKaupunki

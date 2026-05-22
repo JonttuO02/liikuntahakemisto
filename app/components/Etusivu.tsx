@@ -13,6 +13,7 @@ import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
 import { DAY_MAP_STYLES, NIGHT_MAP_STYLES, isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
+import { isSafeUrl } from '@/lib/urlUtils'
 import { useGPS } from '@/hooks/useGPS'
 import { pinUrl, userLocationPinUrl } from '@/lib/sportPins'
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
@@ -69,8 +70,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [aktiivinen, setAktiivinen] = useState('Kaikki')
   const [kartaAuki, setKartaAuki]   = useState(false)
   const [fullH, setFullH]           = useState(600)
-  const [isDark, setIsDark]         = useState(isNightHour)
-  const { coords }                  = useGPS()
+  const [isDark, setIsDark]         = useState(false)
+  const { coords }                  = useGPS({ autoRequest: true })
+
+  useEffect(() => {
+    setIsDark(isNightHour())
+  }, [])
 
   useEffect(() => {
     const id = setInterval(() => setIsDark(isNightHour()), 60_000)
@@ -479,22 +484,22 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
               <div className="mt-4 flex items-center justify-between gap-3">
                 <div>
-                  {hintateksti(valittu.hinta_min, valittu.hinta_max) ? (
-                    <p className="font-serif text-xl font-bold text-[#111111] tabular-nums">
-                      {hintateksti(valittu.hinta_min, valittu.hinta_max)}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-[rgba(17,17,17,0.4)]">Lisätään pian</p>
-                  )}
+                  {(() => {
+                    const priceStr = hintateksti(valittu.hinta_min, valittu.hinta_max)
+                    const displayPrice = valittu.hinta_kuvaus || priceStr || null
+                    return displayPrice
+                      ? <p className="font-serif text-xl font-bold text-[#111111] tabular-nums">{displayPrice}</p>
+                      : <p className="text-sm text-[rgba(17,17,17,0.4)]">Lisätään pian</p>
+                  })()}
                 </div>
 
-                {valittu.varauslinkki ? (
+                {isSafeUrl(valittu.varauslinkki) ? (
                   <motion.a
                     href={valittu.varauslinkki}
                     target="_blank"
                     rel="noopener noreferrer"
                     whileTap={{ scale: 0.97 }}
-                    className="shrink-0 bg-[#111111] hover:bg-[#333333] text-white font-semibold text-sm px-6 py-3 rounded-full [transition:background-color_150ms_var(--ease-out)]"
+                    className="shrink-0 bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-6 py-3 rounded-full [transition:background-color_150ms_var(--ease-out)]"
                   >
                     Varaa →
                   </motion.a>

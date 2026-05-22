@@ -9,8 +9,8 @@ export interface GPSState {
   requestLocation: () => void
 }
 
-export function useGPS(): GPSState {
-  const [status, setStatus] = useState<GPSStatus>('requesting')
+export function useGPS({ autoRequest = false }: { autoRequest?: boolean } = {}): GPSState {
+  const [status, setStatus] = useState<GPSStatus>('idle')
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
 
   const requestLocation = useCallback(() => {
@@ -35,9 +35,9 @@ export function useGPS(): GPSState {
     )
   }, [])
 
-  // Auto-request GPS on mount
+  // Only auto-request GPS on mount when explicitly opted in
   useEffect(() => {
-    requestLocation()
+    if (autoRequest) requestLocation()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { status, coords, requestLocation }
