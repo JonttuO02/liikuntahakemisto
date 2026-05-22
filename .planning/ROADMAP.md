@@ -24,7 +24,7 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 
 ### v1.1 Phases
 
-- [ ] **Phase 6: UI Polish & Data Foundation** — Tighten card UI, add GDPR page, sponsored badge, city filter, AI widget city name
+- [x] **Phase 6: UI Polish & Data Foundation** — Tighten card UI, add GDPR page, sponsored badge, city filter, AI widget city name — 2026-05-22
 - [ ] **Phase 7: Map Infrastructure** — Migrate to AdvancedMarker, add mapId env var, implement re-center button
 - [ ] **Phase 8: Map Features** — GPS accuracy ring, zoom-dependent pin-to-card, in-app map focus
 - [ ] **Phase 9: Auth & Favorites** — Supabase Auth (email + Google OAuth), favorites synced across devices, personalized AI
@@ -121,7 +121,7 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 3. Data Enrichment | v1.0 | 2/2 | ✅ Complete | 2026-05-21 |
 | 4. Service Information UI | v1.0 | 4/4 | ✅ Complete | 2026-05-21 |
 | 5. AI Weather Widget | v1.0 | 2/2 | ✅ Complete | 2026-05-21 |
-| 6. UI Polish & Data Foundation | v1.1 | 7/7 | human_needed | 2026-05-22 |
+| 6. UI Polish & Data Foundation | v1.1 | 7/7 | ✅ Complete | 2026-05-22 |
 | 7. Map Infrastructure | v1.1 | 0/? | Not started | - |
 | 8. Map Features | v1.1 | 0/? | Not started | - |
 | 9. Auth & Favorites | v1.1 | 0/? | Not started | - |
