@@ -13,11 +13,6 @@ const SPORT_ICONS_SVG: Record<string, string> = {
   liikunta: g(`<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>`),
 }
 
-export function userLocationPinUrl(): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="11" fill="rgba(66,133,244,0.18)"/><circle cx="12" cy="12" r="7" fill="#4285F4" stroke="white" stroke-width="2.5"/></svg>`
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
-}
-
 export function pinUrl(color: string, laji: string): string {
   const iconContent = SPORT_ICONS_SVG[laji.toLowerCase()]
   const iconSvg = iconContent
