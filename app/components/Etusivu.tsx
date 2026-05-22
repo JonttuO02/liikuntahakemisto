@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, MapPin, Moon, Sun, Locate } from 'lucide-react'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
@@ -94,6 +95,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [zoomLevel, setZoomLevel]   = useState(14)
   const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
   const { coords }                  = useGPS({ autoRequest: true })
+  const searchParams = useSearchParams()
+  const focusId = searchParams.get('id')
 
   useEffect(() => {
     setIsDark(isNightHour())
@@ -153,6 +156,17 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   useEffect(() => {
     if (!kartaAuki) setValittu(null)
   }, [kartaAuki])
+
+  // Focus venue from ?id= URL param (MAP-07)
+  useEffect(() => {
+    if (!focusId) return
+    const id = Number(focusId)
+    const target = paikat.find(p => p.id === id)
+    if (!target || target.latitude == null || target.longitude == null) return
+    setKartaAuki(true)
+    setAutoZoomTarget({ lat: target.latitude, lng: target.longitude })
+    // Do NOT call setValittu — D-13: big sheet does not auto-open
+  }, [focusId, paikat]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const suodatettu = useMemo(
     () => paikat.filter(p =>

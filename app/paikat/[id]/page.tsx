@@ -68,14 +68,12 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
 
             {paikka.latitude != null && paikka.longitude != null && (
               <Row icon={<MapPin className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Sijainti">
-                <a
-                  href={`https://maps.google.com/?q=${paikka.latitude},${paikka.longitude}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href={`/?id=${paikka.id}`}
                   className="text-[#111111] hover:text-[rgba(17,17,17,0.6)] text-sm font-bold underline underline-offset-2 [transition:color_150ms_var(--ease-out)]"
                 >
                   Näytä kartalla →
-                </a>
+                </Link>
               </Row>
             )}
 
