@@ -17,8 +17,7 @@ import { isSafeUrl } from '@/lib/urlUtils'
 import { useGPS } from '@/hooks/useGPS'
 import { pinUrl } from '@/lib/sportPins'
 
-const DAY_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_DAY
-const NIGHT_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_NIGHT
+const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
 const EASE_MAP:   [number, number, number, number] = [0.4, 0, 0.2, 1]
@@ -262,7 +261,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <Map
                 defaultCenter={TAMPERE}
                 defaultZoom={12}
-                mapId={isDark ? NIGHT_ID : DAY_ID}
+                mapId={MAP_ID} colorScheme={isDark ? 'DARK' : 'LIGHT'}
                 style={{ width: '100%', height: '100%' }}
                 disableDefaultUI
                 gestureHandling="none"
@@ -326,7 +325,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <Map
                 defaultCenter={TAMPERE}
                 defaultZoom={14}
-                mapId={isDark ? NIGHT_ID : DAY_ID}
+                mapId={MAP_ID} colorScheme={isDark ? 'DARK' : 'LIGHT'}
                 style={{ width: '100%', height: '100%' }}
                 disableDefaultUI
                 gestureHandling="greedy"
