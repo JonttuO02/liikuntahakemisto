@@ -10,7 +10,9 @@ import type { LucideIcon } from 'lucide-react'
 import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
 import Karuselli from './Karuselli'
+import HoursTable from './HoursTable'
 import type { Liikuntapaikka } from '@/lib/types'
+import { formatGroupedHours, getOpenStatus } from '@/lib/aukiolo'
 import { isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
 import { isSafeUrl } from '@/lib/urlUtils'
@@ -63,6 +65,17 @@ function RecenterButton({ coords }: { coords: { lat: number; lng: number } | nul
   )
 }
 
+function MapAutoZoom({ target, onComplete }: { target: { lat: number; lng: number } | null; onComplete: () => void }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!map || !target) return
+    map.panTo(target)
+    map.setZoom(16)
+    onComplete()
+  }, [map, target])
+  return null
+}
+
 function getTimeBasedFallback(): string {
   const h = new Date().getHours()
   if (h >= 6 && h < 11)  return 'Huomenta · Löydä paras liikuntapaikka Tampereelta'
@@ -79,6 +92,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [fullH, setFullH]           = useState(600)
   const [isDark, setIsDark]         = useState(false)
   const [zoomLevel, setZoomLevel]   = useState(14)
+  const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
   const { coords }                  = useGPS({ autoRequest: true })
 
   useEffect(() => {
@@ -343,8 +357,30 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 {paikatKartalla.map(p => {
                   const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
                   return (
-                    <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1} onClick={() => setValittu(p)}>
-                      <img src={pinUrl(color, p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
+                    <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1}>
+                      <AnimatePresence mode="wait" initial={false}>
+                        {zoomLevel < 16 ? (
+                          <motion.div key="pin" exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                            onClick={() => setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })}
+                          >
+                            <img src={pinUrl(color, p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
+                          </motion.div>
+                        ) : (
+                          <motion.div key="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}
+                            className="glass rounded-xl px-2.5 py-2 flex flex-col gap-1 cursor-pointer"
+                            style={{ minWidth: 100, maxWidth: 140 }}
+                            onClick={(e) => { e.stopPropagation(); setValittu(p) }}
+                          >
+                            <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white truncate" style={{ backgroundColor: lajiKonfig[p.laji]?.color ?? '#6b7280' }}>
+                              {lajiKonfig[p.laji]?.label ?? p.laji}
+                            </span>
+                            <span className="font-bold text-sm text-[#111111] truncate leading-tight">{p.nimi}</span>
+                            {(p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)) && (
+                              <span className="text-[10px] text-[rgba(17,17,17,0.55)] truncate">{p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)}</span>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </AdvancedMarker>
                   )
                 })}
@@ -363,6 +399,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 )}
                 <MapPanController coords={coords} />
                 <RecenterButton coords={coords} />
+                <MapAutoZoom target={autoZoomTarget} onComplete={() => setAutoZoomTarget(null)} />
               </Map>
 
               {/* X close button */}
@@ -452,6 +489,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               borderTop:            '1px solid rgba(255,255,255,1)',
               boxShadow:            '0 -8px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,1)',
               paddingBottom:        'max(env(safe-area-inset-bottom), 80px)',
+              maxHeight:            '90vh',
             }}
           >
             <div className="flex justify-center pt-3 pb-1">
@@ -465,7 +503,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <X className="w-3.5 h-3.5" />
             </button>
 
-            <div className="px-5 pt-2 pb-2">
+            <div className="px-5 pt-2 pb-2" style={{ overflowY: 'auto' as const }}>
               {(() => {
                 const laji = lajiKonfig[valittu.laji] ?? { label: valittu.laji, color: '#6b7280' }
                 const Icon = SPORT_ICONS[valittu.laji] ?? Activity
@@ -495,6 +533,19 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   {[valittu.osoite, valittu.kaupunki].filter(Boolean).join(', ')}
                 </p>
               )}
+
+              {(() => {
+                const status = getOpenStatus(valittu.aukioloajat)
+                if (status.status === 'no-data') return null
+                return (
+                  <p className="mt-1.5 text-sm">
+                    {status.status === 'open'
+                      ? <span className="text-green-700 font-bold">● Auki nyt{status.hours ? ` · ${status.hours}` : ''}</span>
+                      : <span className="text-[rgba(17,17,17,0.45)]">Suljettu{status.hours ? ` · ${status.hours}` : ''}</span>
+                    }
+                  </p>
+                )
+              })()}
 
               <div className="mt-4 flex items-center justify-between gap-3">
                 <div>
@@ -526,6 +577,43 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   </Link>
                 )}
               </div>
+
+              {(() => {
+                const groups = formatGroupedHours(valittu.aukioloajat)
+                if (groups.length === 0) return null
+                return (
+                  <div className="mt-4 pt-4 border-t border-[rgba(0,0,0,0.07)]">
+                    <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-2">Aukioloajat</p>
+                    <HoursTable groups={groups} />
+                  </div>
+                )
+              })()}
+
+              {valittu.puhelin && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">Puhelin</p>
+                  <a href={`tel:${valittu.puhelin}`} className="text-sm font-bold text-[#111111] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]">
+                    {valittu.puhelin}
+                  </a>
+                </div>
+              )}
+
+              {isSafeUrl(valittu.varauslinkki) && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">Varaussivu</p>
+                  <a href={valittu.varauslinkki!} target="_blank" rel="noopener noreferrer"
+                    className="text-sm text-[#111111] font-bold underline underline-offset-2 break-all hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]">
+                    {valittu.varauslinkki}
+                  </a>
+                </div>
+              )}
+
+              {valittu.kuvaus && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">Kuvaus</p>
+                  <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed">{valittu.kuvaus}</p>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
