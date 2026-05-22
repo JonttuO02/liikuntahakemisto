@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
 status: active
-last_updated: "2026-05-22T14:00:00.000Z"
-last_activity: 2026-05-22 — Phase 7 planned; 2 plans in 2 waves; verification passed
+last_updated: "2026-05-22T16:00:00.000Z"
+last_activity: 2026-05-22 — Phase 7 executed; 2/2 plans complete; 4 manual UAT checks pending
 progress:
   total_phases: 6
-  completed_phases: 2
-  total_plans: 9
-  completed_plans: 7
-  percent: 33
+  completed_phases: 3
+  total_plans: 11
+  completed_plans: 9
+  percent: 50
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 7 — Map Infrastructure (planned — ready to execute)
-Plan: 07-01 (Wave 1), 07-02 (Wave 2)
+Phase: 7 — Map Infrastructure (complete — 4 manual UAT checks pending)
+Plan: 07-01 ✅, 07-02 ✅
 Status: active
-Last activity: 2026-05-22 — Phase 7 planned; 2 plans created and verified
+Last activity: 2026-05-22 — Phase 7 executed; AdvancedMarker migration + RecenterButton done; build passes; 4 manual checks needed
 
 ## Project Reference
 
@@ -34,8 +34,8 @@ See: .planning/PROJECT.md
 | Phase | Status | Notes |
 |-------|--------|-------|
 | 6. UI Polish & Data Foundation | ✅ Complete | UAT passed; 1 inline fix (city filter sentinel off-by-one) |
-| 7. Map Infrastructure | 📋 Planned | 2 plans (07-01/07-02); requires mapId env vars in .env.local before executing |
-| 8. Map Features | Not started | Built on Phase 7 AdvancedMarker foundation |
+| 7. Map Infrastructure | ✅ Complete | 2/2 plans done; 4 manual UAT checks pending (GPS + day/night + preview button absent) |
+| 8. Map Features | Not started | Built on Phase 7 AdvancedMarker foundation — now unblocked |
 | 9. Auth & Favorites | Not started | Highest systemic risk; LEGAL-01 now live (Phase 6) |
 | 10. City Expansion | Not started | Fix sync-paikat hardcoded Tampere first |
 | 11. PWA | Not started | Must be last — needs complete API surface |
@@ -53,7 +53,7 @@ See: .planning/PROJECT.md
 (v1.1 additions)
 
 - LEGAL-01 ships in Phase 6 — must be live before auth (Phase 9) goes out ✅ DONE
-- AdvancedMarker migration is a discrete Phase 7 prerequisite; no map features before it
+- AdvancedMarker migration complete ✅ DONE — Phase 8 map features now unblocked
 - Supabase Auth uses per-request createServerClient — never the existing module-scope singleton
 - middleware.ts does not exist yet — first deliverable of Phase 9
 - Map focus URL: /?nakyma=kartta&id=<paikka_id> — full Link navigation
@@ -66,7 +66,7 @@ See: .planning/PROJECT.md
 ### Key Constraints
 
 - Supabase Auth v1.1: suosikit vaativat tilin, muu toimii anonyymisti
-- AdvancedMarker requires NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID env var + mapId on both Map instances
+- AdvancedMarker requires NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID env var + mapId on both Map instances ✅ DONE
 - supabase.auth.getUser() server-side — never getSession() (reads unvalidated cookie)
 - RLS INSERT needs WITH CHECK not USING for favorites table
 - sync-paikat hardcodes Tampere in kaupunki column — fix before running Helsinki/Turku syncs
@@ -81,10 +81,7 @@ See: .planning/PROJECT.md
 - 3 new npm packages total: @supabase/ssr, @serwist/next, serwist
 - All other v1.1 features use already-installed packages
 - lib/urlUtils.ts added in Phase 6 — isSafeUrl() guards all varauslinkki href renders
-
-### Open Questions (before Phase 7)
-
-- mapId: Create TWO Map IDs in Google Cloud Console (day + night). Add NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_DAY and NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_NIGHT to .env.local before executing Phase 7.
+- RecenterButton uses useMap() outside <Map> subtree but resolves correctly (preview/fullscreen maps are mutually exclusive via AnimatePresence)
 
 ### Open Questions (before Phase 9)
 
@@ -103,6 +100,11 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- Last session: Phase 7 planned — UI-SPEC created, 2 plans written and verified
-- Stopped at: Phase 7 ready to execute
-- Start next session: /gsd:execute-phase 7 (add mapId env vars to .env.local first)
+- Last session: Phase 7 executed — AdvancedMarker migration + RecenterButton complete
+- Stopped at: Phase 7 all plans done; 4 manual UAT checks before marking fully verified
+- Manual UAT needed:
+  1. Tap re-center button with GPS active → map pans to user position
+  2. Tap re-center with GPS denied → silent no-op (no error/toast)
+  3. Toggle day/night → Cloud Console map styles switch correctly
+  4. Confirm no re-center button on 3D preview map
+- Start next session: /gsd:discuss-phase 8 (or run UAT first)
