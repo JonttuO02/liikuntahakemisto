@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
 status: active
-last_updated: "2026-05-22T14:47:44.216Z"
-last_activity: 2026-05-22 — Phase 8 all plans executed; verifying
+last_updated: "2026-05-22T15:00:00.000Z"
+last_activity: 2026-05-22 — Phase 9 context gathered
 progress:
   total_phases: 6
   completed_phases: 2
@@ -100,11 +100,6 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- Last session: Phase 8 executed — GPS ring, pin→card, map focus URL all complete
-- Stopped at: Phase 8 verification passed (10/10 automated checks); 4 manual UAT pending
-- Phase 8 manual UAT needed:
-  1. GPS ring animates visually on the user location dot
-  2. Tapping a pin at zoom <16 pans+zooms to 16 (no bottom sheet)
-  3. "Näytä kartalla" on profile navigates to /?id=N and opens map on venue
-  4. Bottom sheet scrolls within 90vh and shows all content sections
-- Start next session: /gsd:verify-work 8 or proceed to Phase 9
+- Last session: Phase 9 context gathered — auth modal, heart placement, NavBar state, AI favorites flow all decided
+- Stopped at: Phase 9 context captured in 09-CONTEXT.md
+- Resume: /gsd:plan-phase 9
