@@ -1,12 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Phone, MapPin, CircleDollarSign, Info, ChevronLeft, Clock } from 'lucide-react'
+import { Phone, MapPin, CircleDollarSign, Info, ChevronLeft, Clock, ExternalLink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
 import { formatGroupedHours } from '@/lib/aukiolo'
 import HoursTable from '@/app/components/HoursTable'
-import { buttonVariants } from '@/components/ui/button'
 
 export default async function PaikkaPage({ params }: { params: { id: string } }) {
   const id = Number(params.id)
@@ -72,7 +71,7 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
                   href={`https://maps.google.com/?q=${paikka.latitude},${paikka.longitude}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#111111] hover:text-[rgba(17,17,17,0.6)] text-sm font-medium underline underline-offset-2 [transition:color_150ms_var(--ease-out)]"
+                  className="text-[#111111] hover:text-[rgba(17,17,17,0.6)] text-sm font-bold underline underline-offset-2 [transition:color_150ms_var(--ease-out)]"
                 >
                   Näytä kartalla →
                 </a>
@@ -88,7 +87,7 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
             {paikka.puhelin && (
               <Row icon={<Phone className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Puhelin">
                 <a href={`tel:${paikka.puhelin}`}
-                  className="text-[#111111] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)] font-medium">
+                  className="text-[#111111] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)] font-bold">
                   {paikka.puhelin}
                 </a>
               </Row>
@@ -104,28 +103,25 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
               </Row>
             )}
 
+            {paikka.varauslinkki && (
+              <Row icon={<ExternalLink className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Varaussivu">
+                <a
+                  href={paikka.varauslinkki}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-[#111111] font-bold underline underline-offset-2 break-all hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]"
+                >
+                  {paikka.varauslinkki}
+                </a>
+              </Row>
+            )}
+
             {paikka.kuvaus && (
               <Row icon={<Info className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Kuvaus">
                 <p className="text-[rgba(17,17,17,0.65)] leading-relaxed">{paikka.kuvaus}</p>
               </Row>
             )}
           </div>
-
-          {paikka.varauslinkki && (
-            <div className="px-6 sm:px-8 pb-8">
-              <a
-                href={paikka.varauslinkki}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={buttonVariants({
-                  size: 'lg',
-                  className: 'w-full rounded-full bg-[#111111] hover:bg-[#333333] active:scale-[0.97] text-white font-semibold text-base h-14 no-underline [transition:background-color_150ms_var(--ease-out),transform_100ms_var(--ease-out)]',
-                })}
-              >
-                Varaa aika →
-              </a>
-            </div>
-          )}
         </div>
       </div>
     </div>
