@@ -106,8 +106,8 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
           {/* Row 1: city + sport dropdowns + Etäisyydet */}
           <div className="flex flex-wrap items-center gap-2">
 
-            {/* City select (DATA-07) */}
-            {kaupungit.length > 1 && (
+            {/* City select (DATA-07) — kaupungit always includes 'Kaikki' sentinel at [0], so > 2 means 2+ real cities */}
+            {kaupungit.length > 2 && (
               <select
                 value={aktiivKaupunki}
                 onChange={e => setAktiivKaupunki(e.target.value)}
