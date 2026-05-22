@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { LAJIT_FILTTERI } from '@/lib/lajit'
 import { deriveKaupungit } from '@/lib/cityFilter'
 import { getOpenStatus } from '@/lib/aukiolo'
+import Link from 'next/link'
 import PaikkaKortti, { korttiVariants } from './PaikkaKortti'
 
 import type { Liikuntapaikka } from '@/lib/types'
@@ -233,6 +234,16 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
             </motion.button>
           </motion.div>
         )}
+      </div>
+
+      {/* ── Footer ───────────────────────────────────────────────── */}
+      <div className="max-w-5xl mx-auto px-4 pb-6 pt-2 flex justify-center">
+        <Link
+          href="/tietosuoja"
+          className="text-xs text-[rgba(17,17,17,0.35)] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)] underline underline-offset-2"
+        >
+          Tietosuoja
+        </Link>
       </div>
     </div>
   )
