@@ -18,9 +18,9 @@ progress:
 ## Current Position
 
 Phase: 8 — Map Features (planned — ready to execute)
-Plan: 08-01 ⏳, 08-02 ⏳, 08-03 ⏳
+Plan: 08-01 ✅, 08-02 ⏳, 08-03 ⏳
 Status: active
-Last activity: 2026-05-22 — Phase 8 planned; 3 plans in 3 sequential waves; verification passed
+Last activity: 2026-05-22 — Phase 8 executing; 08-01 complete (GPS ripple ring + zoomLevel tracking)
 
 ## Project Reference
 
