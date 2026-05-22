@@ -124,7 +124,7 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 4. Service Information UI | v1.0 | 4/4 | ✅ Complete | 2026-05-21 |
 | 5. AI Weather Widget | v1.0 | 2/2 | ✅ Complete | 2026-05-21 |
 | 6. UI Polish & Data Foundation | v1.1 | 7/7 | ✅ Complete | 2026-05-22 |
-| 7. Map Infrastructure | v1.1 | 0/2 | Not started | - |
+| 7. Map Infrastructure | v1.1 | 0/2 | 📋 Planned | - |
 | 8. Map Features | v1.1 | 0/? | Not started | - |
 | 9. Auth & Favorites | v1.1 | 0/? | Not started | - |
 | 10. City Expansion | v1.1 | 0/? | Not started | - |

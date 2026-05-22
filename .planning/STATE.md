@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
 status: active
-last_updated: "2026-05-22T12:00:00.000Z"
-last_activity: 2026-05-22 — Phase 6 UAT complete; 9/12 tests passed, 1 inline fix (city filter threshold), 2 skipped (no featured venues yet)
+last_updated: "2026-05-22T14:00:00.000Z"
+last_activity: 2026-05-22 — Phase 7 planned; 2 plans in 2 waves; verification passed
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 7
+  total_plans: 9
   completed_plans: 7
   percent: 33
 ---
@@ -17,10 +17,10 @@ progress:
 
 ## Current Position
 
-Phase: 7 — Map Infrastructure (not started — ready to plan)
-Plan: —
+Phase: 7 — Map Infrastructure (planned — ready to execute)
+Plan: 07-01 (Wave 1), 07-02 (Wave 2)
 Status: active
-Last activity: 2026-05-22 — Phase 6 verified and marked complete
+Last activity: 2026-05-22 — Phase 7 planned; 2 plans created and verified
 
 ## Project Reference
 
@@ -34,7 +34,7 @@ See: .planning/PROJECT.md
 | Phase | Status | Notes |
 |-------|--------|-------|
 | 6. UI Polish & Data Foundation | ✅ Complete | UAT passed; 1 inline fix (city filter sentinel off-by-one) |
-| 7. Map Infrastructure | Not started | Requires mapId env var + AdvancedMarker — start here |
+| 7. Map Infrastructure | 📋 Planned | 2 plans (07-01/07-02); requires mapId env vars in .env.local before executing |
 | 8. Map Features | Not started | Built on Phase 7 AdvancedMarker foundation |
 | 9. Auth & Favorites | Not started | Highest systemic risk; LEGAL-01 now live (Phase 6) |
 | 10. City Expansion | Not started | Fix sync-paikat hardcoded Tampere first |
@@ -84,7 +84,7 @@ See: .planning/PROJECT.md
 
 ### Open Questions (before Phase 7)
 
-- mapId: Create Map ID in Google Cloud Console, add NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID to .env.local
+- mapId: Create TWO Map IDs in Google Cloud Console (day + night). Add NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_DAY and NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_NIGHT to .env.local before executing Phase 7.
 
 ### Open Questions (before Phase 9)
 
@@ -103,6 +103,6 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- Last session: Phase 6 complete — code review fixed 14 findings, UAT passed
-- Stopped at: Phase 7 ready to plan
-- Start next session: /gsd:discuss-phase 7 or /gsd:plan-phase 7
+- Last session: Phase 7 planned — UI-SPEC created, 2 plans written and verified
+- Stopped at: Phase 7 ready to execute
+- Start next session: /gsd:execute-phase 7 (add mapId env vars to .env.local first)
