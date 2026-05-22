@@ -489,6 +489,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               borderTop:            '1px solid rgba(255,255,255,1)',
               boxShadow:            '0 -8px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,1)',
               paddingBottom:        'max(env(safe-area-inset-bottom), 80px)',
+              maxHeight:            '90vh',
             }}
           >
             <div className="flex justify-center pt-3 pb-1">
@@ -502,7 +503,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <X className="w-3.5 h-3.5" />
             </button>
 
-            <div className="px-5 pt-2 pb-2">
+            <div className="px-5 pt-2 pb-2" style={{ overflowY: 'auto' as const }}>
               {(() => {
                 const laji = lajiKonfig[valittu.laji] ?? { label: valittu.laji, color: '#6b7280' }
                 const Icon = SPORT_ICONS[valittu.laji] ?? Activity
@@ -532,6 +533,19 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   {[valittu.osoite, valittu.kaupunki].filter(Boolean).join(', ')}
                 </p>
               )}
+
+              {(() => {
+                const status = getOpenStatus(valittu.aukioloajat)
+                if (status.status === 'no-data') return null
+                return (
+                  <p className="mt-1.5 text-sm">
+                    {status.status === 'open'
+                      ? <span className="text-green-700 font-bold">● Auki nyt{status.hours ? ` · ${status.hours}` : ''}</span>
+                      : <span className="text-[rgba(17,17,17,0.45)]">Suljettu{status.hours ? ` · ${status.hours}` : ''}</span>
+                    }
+                  </p>
+                )
+              })()}
 
               <div className="mt-4 flex items-center justify-between gap-3">
                 <div>
@@ -563,6 +577,43 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   </Link>
                 )}
               </div>
+
+              {(() => {
+                const groups = formatGroupedHours(valittu.aukioloajat)
+                if (groups.length === 0) return null
+                return (
+                  <div className="mt-4 pt-4 border-t border-[rgba(0,0,0,0.07)]">
+                    <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-2">Aukioloajat</p>
+                    <HoursTable groups={groups} />
+                  </div>
+                )
+              })()}
+
+              {valittu.puhelin && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">Puhelin</p>
+                  <a href={`tel:${valittu.puhelin}`} className="text-sm font-bold text-[#111111] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]">
+                    {valittu.puhelin}
+                  </a>
+                </div>
+              )}
+
+              {isSafeUrl(valittu.varauslinkki) && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">Varaussivu</p>
+                  <a href={valittu.varauslinkki!} target="_blank" rel="noopener noreferrer"
+                    className="text-sm text-[#111111] font-bold underline underline-offset-2 break-all hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]">
+                    {valittu.varauslinkki}
+                  </a>
+                </div>
+              )}
+
+              {valittu.kuvaus && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">Kuvaus</p>
+                  <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed">{valittu.kuvaus}</p>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
