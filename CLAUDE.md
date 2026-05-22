@@ -136,17 +136,13 @@ Every hero section (listing page and profile page) uses this pattern:
 ### NavBar (`app/components/NavBar.tsx`)
 - `sticky top-0 z-40 bg-indigo-800`
 - Logo: text link to `/`
-- Desktop-only (hidden on mobile where BottomNav takes over — but NavBar is actually visible on all sizes in this project, BottomNav is `sm:hidden`)
+- Visible on all screen sizes — the only navigation bar in the app
 
 ### BottomNav (`app/components/BottomNav.tsx`)
-- `fixed bottom-0 sm:hidden` — mobile only
-- Three tabs: **Koti** (`/`), **Kartta** (`/?nakyma=kartta`), **Suosikit** (`/suosikit`)
-- Active tab: `text-indigo-600`, inactive: `text-gray-400`
-- Body needs `pb-16 sm:pb-0` to clear the nav (set in `app/layout.tsx`)
-- Must be wrapped in `<Suspense>` in layout because it uses `useSearchParams`
+- **Dead file — not imported anywhere.** The component still exists on disk but is not used in layout or any page. Do not reference or revive it without a dedicated phase.
 
 ### View toggle (lista/kartta)
-State lives in the URL: `?nakyma=kartta` for map, no param for list. Use `useSearchParams` + `useRouter` to read/write. This allows the BottomNav Kartta tab to deep-link directly to map view.
+State lives in the URL: `?nakyma=kartta` for map, no param for list. Both `/` and `/?nakyma=kartta` render `Etusivu` (the integrated map view); `/?nakyma=lista` renders `LiikuntapaikatLista`.
 
 ## Component Conventions
 
