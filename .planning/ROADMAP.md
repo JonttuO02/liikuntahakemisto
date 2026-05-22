@@ -66,7 +66,7 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
   3. `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_DAY` and `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_NIGHT` env vars are documented and both Map components pass `mapId`
 **Plans:** 2 plans
   - [x] 07-01-PLAN.md — AdvancedMarker migration, mapId switching, remove MapStyleController, env var docs
-  - [ ] 07-02-PLAN.md — Add RecenterButton (MAP-04) to fullscreen map
+  - [x] 07-02-PLAN.md — Add RecenterButton (MAP-04) to fullscreen map
 **UI hint**: yes
 
 ### Phase 8: Map Features
@@ -124,7 +124,7 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 4. Service Information UI | v1.0 | 4/4 | ✅ Complete | 2026-05-21 |
 | 5. AI Weather Widget | v1.0 | 2/2 | ✅ Complete | 2026-05-21 |
 | 6. UI Polish & Data Foundation | v1.1 | 7/7 | ✅ Complete | 2026-05-22 |
-| 7. Map Infrastructure | v1.1 | 0/2 | 📋 Planned | - |
+| 7. Map Infrastructure | v1.1 | 2/2 | ✅ Complete | - |
 | 8. Map Features | v1.1 | 0/? | Not started | - |
 | 9. Auth & Favorites | v1.1 | 0/? | Not started | - |
 | 10. City Expansion | v1.1 | 0/? | Not started | - |
