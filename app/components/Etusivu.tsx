@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, MapPin, Moon, Sun } from 'lucide-react'
-import { Map, Marker, useMap } from '@vis.gl/react-google-maps'
+import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
 import { Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -11,11 +11,15 @@ import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
 import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
-import { DAY_MAP_STYLES, NIGHT_MAP_STYLES, isNightHour } from '@/lib/mapStyles'
+import { isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
 import { isSafeUrl } from '@/lib/urlUtils'
 import { useGPS } from '@/hooks/useGPS'
-import { pinUrl, userLocationPinUrl } from '@/lib/sportPins'
+import { pinUrl } from '@/lib/sportPins'
+
+const DAY_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_DAY
+const NIGHT_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_NIGHT
+
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
 const EASE_MAP:   [number, number, number, number] = [0.4, 0, 0.2, 1]
 const NAV_H      = 56
@@ -35,15 +39,6 @@ function getWeatherEmoji(code: number): string {
   if (code <= 67)  return '🌧️'
   if (code <= 77)  return '❄️'
   return '⛅'
-}
-
-function MapStyleController({ isDark }: { isDark: boolean }) {
-  const map = useMap()
-  useEffect(() => {
-    if (!map) return
-    map.setOptions({ styles: (isDark ? NIGHT_MAP_STYLES : DAY_MAP_STYLES) as google.maps.MapTypeStyle[] })
-  }, [map, isDark])
-  return null
 }
 
 function MapPanController({ coords }: { coords: { lat: number; lng: number } | null }) {
@@ -254,6 +249,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <Map
                 defaultCenter={TAMPERE}
                 defaultZoom={12}
+                mapId={isDark ? NIGHT_ID : DAY_ID}
                 style={{ width: '100%', height: '100%' }}
                 disableDefaultUI
                 gestureHandling="none"
@@ -263,22 +259,19 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 {paikatKartalla.map(p => {
                   const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
                   return (
-                    <Marker
-                      key={p.id}
-                      position={{ lat: p.latitude, lng: p.longitude }}
-                      icon={pinUrl(color, p.laji)}
-                    />
+                    <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }}>
+                      <img src={pinUrl(color, p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
+                    </AdvancedMarker>
                   )
                 })}
                 {coords && (
-                  <Marker
-                    position={coords}
-                    icon={{ url: userLocationPinUrl(), scaledSize: new google.maps.Size(24, 24), anchor: new google.maps.Point(12, 12) }}
-                    zIndex={20}
-                    clickable={false}
-                  />
+                  <AdvancedMarker position={coords} zIndex={20}>
+                    <div style={{ width: 24, height: 24, position: 'relative' }}>
+                      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(66,133,244,0.18)' }} />
+                      <div style={{ position: 'absolute', inset: 3, borderRadius: '50%', background: '#4285F4', border: '2.5px solid white' }} />
+                    </div>
+                  </AdvancedMarker>
                 )}
-                <MapStyleController isDark={isDark} />
                 <MapPanController coords={coords} />
               </Map>
             </div>
@@ -320,6 +313,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <Map
                 defaultCenter={TAMPERE}
                 defaultZoom={14}
+                mapId={isDark ? NIGHT_ID : DAY_ID}
                 style={{ width: '100%', height: '100%' }}
                 disableDefaultUI
                 gestureHandling="greedy"
@@ -330,24 +324,19 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 {paikatKartalla.map(p => {
                   const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
                   return (
-                    <Marker
-                      key={p.id}
-                      position={{ lat: p.latitude, lng: p.longitude }}
-                      zIndex={valittu?.id === p.id ? 10 : 1}
-                      icon={pinUrl(color, p.laji)}
-                      onClick={() => setValittu(p)}
-                    />
+                    <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1} onClick={() => setValittu(p)}>
+                      <img src={pinUrl(color, p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
+                    </AdvancedMarker>
                   )
                 })}
                 {coords && (
-                  <Marker
-                    position={coords}
-                    icon={{ url: userLocationPinUrl(), scaledSize: new google.maps.Size(24, 24), anchor: new google.maps.Point(12, 12) }}
-                    zIndex={20}
-                    clickable={false}
-                  />
+                  <AdvancedMarker position={coords} zIndex={20}>
+                    <div style={{ width: 24, height: 24, position: 'relative' }}>
+                      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(66,133,244,0.18)' }} />
+                      <div style={{ position: 'absolute', inset: 3, borderRadius: '50%', background: '#4285F4', border: '2.5px solid white' }} />
+                    </div>
+                  </AdvancedMarker>
                 )}
-                <MapStyleController isDark={isDark} />
                 <MapPanController coords={coords} />
               </Map>
 

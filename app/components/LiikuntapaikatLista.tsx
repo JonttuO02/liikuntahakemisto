@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Search, MapPin, Clock } from 'lucide-react'
 import { useGPS } from '@/hooks/useGPS'
 import { haversineKm, formatDistance } from '@/lib/geo'
