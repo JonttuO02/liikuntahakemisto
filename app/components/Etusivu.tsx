@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MapPin, Moon, Sun } from 'lucide-react'
+import { X, MapPin, Moon, Sun, Locate } from 'lucide-react'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
 import { Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
@@ -50,6 +50,19 @@ function MapPanController({ coords }: { coords: { lat: number; lng: number } | n
   return null
 }
 
+function RecenterButton({ coords }: { coords: { lat: number; lng: number } | null }) {
+  const map = useMap()
+  return (
+    <motion.button
+      whileTap={{ scale: 0.95 }}
+      onClick={() => { if (map && coords) map.panTo(coords) }}
+      className="absolute bottom-16 right-4 z-10 w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.6)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+      aria-label="Palaa omalle sijainnille"
+    >
+      <Locate className="w-4 h-4" />
+    </motion.button>
+  )
+}
 
 function getTimeBasedFallback(): string {
   const h = new Date().getHours()
@@ -339,6 +352,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 )}
                 <MapPanController coords={coords} />
               </Map>
+
+              <RecenterButton coords={coords} />
 
               {/* X close button */}
               <button
