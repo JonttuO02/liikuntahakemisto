@@ -17,6 +17,7 @@ export function isMembershipOnly(
   const kuvaus = p.hinta_kuvaus
   if (!kuvaus) return false
   if (!kuvaus.toLowerCase().includes('jäsenyys')) return false
+  if (kuvaus.toLowerCase().includes('kertakäynti')) return false
   if (p.hinta_min !== null || p.hinta_max !== null) return false
   return true
 }

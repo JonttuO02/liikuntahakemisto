@@ -24,7 +24,9 @@ export function deriveKaupungit(
   // Poista sentinel-arvo joukosta (dedup "Kaikki" vs. DB-literal "Kaikki")
   unique.delete('Kaikki')
 
-  const sorted = Array.from(unique).sort()
+  const sorted = Array.from(unique).sort((a, b) =>
+    a.localeCompare(b, 'fi', { sensitivity: 'base' })
+  )
 
   return ['Kaikki', ...sorted]
 }

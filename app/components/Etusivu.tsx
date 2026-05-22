@@ -202,7 +202,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             <motion.button
               whileTap={{ scale: 0.88 }}
               onClick={() => setIsDark(d => !d)}
-              className="glass-btn flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
+              className="glass-btn flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold"
               style={{ color: isDark ? '#a0a0cc' : '#475569' }}
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -363,7 +363,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={() => setIsDark(d => !d)}
-                className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-2 rounded-full glass-btn text-xs font-semibold"
+                className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-2 rounded-full glass-btn text-xs font-bold"
                 style={{ color: isDark ? '#a0a0cc' : '#475569' }}
               >
                 <AnimatePresence mode="wait" initial={false}>
@@ -396,7 +396,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                           key={laji}
                           onClick={() => setAktiivinen(laji)}
                           whileTap={{ scale: 0.95, transition: { duration: 0.1 } }}
-                          className={`shrink-0 px-3.5 py-2 rounded-full text-sm font-semibold
+                          className={`shrink-0 px-3.5 py-2 rounded-full text-sm font-bold
                             [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
                             ${aktiivinen === laji
                               ? 'bg-[#111111] text-white shadow-lg'
@@ -457,7 +457,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 const Icon = SPORT_ICONS[valittu.laji] ?? Activity
                 return (
                   <span
-                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full text-white"
+                    className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full text-white"
                     style={{ backgroundColor: laji.color }}
                   >
                     <Icon className="w-3 h-3" />

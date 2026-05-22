@@ -158,7 +158,7 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
                   key={label}
                   onClick={() => setAktiivHinta(max)}
                   whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold
                     [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
                     ${aktiivHinta === max
                       ? 'bg-[#111111] text-white'

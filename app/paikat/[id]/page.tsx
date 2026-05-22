@@ -42,7 +42,7 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
 
           <div className="mt-6">
             <span
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-full text-white"
+              className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full text-white"
               style={{ backgroundColor: laji.color }}
             >
               {laji.label}
@@ -119,7 +119,7 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
 
             {paikka.kuvaus && (
               <Row icon={<Info className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Kuvaus">
-                <p className="text-[rgba(17,17,17,0.65)] leading-relaxed">{paikka.kuvaus}</p>
+                <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed">{paikka.kuvaus}</p>
               </Row>
             )}
           </div>
