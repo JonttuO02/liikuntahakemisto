@@ -350,9 +350,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   </AdvancedMarker>
                 )}
                 <MapPanController coords={coords} />
+                <RecenterButton coords={coords} />
               </Map>
-
-              <RecenterButton coords={coords} />
 
               {/* X close button */}
               <button
