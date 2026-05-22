@@ -7,7 +7,9 @@ import { useGPS } from '@/hooks/useGPS'
 import { haversineKm, formatDistance } from '@/lib/geo'
 import { Input } from '@/components/ui/input'
 import { LAJIT_FILTTERI } from '@/lib/lajit'
+import { deriveKaupungit } from '@/lib/cityFilter'
 import { getOpenStatus } from '@/lib/aukiolo'
+import Link from 'next/link'
 import PaikkaKortti, { korttiVariants } from './PaikkaKortti'
 
 import type { Liikuntapaikka } from '@/lib/types'
@@ -32,8 +34,11 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
   const [aktiivinen, setAktiivinen]   = useState('Kaikki')
   const [aktiivHinta, setAktiivHinta] = useState<number | null>(null)
   const [aukinyt, setAukinyt]         = useState(false)
+  const [aktiivKaupunki, setAktiivKaupunki] = useState('Kaikki')
 
   const { status, coords, requestLocation } = useGPS()
+
+  const kaupungit = useMemo(() => deriveKaupungit(paikat), [paikat])
 
   const distancesMap = useMemo<Record<string, number>>(() => {
     if (!coords) return {}
@@ -47,15 +52,16 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
 
   const suodatettu = useMemo(() =>
     paikat.filter(p => {
-      const matchesLaji  = aktiivinen === 'Kaikki' || p.laji.toLowerCase() === aktiivinen.toLowerCase()
-      const q            = haku.toLowerCase()
-      const matchesHaku  = !haku || p.nimi.toLowerCase().includes(q) || p.kuvaus?.toLowerCase().includes(q) || p.osoite?.toLowerCase().includes(q)
-      const hintaRef     = p.hinta_min ?? p.hinta_max
-      const matchesHinta = aktiivHinta === null || hintaRef == null || hintaRef <= aktiivHinta
-      const matchesAuki  = !aukinyt || getOpenStatus(p.aukioloajat).status !== 'closed'
-      return matchesLaji && matchesHaku && matchesHinta && matchesAuki
+      const matchesLaji    = aktiivinen === 'Kaikki' || p.laji.toLowerCase() === aktiivinen.toLowerCase()
+      const q              = haku.toLowerCase()
+      const matchesHaku    = !haku || p.nimi.toLowerCase().includes(q) || p.kuvaus?.toLowerCase().includes(q) || p.osoite?.toLowerCase().includes(q)
+      const hintaRef       = p.hinta_min ?? p.hinta_max
+      const matchesHinta   = aktiivHinta === null || hintaRef == null || hintaRef <= aktiivHinta
+      const matchesAuki    = !aukinyt || getOpenStatus(p.aukioloajat).status !== 'closed'
+      const matchesKaupunki = aktiivKaupunki === 'Kaikki' || p.kaupunki === aktiivKaupunki
+      return matchesLaji && matchesHaku && matchesHinta && matchesAuki && matchesKaupunki
     }),
-    [paikat, aktiivinen, haku, aktiivHinta, aukinyt]
+    [paikat, aktiivinen, haku, aktiivHinta, aukinyt, aktiivKaupunki]
   )
 
   return (
@@ -74,7 +80,7 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
               Löydä liikuntasi
             </h1>
             <p className="mt-2 text-[rgba(17,17,17,0.45)] text-sm sm:text-base">
-              Tampere &nbsp;·&nbsp; {paikat.length} paikkaa
+              {aktiivKaupunki === 'Kaikki' ? 'Kaikki kaupungit' : aktiivKaupunki}&nbsp;·&nbsp;{suodatettu.length} paikkaa
             </p>
 
             {/* Search bar */}
@@ -96,43 +102,51 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
       <div className="max-w-5xl mx-auto px-4 pt-5 pb-2">
         <div className="flex flex-col gap-3">
 
-          {/* Row 1: sport filters */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {/* Row 1: city + sport dropdowns + Etäisyydet */}
+          <div className="flex flex-wrap items-center gap-2">
 
-            {/* Sport filters */}
-            <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 sm:flex-wrap [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-              <p className="sr-only">LAJIT</p>
-              {LAJIT_FILTTERI.map(laji => (
-                <motion.button
-                  key={laji}
-                  onClick={() => setAktiivinen(laji)}
-                  whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
-                  className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold
-                    [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
-                    ${aktiivinen === laji
-                      ? 'bg-[#111111] text-white'
-                      : 'glass-btn text-[rgba(17,17,17,0.6)] hover:text-[#111111]'
-                    }`}
-                >
-                  {laji}
-                </motion.button>
-              ))}
-              <motion.button
-                onClick={requestLocation}
-                disabled={status === 'requesting'}
-                whileTap={{ scale: 0.95, transition: { duration: 0.1 } }}
-                className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold
-                  [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
-                  disabled:opacity-50
-                  ${status === 'granted'
-                    ? 'bg-[#111111] text-white'
-                    : 'border border-[rgba(0,0,0,0.1)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.2)]'
-                  }`}
+            {/* City select (DATA-07) */}
+            {kaupungit.length > 1 && (
+              <select
+                value={aktiivKaupunki}
+                onChange={e => setAktiivKaupunki(e.target.value)}
+                aria-label="Suodata kaupungin mukaan"
+                className="h-10 rounded-full border border-[rgba(0,0,0,0.12)] bg-white px-4 text-sm font-bold text-[#111111] focus:outline-none focus:ring-1 focus:ring-[#111111] [transition:border-color_150ms_var(--ease-out)] cursor-pointer"
               >
-                <MapPin className="w-3.5 h-3.5" />
-                {status === 'requesting' ? 'Haetaan...' : status === 'granted' ? 'Sijainti päällä' : 'Etäisyydet'}
-              </motion.button>
-            </div>
+                {kaupungit.map(k => (
+                  <option key={k} value={k}>{k}</option>
+                ))}
+              </select>
+            )}
+
+            {/* Sport select (UI-08) */}
+            <select
+              value={aktiivinen}
+              onChange={e => setAktiivinen(e.target.value)}
+              aria-label="Suodata lajin mukaan"
+              className="h-10 rounded-full border border-[rgba(0,0,0,0.12)] bg-white px-4 text-sm font-bold text-[#111111] focus:outline-none focus:ring-1 focus:ring-[#111111] [transition:border-color_150ms_var(--ease-out)] cursor-pointer"
+            >
+              {LAJIT_FILTTERI.map(l => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+
+            {/* Etäisyydet */}
+            <motion.button
+              onClick={requestLocation}
+              disabled={status === 'requesting'}
+              whileTap={{ scale: 0.95, transition: { duration: 0.1 } }}
+              className={`shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-bold
+                [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
+                disabled:opacity-50
+                ${status === 'granted'
+                  ? 'bg-[#111111] text-white'
+                  : 'border border-[rgba(0,0,0,0.1)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.2)]'
+                }`}
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              {status === 'requesting' ? 'Haetaan...' : status === 'granted' ? 'Sijainti päällä' : 'Etäisyydet'}
+            </motion.button>
           </div>
 
           {/* Row 2: price filters + result count */}
@@ -188,7 +202,7 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
       <div className="max-w-5xl mx-auto px-4 pb-10">
         {suodatettu.length > 0 ? (
           <motion.div
-            key={`grid-${aktiivinen}-${aktiivHinta ?? 'all'}-${aukinyt}`}
+            key={`grid-${aktiivKaupunki}-${aktiivinen}-${aktiivHinta ?? 'all'}-${aukinyt}`}
             className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4"
             variants={gridVariants}
             initial="hidden"
@@ -212,7 +226,7 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
           >
             <p className="text-[rgba(17,17,17,0.5)] text-lg">Ei tuloksia</p>
             <motion.button
-              onClick={() => { setHaku(''); setAktiivinen('Kaikki'); setAktiivHinta(null); setAukinyt(false) }}
+              onClick={() => { setHaku(''); setAktiivinen('Kaikki'); setAktiivHinta(null); setAukinyt(false); setAktiivKaupunki('Kaikki') }}
               whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
               className="mt-3 text-[#111111] text-sm font-medium underline underline-offset-2"
             >
@@ -220,6 +234,16 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
             </motion.button>
           </motion.div>
         )}
+      </div>
+
+      {/* ── Footer ───────────────────────────────────────────────── */}
+      <div className="max-w-5xl mx-auto px-4 pb-6 pt-2 flex justify-center">
+        <Link
+          href="/tietosuoja"
+          className="text-xs text-[rgba(17,17,17,0.35)] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)] underline underline-offset-2"
+        >
+          Tietosuoja
+        </Link>
       </div>
     </div>
   )
