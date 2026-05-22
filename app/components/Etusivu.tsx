@@ -460,6 +460,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   </span>
                 )
               })()}
+              {valittu.featured && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200 ml-1.5">
+                  Sponsoroitu
+                </span>
+              )}
 
               <h2 className="mt-2 font-serif text-xl font-bold text-[#111111] leading-snug">
                 {valittu.nimi}
