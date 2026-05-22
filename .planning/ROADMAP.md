@@ -77,7 +77,10 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
   1. The user's location marker displays a translucent accuracy ring that reflects GPS precision
   2. At normal zoom the map shows pin icons; zooming in past the threshold transforms each pin into a small card showing name, sport, and price
   3. Tapping "Näytä kartalla" on a venue detail page opens the app's own map view centered and zoomed on that venue — no navigation to Google Maps
-**Plans**: TBD
+**Plans:** 3 plans
+  - [ ] 08-01-PLAN.md — GPS accuracy ring + zoom state infrastructure (MAP-05, MAP-06 groundwork)
+  - [ ] 08-02-PLAN.md — Pin-to-mini-card transformation + expanded bottom sheet (MAP-06)
+  - [ ] 08-03-PLAN.md — Map focus via URL + profile page link change (MAP-07)
 **UI hint**: yes
 
 ### Phase 9: Auth & Favorites
@@ -125,7 +128,7 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 5. AI Weather Widget | v1.0 | 2/2 | ✅ Complete | 2026-05-21 |
 | 6. UI Polish & Data Foundation | v1.1 | 7/7 | ✅ Complete | 2026-05-22 |
 | 7. Map Infrastructure | v1.1 | 2/2 | ✅ Complete | - |
-| 8. Map Features | v1.1 | 0/? | Not started | - |
+| 8. Map Features | v1.1 | 0/3 | Not started | - |
 | 9. Auth & Favorites | v1.1 | 0/? | Not started | - |
 | 10. City Expansion | v1.1 | 0/? | Not started | - |
 | 11. PWA | v1.1 | 0/? | Not started | - |
