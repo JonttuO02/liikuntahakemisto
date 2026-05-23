@@ -81,9 +81,14 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
           return
         }
       } else {
-        const { error: err } = await supabase.auth.signUp({ email, password })
+        const { data, error: err } = await supabase.auth.signUp({ email, password })
         if (err) {
           setError(mapError(err.message))
+          return
+        }
+        if (!data.session) {
+          // Email confirmation required — show info message instead of calling onSuccess
+          setError('Tarkista sähköpostisi ja vahvista tili.')
           return
         }
       }
