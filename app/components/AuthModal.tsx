@@ -109,10 +109,11 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
     // Note: Google OAuth requires the following manual setup:
     // 1. Add {SUPABASE_PROJECT_URL}/auth/v1/callback to Google Cloud Console as an authorized redirect URI
     // 2. Add the app's origin to Supabase Auth → URL Configuration → Redirect URLs
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
+    if (error) setError('Google-kirjautuminen epäonnistui. Yritä uudelleen.')
   }
 
   return (
