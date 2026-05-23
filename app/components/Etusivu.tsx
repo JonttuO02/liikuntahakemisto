@@ -226,18 +226,32 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
   useEffect(() => {
     const key = 'saasuositus-' + new Date().toISOString().slice(0, 10)
+      + (suosikitIds.size > 0 ? '-' + suosikitIds.size : '')
     try {
       const cached = sessionStorage.getItem(key)
       if (cached) { setAiTeksti(cached); return }
     } catch {}
-    fetch('/api/saasuositus')
+
+    const suosikkiNimet = Array.from(suosikitIds)
+      .slice(0, 10)
+      .map(id => paikat.find(p => p.id === id)?.nimi)
+      .filter(Boolean) as string[]
+
+    const fetchOptions: RequestInit = suosikkiNimet.length > 0
+      ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ suosikit: suosikkiNimet }) }
+      : { method: 'GET' }
+
+    fetch('/api/saasuositus', fetchOptions)
       .then(r => r.json())
       .then((d: { text: string; temp: number; code: number; fallback?: boolean }) => {
         setAiTeksti(d.text)
         try { sessionStorage.setItem(key, d.text) } catch {}
       })
       .catch(() => setAiTeksti(getTimeBasedFallback()))
-  }, [])
+  // paikat is intentionally excluded — it's a stable server-fetched prop and its reference
+  // changing on router.refresh() would cause spurious AI calls; suosikitIds already covers the meaningful dependency
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suosikitIds])
 
   useEffect(() => {
     if (sheetPhase !== 'open') setValittu(null)
