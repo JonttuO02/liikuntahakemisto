@@ -2,30 +2,32 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MapPin, Moon, Sun, Locate } from 'lucide-react'
+import { X, MapPin, Moon, Sun, Locate, SlidersHorizontal, Search, Heart, MoreHorizontal, LogOut, User } from 'lucide-react'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
 import { Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
-import { hintateksti } from '@/lib/utils'
+import { hintateksti, cn } from '@/lib/utils'
 import Karuselli from './Karuselli'
 import HoursTable from './HoursTable'
 import type { Liikuntapaikka } from '@/lib/types'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { formatGroupedHours, getOpenStatus } from '@/lib/aukiolo'
 import { isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
 import { isSafeUrl } from '@/lib/urlUtils'
 import { useGPS } from '@/hooks/useGPS'
 import { pinUrl } from '@/lib/sportPins'
+import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import AuthModal from './AuthModal'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
-
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
-const EASE_MAP:   [number, number, number, number] = [0.4, 0, 0.2, 1]
-const NAV_H      = 56
 const WEATHER_CITY = 'Tampere'
+const HANDLE_H = 44 // visible sheet tab height when closed
 
 const SPORT_ICONS: Record<string, LucideIcon> = {
   padel: Zap, kuntosali: Dumbbell, jooga: Leaf,
@@ -58,7 +60,7 @@ function RecenterButton({ coords }: { coords: { lat: number; lng: number } | nul
     <motion.button
       whileTap={{ scale: 0.95 }}
       onClick={() => { if (map && coords) map.panTo(coords) }}
-      className="absolute bottom-16 right-4 z-10 w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.6)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+      className="absolute bottom-20 right-4 z-10 w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.6)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
       aria-label="Palaa omalle sijainnille"
     >
       <Locate className="w-4 h-4" />
@@ -89,18 +91,91 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [aiTeksti, setAiTeksti]     = useState<string | null>(null)
   const [valittu, setValittu]       = useState<Liikuntapaikka | null>(null)
   const [aktiivinen, setAktiivinen] = useState('Kaikki')
-  const [kartaAuki, setKartaAuki]   = useState(false)
-  const [fullH, setFullH]           = useState(600)
+  // 'open' → 'sliding' (y to contentH) → onAnimationComplete → 'closed' (pill)
+  const [sheetPhase, setSheetPhase] = useState<'open' | 'sliding' | 'closed'>('open')
+  const [leftOpen, setLeftOpen]     = useState(false)
+  const [rightOpen, setRightOpen]   = useState(false)
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [fullH, setFullH]           = useState(700)
+  const [fullW, setFullW]           = useState(390)
   const [isDark, setIsDark]         = useState(false)
   const [zoomLevel, setZoomLevel]   = useState(14)
   const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
+  const [suosikitIds, setSuosikitIds]       = useState<Set<number>>(new Set())
+  const [supabaseUser, setSupabaseUser]     = useState<SupabaseUser | null>(null)
+  const [authModalOpen, setAuthModalOpen]   = useState(false)
+  const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null)
   const { coords }                  = useGPS({ autoRequest: true })
   const searchParams = useSearchParams()
   const focusId = searchParams.get('id')
+  const router = useRouter()
 
-  useEffect(() => {
-    setIsDark(isNightHour())
-  }, [])
+  const contentH  = Math.round(fullH * 0.82)
+  const PILL_W    = 160
+  const pillInset = Math.round((fullW - PILL_W) / 2)
+
+  // Per-phase animation targets
+  const sheetAnimY      = sheetPhase === 'open' ? 0 : sheetPhase === 'sliding' ? contentH : contentH - HANDLE_H
+  const sheetAnimLeft   = sheetPhase === 'closed' ? pillInset : 0
+  const sheetAnimRight  = sheetPhase === 'closed' ? pillInset : 0
+  const sheetAnimRadius = sheetPhase === 'closed' ? '24px 24px 24px 24px' : '24px 24px 0px 0px'
+
+  // Transition differs per phase
+  const sheetTransition = sheetPhase === 'sliding'
+    ? { y: { type: 'spring' as const, damping: 28, stiffness: 280 } }
+    : sheetPhase === 'closed'
+    ? {
+        // narrowing happens off-screen first, then y pops the pill into view
+        y:            { type: 'spring' as const, damping: 32, stiffness: 350, delay: 0.18 },
+        left:         { type: 'spring' as const, damping: 28, stiffness: 280 },
+        right:        { type: 'spring' as const, damping: 28, stiffness: 280 },
+        borderRadius: { duration: 0.2, ease: 'easeInOut' as const },
+      }
+    : { // open
+        y:            { type: 'spring' as const, damping: 28, stiffness: 280, delay: 0.1 },
+        left:         { duration: 0.15, ease: 'easeOut' as const },
+        right:        { duration: 0.15, ease: 'easeOut' as const },
+        borderRadius: { duration: 0.15, ease: 'easeOut' as const },
+      }
+
+  function closeOverlays() {
+    setLeftOpen(false)
+    setRightOpen(false)
+    setFilterOpen(false)
+  }
+
+  async function toggleSuosikki(id: number) {
+    const supabase = createBrowserSupabase()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      setPendingFavoriteId(id)
+      setAuthModalOpen(true)
+      return
+    }
+
+    const isCurrentlySaved = suosikitIds.has(id)
+    setSuosikitIds(prev => {
+      const next = new Set(prev)
+      if (isCurrentlySaved) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
+    if (isCurrentlySaved) {
+      const { error } = await supabase.from('suosikit').delete().eq('user_id', user.id).eq('paikka_id', id)
+      if (error) {
+        setSuosikitIds(prev => { const next = new Set(prev); next.add(id); return next })
+      }
+    } else {
+      const { error } = await supabase.from('suosikit').insert({ user_id: user.id, paikka_id: id })
+      if (error) {
+        setSuosikitIds(prev => { const next = new Set(prev); next.delete(id); return next })
+      }
+    }
+  }
+
+  useEffect(() => { setIsDark(isNightHour()) }, [])
 
   useEffect(() => {
     const id = setInterval(() => setIsDark(isNightHour()), 60_000)
@@ -108,9 +183,35 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   }, [])
 
   useEffect(() => {
-    const update = () => {
-      setFullH(window.innerHeight - NAV_H)
+    const supabase = createBrowserSupabase()
+
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      setSupabaseUser(user)
+      if (user) {
+        const { data } = await supabase.from('suosikit').select('paikka_id')
+        if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
+      }
     }
+
+    init()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const u = session?.user ?? null
+      setSupabaseUser(u)
+      if (u) {
+        const { data } = await supabase.from('suosikit').select('paikka_id')
+        if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
+      } else {
+        setSuosikitIds(new Set())
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    const update = () => { setFullH(window.innerHeight); setFullW(window.innerWidth) }
     update()
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
@@ -127,10 +228,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     const key = 'saasuositus-' + new Date().toISOString().slice(0, 10)
     try {
       const cached = sessionStorage.getItem(key)
-      if (cached) {
-        setAiTeksti(cached)
-        return
-      }
+      if (cached) { setAiTeksti(cached); return }
     } catch {}
     fetch('/api/saasuositus')
       .then(r => r.json())
@@ -138,40 +236,24 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         setAiTeksti(d.text)
         try { sessionStorage.setItem(key, d.text) } catch {}
       })
-      .catch(() => {
-        setAiTeksti(getTimeBasedFallback())
-      })
+      .catch(() => setAiTeksti(getTimeBasedFallback()))
   }, [])
 
-  // Browser back closes fullscreen map
   useEffect(() => {
-    if (!kartaAuki) return
-    window.history.pushState(null, '')
-    const close = () => setKartaAuki(false)
-    window.addEventListener('popstate', close)
-    return () => window.removeEventListener('popstate', close)
-  }, [kartaAuki])
+    if (sheetPhase !== 'open') setValittu(null)
+  }, [sheetPhase])
 
-  // Clear selection when map closes
-  useEffect(() => {
-    if (!kartaAuki) setValittu(null)
-  }, [kartaAuki])
-
-  // Focus venue from ?id= URL param (MAP-07)
   useEffect(() => {
     if (!focusId) return
     const id = Number(focusId)
     const target = paikat.find(p => p.id === id)
     if (!target || target.latitude == null || target.longitude == null) return
-    setKartaAuki(true)
     setAutoZoomTarget({ lat: target.latitude, lng: target.longitude })
-    // Do NOT call setValittu — D-13: big sheet does not auto-open
+    setSheetPhase('sliding')
   }, [focusId, paikat]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const suodatettu = useMemo(
-    () => paikat.filter(p =>
-      aktiivinen === 'Kaikki' || p.laji.toLowerCase() === aktiivinen.toLowerCase()
-    ),
+    () => paikat.filter(p => aktiivinen === 'Kaikki' || p.laji.toLowerCase() === aktiivinen.toLowerCase()),
     [paikat, aktiivinen]
   )
 
@@ -189,13 +271,15 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     [suodatettu, lajitKartalla]
   )
 
+  const anyOverlayOpen = leftOpen || rightOpen || filterOpen
+
   return (
     <>
-      {/* ── Night mode background overlays ──────────────────────────── */}
+      {/* Night mode overlays — behind map */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
-          zIndex: 0,
+          zIndex: 48,
           background: 'linear-gradient(to bottom, #dde0ef 0%, #8a94b3 32%, #1d2038 62%, #07090f 100%)',
           backgroundAttachment: 'fixed',
           opacity: isDark ? 1 : 0,
@@ -205,282 +289,342 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       />
       <div
         className="fixed inset-0 pointer-events-none night-stars"
-        style={{
-          zIndex: 0,
-          opacity: isDark ? 1 : 0,
-          transition: 'opacity 1000ms ease',
-        }}
+        style={{ zIndex: 48, opacity: isDark ? 1 : 0, transition: 'opacity 1000ms ease' }}
         aria-hidden
       />
 
-      {/* ── Main layout ─────────────────────────────────────────────── */}
-      <div
-        className="px-4 pt-4 pb-4 flex flex-col gap-3 relative z-[1]"
-        style={{ height: `calc(100svh - ${NAV_H}px)` }}
-      >
-
-        {/* AI Widget — auto height, grows with content */}
-        <div className="glass rounded-2xl flex items-center px-4 py-3.5 gap-3 shrink-0">
-          <div className="flex-1 min-w-0 flex items-center">
-            {aiTeksti && <span className="text-sm font-medium text-[#111111]">{aiTeksti}</span>}
-          </div>
-          <div className="shrink-0 flex items-center gap-2">
-            {saa && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-base leading-none select-none" aria-hidden>
-                  {getWeatherEmoji(saa.code)}
-                </span>
-                <span className="text-sm font-bold text-[#111111] tabular-nums">
-                  {saa.temp}°{' '}<span className="font-normal text-[rgba(17,17,17,0.45)]">{WEATHER_CITY}</span>
-                </span>
+      {/* Map — z-50 covers NavBar (z-40) */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
+        <Map
+          defaultCenter={TAMPERE}
+          defaultZoom={14}
+          mapId={MAP_ID}
+          colorScheme={isDark ? 'DARK' : 'LIGHT'}
+          style={{ width: '100%', height: '100%' }}
+          disableDefaultUI
+          gestureHandling={sheetPhase === 'open' ? 'none' : 'greedy'}
+          clickableIcons={false}
+          keyboardShortcuts={false}
+          onClick={() => setValittu(null)}
+          onCameraChanged={ev => setZoomLevel(ev.detail.zoom)}
+        >
+          {paikatKartalla.map(p => {
+            const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
+            return (
+              <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1}>
+                <AnimatePresence mode="wait" initial={false}>
+                  {zoomLevel < 16 ? (
+                    <motion.div key="pin" exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                      onClick={() => setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })}>
+                      <img src={pinUrl(color, p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
+                    </motion.div>
+                  ) : (
+                    <motion.div key="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}
+                      className="glass rounded-xl px-2.5 py-2 flex flex-col gap-1 cursor-pointer"
+                      style={{ minWidth: 100, maxWidth: 140 }}
+                      onClick={e => { e.stopPropagation(); setValittu(p) }}>
+                      <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white truncate" style={{ backgroundColor: lajiKonfig[p.laji]?.color ?? '#6b7280' }}>
+                        {lajiKonfig[p.laji]?.label ?? p.laji}
+                      </span>
+                      <span className="font-bold text-sm text-[#111111] truncate leading-tight">{p.nimi}</span>
+                      {(p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)) && (
+                        <span className="text-[10px] text-[rgba(17,17,17,0.55)] truncate">{p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)}</span>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </AdvancedMarker>
+            )
+          })}
+          {coords && (
+            <AdvancedMarker position={coords} zIndex={20}>
+              <div style={{ width: 24, height: 24, position: 'relative', overflow: 'visible' }}>
+                <motion.div
+                  style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.7)', pointerEvents: 'none' }}
+                  animate={{ scale: [0.5, 2], opacity: [0.6, 0] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+                />
+                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(66,133,244,0.18)' }} />
+                <div style={{ position: 'absolute', inset: 3, borderRadius: '50%', background: '#4285F4', border: '2.5px solid white' }} />
               </div>
-            )}
-            <motion.button
-              whileTap={{ scale: 0.88 }}
-              onClick={() => setIsDark(d => !d)}
-              className="glass-btn flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold"
-              style={{ color: isDark ? '#a0a0cc' : '#475569' }}
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                {isDark ? (
-                  <motion.span key="sun" className="flex items-center gap-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                    <Sun className="w-3 h-3" /> Päivä
-                  </motion.span>
-                ) : (
-                  <motion.span key="moon" className="flex items-center gap-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                    <Moon className="w-3 h-3" /> Yö
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Expansion space — absorbs AI widget growth (≈ 2 lines of text) */}
-        <div className="shrink-0" style={{ height: 40 }} />
-
-        {/* Ad carousel */}
-        <Karuselli isDark={isDark} />
-
-        {/* ── Map preview ─────────────────────────────────────────────
-            Fixed height placeholder; the actual map is always position:fixed
-            below and overlaps this space exactly.                      */}
-        <div className="shrink-0 mx-0 sm:mx-16" style={{ height: 200 }} aria-hidden />
+            </AdvancedMarker>
+          )}
+          <MapPanController coords={coords} />
+          {sheetPhase !== 'open' && <RecenterButton coords={coords} />}
+          <MapAutoZoom target={autoZoomTarget} onComplete={() => setAutoZoomTarget(null)} />
+        </Map>
       </div>
 
-      {/* ── Map widget — always fixed, animates from small to fullscreen */}
-      <AnimatePresence>
-        {!kartaAuki && (
-          /* Small / 3-D preview state */
-          <motion.div
-            key="preview"
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            className={`fixed left-0 right-0 bottom-0 z-40 mx-0 sm:mx-16 cursor-pointer${isDark ? ' map-night-fade-top' : ''}`}
-            style={{
-              height: 370,
-              borderRadius: 24,
-              boxShadow: '0 40px 80px rgba(0,0,0,0.3)',
-              transform: 'perspective(900px) rotateX(35deg) scale(0.85)',
-              transformOrigin: 'bottom center',
-            }}
-            onClick={() => setKartaAuki(true)}
-          >
-            {/* clip-path clips at render level — the only reliable way to round Google Maps corners */}
-            <div style={{ width: '100%', height: '100%', clipPath: 'inset(0 round 24px)', position: 'relative' }}>
-              <Map
-                defaultCenter={TAMPERE}
-                defaultZoom={12}
-                mapId={MAP_ID} colorScheme={isDark ? 'DARK' : 'LIGHT'}
-                style={{ width: '100%', height: '100%' }}
-                disableDefaultUI
-                gestureHandling="none"
-                clickableIcons={false}
-                keyboardShortcuts={false}
-              >
-                {paikatKartalla.map(p => {
-                  const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
-                  return (
-                    <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }}>
-                      <img src={pinUrl(color, p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
-                    </AdvancedMarker>
-                  )
-                })}
-                {coords && (
-                  <AdvancedMarker position={coords} zIndex={20}>
-                    <div style={{ width: 24, height: 24, position: 'relative', overflow: 'visible' }}>
-                      <motion.div
-                        style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.7)', pointerEvents: 'none' }}
-                        animate={{ scale: [0.5, 2], opacity: [0.6, 0] }}
-                        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
-                      />
-                      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(66,133,244,0.18)' }} />
-                      <div style={{ position: 'absolute', inset: 3, borderRadius: '50%', background: '#4285F4', border: '2.5px solid white' }} />
-                    </div>
-                  </AdvancedMarker>
-                )}
-                <MapPanController coords={coords} />
-              </Map>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Tap-to-close sheet overlay — covers map area above the open sheet */}
+      {sheetPhase === 'open' && (
+        <div
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: contentH, zIndex: 56, cursor: 'pointer' }}
+          onClick={() => { closeOverlays(); setSheetPhase('sliding') }}
+        />
+      )}
 
-      <AnimatePresence>
-        {kartaAuki && (
-          /* ── Wrapper: height 260 → fullH ──────────────────────────── */
-          <motion.div
-            key="fullscreen"
-            className="fixed left-0 right-0 bottom-0 z-50 overflow-hidden"
-            initial={{ height: 310 }}
-            animate={{ height: fullH }}
-            exit={{ height: 370, opacity: 0 }}
-            transition={{ duration: 0.45, ease: EASE_MAP }}
+      {/* Backdrop for toolbars / filter dropdown */}
+      {anyOverlayOpen && (
+        <div className="fixed inset-0" style={{ zIndex: 63 }} onClick={closeOverlays} />
+      )}
+
+      {/* ── Top-left toolbar — filter + count ──────────────────────────── */}
+      <div
+        className="fixed"
+        style={{
+          top: 'max(12px, env(safe-area-inset-top))',
+          left: 16,
+          zIndex: 64,
+        }}
+      >
+        <motion.div
+          layout
+          transition={{ layout: { type: 'spring', damping: 30, stiffness: 350 } }}
+          className="glass rounded-full flex items-center overflow-hidden"
+          style={{ height: 40 }}
+        >
+          {/* Trigger button */}
+          <button
+            onClick={() => { setLeftOpen(l => !l); setRightOpen(false); setFilterOpen(false) }}
+            className="w-10 h-10 shrink-0 flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
           >
-            {/* ── Inner: 3-D unfolding transform ─────────────────────── */}
+            <SlidersHorizontal className="w-4 h-4" />
+          </button>
+
+          {/* Expanded content */}
+          <AnimatePresence>
+            {leftOpen && (
+              <motion.div
+                key="left-content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12, delay: 0.06 }}
+                className="flex items-center gap-2.5 pr-4 whitespace-nowrap"
+              >
+                {/* Filter selector */}
+                <button
+                  onClick={() => setFilterOpen(f => !f)}
+                  className="flex items-center gap-1 text-sm font-bold text-[#111111] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_ease]"
+                >
+                  {aktiivinen === 'Kaikki' ? 'Kaikki lajit' : aktiivinen}
+                  <motion.span
+                    animate={{ rotate: filterOpen ? 180 : 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="inline-flex"
+                  >
+                    ▾
+                  </motion.span>
+                </button>
+
+                {/* Divider */}
+                <div className="w-px h-4 bg-[rgba(0,0,0,0.1)]" />
+
+                {/* Count */}
+                <span className="text-sm text-[rgba(17,17,17,0.5)]">
+                  {suodatettu.length} kohdetta
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Filter dropdown */}
+        <AnimatePresence>
+          {filterOpen && (
             <motion.div
-              style={{ width: '100%', height: '100%', transformOrigin: 'bottom center' }}
-              initial={{
-                transform:   'perspective(900px) rotateX(35deg) scale(0.85)',
-                boxShadow:   '0 40px 80px rgba(0,0,0,0.3)',
-                borderRadius: 24,
-              }}
-              animate={{
-                transform:   'perspective(900px) rotateX(0deg) scale(1)',
-                boxShadow:   '0 0px 0px rgba(0,0,0,0)',
-                borderRadius: 0,
-              }}
-              exit={{
-                transform:   'perspective(900px) rotateX(35deg) scale(0.85)',
-                boxShadow:   '0 40px 80px rgba(0,0,0,0.3)',
-                borderRadius: 24,
-              }}
-              transition={{ duration: 0.45, ease: EASE_MAP }}
+              initial={{ opacity: 0, y: -6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.97 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="absolute top-full left-0 mt-2 glass rounded-2xl py-1.5 min-w-[160px] shadow-xl"
+              style={{ zIndex: 65 }}
             >
-              <Map
-                defaultCenter={TAMPERE}
-                defaultZoom={14}
-                mapId={MAP_ID} colorScheme={isDark ? 'DARK' : 'LIGHT'}
-                style={{ width: '100%', height: '100%' }}
-                disableDefaultUI
-                gestureHandling="greedy"
-                clickableIcons={false}
-                keyboardShortcuts={false}
-                onClick={() => setValittu(null)}
-                onCameraChanged={(ev) => setZoomLevel(ev.detail.zoom)}
+              {LAJIT_FILTTERI.map(laji => (
+                <button
+                  key={laji}
+                  onClick={() => { setAktiivinen(laji); setFilterOpen(false) }}
+                  className={`w-full text-left px-4 py-2.5 text-sm font-bold [transition:color_100ms_ease]
+                    ${aktiivinen === laji
+                      ? 'text-[#111111]'
+                      : 'text-[rgba(17,17,17,0.5)] hover:text-[#111111] hover:bg-[rgba(0,0,0,0.03)]'
+                    }`}
+                >
+                  {laji}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* ── Top-right toolbar — search + favorites ─────────────────────── */}
+      <div
+        className="fixed flex items-center"
+        style={{
+          top: 'max(12px, env(safe-area-inset-top))',
+          right: 16,
+          zIndex: 64,
+        }}
+      >
+        <motion.div
+          layout
+          transition={{ layout: { type: 'spring', damping: 30, stiffness: 350 } }}
+          className="glass rounded-full flex items-center overflow-hidden"
+          style={{ height: 40 }}
+        >
+          {/* Expanded content — appears to the left of trigger */}
+          <AnimatePresence>
+            {rightOpen && (
+              <motion.div
+                key="right-content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12, delay: 0.06 }}
+                className="flex items-center gap-1 pl-2"
               >
-                {paikatKartalla.map(p => {
-                  const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
-                  return (
-                    <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1}>
-                      <AnimatePresence mode="wait" initial={false}>
-                        {zoomLevel < 16 ? (
-                          <motion.div key="pin" exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-                            onClick={() => setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })}
-                          >
-                            <img src={pinUrl(color, p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
-                          </motion.div>
-                        ) : (
-                          <motion.div key="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}
-                            className="glass rounded-xl px-2.5 py-2 flex flex-col gap-1 cursor-pointer"
-                            style={{ minWidth: 100, maxWidth: 140 }}
-                            onClick={(e) => { e.stopPropagation(); setValittu(p) }}
-                          >
-                            <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white truncate" style={{ backgroundColor: lajiKonfig[p.laji]?.color ?? '#6b7280' }}>
-                              {lajiKonfig[p.laji]?.label ?? p.laji}
-                            </span>
-                            <span className="font-bold text-sm text-[#111111] truncate leading-tight">{p.nimi}</span>
-                            {(p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)) && (
-                              <span className="text-[10px] text-[rgba(17,17,17,0.55)] truncate">{p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)}</span>
-                            )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </AdvancedMarker>
-                  )
-                })}
-                {coords && (
-                  <AdvancedMarker position={coords} zIndex={20}>
-                    <div style={{ width: 24, height: 24, position: 'relative', overflow: 'visible' }}>
-                      <motion.div
-                        style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.7)', pointerEvents: 'none' }}
-                        animate={{ scale: [0.5, 2], opacity: [0.6, 0] }}
-                        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
-                      />
-                      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(66,133,244,0.18)' }} />
-                      <div style={{ position: 'absolute', inset: 3, borderRadius: '50%', background: '#4285F4', border: '2.5px solid white' }} />
-                    </div>
-                  </AdvancedMarker>
+                <Link
+                  href="/?nakyma=lista"
+                  onClick={closeOverlays}
+                  className="w-8 h-8 rounded-full glass-btn flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
+                  aria-label="Haku"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                </Link>
+                <Link
+                  href="/suosikit"
+                  onClick={closeOverlays}
+                  className="w-8 h-8 rounded-full glass-btn flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
+                  aria-label="Suosikit"
+                >
+                  <Heart className="w-3.5 h-3.5" />
+                </Link>
+                {supabaseUser ? (
+                  <button
+                    onClick={() => {
+                      createBrowserSupabase().auth.signOut().then(() => {
+                        setSupabaseUser(null)
+                        setSuosikitIds(new Set())
+                        router.refresh()
+                      })
+                      closeOverlays()
+                    }}
+                    className="w-8 h-8 rounded-full glass-btn flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
+                    aria-label="Kirjaudu ulos"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setAuthModalOpen(true); closeOverlays() }}
+                    className="w-8 h-8 rounded-full glass-btn flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
+                    aria-label="Kirjaudu"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                  </button>
                 )}
-                <MapPanController coords={coords} />
-                <RecenterButton coords={coords} />
-                <MapAutoZoom target={autoZoomTarget} onComplete={() => setAutoZoomTarget(null)} />
-              </Map>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-              {/* X close button */}
-              <button
-                onClick={() => setKartaAuki(false)}
-                className="absolute top-4 right-4 z-10 w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.6)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
-              >
-                <X className="w-4 h-4" />
-              </button>
+          {/* Trigger button */}
+          <button
+            onClick={() => { setRightOpen(r => !r); setLeftOpen(false); setFilterOpen(false) }}
+            className="w-10 h-10 shrink-0 flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
+        </motion.div>
+      </div>
 
-              {/* Day / Night toggle */}
+      {/* ── Main bottom sheet ──────────────────────────────────────────── */}
+      {/* Tab (HANDLE_H) stays visible at bottom when closed — no separate FAB */}
+      <motion.div
+        drag="y"
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={0.1}
+        initial={{ left: 0, right: 0, y: 0, borderRadius: '24px 24px 0px 0px' }}
+        animate={{ y: sheetAnimY, left: sheetAnimLeft, right: sheetAnimRight, borderRadius: sheetAnimRadius }}
+        transition={sheetTransition}
+        onAnimationComplete={() => { if (sheetPhase === 'sliding') setSheetPhase('closed') }}
+        onDragEnd={(_, info) => {
+          if (info.velocity.y > 300 || info.offset.y > 80) setSheetPhase('sliding')
+          else if (info.velocity.y < -300 || info.offset.y < -80) setSheetPhase('open')
+        }}
+        className="glass"
+        style={{ position: 'fixed', bottom: 0, height: contentH, zIndex: 60, overflow: 'hidden' }}
+      >
+        {/* Drag handle — also tap to open when closed */}
+        <div
+          className="flex justify-center pt-3 pb-2"
+          style={{ cursor: sheetPhase === 'open' ? 'grab' : 'pointer' }}
+          onClick={() => { if (sheetPhase !== 'open') setSheetPhase('open') }}
+        >
+          <div className="w-10 h-1 bg-[rgba(0,0,0,0.12)] rounded-full" />
+        </div>
+
+        {/* Sheet content — fades out during slide-down so text doesn't squish during narrowing */}
+        <motion.div
+          animate={{ opacity: sheetPhase === 'open' ? 1 : 0 }}
+          transition={{ duration: 0.18, ease: 'easeIn' }}
+          className="flex flex-col gap-3 px-4 overflow-y-auto"
+          style={{
+            height: 'calc(100% - 40px)',
+            paddingBottom: 'max(env(safe-area-inset-bottom), 16px)',
+          }}
+        >
+          {/* AI Widget */}
+          <div className="glass rounded-2xl flex items-center px-4 py-3.5 gap-3 shrink-0">
+            <div className="flex-1 min-w-0 flex items-center">
+              {aiTeksti && <span className="text-sm font-medium text-[#111111]">{aiTeksti}</span>}
+            </div>
+            <div className="shrink-0 flex items-center gap-2">
+              {saa && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base leading-none select-none" aria-hidden>{getWeatherEmoji(saa.code)}</span>
+                  <span className="text-sm font-bold text-[#111111] tabular-nums">
+                    {saa.temp}°{' '}<span className="font-normal text-[rgba(17,17,17,0.45)]">{WEATHER_CITY}</span>
+                  </span>
+                </div>
+              )}
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={() => setIsDark(d => !d)}
-                className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-2 rounded-full glass-btn text-xs font-bold"
+                className="glass-btn flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold"
                 style={{ color: isDark ? '#a0a0cc' : '#475569' }}
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {isDark ? (
                     <motion.span key="sun" className="flex items-center gap-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                      <Sun className="w-3.5 h-3.5" /> Päivä
+                      <Sun className="w-3 h-3" /> Päivä
                     </motion.span>
                   ) : (
                     <motion.span key="moon" className="flex items-center gap-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                      <Moon className="w-3.5 h-3.5" /> Yö
+                      <Moon className="w-3 h-3" /> Yö
                     </motion.span>
                   )}
                 </AnimatePresence>
               </motion.button>
+            </div>
+          </div>
 
-              {/* Filter pills — bottom center, hidden when bottom sheet open */}
-              <AnimatePresence>
-                {!valittu && (
-                  <motion.div
-                    key="filters"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute bottom-4 inset-x-0 flex justify-center px-4 z-10 pointer-events-none"
-                  >
-                    <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pointer-events-auto">
-                      {LAJIT_FILTTERI.map(laji => (
-                        <motion.button
-                          key={laji}
-                          onClick={() => setAktiivinen(laji)}
-                          whileTap={{ scale: 0.95, transition: { duration: 0.1 } }}
-                          className={`shrink-0 px-3.5 py-2 rounded-full text-sm font-bold
-                            [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
-                            ${aktiivinen === laji
-                              ? 'bg-[#111111] text-white shadow-lg'
-                              : 'glass-btn text-[rgba(17,17,17,0.7)] hover:text-[#111111]'
-                            }`}
-                        >
-                          {laji}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* Ad carousel */}
+          <Karuselli isDark={isDark} />
+        </motion.div>
+      </motion.div>
 
-      {/* ── Bottom sheet ─────────────────────────────────────────────── */}
+      <AuthModal
+        open={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        pendingPaikkaId={pendingFavoriteId}
+        onSuccess={id => {
+          if (id) toggleSuosikki(id)
+          setAuthModalOpen(false)
+        }}
+      />
+
+      {/* ── Selected venue bottom sheet ────────────────────────────────── */}
       <AnimatePresence>
         {valittu && (
           <motion.div
@@ -495,8 +639,9 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             onDragEnd={(_, info) => {
               if (info.velocity.y > 300 || info.offset.y > 80) setValittu(null)
             }}
-            className="fixed bottom-0 inset-x-0 z-[60] rounded-t-3xl"
+            className="fixed bottom-0 inset-x-0 rounded-t-3xl"
             style={{
+              zIndex: 70,
               background:           'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
               backdropFilter:       'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
@@ -509,7 +654,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 bg-[rgba(0,0,0,0.12)] rounded-full" />
             </div>
-
             <button
               onClick={() => setValittu(null)}
               className="glass-btn absolute top-3 right-4 w-7 h-7 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
@@ -522,12 +666,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 const laji = lajiKonfig[valittu.laji] ?? { label: valittu.laji, color: '#6b7280' }
                 const Icon = SPORT_ICONS[valittu.laji] ?? Activity
                 return (
-                  <span
-                    className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full text-white"
-                    style={{ backgroundColor: laji.color }}
-                  >
-                    <Icon className="w-3 h-3" />
-                    {laji.label}
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full text-white" style={{ backgroundColor: laji.color }}>
+                    <Icon className="w-3 h-3" />{laji.label}
                   </span>
                 )
               })()}
@@ -537,9 +677,17 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 </span>
               )}
 
-              <h2 className="mt-2 font-serif text-xl font-bold text-[#111111] leading-snug">
-                {valittu.nimi}
-              </h2>
+              <div className="mt-2 flex items-start justify-between gap-2">
+                <h2 className="font-serif text-xl font-bold text-[#111111] leading-snug flex-1">{valittu.nimi}</h2>
+                <motion.button
+                  whileTap={{ scale: 0.85, transition: { duration: 0.12, ease: 'easeOut' } }}
+                  onClick={() => toggleSuosikki(valittu.id)}
+                  className="shrink-0 w-8 h-8 rounded-full glass-btn flex items-center justify-center"
+                  aria-label={suosikitIds.has(valittu.id) ? 'Poista suosikeista' : 'Lisää suosikkeihin'}
+                >
+                  <Heart className={cn('w-4 h-4', suosikitIds.has(valittu.id) ? 'fill-[#111111] text-[#111111]' : 'text-[rgba(17,17,17,0.35)]')} />
+                </motion.button>
+              </div>
 
               {(valittu.osoite || valittu.kaupunki) && (
                 <p className="mt-1.5 text-sm text-[rgba(17,17,17,0.45)] flex items-center gap-1.5">
@@ -571,22 +719,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                       : <p className="text-sm text-[rgba(17,17,17,0.4)]">Lisätään pian</p>
                   })()}
                 </div>
-
                 {isSafeUrl(valittu.varauslinkki) ? (
-                  <motion.a
-                    href={valittu.varauslinkki}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileTap={{ scale: 0.97 }}
-                    className="shrink-0 bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-6 py-3 rounded-full [transition:background-color_150ms_var(--ease-out)]"
-                  >
+                  <motion.a href={valittu.varauslinkki} target="_blank" rel="noopener noreferrer" whileTap={{ scale: 0.97 }}
+                    className="shrink-0 bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-6 py-3 rounded-full [transition:background-color_150ms_var(--ease-out)]">
                     Varaa →
                   </motion.a>
                 ) : (
-                  <Link
-                    href={`/paikat/${valittu.id}`}
-                    className="shrink-0 border border-[rgba(0,0,0,0.15)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.3)] font-medium text-sm px-5 py-3 rounded-full [transition:color_150ms_var(--ease-out),border-color_150ms_var(--ease-out)]"
-                  >
+                  <Link href={`/paikat/${valittu.id}`}
+                    className="shrink-0 border border-[rgba(0,0,0,0.15)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.3)] font-medium text-sm px-5 py-3 rounded-full [transition:color_150ms_var(--ease-out),border-color_150ms_var(--ease-out)]">
                     Näytä tiedot
                   </Link>
                 )}
