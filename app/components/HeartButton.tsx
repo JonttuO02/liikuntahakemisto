@@ -18,21 +18,6 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
   useEffect(() => {
     const supabase = createBrowserSupabase()
 
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data } = await supabase
-          .from('suosikit')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('paikka_id', paikkaId)
-          .maybeSingle()
-        setIsSuosikki(!!data)
-      }
-    }
-
-    init()
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const u = session?.user ?? null
       if (u) {

@@ -47,17 +47,7 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
   useEffect(() => {
     const supabase = createBrowserSupabase()
 
-    async function fetchFavorites() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
-        if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
-      }
-    }
-
-    fetchFavorites()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', session.user.id)
         if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))

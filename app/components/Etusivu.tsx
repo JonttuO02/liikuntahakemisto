@@ -193,22 +193,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   useEffect(() => {
     const supabase = createBrowserSupabase()
 
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
-      setSupabaseUser(user)
-      if (user) {
-        const { data } = await supabase.from('suosikit').select('paikka_id')
-        if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
-      }
-    }
-
-    init()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const u = session?.user ?? null
       setSupabaseUser(u)
       if (u) {
-        const { data } = await supabase.from('suosikit').select('paikka_id')
+        const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', u.id)
         if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
       } else {
         setSuosikitIds(new Set())
