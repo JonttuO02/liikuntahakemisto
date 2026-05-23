@@ -74,7 +74,12 @@ export async function POST(request: Request) {
   let suosikit: string[] = []
   try {
     const body = await request.json()
-    suosikit = Array.isArray(body.suosikit) ? body.suosikit.slice(0, 10) : []
+    suosikit = Array.isArray(body.suosikit)
+      ? body.suosikit
+          .slice(0, 10)
+          .filter((s): s is string => typeof s === 'string')
+          .map((s: string) => s.replace(/[^p{L}p{N}s-,.]/gu, '').slice(0, 80))
+      : []
   } catch {}
 
   const { temp, code, day, weatherDesc } = await fetchWeather()
