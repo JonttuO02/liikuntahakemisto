@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Phone, MapPin, CircleDollarSign, Info, ChevronLeft, Clock, ExternalLink } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { cookies } from 'next/headers'
+import { createServerSupabase } from '@/lib/supabaseSSR'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
 import { isSafeUrl } from '@/lib/urlUtils'
@@ -10,6 +11,7 @@ import HoursTable from '@/app/components/HoursTable'
 import HeartButton from '@/app/components/HeartButton'
 
 export default async function PaikkaPage({ params }: { params: { id: string } }) {
+  const supabase = createServerSupabase(cookies())
   const id = Number(params.id)
   if (!Number.isInteger(id) || id < 1) notFound()
 
