@@ -25,8 +25,8 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 ### v1.1 Phases
 
 - [x] **Phase 6: UI Polish & Data Foundation** — Tighten card UI, add GDPR page, sponsored badge, city filter, AI widget city name — 2026-05-22
-- [ ] **Phase 7: Map Infrastructure** — Migrate to AdvancedMarker, add mapId env var, implement re-center button
-- [ ] **Phase 8: Map Features** — GPS accuracy ring, zoom-dependent pin-to-card, in-app map focus
+- [x] **Phase 7: Map Infrastructure** — Migrate to AdvancedMarker, add mapId env var, implement re-center button
+- [x] **Phase 8: Map Features** — GPS accuracy ring, zoom-dependent pin-to-card, in-app map focus; Etusivu refactored to bottom sheet architecture
 - [ ] **Phase 9: Auth & Favorites** — Supabase Auth (email + Google OAuth), favorites synced across devices, personalized AI
 - [ ] **Phase 10: City Expansion** — Helsinki and Turku data via Google Places sync
 - [ ] **Phase 11: PWA** — Service worker with offline support and home screen install prompt
@@ -80,8 +80,10 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 **Plans:** 3 plans
   - [x] 08-01-PLAN.md — GPS accuracy ring + zoom state infrastructure (MAP-05, MAP-06 groundwork)
   - [x] 08-02-PLAN.md — Pin-to-mini-card transformation + expanded bottom sheet (MAP-06)
-  - [x] 08-03-PLAN.md — Map focus via URL + profile page link change (MAP-07)
+  - [x] 08-03-PLAN.md — Map focus via URL (`/?id=<paikka_id>`) + profile page link change (MAP-07)
 **UI hint**: yes
+
+> **Post-phase-8 note:** After phase 8 execution, `Etusivu.tsx` was fully refactored with a bottom sheet architecture (`sheetPhase` state machine). The 3D preview map and `kartaAuki` boolean are gone. Map focus URL is `/?id=<paikka_id>` — the `focusId` effect closes the sheet and pans the map. NavBar is hidden on the home page (map `z-50` > NavBar `z-40`). Left/right top-corner toolbars replace filter pills.
 
 ### Phase 9: Auth & Favorites
 **Goal**: Users can create accounts, save favorites that persist across devices, and receive personalized AI recommendations
@@ -92,7 +94,11 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
   2. A signed-in user can heart/un-heart any venue; favorites persist when switching devices or browsers
   3. The AI weather recommendation references the user's saved favorites when they are signed in
   4. Signed-out users can browse the full directory without being prompted or gated
-**Plans**: TBD
+**Plans**: 4 plans
+  - [x] 09-01-PLAN.md — Foundation: @supabase/ssr, middleware.ts, lib/supabaseSSR.ts, Suosikki type, migration SQL
+  - [ ] 09-02-PLAN.md — AuthModal + server auth wiring
+  - [ ] 09-03-PLAN.md — Heart buttons + favorites engine
+  - [ ] 09-04-PLAN.md — AI personalization
 **UI hint**: yes
 
 ### Phase 10: City Expansion
@@ -127,8 +133,8 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 4. Service Information UI | v1.0 | 4/4 | ✅ Complete | 2026-05-21 |
 | 5. AI Weather Widget | v1.0 | 2/2 | ✅ Complete | 2026-05-21 |
 | 6. UI Polish & Data Foundation | v1.1 | 7/7 | ✅ Complete | 2026-05-22 |
-| 7. Map Infrastructure | v1.1 | 2/2 | ✅ Complete | - |
-| 8. Map Features | v1.1 | 3/3 | Complete | 2026-05-22 |
-| 9. Auth & Favorites | v1.1 | 0/? | Not started | - |
+| 7. Map Infrastructure | v1.1 | 2/2 | ✅ Complete | 2026-05-22 |
+| 8. Map Features | v1.1 | 3/3 | ✅ Complete | 2026-05-22 |
+| 9. Auth & Favorites | v1.1 | 1/4 | In progress | - |
 | 10. City Expansion | v1.1 | 0/? | Not started | - |
 | 11. PWA | v1.1 | 0/? | Not started | - |

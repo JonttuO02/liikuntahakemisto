@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
 status: active
-last_updated: "2026-05-22T15:00:00.000Z"
-last_activity: 2026-05-22 — Phase 9 context gathered
+last_updated: "2026-05-23T05:39:00Z"
+last_activity: 2026-05-23 — Phase 9 Plan 01 complete: @supabase/ssr, middleware.ts, supabaseSSR.ts, Suosikki type, migration SQL
 progress:
   total_phases: 6
-  completed_phases: 2
-  total_plans: 12
-  completed_plans: 11
-  percent: 33
+  completed_phases: 3
+  total_plans: 16
+  completed_plans: 13
+  percent: 52
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 8 — Map Features (planned — ready to execute)
-Plan: 08-01 ✅, 08-02 ✅, 08-03 ✅
+Phase: 9 — Auth & Favorites (in progress)
+Plan: 09-01 ✅
 Status: active
-Last activity: 2026-05-22 — Phase 8 all plans executed; verifying
+Last activity: 2026-05-23 — Phase 9 Plan 01 complete: auth foundation (SSR package, middleware, DB schema)
 
 ## Project Reference
 
@@ -35,8 +35,8 @@ See: .planning/PROJECT.md
 |-------|--------|-------|
 | 6. UI Polish & Data Foundation | ✅ Complete | UAT passed; 1 inline fix (city filter sentinel off-by-one) |
 | 7. Map Infrastructure | ✅ Complete | 2/2 plans done; 4 manual UAT checks pending (GPS + day/night + preview button absent) |
-| 8. Map Features | ✅ Complete | 3/3 plans done; 4 manual UAT checks pending |
-| 9. Auth & Favorites | Not started | Highest systemic risk; LEGAL-01 now live (Phase 6) |
+| 8. Map Features | ✅ Complete | 3/3 plans done; Etusivu refactored to bottom sheet architecture |
+| 9. Auth & Favorites | In progress | 09-01 ✅ foundation; 09-02–09-04 remaining |
 | 10. City Expansion | Not started | Fix sync-paikat hardcoded Tampere first |
 | 11. PWA | Not started | Must be last — needs complete API surface |
 
@@ -55,11 +55,28 @@ See: .planning/PROJECT.md
 - LEGAL-01 ships in Phase 6 — must be live before auth (Phase 9) goes out ✅ DONE
 - AdvancedMarker migration complete ✅ DONE — Phase 8 map features now unblocked
 - Supabase Auth uses per-request createServerClient — never the existing module-scope singleton
-- middleware.ts does not exist yet — first deliverable of Phase 9
-- Map focus URL: /?nakyma=kartta&id=<paikka_id> — full Link navigation
+- middleware.ts created ✅ — refreshes Supabase session on every non-static request (Phase 9 Plan 01)
+- Map focus URL: /?id=<paikka_id> — focusId effect sets sheetPhase('sliding'), closes sheet and pans map (NOT /?nakyma=kartta&id=...)
 - PWA must use Serwist (@serwist/next + serwist) — next-pwa and @ducanh2912/next-pwa are abandoned
 - Service worker must exclude _rsc requests and be disabled in dev mode
 - useGPS now takes { autoRequest?: boolean } param (default false) — Etusivu passes true, LiikuntapaikatLista uses default
+
+(post-phase-8 bottom sheet refactor)
+
+- Etusivu bottom sheet architecture: `sheetPhase: 'open' | 'sliding' | 'closed'` replaces old `kartaAuki` boolean
+  - 'open': sheet at 82% viewport height
+  - 'sliding': y animates to contentH (off-screen), triggers onAnimationComplete
+  - 'closed': sheet narrows to 160px-wide pill at bottom center, y springs up to show 44px (HANDLE_H)
+- Map is always position: fixed, top/left/right/bottom: 0, z-50 — covers NavBar (z-40)
+- NavBar is NOT visible on the home page (/) — map z-50 covers NavBar z-40; NavBar remains in layout.tsx and shows on all other pages (/paikat/[id], /suosikit, /tietosuoja)
+- Left top-corner toolbar (z-64): SlidersHorizontal icon expands right to show filter dropdown + venue count
+- Right top-corner toolbar (z-64): MoreHorizontal icon expands left to show Search link (/?nakyma=lista) + Heart link (/suosikit)
+- Shared backdrop (z-63): closes all toolbars/filter on outside click
+- Filter pills removed from Etusivu — replaced by left toolbar dropdown
+- AI widget and Karuselli now live inside the bottom sheet (not in page flow)
+- Map gestureHandling: 'none' when sheet open, 'greedy' otherwise
+- Heart/auth state in home page context: must go in the right toolbar (MoreHorizontal), NOT in NavBar (NavBar not visible on home page)
+- MAP_BOTTOM_SHEET_PLAN.md in .planning/ is now implemented
 
 ## Accumulated Context
 
@@ -81,7 +98,8 @@ See: .planning/PROJECT.md
 - 3 new npm packages total: @supabase/ssr, @serwist/next, serwist
 - All other v1.1 features use already-installed packages
 - lib/urlUtils.ts added in Phase 6 — isSafeUrl() guards all varauslinkki href renders
-- RecenterButton uses useMap() outside <Map> subtree but resolves correctly (preview/fullscreen maps are mutually exclusive via AnimatePresence)
+- RecenterButton uses useMap() — resolves correctly within the single always-mounted fixed map
+- Etusivu.tsx bottom sheet refactor: kartaAuki boolean, 3D preview map, fullscreen expand animation, kartaInteractive, EASE_MAP — all removed; replaced by sheetPhase state machine
 
 ### Open Questions (before Phase 9)
 
@@ -100,6 +118,6 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- Last session: Phase 9 context gathered — auth modal, heart placement, NavBar state, AI favorites flow all decided
-- Stopped at: Phase 9 context captured in 09-CONTEXT.md
-- Resume: /gsd:plan-phase 9
+- Last session: Phase 9 Plan 01 executed — @supabase/ssr installed, middleware.ts created, lib/supabaseSSR.ts created, Suosikki type added, suosikit migration SQL written
+- Stopped at: Phase 9 Plan 01 complete; manual step required — run supabase/migrations/20260523_suosikit.sql in Supabase Dashboard before plan 09-03
+- Resume: /gsd:execute-phase 9 (plan 09-02)
