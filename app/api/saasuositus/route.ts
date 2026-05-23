@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       ? body.suosikit
           .slice(0, 10)
           .filter((s): s is string => typeof s === 'string')
-          .map((s: string) => s.replace(/[^p{L}p{N}s-,.]/gu, '').slice(0, 80))
+          .map((s: string) => s.replace(/[^\w\sÄäÖöÅå\-,.'()&]/g, '').slice(0, 80))
       : []
   } catch {}
 
