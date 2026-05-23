@@ -12,6 +12,7 @@
     "@anthropic-ai/sdk": "^0.97.1",
     "@base-ui/react": "^1.4.1",
     "@googlemaps/markerclusterer": "^2.6.2",
+    "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
     "@vis.gl/react-google-maps": "^1.8.3",
     "class-variance-authority": "^0.7.1",
