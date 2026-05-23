@@ -2,10 +2,10 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { MapPin, Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
+import { MapPin, Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity, Heart } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
-import { hintateksti } from '@/lib/utils'
+import { hintateksti, cn } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
 import { isMembershipOnly } from '@/lib/priceUtils'
 import type { Liikuntapaikka } from '@/lib/types'
@@ -35,9 +35,11 @@ interface PaikkaKorttiProps {
   paikka: Liikuntapaikka
   distanceStr?: string
   aukinyt?: boolean
+  isSuosikki?: boolean
+  onToggleSuosikki?: (id: number) => void
 }
 
-export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false }: PaikkaKorttiProps) {
+export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isSuosikki, onToggleSuosikki }: PaikkaKorttiProps) {
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
   const openStatus   = getOpenStatus(paikka.aukioloajat)
   const hasDropIn    = paikka.hinta_kuvaus?.toLowerCase().includes('kertakäynti') ?? false
@@ -55,9 +57,19 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false }: P
   return (
     <motion.div
       variants={korttiVariants}
-      className="glass glass-hover rounded-2xl flex flex-col overflow-hidden cursor-default"
+      className="relative glass glass-hover rounded-2xl flex flex-col overflow-hidden cursor-default"
       whileHover={{ y: -2, transition: { duration: 0.18, ease: EASE_OUT } }}
     >
+      {onToggleSuosikki && (
+        <motion.button
+          whileTap={{ scale: 0.85, transition: { duration: 0.12, ease: 'easeOut' } }}
+          onClick={e => { e.preventDefault(); e.stopPropagation(); onToggleSuosikki(paikka.id) }}
+          className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full glass-btn flex items-center justify-center"
+          aria-label={isSuosikki ? 'Poista suosikeista' : 'Lisää suosikkeihin'}
+        >
+          <Heart className={cn('w-4 h-4', isSuosikki ? 'fill-[#111111] text-[#111111]' : 'text-[rgba(17,17,17,0.35)]')} />
+        </motion.button>
+      )}
       <div className="p-4 flex flex-col gap-2.5 flex-1">
 
         {/* Badge row: [sport pill] [Sponsoroitu?] [Kertakäynti OK?] */}
