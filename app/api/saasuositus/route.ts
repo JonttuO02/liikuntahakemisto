@@ -12,7 +12,14 @@ function getTimeBasedFallback(): string {
   return 'Iltaa · Löydä paras liikuntapaikka Tampereelta'
 }
 
-export async function GET() {
+interface WeatherData {
+  temp: number
+  code: number
+  day: string
+  weatherDesc: string
+}
+
+async function fetchWeather(): Promise<WeatherData> {
   let temp = 15
   let code = 0
 
@@ -38,6 +45,12 @@ export async function GET() {
     code <= 77  ? 'luminen' :
     'pilvinen'
 
+  return { temp, code, day, weatherDesc }
+}
+
+export async function GET() {
+  const { temp, code, day, weatherDesc } = await fetchWeather()
+
   let text: string
   try {
     const msg = await client.messages.create({
@@ -55,4 +68,33 @@ export async function GET() {
   }
 
   return NextResponse.json({ text, temp, code, fallback: false })
+}
+
+export async function POST(request: Request) {
+  let suosikit: string[] = []
+  try {
+    const body = await request.json()
+    suosikit = Array.isArray(body.suosikit) ? body.suosikit.slice(0, 10) : []
+  } catch {}
+
+  const { temp, code, day, weatherDesc } = await fetchWeather()
+
+  const suosikkiLista = suosikit.length
+    ? `\nKäyttäjän suosikit: ${suosikit.join(', ')}.`
+    : ''
+
+  const prompt = `Tänään on ${day} Tampereella. Lämpötila on ${temp}°C ja sää on ${weatherDesc}. Kirjoita YKSI lyhyt suomenkielinen lause joka suosittelee sopivaa liikuntapalvelua tai -lajia tähän säähän Tampereella. Mainitse "Tampere" tai viittaa liikuntapaikan löytämiseen. Älä käytä emojeja.${suosikkiLista}`
+
+  try {
+    const msg = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 100,
+      messages: [{ role: 'user', content: prompt }],
+    })
+    const block = msg.content[0]
+    const text = block.type === 'text' ? block.text.trim() : getTimeBasedFallback()
+    return NextResponse.json({ text, temp, code, fallback: false })
+  } catch {
+    return NextResponse.json({ text: getTimeBasedFallback(), temp, code, fallback: true })
+  }
 }
