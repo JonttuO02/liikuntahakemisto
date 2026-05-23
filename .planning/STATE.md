@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
 status: active
-last_updated: "2026-05-23T05:39:00Z"
-last_activity: 2026-05-23 — Phase 9 Plan 01 complete: @supabase/ssr, middleware.ts, supabaseSSR.ts, Suosikki type, migration SQL
+last_updated: "2026-05-23T05:43:02Z"
+last_activity: 2026-05-23 — Phase 9 Plan 02 complete: AuthModal, async layout with getUser(), NavBar auth state
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 16
-  completed_plans: 13
-  percent: 52
+  completed_plans: 14
+  percent: 56
 ---
 
 # Project State
@@ -18,9 +18,9 @@ progress:
 ## Current Position
 
 Phase: 9 — Auth & Favorites (in progress)
-Plan: 09-01 ✅
+Plan: 09-02 ✅
 Status: active
-Last activity: 2026-05-23 — Phase 9 Plan 01 complete: auth foundation (SSR package, middleware, DB schema)
+Last activity: 2026-05-23 — Phase 9 Plan 02 complete: AuthModal glass component, async layout auth fetch, NavBar auth state
 
 ## Project Reference
 
@@ -118,6 +118,6 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- Last session: Phase 9 Plan 01 executed — @supabase/ssr installed, middleware.ts created, lib/supabaseSSR.ts created, Suosikki type added, suosikit migration SQL written
-- Stopped at: Phase 9 Plan 01 complete; manual step required — run supabase/migrations/20260523_suosikit.sql in Supabase Dashboard before plan 09-03
-- Resume: /gsd:execute-phase 9 (plan 09-02)
+- Last session: Phase 9 Plan 02 executed — AuthModal.tsx created, layout.tsx made async with getUser(), NavBar.tsx updated with auth state + AuthModal
+- Stopped at: Phase 9 Plan 02 complete; manual step still required — run supabase/migrations/20260523_suosikit.sql in Supabase Dashboard before plan 09-03
+- Resume: /gsd:execute-phase 9 (plan 09-03)
