@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
-import type { User } from '@supabase/supabase-js'
 import { cn } from '@/lib/utils'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
@@ -13,8 +12,7 @@ interface HeartButtonProps {
 }
 
 export default function HeartButton({ paikkaId }: HeartButtonProps) {
-  const [isSuosikki, setIsSuosikki]     = useState(false)
-  const [supabaseUser, setSupabaseUser] = useState<User | null>(null)
+  const [isSuosikki, setIsSuosikki]       = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
 
   useEffect(() => {
@@ -22,7 +20,6 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
 
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
-      setSupabaseUser(user)
       if (user) {
         const { data } = await supabase
           .from('suosikit')
@@ -36,9 +33,8 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
 
     init()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const u = session?.user ?? null
-      setSupabaseUser(u)
       if (u) {
         const { data } = await supabase
           .from('suosikit')
