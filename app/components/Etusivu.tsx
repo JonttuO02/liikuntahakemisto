@@ -224,6 +224,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       .catch(() => {})
   }, [])
 
+  const suosikitSizeAndIds = useMemo(
+    () => Array.from(suosikitIds).sort((a, b) => a - b).join(','),
+    [suosikitIds]
+  )
+
   useEffect(() => {
     const key = 'saasuositus-' + new Date().toISOString().slice(0, 10)
       + (suosikitIds.size > 0 ? '-' + suosikitIds.size : '')
@@ -249,9 +254,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       })
       .catch(() => setAiTeksti(getTimeBasedFallback()))
   // paikat is intentionally excluded — it's a stable server-fetched prop and its reference
-  // changing on router.refresh() would cause spurious AI calls; suosikitIds already covers the meaningful dependency
+  // changing on router.refresh() would cause spurious AI calls; suosikitSizeAndIds (a stable string) already covers
+  // the meaningful dependency without creating a new reference on every render
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [suosikitIds])
+  }, [suosikitSizeAndIds])
 
   useEffect(() => {
     if (sheetPhase !== 'open') setValittu(null)
