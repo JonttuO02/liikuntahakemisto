@@ -7,6 +7,7 @@ import { hintateksti } from '@/lib/utils'
 import { isSafeUrl } from '@/lib/urlUtils'
 import { formatGroupedHours } from '@/lib/aukiolo'
 import HoursTable from '@/app/components/HoursTable'
+import HeartButton from '@/app/components/HeartButton'
 
 export default async function PaikkaPage({ params }: { params: { id: string } }) {
   const id = Number(params.id)
@@ -47,9 +48,12 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
             >
               {laji.label}
             </span>
-            <h1 className="mt-3 font-serif text-3xl sm:text-4xl font-bold text-[#111111] leading-tight tracking-tight">
-              {paikka.nimi}
-            </h1>
+            <div className="flex items-start justify-between gap-3 mt-3">
+              <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#111111] leading-tight tracking-tight flex-1">
+                {paikka.nimi}
+              </h1>
+              <HeartButton paikkaId={paikka.id} />
+            </div>
             {osoiteRivi && (
               <p className="mt-2 text-[rgba(17,17,17,0.45)] text-sm flex items-center gap-1.5">
                 <MapPin className="w-4 h-4 shrink-0" />
