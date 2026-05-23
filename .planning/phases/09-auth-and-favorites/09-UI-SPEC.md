@@ -1,7 +1,7 @@
 ---
 phase: 9
 slug: auth-and-favorites
-status: draft
+status: approved
 shadcn_initialized: true
 preset: base-nova / neutral / cssVariables
 created: 2026-05-23
@@ -37,6 +37,7 @@ Declared values (multiples of 4 only):
 |-------|-------|-------------------|
 | xs | 4px | Heart button inner padding (`p-1`) |
 | sm | 8px | Modal field gap, toolbar icon gap |
+| 2xs | 12px | OAuth button icon gap (`gap-3`), /suosikit CTA vertical padding (`py-3`) |
 | md | 16px | Modal horizontal padding (`px-4`), card padding (existing) |
 | lg | 24px | Modal panel padding (`p-6`) |
 | xl | 32px | Modal max content width internal rhythm |
@@ -177,7 +178,7 @@ Heart appears in the venue name row of the `valittu` bottom sheet (the draggable
 <div className="mt-2 flex items-start justify-between gap-2">
   <h2 className="font-serif text-xl font-bold text-[#111111] leading-snug flex-1">{valittu.nimi}</h2>
   <motion.button whileTap={{ scale: 0.85, transition: { duration: 0.12 } }}
-    className="shrink-0 w-8 h-8 rounded-full glass-btn flex items-center justify-center mt-0.5"
+    className="shrink-0 w-8 h-8 rounded-full glass-btn flex items-center justify-center"
     aria-label={isSuosikki ? 'Poista suosikeista' : 'Lisää suosikkeihin'}>
     <Heart className={cn('w-4 h-4', isSuosikki ? 'fill-[#111111] text-[#111111]' : 'text-[rgba(17,17,17,0.35)]')} />
   </motion.button>
@@ -326,7 +327,7 @@ No layout animation — height change is accepted as an instantaneous snap to av
 - Silently degrade: if favorites fetch fails on mount, all hearts show unfilled. No error shown to user.
 
 **`/suosikit` stub — signed out:**
-- Centered content: heading `text-xl font-bold text-[#111111]` "Suosikit vaativat kirjautumisen", body `text-sm text-[rgba(17,17,17,0.45)]` "Kirjaudu sisään tallentaaksesi suosikkipaikkasi.", then a `.glass-btn rounded-full px-6 py-2.5 text-sm font-bold text-[#111111]` "Kirjaudu" button that opens AuthModal.
+- Centered content: heading `text-xl font-bold text-[#111111]` "Suosikit vaativat kirjautumisen", body `text-sm text-[rgba(17,17,17,0.45)]` "Kirjaudu sisään tallentaaksesi suosikkipaikkasi.", then a `.glass-btn rounded-full px-6 py-3 text-sm font-bold text-[#111111]` "Kirjaudu sisään" button that opens AuthModal.
 
 ---
 
@@ -360,7 +361,7 @@ All copy in Finnish. Source: 09-CONTEXT.md decisions + CLAUDE.md patterns.
 | Home toolbar — signed in | "Kirjaudu ulos" (aria-label) |
 | /suosikit — signed out heading | "Suosikit vaativat kirjautumisen" |
 | /suosikit — signed out body | "Kirjaudu sisään tallentaaksesi suosikkipaikkasi." |
-| /suosikit — signed out CTA | "Kirjaudu" |
+| /suosikit — signed out CTA | "Kirjaudu sisään" |
 | Favorites empty state (signed in) | "Et ole vielä tallentanut suosikkeja. Selaa hakemistoa ja lisää sydämellä." |
 
 > No destructive confirmation pattern required in this phase. Removing a favorite (un-hearting) is immediate with optimistic UI — no confirmation dialog.
@@ -425,11 +426,11 @@ No third-party registry blocks are used in Phase 9. The AuthModal is built from 
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-05-23
