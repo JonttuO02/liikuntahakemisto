@@ -27,7 +27,7 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **Phase 6: UI Polish & Data Foundation** — Tighten card UI, add GDPR page, sponsored badge, city filter, AI widget city name — 2026-05-22
 - [x] **Phase 7: Map Infrastructure** — Migrate to AdvancedMarker, add mapId env var, implement re-center button
 - [x] **Phase 8: Map Features** — GPS accuracy ring, zoom-dependent pin-to-card, in-app map focus; Etusivu refactored to bottom sheet architecture
-- [ ] **Phase 9: Auth & Favorites** — Supabase Auth (email + Google OAuth), favorites synced across devices, personalized AI
+- [x] **Phase 9: Auth & Favorites** — Supabase Auth (email + Google OAuth), favorites synced across devices, personalized AI — 2026-05-23
 - [ ] **Phase 10: City Expansion** — Helsinki and Turku data via Google Places sync
 - [ ] **Phase 11: PWA** — Service worker with offline support and home screen install prompt
 
@@ -98,7 +98,7 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
   - [x] 09-01-PLAN.md — Foundation: @supabase/ssr, middleware.ts, lib/supabaseSSR.ts, Suosikki type, migration SQL
   - [x] 09-02-PLAN.md — AuthModal + server auth wiring
   - [x] 09-03-PLAN.md — Heart buttons + favorites engine
-  - [ ] 09-04-PLAN.md — AI personalization
+  - [x] 09-04-PLAN.md — AI personalization
 **UI hint**: yes
 
 ### Phase 10: City Expansion
@@ -135,6 +135,6 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 6. UI Polish & Data Foundation | v1.1 | 7/7 | ✅ Complete | 2026-05-22 |
 | 7. Map Infrastructure | v1.1 | 2/2 | ✅ Complete | 2026-05-22 |
 | 8. Map Features | v1.1 | 3/3 | ✅ Complete | 2026-05-22 |
-| 9. Auth & Favorites | v1.1 | 3/4 | In progress | - |
+| 9. Auth & Favorites | v1.1 | 4/4 | ✅ Complete | 2026-05-23 |
 | 10. City Expansion | v1.1 | 0/? | Not started | - |
 | 11. PWA | v1.1 | 0/? | Not started | - |

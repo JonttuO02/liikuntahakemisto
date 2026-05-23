@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
 status: active
-last_updated: "2026-05-23T06:40:00Z"
-last_activity: 2026-05-23 — Phase 9 Plan 03 complete: heart buttons on all surfaces, favorites engine with Supabase INSERT/DELETE, auth-aware suosikit page
+last_updated: "2026-05-23T07:00:00Z"
+last_activity: 2026-05-23 — Phase 9 complete: AI personalization — POST /api/saasuositus with favorites in Haiku prompt, cache-busting by favorites count
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 16
-  completed_plans: 15
-  percent: 59
+  completed_plans: 16
+  percent: 65
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 9 — Auth & Favorites (in progress)
-Plan: 09-03 ✅
+Phase: 9 — Auth & Favorites ✅ Complete
+Plan: 09-04 ✅
 Status: active
-Last activity: 2026-05-23 — Phase 9 Plan 03 complete: heart buttons + favorites engine on all three surfaces, auth-aware suosikit page
+Last activity: 2026-05-23 — Phase 9 Plan 04 complete: AI personalization with POST /api/saasuositus, favorites in Haiku prompt, cache-busting by count
 
 ## Project Reference
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md
 | 6. UI Polish & Data Foundation | ✅ Complete | UAT passed; 1 inline fix (city filter sentinel off-by-one) |
 | 7. Map Infrastructure | ✅ Complete | 2/2 plans done; 4 manual UAT checks pending (GPS + day/night + preview button absent) |
 | 8. Map Features | ✅ Complete | 3/3 plans done; Etusivu refactored to bottom sheet architecture |
-| 9. Auth & Favorites | In progress | 09-01 ✅ foundation; 09-02–09-04 remaining |
+| 9. Auth & Favorites | ✅ Complete | All 4 plans done: foundation, AuthModal, favorites engine, AI personalization |
 | 10. City Expansion | Not started | Fix sync-paikat hardcoded Tampere first |
 | 11. PWA | Not started | Must be last — needs complete API surface |
 
@@ -57,7 +57,9 @@ See: .planning/PROJECT.md
 - Supabase Auth uses per-request createServerClient — never the existing module-scope singleton
 - middleware.ts created ✅ — refreshes Supabase session on every non-static request (Phase 9 Plan 01)
 - toggleSuosikki calls getUser() on each invocation — avoids stale auth state from closure
-- suosikitIds: Set<number> lives in both LiikuntapaikatLista and Etusivu — ready for AI personalization (09-04)
+- suosikitIds: Set<number> lives in both LiikuntapaikatLista and Etusivu — drives AI personalization (09-04 complete)
+- AI route: GET for anonymous users, POST with suosikkiNimet[] for signed-in users; cache key includes count suffix
+- fetchWeather() shared helper in route.ts — single source of truth for Open Meteo fetch + weather description
 - HeartButton is a standalone client component (no shared auth state) — manages own subscription lifecycle
 - Map focus URL: /?id=<paikka_id> — focusId effect sets sheetPhase('sliding'), closes sheet and pans map (NOT /?nakyma=kartta&id=...)
 - PWA must use Serwist (@serwist/next + serwist) — next-pwa and @ducanh2912/next-pwa are abandoned
@@ -121,6 +123,6 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- Last session: Phase 9 Plan 03 executed — heart buttons on PaikkaKortti/LiikuntapaikatLista/Etusivu, HeartButton for profile page, suosikit page auth-aware
-- Stopped at: Phase 9 Plan 03 complete; ready for Plan 09-04 (AI personalization with favorites)
-- Resume: /gsd:execute-phase 9 (plan 09-04)
+- Last session: Phase 9 Plan 04 executed — POST /api/saasuositus with shared fetchWeather() helper, Etusivu AI effect updated to POST with favorites
+- Stopped at: Phase 9 complete (all 4 plans done); ready for Phase 10 (City Expansion)
+- Resume: /gsd:execute-phase 10
