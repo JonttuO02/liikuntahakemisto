@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -105,6 +105,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [supabaseUser, setSupabaseUser]     = useState<SupabaseUser | null>(null)
   const [authModalOpen, setAuthModalOpen]   = useState(false)
   const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null)
+  const inFlight = useRef<Set<number>>(new Set())
   const { coords }                  = useGPS({ autoRequest: true })
   const searchParams = useSearchParams()
   const focusId = searchParams.get('id')
@@ -145,33 +146,40 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   }
 
   async function toggleSuosikki(id: number) {
+    if (inFlight.current.has(id)) return   // debounce concurrent taps
+    inFlight.current.add(id)
     const supabase = createBrowserSupabase()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
+      inFlight.current.delete(id)
       setPendingFavoriteId(id)
       setAuthModalOpen(true)
       return
     }
 
-    const isCurrentlySaved = suosikitIds.has(id)
-    setSuosikitIds(prev => {
-      const next = new Set(prev)
-      if (isCurrentlySaved) next.delete(id)
-      else next.add(id)
-      return next
-    })
+    try {
+      const isCurrentlySaved = suosikitIds.has(id)
+      setSuosikitIds(prev => {
+        const next = new Set(prev)
+        if (isCurrentlySaved) next.delete(id)
+        else next.add(id)
+        return next
+      })
 
-    if (isCurrentlySaved) {
-      const { error } = await supabase.from('suosikit').delete().eq('user_id', user.id).eq('paikka_id', id)
-      if (error) {
-        setSuosikitIds(prev => { const next = new Set(prev); next.add(id); return next })
+      if (isCurrentlySaved) {
+        const { error } = await supabase.from('suosikit').delete().eq('user_id', user.id).eq('paikka_id', id)
+        if (error) {
+          setSuosikitIds(prev => { const next = new Set(prev); next.add(id); return next })
+        }
+      } else {
+        const { error } = await supabase.from('suosikit').insert({ user_id: user.id, paikka_id: id })
+        if (error) {
+          setSuosikitIds(prev => { const next = new Set(prev); next.delete(id); return next })
+        }
       }
-    } else {
-      const { error } = await supabase.from('suosikit').insert({ user_id: user.id, paikka_id: id })
-      if (error) {
-        setSuosikitIds(prev => { const next = new Set(prev); next.delete(id); return next })
-      }
+    } finally {
+      inFlight.current.delete(id)
     }
   }
 
