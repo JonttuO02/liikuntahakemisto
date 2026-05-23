@@ -78,7 +78,15 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
         open={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         pendingPaikkaId={paikkaId}
-        onSuccess={() => { setIsSuosikki(true); setAuthModalOpen(false) }}
+        onSuccess={async () => {
+          setAuthModalOpen(false)
+          const supabase = createBrowserSupabase()
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const { error } = await supabase.from('suosikit').insert({ user_id: user.id, paikka_id: paikkaId })
+            if (!error) setIsSuosikki(true)
+          }
+        }}
       />
     </>
   )
