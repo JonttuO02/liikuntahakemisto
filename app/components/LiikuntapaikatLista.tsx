@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Search, MapPin, Clock } from 'lucide-react'
 import { useGPS } from '@/hooks/useGPS'
@@ -11,6 +11,8 @@ import { deriveKaupungit } from '@/lib/cityFilter'
 import { getOpenStatus } from '@/lib/aukiolo'
 import Link from 'next/link'
 import PaikkaKortti, { korttiVariants } from './PaikkaKortti'
+import AuthModal from './AuthModal'
+import { createBrowserSupabase } from '@/lib/supabaseSSR'
 
 import type { Liikuntapaikka } from '@/lib/types'
 export type { Liikuntapaikka } from '@/lib/types'
@@ -35,8 +37,70 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
   const [aktiivHinta, setAktiivHinta] = useState<number | null>(null)
   const [aukinyt, setAukinyt]         = useState(false)
   const [aktiivKaupunki, setAktiivKaupunki] = useState('Kaikki')
+  const [suosikitIds, setSuosikitIds] = useState<Set<number>>(new Set())
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null)
 
   const { status, coords, requestLocation } = useGPS()
+
+  useEffect(() => {
+    const supabase = createBrowserSupabase()
+
+    async function fetchFavorites() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
+        if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
+      }
+    }
+
+    fetchFavorites()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', session.user.id)
+        if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
+      } else {
+        setSuosikitIds(new Set())
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  async function toggleSuosikki(id: number) {
+    const supabase = createBrowserSupabase()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      setPendingFavoriteId(id)
+      setAuthModalOpen(true)
+      return
+    }
+
+    const isCurrentlySaved = suosikitIds.has(id)
+    // Optimistic update
+    setSuosikitIds(prev => {
+      const next = new Set(prev)
+      if (isCurrentlySaved) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
+    if (isCurrentlySaved) {
+      const { error } = await supabase.from('suosikit').delete().eq('user_id', user.id).eq('paikka_id', id)
+      if (error) {
+        // Revert on error
+        setSuosikitIds(prev => { const next = new Set(prev); next.add(id); return next })
+      }
+    } else {
+      const { error } = await supabase.from('suosikit').insert({ user_id: user.id, paikka_id: id })
+      if (error) {
+        // Revert on error
+        setSuosikitIds(prev => { const next = new Set(prev); next.delete(id); return next })
+      }
+    }
+  }
 
   const kaupungit = useMemo(() => deriveKaupungit(paikat), [paikat])
 
@@ -215,6 +279,8 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
                 paikka={p}
                 distanceStr={distancesMap[p.id] != null ? formatDistance(distancesMap[p.id]) : undefined}
                 aukinyt={aukinyt}
+                isSuosikki={suosikitIds.has(p.id)}
+                onToggleSuosikki={toggleSuosikki}
               />
             ))}
           </motion.div>
@@ -246,6 +312,16 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
           Tietosuoja
         </Link>
       </div>
+
+      <AuthModal
+        open={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        pendingPaikkaId={pendingFavoriteId}
+        onSuccess={id => {
+          if (id) toggleSuosikki(id)
+          setAuthModalOpen(false)
+        }}
+      />
     </div>
   )
 }
