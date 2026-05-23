@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Menu, X, Search, Heart, User, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -16,7 +16,17 @@ interface NavBarProps {
 export default function NavBar({ userEmail }: NavBarProps) {
   const [open, setOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [clientEmail, setClientEmail] = useState<string | null>(userEmail)
   const router = useRouter()
+
+  // Track auth state client-side so login/logout updates NavBar without router.refresh()
+  useEffect(() => {
+    const supabase = createBrowserSupabase()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setClientEmail(session?.user?.email ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   async function handleSignOut() {
     const supabase = createBrowserSupabase()
@@ -73,42 +83,42 @@ export default function NavBar({ userEmail }: NavBarProps) {
               <div className="max-w-5xl mx-auto px-4 h-11 flex items-center justify-end gap-1">
 
                 {/* Auth state: signed out shows User icon, signed in shows email + LogOut */}
-                {userEmail ? (
+                {clientEmail ? (
                   <>
-                    <span className="text-sm font-bold text-[#111111] max-w-[120px] truncate">{userEmail}</span>
+                    <span className="text-sm font-bold text-[#111111] max-w-[140px] truncate">{clientEmail}</span>
                     <button
                       onClick={() => { setOpen(false); handleSignOut() }}
-                      aria-label="Kirjaudu ulos"
-                      className="glass-btn w-9 h-9 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+                      className="glass-btn flex items-center gap-1.5 px-3 h-9 rounded-full text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
                     >
                       <LogOut className="w-4 h-4" />
+                      Kirjaudu ulos
                     </button>
                   </>
                 ) : (
                   <button
                     onClick={() => { setOpen(false); setAuthModalOpen(true) }}
-                    aria-label="Kirjaudu"
-                    className="glass-btn w-9 h-9 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+                    className="glass-btn flex items-center gap-1.5 px-3 h-9 rounded-full text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
                   >
                     <User className="w-4 h-4" />
+                    Kirjaudu
                   </button>
                 )}
 
                 <Link
                   href="/?nakyma=lista"
                   onClick={() => setOpen(false)}
-                  aria-label="Haku"
-                  className="glass-btn w-9 h-9 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+                  className="glass-btn flex items-center gap-1.5 px-3 h-9 rounded-full text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
                 >
                   <Search className="w-4 h-4" />
+                  Haku
                 </Link>
                 <Link
                   href="/suosikit"
                   onClick={() => setOpen(false)}
-                  aria-label="Suosikit"
-                  className="glass-btn w-9 h-9 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+                  className="glass-btn flex items-center gap-1.5 px-3 h-9 rounded-full text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
                 >
                   <Heart className="w-4 h-4" />
+                  Suosikit
                 </Link>
               </div>
             </motion.div>
