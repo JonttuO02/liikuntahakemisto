@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
 status: active
-last_updated: "2026-05-23T05:43:02Z"
-last_activity: 2026-05-23 — Phase 9 Plan 02 complete: AuthModal, async layout with getUser(), NavBar auth state
+last_updated: "2026-05-23T06:40:00Z"
+last_activity: 2026-05-23 — Phase 9 Plan 03 complete: heart buttons on all surfaces, favorites engine with Supabase INSERT/DELETE, auth-aware suosikit page
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 16
-  completed_plans: 14
-  percent: 56
+  completed_plans: 15
+  percent: 59
 ---
 
 # Project State
@@ -18,9 +18,9 @@ progress:
 ## Current Position
 
 Phase: 9 — Auth & Favorites (in progress)
-Plan: 09-02 ✅
+Plan: 09-03 ✅
 Status: active
-Last activity: 2026-05-23 — Phase 9 Plan 02 complete: AuthModal glass component, async layout auth fetch, NavBar auth state
+Last activity: 2026-05-23 — Phase 9 Plan 03 complete: heart buttons + favorites engine on all three surfaces, auth-aware suosikit page
 
 ## Project Reference
 
@@ -56,6 +56,9 @@ See: .planning/PROJECT.md
 - AdvancedMarker migration complete ✅ DONE — Phase 8 map features now unblocked
 - Supabase Auth uses per-request createServerClient — never the existing module-scope singleton
 - middleware.ts created ✅ — refreshes Supabase session on every non-static request (Phase 9 Plan 01)
+- toggleSuosikki calls getUser() on each invocation — avoids stale auth state from closure
+- suosikitIds: Set<number> lives in both LiikuntapaikatLista and Etusivu — ready for AI personalization (09-04)
+- HeartButton is a standalone client component (no shared auth state) — manages own subscription lifecycle
 - Map focus URL: /?id=<paikka_id> — focusId effect sets sheetPhase('sliding'), closes sheet and pans map (NOT /?nakyma=kartta&id=...)
 - PWA must use Serwist (@serwist/next + serwist) — next-pwa and @ducanh2912/next-pwa are abandoned
 - Service worker must exclude _rsc requests and be disabled in dev mode
@@ -118,6 +121,6 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- Last session: Phase 9 Plan 02 executed — AuthModal.tsx created, layout.tsx made async with getUser(), NavBar.tsx updated with auth state + AuthModal
-- Stopped at: Phase 9 Plan 02 complete; manual step still required — run supabase/migrations/20260523_suosikit.sql in Supabase Dashboard before plan 09-03
-- Resume: /gsd:execute-phase 9 (plan 09-03)
+- Last session: Phase 9 Plan 03 executed — heart buttons on PaikkaKortti/LiikuntapaikatLista/Etusivu, HeartButton for profile page, suosikit page auth-aware
+- Stopped at: Phase 9 Plan 03 complete; ready for Plan 09-04 (AI personalization with favorites)
+- Resume: /gsd:execute-phase 9 (plan 09-04)
