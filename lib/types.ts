@@ -17,3 +17,10 @@ export type Liikuntapaikka = {
   lajit_lista?: string[] | null
   featured?: boolean | null
 }
+
+export type Suosikki = {
+  id: number
+  user_id: string
+  paikka_id: number
+  created_at: string
+}
