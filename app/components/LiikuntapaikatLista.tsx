@@ -71,6 +71,7 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
   }, [])
 
   async function toggleSuosikki(id: number) {
+    console.log('[toggleSuosikki] called id:', id)
     if (inFlight.current.has(id)) return   // debounce concurrent taps
     inFlight.current.add(id)
     const supabase = createBrowserSupabase()

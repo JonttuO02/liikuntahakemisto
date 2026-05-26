@@ -7,7 +7,15 @@ export function createBrowserSupabase() {
   if (!_browserClient) {
     _browserClient = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          // Use localStorage instead of cookie storage — the default @supabase/ssr
+          // cookie writer hangs on this Next.js setup, preventing session persistence.
+          storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+          persistSession: true,
+        },
+      }
     )
   }
   return _browserClient
