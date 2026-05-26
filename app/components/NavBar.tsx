@@ -28,8 +28,8 @@ export default function NavBar({ userEmail }: NavBarProps) {
   }, [])
 
   function handleSignOut() {
+    setClientEmail(null) // immediate UI update — signOut() may hang like signInWithPassword
     createBrowserSupabase().auth.signOut()
-    // onAuthStateChange fires SIGNED_OUT → setClientEmail(null) handles UI update
   }
 
   return (
