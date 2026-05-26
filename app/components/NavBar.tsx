@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import ActaLogo from './ActaLogo'
 import AuthModal from './AuthModal'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 interface NavBarProps {
   userEmail: string | null
@@ -20,8 +21,7 @@ export default function NavBar({ userEmail }: NavBarProps) {
   // Track auth state client-side so login/logout updates NavBar without router.refresh()
   useEffect(() => {
     const supabase = createBrowserSupabase()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[NavBar] auth event:', event, session?.user?.email ?? 'null')
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       setClientEmail(session?.user?.email ?? null)
     })
     return () => subscription.unsubscribe()

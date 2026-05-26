@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import type { AuthChangeEvent, Session, AuthError } from '@supabase/supabase-js'
 
 interface AuthModalProps {
   open: boolean
@@ -70,7 +71,7 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
   useEffect(() => {
     if (!open || !loading) return
     const supabase = createBrowserSupabase()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       if (event === 'SIGNED_IN' && session) {
         onSuccess?.(pendingPaikkaId ?? null)
         onClose()
@@ -91,12 +92,14 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
     if (mode === 'signin') {
       // Fire sign-in; success is handled by the SIGNED_IN useEffect above.
       // Only handle the error path here — the promise may hang on @supabase/ssr.
-      supabase.auth.signInWithPassword({ email, password }).then(({ error: err }) => {
-        if (err) {
-          setError(mapError(err.message))
-          setLoading(false)
+      void supabase.auth.signInWithPassword({ email, password }).then(
+        ({ error }: { data: unknown; error: AuthError | null }) => {
+          if (error) {
+            setError(mapError(error.message))
+            setLoading(false)
+          }
         }
-      }).catch(() => {
+      ).catch(() => {
         setError('Jokin meni pieleen. Yritä uudelleen.')
         setLoading(false)
       })

@@ -22,6 +22,7 @@ import { isSafeUrl } from '@/lib/urlUtils'
 import { useGPS } from '@/hooks/useGPS'
 import { pinUrl } from '@/lib/sportPins'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import AuthModal from './AuthModal'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
@@ -195,19 +196,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   useEffect(() => {
     const supabase = createBrowserSupabase()
 
-    // Immediate load — avoids race where INITIAL_SESSION async DB query overwrites optimistic updates
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setSupabaseUser(user)
-      if (user) {
-        supabase.from('suosikit').select('paikka_id').eq('user_id', user.id).then(({ data }) => {
-          if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
-        })
-      }
-    })
+    // INITIAL_SESSION fires immediately with the current session loaded from localStorage.
+    // TOKEN_REFRESHED skipped to avoid overriding optimistic updates mid-toggle.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' ||
+          event === 'PASSWORD_RECOVERY' || event === 'MFA_CHALLENGE_VERIFIED') return
 
-    // Handle subsequent login/logout — skip INITIAL_SESSION to avoid overwriting optimistic updates
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'INITIAL_SESSION') return
       const u = session?.user ?? null
       setSupabaseUser(u)
       if (u) {

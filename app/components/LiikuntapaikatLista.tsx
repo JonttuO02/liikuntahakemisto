@@ -13,6 +13,7 @@ import Link from 'next/link'
 import PaikkaKortti, { korttiVariants } from './PaikkaKortti'
 import AuthModal from './AuthModal'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 import type { Liikuntapaikka } from '@/lib/types'
 export type { Liikuntapaikka } from '@/lib/types'
@@ -48,24 +49,16 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
   useEffect(() => {
     const supabase = createBrowserSupabase()
 
-    // Immediate load via getSession (avoids network round-trip of getUser)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const user = session?.user ?? null
-      currentUser.current = user
-      if (user) {
-        supabase.from('suosikit').select('paikka_id').eq('user_id', user.id).then(({ data }) => {
-          if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
-        })
-      }
-    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' ||
+          event === 'PASSWORD_RECOVERY' || event === 'MFA_CHALLENGE_VERIFIED') return
 
-    // Handle subsequent login/logout — skip INITIAL_SESSION to avoid overwriting optimistic updates
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'INITIAL_SESSION') return
       const user = session?.user ?? null
       currentUser.current = user
+      console.log('[LISTA] currentUser set to:', user?.id ?? 'null')
       if (user) {
-        const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
+        const { data, error } = await supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
+        console.log('[LISTA] suosikit query:', data, error)
         if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
       } else {
         setSuosikitIds(new Set())
@@ -76,7 +69,7 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
   }, [])
 
   async function toggleSuosikki(id: number) {
-    console.log('[toggleSuosikki] called id:', id, 'user:', currentUser.current?.id ?? 'null')
+    console.log('[LISTA toggleSuosikki] id:', id, 'currentUser:', currentUser.current?.id ?? 'null')
     if (inFlight.current.has(id)) return   // debounce concurrent taps
     inFlight.current.add(id)
     const user = currentUser.current

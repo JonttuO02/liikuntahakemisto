@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import AuthModal from './AuthModal'
 
 interface HeartButtonProps {
@@ -19,17 +20,10 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
   useEffect(() => {
     const supabase = createBrowserSupabase()
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const u = session?.user ?? null
-      currentUser.current = u
-      if (u) {
-        supabase.from('suosikit').select('id').eq('user_id', u.id).eq('paikka_id', paikkaId).maybeSingle()
-          .then(({ data }) => setIsSuosikki(!!data))
-      }
-    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' ||
+          event === 'PASSWORD_RECOVERY' || event === 'MFA_CHALLENGE_VERIFIED') return
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'INITIAL_SESSION') return
       const u = session?.user ?? null
       currentUser.current = u
       if (u) {
@@ -51,6 +45,7 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
       return
     }
 
+    const supabase = createBrowserSupabase()
     const wasSaved = isSuosikki
     // Optimistic update
     setIsSuosikki(!wasSaved)

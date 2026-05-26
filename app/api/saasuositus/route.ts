@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     suosikit = Array.isArray(body.suosikit)
       ? body.suosikit
           .slice(0, 10)
-          .filter((s): s is string => typeof s === 'string')
+          .filter((s: unknown): s is string => typeof s === 'string')
           .map((s: string) => s.replace(/[^\w\sÄäÖöÅå\-,.'()&]/g, '').slice(0, 80))
       : []
   } catch {}
