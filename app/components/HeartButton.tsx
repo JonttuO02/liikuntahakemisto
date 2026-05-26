@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -14,19 +14,26 @@ interface HeartButtonProps {
 export default function HeartButton({ paikkaId }: HeartButtonProps) {
   const [isSuosikki, setIsSuosikki]       = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
+  const currentUser = useRef<{ id: string } | null>(null)
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user ?? null
+      currentUser.current = u
       if (u) {
-        const { data } = await supabase
-          .from('suosikit')
-          .select('id')
-          .eq('user_id', u.id)
-          .eq('paikka_id', paikkaId)
-          .maybeSingle()
+        supabase.from('suosikit').select('id').eq('user_id', u.id).eq('paikka_id', paikkaId).maybeSingle()
+          .then(({ data }) => setIsSuosikki(!!data))
+      }
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'INITIAL_SESSION') return
+      const u = session?.user ?? null
+      currentUser.current = u
+      if (u) {
+        const { data } = await supabase.from('suosikit').select('id').eq('user_id', u.id).eq('paikka_id', paikkaId).maybeSingle()
         setIsSuosikki(!!data)
       } else {
         setIsSuosikki(false)
@@ -37,9 +44,7 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
   }, [paikkaId])
 
   async function toggle() {
-    const supabase = createBrowserSupabase()
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session?.user ?? null
+    const user = currentUser.current
 
     if (!user) {
       setAuthModalOpen(true)

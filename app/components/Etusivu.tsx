@@ -148,9 +148,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   async function toggleSuosikki(id: number) {
     if (inFlight.current.has(id)) return   // debounce concurrent taps
     inFlight.current.add(id)
-    const supabase = createBrowserSupabase()
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session?.user ?? null
+    const user = supabaseUser
 
     if (!user) {
       inFlight.current.delete(id)
@@ -158,6 +156,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       setAuthModalOpen(true)
       return
     }
+    const supabase = createBrowserSupabase()
 
     try {
       const isCurrentlySaved = suosikitIds.has(id)

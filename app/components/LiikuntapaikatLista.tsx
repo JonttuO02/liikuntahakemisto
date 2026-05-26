@@ -41,14 +41,17 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null)
   const inFlight = useRef<Set<number>>(new Set())
+  const currentUser = useRef<{ id: string } | null>(null)
 
   const { status, coords, requestLocation } = useGPS()
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
 
-    // Immediate load — avoids race where INITIAL_SESSION async DB query overwrites optimistic updates
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    // Immediate load via getSession (avoids network round-trip of getUser)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const user = session?.user ?? null
+      currentUser.current = user
       if (user) {
         supabase.from('suosikit').select('paikka_id').eq('user_id', user.id).then(({ data }) => {
           if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
@@ -59,8 +62,10 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
     // Handle subsequent login/logout — skip INITIAL_SESSION to avoid overwriting optimistic updates
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'INITIAL_SESSION') return
-      if (session?.user) {
-        const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', session.user.id)
+      const user = session?.user ?? null
+      currentUser.current = user
+      if (user) {
+        const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
         if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
       } else {
         setSuosikitIds(new Set())
@@ -71,12 +76,10 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
   }, [])
 
   async function toggleSuosikki(id: number) {
-    console.log('[toggleSuosikki] called id:', id)
+    console.log('[toggleSuosikki] called id:', id, 'user:', currentUser.current?.id ?? 'null')
     if (inFlight.current.has(id)) return   // debounce concurrent taps
     inFlight.current.add(id)
-    const supabase = createBrowserSupabase()
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session?.user ?? null
+    const user = currentUser.current
 
     if (!user) {
       inFlight.current.delete(id)
@@ -84,6 +87,7 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
       setAuthModalOpen(true)
       return
     }
+    const supabase = createBrowserSupabase()
 
     try {
       const isCurrentlySaved = suosikitIds.has(id)
