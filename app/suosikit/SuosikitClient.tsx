@@ -26,7 +26,7 @@ export default function SuosikitClient() {
         .select('paikka_id, liikuntapaikat(*)')
         .eq('user_id', userId)
       if (!error && data) {
-        const rows = data as SuosikkiRow[]
+        const rows = data as unknown as SuosikkiRow[]
         const places = rows
           .map(row => row.liikuntapaikat)
           .filter((p): p is Liikuntapaikka => p !== null)

@@ -1,13 +1,16 @@
-import { createBrowserClient, createServerClient } from '@supabase/ssr'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 
-// Module-level auth store — one subscription for the entire app lifetime.
-// Solves two problems:
-// 1. @supabase/ssr hanging promises (getSession, signInWithPassword)
-// 2. React Strict Mode double-invoke race on INITIAL_SESSION
+// Standard createClient (localStorage) — reliable INITIAL_SESSION, no hanging promises.
+// @supabase/ssr's createBrowserClient hangs on async init in this Next.js setup.
+// All auth checks are client-side so the server not reading localStorage is fine.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type BrowserClient = SupabaseClient<any>
 type AuthUser = { id: string; email?: string } | null
-let _browserClient: ReturnType<typeof createBrowserClient> | undefined
+
+let _browserClient: BrowserClient | undefined
 let _currentUser: AuthUser = null
 const _authListeners = new Set<(user: AuthUser) => void>()
 
@@ -16,9 +19,10 @@ function _notifyListeners(user: AuthUser) {
   _authListeners.forEach(cb => cb(user))
 }
 
-export function createBrowserSupabase() {
+export function createBrowserSupabase(): BrowserClient {
   if (!_browserClient) {
-    _browserClient = createBrowserClient(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _browserClient = createClient<any>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     )
