@@ -97,6 +97,9 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
       onSuccess?.(pendingPaikkaId ?? null)
       onClose()
       router.refresh()
+    } catch (e) {
+      console.error('[AuthModal] unexpected error:', e)
+      setError('Jokin meni pieleen. Yritä uudelleen.')
     } finally {
       setLoading(false)
     }

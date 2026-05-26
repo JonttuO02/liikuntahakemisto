@@ -149,7 +149,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     if (inFlight.current.has(id)) return   // debounce concurrent taps
     inFlight.current.add(id)
     const supabase = createBrowserSupabase()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user ?? null
 
     if (!user) {
       inFlight.current.delete(id)
@@ -170,11 +171,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       if (isCurrentlySaved) {
         const { error } = await supabase.from('suosikit').delete().eq('user_id', user.id).eq('paikka_id', id)
         if (error) {
+          console.error('[toggleSuosikki] delete error:', error)
           setSuosikitIds(prev => { const next = new Set(prev); next.add(id); return next })
         }
       } else {
         const { error } = await supabase.from('suosikit').insert({ user_id: user.id, paikka_id: id })
         if (error) {
+          console.error('[toggleSuosikki] insert error:', error)
           setSuosikitIds(prev => { const next = new Set(prev); next.delete(id); return next })
         }
       }

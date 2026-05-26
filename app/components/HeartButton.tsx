@@ -38,7 +38,8 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
 
   async function toggle() {
     const supabase = createBrowserSupabase()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user ?? null
 
     if (!user) {
       setAuthModalOpen(true)
@@ -55,12 +56,18 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
         .delete()
         .eq('user_id', user.id)
         .eq('paikka_id', paikkaId)
-      if (error) setIsSuosikki(wasSaved)
+      if (error) {
+        console.error('[HeartButton] delete error:', error)
+        setIsSuosikki(wasSaved)
+      }
     } else {
       const { error } = await supabase
         .from('suosikit')
         .insert({ user_id: user.id, paikka_id: paikkaId })
-      if (error) setIsSuosikki(wasSaved)
+      if (error) {
+        console.error('[HeartButton] insert error:', error)
+        setIsSuosikki(wasSaved)
+      }
     }
   }
 
