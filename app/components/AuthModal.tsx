@@ -65,6 +65,21 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
     return () => window.removeEventListener('keydown', onKey)
   }, [open, handleClose])
 
+  // Close modal when SIGNED_IN fires — handles @supabase/ssr bug where
+  // signInWithPassword promise hangs after the auth event already resolved
+  useEffect(() => {
+    if (!open || !loading) return
+    const supabase = createBrowserSupabase()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        onSuccess?.(pendingPaikkaId ?? null)
+        onClose()
+      }
+    })
+    return () => subscription.unsubscribe()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, loading])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (loading) return
@@ -73,32 +88,37 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
 
     const supabase = createBrowserSupabase()
 
-    try {
-      if (mode === 'signin') {
-        const { error: err } = await supabase.auth.signInWithPassword({ email, password })
+    if (mode === 'signin') {
+      // Fire sign-in; success is handled by the SIGNED_IN useEffect above.
+      // Only handle the error path here — the promise may hang on @supabase/ssr.
+      supabase.auth.signInWithPassword({ email, password }).then(({ error: err }) => {
         if (err) {
           setError(mapError(err.message))
-          return
+          setLoading(false)
         }
-      } else {
-        const { data, error: err } = await supabase.auth.signUp({ email, password })
-        if (err) {
-          setError(mapError(err.message))
-          return
-        }
-        if (!data.session) {
-          // Email confirmation required — show info message instead of calling onSuccess
-          setError('Tarkista sähköpostisi ja vahvista tili.')
-          return
-        }
-      }
+      }).catch(() => {
+        setError('Jokin meni pieleen. Yritä uudelleen.')
+        setLoading(false)
+      })
+      return
+    }
 
-      // Success
+    // signup flow — use await normally (no known hanging issue)
+    try {
+      const { data, error: err } = await supabase.auth.signUp({ email, password })
+      if (err) {
+        setError(mapError(err.message))
+        return
+      }
+      if (!data.session) {
+        setError('Tarkista sähköpostisi ja vahvista tili.')
+        return
+      }
       onSuccess?.(pendingPaikkaId ?? null)
       onClose()
       router.refresh()
     } catch (e) {
-      console.error('[AuthModal] unexpected error:', e)
+      console.error('[AuthModal] signup error:', e)
       setError('Jokin meni pieleen. Yritä uudelleen.')
     } finally {
       setLoading(false)

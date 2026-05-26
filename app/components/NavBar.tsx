@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Menu, X, Search, Heart, User, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useRouter } from 'next/navigation'
 import ActaLogo from './ActaLogo'
 import AuthModal from './AuthModal'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
@@ -17,21 +16,20 @@ export default function NavBar({ userEmail }: NavBarProps) {
   const [open, setOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [clientEmail, setClientEmail] = useState<string | null>(userEmail)
-  const router = useRouter()
 
   // Track auth state client-side so login/logout updates NavBar without router.refresh()
   useEffect(() => {
     const supabase = createBrowserSupabase()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[NavBar] auth event:', event, session?.user?.email ?? 'null')
       setClientEmail(session?.user?.email ?? null)
     })
     return () => subscription.unsubscribe()
   }, [])
 
-  async function handleSignOut() {
-    const supabase = createBrowserSupabase()
-    await supabase.auth.signOut()
-    router.refresh()
+  function handleSignOut() {
+    createBrowserSupabase().auth.signOut()
+    // onAuthStateChange fires SIGNED_OUT → setClientEmail(null) handles UI update
   }
 
   return (
