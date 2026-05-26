@@ -21,8 +21,7 @@ import { TAMPERE } from '@/lib/constants'
 import { isSafeUrl } from '@/lib/urlUtils'
 import { useGPS } from '@/hooks/useGPS'
 import { pinUrl } from '@/lib/sportPins'
-import { createBrowserSupabase } from '@/lib/supabaseSSR'
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
+import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
@@ -103,7 +102,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [zoomLevel, setZoomLevel]   = useState(14)
   const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
   const [suosikitIds, setSuosikitIds]       = useState<Set<number>>(new Set())
-  const [supabaseUser, setSupabaseUser]     = useState<SupabaseUser | null>(null)
+  const [supabaseUser, setSupabaseUser]     = useState<{ id: string; email?: string } | null>(null)
   const [authModalOpen, setAuthModalOpen]   = useState(false)
   const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null)
   const inFlight = useRef<Set<number>>(new Set())
@@ -195,24 +194,15 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
-
-    // INITIAL_SESSION fires immediately with the current session loaded from localStorage.
-    // TOKEN_REFRESHED skipped to avoid overriding optimistic updates mid-toggle.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' ||
-          event === 'PASSWORD_RECOVERY' || event === 'MFA_CHALLENGE_VERIFIED') return
-
-      const u = session?.user ?? null
-      setSupabaseUser(u)
-      if (u) {
-        const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', u.id)
+    return subscribeToAuthUser(async (user) => {
+      setSupabaseUser(user)
+      if (user) {
+        const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
         if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
       } else {
         setSuosikitIds(new Set())
       }
     })
-
-    return () => subscription.unsubscribe()
   }, [])
 
   useEffect(() => {

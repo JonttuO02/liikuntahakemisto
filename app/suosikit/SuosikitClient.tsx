@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import { Heart } from 'lucide-react'
 import Link from 'next/link'
 import AuthModal from '@/app/components/AuthModal'
-import { createBrowserSupabase } from '@/lib/supabaseSSR'
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
+import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import type { Liikuntapaikka } from '@/lib/types'
 
 type AuthState = 'loading' | 'unauthenticated' | 'authenticated'
@@ -36,11 +35,7 @@ export default function SuosikitClient() {
       setFavLoading(false)
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
-      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' ||
-          event === 'PASSWORD_RECOVERY' || event === 'MFA_CHALLENGE_VERIFIED') return
-
-      const user = session?.user ?? null
+    return subscribeToAuthUser((user) => {
       if (user) {
         setAuthState('authenticated')
         loadFavorites(user.id)
@@ -49,8 +44,6 @@ export default function SuosikitClient() {
         setPaikat([])
       }
     })
-
-    return () => subscription.unsubscribe()
   }, [])
 
   // Still loading session from cookies

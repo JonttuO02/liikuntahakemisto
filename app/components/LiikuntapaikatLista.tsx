@@ -12,8 +12,7 @@ import { getOpenStatus } from '@/lib/aukiolo'
 import Link from 'next/link'
 import PaikkaKortti, { korttiVariants } from './PaikkaKortti'
 import AuthModal from './AuthModal'
-import { createBrowserSupabase } from '@/lib/supabaseSSR'
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
+import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 
 import type { Liikuntapaikka } from '@/lib/types'
 export type { Liikuntapaikka } from '@/lib/types'
@@ -48,28 +47,18 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' ||
-          event === 'PASSWORD_RECOVERY' || event === 'MFA_CHALLENGE_VERIFIED') return
-
-      const user = session?.user ?? null
+    return subscribeToAuthUser(async (user) => {
       currentUser.current = user
-      console.log('[LISTA] currentUser set to:', user?.id ?? 'null')
       if (user) {
-        const { data, error } = await supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
-        console.log('[LISTA] suosikit query:', data, error)
+        const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
         if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
       } else {
         setSuosikitIds(new Set())
       }
     })
-
-    return () => subscription.unsubscribe()
   }, [])
 
   async function toggleSuosikki(id: number) {
-    console.log('[LISTA toggleSuosikki] id:', id, 'currentUser:', currentUser.current?.id ?? 'null')
     if (inFlight.current.has(id)) return   // debounce concurrent taps
     inFlight.current.add(id)
     const user = currentUser.current
