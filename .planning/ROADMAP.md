@@ -144,4 +144,4 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 8. Map Features | v1.1 | 3/3 | ✅ Complete | 2026-05-22 |
 | 9. Auth & Favorites | v1.1 | 4/4 | ✅ Complete | 2026-05-23 |
 | 10. City Expansion | v1.1 | 4/4 | ✅ Complete | 2026-05-27 |
-| 11. PWA | v1.1 | 0/3 | Not started | - |
+| 11. PWA | v1.1 | 0/3 | 📋 Planned | - |

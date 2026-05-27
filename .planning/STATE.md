@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
 status: active
-last_updated: "2026-05-27T10:46:30.677Z"
-last_activity: "2026-05-27 — Phase 10 complete: SUOMI_KAUPUNGIT, sync parameterization, saasuositus city-aware, Etusivu map-center debounce"
+last_updated: "2026-05-27T12:00:00.000Z"
+last_activity: "2026-05-27 — Phase 11 planned: 3 plans (install+icons, Serwist SW config, manifest+offline page) in 2 waves"
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 16
+  total_plans: 19
   completed_plans: 20
   percent: 67
 ---
@@ -17,10 +17,10 @@ progress:
 
 ## Current Position
 
-Phase: 10 — City Expansion ✅ Complete
-Plan: 4/4 plans done
+Phase: 11 — PWA 📋 Planned
+Plan: 0/3 plans done
 Status: active
-Last activity: 2026-05-27 — Phase 10 complete: SUOMI_KAUPUNGIT, sync parameterization, saasuositus city-aware, Etusivu map-center debounce
+Last activity: 2026-05-27 — Phase 11 planned: 3 plans (install+icons, Serwist SW config, manifest+offline page) in 2 waves
 
 ## Project Reference
 
@@ -38,7 +38,7 @@ See: .planning/PROJECT.md
 | 8. Map Features | ✅ Complete | 3/3 plans done; Etusivu refactored to bottom sheet architecture |
 | 9. Auth & Favorites | ✅ Complete | All 4 plans done: foundation, AuthModal, favorites engine, AI personalization |
 | 10. City Expansion | ✅ Complete | 4/4 plans done: SUOMI_KAUPUNGIT, sync parameterization, saasuositus city-aware, Etusivu map-center debounce |
-| 11. PWA | Not started | Must be last — needs complete API surface |
+| 11. PWA | 📋 Planned (0/3) | 3 plans: packages+icons, SW config, manifest+offline page |
 
 ## Active Decisions
 
@@ -123,6 +123,6 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- Last session: Phase 10 planned — sync parameterization (?kaupunki= param), SUOMI_KAUPUNGIT constants, nearestKaupunki utility, fetchWeather parameterization, Etusivu mapCenter debounce
-- Stopped at: Phase 10 planned (4 plans verified); ready to execute
-- Resume: /gsd:execute-phase 10
+- Last session: Phase 11 planned — Serwist PWA (install+icons, SW config, manifest+offline page), 3 plans in 2 waves, verification passed
+- Stopped at: Phase 11 planned (3 plans verified); ready to execute
+- Resume: /gsd:execute-phase 11

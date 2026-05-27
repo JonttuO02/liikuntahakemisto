@@ -617,22 +617,25 @@ No manual `navigator.serviceWorker.register()` call is needed. `withSerwist()` i
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`start_url` and installability**
    - What we know: Chrome requires `start_url` to be same-origin as the manifest.
    - What's unclear: Whether `/?nakyma=lista` as `start_url` satisfies Chrome's installability check — some browsers parse query strings strictly.
    - Recommendation: Use `"/?nakyma=lista"` as planned; verify in Chrome DevTools → Application → Manifest during execution.
+   - RESOLVED: Use `start_url: "/?nakyma=lista"`; verify Chrome installability in DevTools → Application → Manifest during execution.
 
 2. **`app/manifest.ts` — does Next.js auto-add `<link rel="manifest">`?**
    - What we know: The official Next.js docs show `app/manifest.ts` as the pattern without mentioning `metadata.manifest`.
    - What's unclear: Whether the framework injects the `<link>` tag automatically or requires `metadata.manifest` to point to it.
    - Recommendation: Add `metadata.manifest = '/manifest.webmanifest'` explicitly to `layout.tsx` metadata as a safety measure. It is a no-op if the framework already injects it.
+   - RESOLVED: Add explicit `metadata.manifest = '/manifest.webmanifest'` as safety measure (done in Plan 03 Task 2).
 
 3. **`appleWebApp` metadata — needed for iOS?**
    - What we know: The Serwist getting-started example shows `appleWebApp: { capable: true, statusBarStyle: 'default', title: ... }` in metadata.
    - What's unclear: Whether this meaningfully affects iOS A2HS behavior for this app; D-10 defers iOS instructions entirely.
    - Recommendation: Include `appleWebApp: { capable: true, statusBarStyle: 'default' }` as it costs nothing and enables better iOS standalone behavior.
+   - RESOLVED: Include `appleWebApp: { capable: true, statusBarStyle: 'default' }` in layout.tsx metadata (done in Plan 03 Task 2).
 
 ---
 
