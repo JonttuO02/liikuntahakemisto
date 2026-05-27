@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
 status: executing
-last_updated: "2026-05-27T11:26:17.664Z"
-last_activity: 2026-05-27 -- Phase 11 execution started
+last_updated: "2026-05-27T11:37:39.012Z"
+last_activity: 2026-05-27
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 19
-  completed_plans: 20
-  percent: 67
+  completed_plans: 23
+  percent: 83
 ---
 
 # Project State
@@ -18,9 +18,9 @@ progress:
 ## Current Position
 
 Phase: 11 (PWA) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 11
-Last activity: 2026-05-27 -- Phase 11 execution started
+Plan: 3 of 3
+Status: Checkpoint — awaiting human verify (11-03 Tasks 1–3 complete, build verification pending)
+Last activity: 2026-05-27 -- Phase 11 Plan 03 executed (manifest.ts, layout.tsx viewport, offline page)
 
 ## Project Reference
 
@@ -38,7 +38,7 @@ See: .planning/PROJECT.md
 | 8. Map Features | ✅ Complete | 3/3 plans done; Etusivu refactored to bottom sheet architecture |
 | 9. Auth & Favorites | ✅ Complete | All 4 plans done: foundation, AuthModal, favorites engine, AI personalization |
 | 10. City Expansion | ✅ Complete | 4/4 plans done: SUOMI_KAUPUNGIT, sync parameterization, saasuositus city-aware, Etusivu map-center debounce |
-| 11. PWA | 📋 Planned (0/3) | 3 plans: packages+icons, SW config, manifest+offline page |
+| 11. PWA | 🔄 Executing (3/3 tasks done, checkpoint pending) | manifest.ts, layout viewport, offline page built — awaiting build verify |
 
 ## Active Decisions
 
@@ -123,6 +123,6 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- Last session: Phase 11 planned — Serwist PWA (install+icons, SW config, manifest+offline page), 3 plans in 2 waves, verification passed
-- Stopped at: Phase 11 planned (3 plans verified); ready to execute
-- Resume: /gsd:execute-phase 11
+- Last session: 2026-05-27 — Phase 11 Plan 03 executed: manifest.ts (MetadataRoute.Manifest), layout.tsx (viewport + manifest metadata), offline/page.tsx (Finnish server component). Checkpoint 4 reached — awaiting human build verification.
+- Stopped at: 11-03-PLAN.md Task 4 (human-verify checkpoint)
+- Resume: Approve checkpoint after `npm run build` and `npm run start` verification

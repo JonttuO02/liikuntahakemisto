@@ -46,8 +46,8 @@
 
 ## PWA
 
-- [ ] **PWA-01**: Sovellus toimii perustasolla offline-tilassa (palvelun tiedot näkyvät ilman nettiä)
-- [ ] **PWA-02**: Käyttäjä voi lisätä sovelluksen kotinäyttöön (Web App Manifest + install prompt)
+- [x] **PWA-01**: Sovellus toimii perustasolla offline-tilassa (palvelun tiedot näkyvät ilman nettiä)
+- [x] **PWA-02**: Käyttäjä voi lisätä sovelluksen kotinäyttöön (Web App Manifest + install prompt)
 
 ---
 
@@ -88,8 +88,8 @@
 | AUTH-03 | Phase 9 | Pending |
 | DATA-05 | Phase 10 | Pending |
 | DATA-06 | Phase 10 | Pending |
-| PWA-01 | Phase 11 | Pending |
-| PWA-02 | Phase 11 | Pending |
+| PWA-01 | Phase 11 | Complete |
+| PWA-02 | Phase 11 | Complete |
 
 ---
 
