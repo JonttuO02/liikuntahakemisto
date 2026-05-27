@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   title: 'Liikuntahakemisto',
   description: 'Löydä liikuntapaikat läheltäsi Tampereella',
   manifest: '/manifest.webmanifest',
-  appleWebApp: { capable: true, statusBarStyle: 'default' },
+  appleWebApp: { statusBarStyle: 'default' },
+  other: { 'mobile-web-app-capable': 'yes' },
 }
 
 export const viewport: Viewport = { themeColor: '#4F46E5' }
