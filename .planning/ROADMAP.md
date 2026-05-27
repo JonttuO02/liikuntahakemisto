@@ -109,7 +109,11 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
   1. Helsinki-area sports venues appear in the listing and on the map when Helsinki is selected as the city filter
   2. Turku-area sports venues appear in the listing and on the map when Turku is selected as the city filter
   3. Syncing Helsinki or Turku data does not overwrite or corrupt existing Tampere venue records
-**Plans**: TBD
+**Plans**: 4 plans
+  - [ ] 10-01-PLAN.md — SUOMI_KAUPUNGIT constants + nearestKaupunki geo utility
+  - [ ] 10-02-PLAN.md — Sync route parameterization (?kaupunki= support, SPORT_LAJIT, dynamic parseOsoite)
+  - [ ] 10-03-PLAN.md — Weather API city-awareness (fetchWeather lat/lng params, GET/POST kaupunki)
+  - [ ] 10-04-PLAN.md — Etusivu map-center tracking + weatherKaupunki trigger
 
 ### Phase 11: PWA
 **Goal**: The app is installable and shows cached content when the device is offline
@@ -136,5 +140,5 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 7. Map Infrastructure | v1.1 | 2/2 | ✅ Complete | 2026-05-22 |
 | 8. Map Features | v1.1 | 3/3 | ✅ Complete | 2026-05-22 |
 | 9. Auth & Favorites | v1.1 | 4/4 | ✅ Complete | 2026-05-23 |
-| 10. City Expansion | v1.1 | 0/? | Not started | - |
+| 10. City Expansion | v1.1 | 0/4 | Not started | - |
 | 11. PWA | v1.1 | 0/? | Not started | - |
