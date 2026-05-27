@@ -1,3 +1,5 @@
+import { SUOMI_KAUPUNGIT } from './constants'
+
 export function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371
   const dLat = (lat2 - lat1) * Math.PI / 180
@@ -11,4 +13,14 @@ export function formatDistance(km: number): string {
   if (km < 1) return `${Math.round(km * 1000 / 50) * 50} m`
   if (km < 10) return `${km.toFixed(1).replace('.', ',')} km`
   return `${Math.round(km)} km`
+}
+
+export function nearestKaupunki(lat: number, lng: number): string {
+  let best = SUOMI_KAUPUNGIT[0]
+  let bestDist = Infinity
+  for (const city of SUOMI_KAUPUNGIT) {
+    const d = haversineKm(lat, lng, city.lat, city.lng)
+    if (d < bestDist) { bestDist = d; best = city }
+  }
+  return best.nimi
 }
