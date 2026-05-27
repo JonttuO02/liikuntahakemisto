@@ -72,7 +72,9 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
   1. Etusivun korttilistassa jokainen kortti näyttää vasemmalla puolella paikan nimen, lajin, hinnan, aukioloajan ja etäisyyden
   2. Kortissa on oikealla puolella Google Static Maps -kuvakaappaus paikan sijainnista pin-ikonin kanssa
   3. Kartan zoom-kortit (MAP-06-ominaisuus) pysyvät ennallaan — ne eivät käytä uutta diagonaalimallia
-**Plans**: TBD
+**Plans:** 2 plans
+  - [ ] 13-01-PLAN.md — Create DiagonaalKortti.tsx component (clip-path diagonal split, Static Maps thumbnail, sport-color fallback)
+  - [ ] 13-02-PLAN.md — Swap PaikkaKortti → DiagonaalKortti in Etusivu.tsx + human verification of visual rendering and Static Maps loading
 **UI hint**: yes
 
 ### Phase 14: Profiilisivu & AI-kotipaikkakunta
@@ -117,6 +119,6 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
 | 10. City Expansion | v1.1 | 4/4 | ✅ Complete | 2026-05-27 |
 | 11. PWA | v1.1 | 3/3 | ✅ Complete | 2026-05-27 |
 | 12. Haku & korttilistaus etusivulle | v1.2 | 0/TBD | Not started | - |
-| 13. Uusi korttimalli | v1.2 | 0/TBD | Not started | - |
+| 13. Uusi korttimalli | v1.2 | 0/2 | Not started | - |
 | 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 0/TBD | Not started | - |
 | 15. Arvostelut | v1.2 | 0/TBD | Not started | - |
