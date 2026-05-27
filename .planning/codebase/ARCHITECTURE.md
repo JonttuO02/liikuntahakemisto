@@ -1,4 +1,4 @@
-<!-- refreshed: 2026-05-20 -->
+<!-- refreshed: 2026-05-23 (Etusivu bottom sheet refactor noted) -->
 # Architecture
 
 **Analysis Date:** 2026-05-20
@@ -61,7 +61,7 @@
 | `Home (page)` | Server | Fetches all venues from Supabase, routes to Etusivu or LiikuntapaikatLista via `?nakyma=` | `app/page.tsx` |
 | `PaikkaPage` | Server | Fetches single venue by ID, renders detail view | `app/paikat/[id]/page.tsx` |
 | `SuosikitPage` | Server | Favorites placeholder (not yet implemented) | `app/suosikit/page.tsx` |
-| `Etusivu` | Client | Homepage — 3D map widget (preview + fullscreen expand), ad carousel, weather, night mode toggle | `app/components/Etusivu.tsx` |
+| `Etusivu` | Client | Homepage — full-screen fixed map + bottom sheet (`sheetPhase` state machine), left/right toolbars, ad carousel, AI widget, night mode toggle | `app/components/Etusivu.tsx` |
 | `LiikuntapaikatLista` | Client | Venue list with text search, sport filters, price filters, staggered card grid | `app/components/LiikuntapaikatLista.tsx` |
 | `PaikkaKortti` | Client | Single venue card — sport badge, name, address, description, price, CTA | `app/components/PaikkaKortti.tsx` |
 | `Kartta` | Client | Standalone map with OverlayView pins and bottom sheet (currently unused — not imported anywhere) | `app/components/Kartta.tsx` |
@@ -149,12 +149,12 @@
 5. Upserts rows via `supabaseAdmin` (service role, bypasses RLS) using `place_id` as upsert conflict key
 
 **State Management:**
-- View toggle: URL param `?nakyma=lista` / no param — written by BottomNav links, read by `app/page.tsx` (server) and `BottomNav` (client via `useSearchParams`)
-- Filter state (sport, price, search text): `useState` local to `LiikuntapaikatLista`
-- Map open/closed: `useState` local to `Etusivu` (`kartaAuki`)
-- Selected map marker: `useState<Liikuntapaikka | null>` local to `Etusivu` (`valittu`) and `Kartta` (`valittu`)
+- View toggle: URL param `?nakyma=lista` / no param — written by toolbar Search link, read by `app/page.tsx` (server)
+- Filter state (sport): `useState` local to `Etusivu` left toolbar dropdown; filter state (sport, price, search text) in `LiikuntapaikatLista`
+- Bottom sheet phase: `sheetPhase: 'open' | 'sliding' | 'closed'` local to `Etusivu` — replaces old `kartaAuki` boolean
+- Selected map marker: `useState<Liikuntapaikka | null>` local to `Etusivu` (`valittu`)
 - Night/day mode: `useState` initialized from `isNightHour()`, polled every 60s via `setInterval`
-- BottomNav active tab: derived from `usePathname()` + `useSearchParams()` — no local state needed
+- BottomNav active tab: N/A — BottomNav is a dead file, not used on any page
 
 ## Key Abstractions
 
@@ -207,12 +207,13 @@ The `?nakyma=` query param is the single authoritative view-toggle mechanism.
 
 | URL | View | Rendered Component |
 |-----|------|--------------------|
-| `/` | Homepage with 3D map widget | `Etusivu` (client) |
+| `/` | Homepage — full-screen fixed map + bottom sheet | `Etusivu` (client) |
 | `/?nakyma=lista` | Venue list with filters | `LiikuntapaikatLista` (client) |
+| `/?id=<paikka_id>` | Home page with map panned to specific venue (sheet closes) | `Etusivu` (focusId effect) |
 | `/paikat/[id]` | Venue detail | `PaikkaPage` (server) |
 | `/suosikit` | Favorites stub | `SuosikitPage` (server) |
 
-**Note:** The map is embedded inside `Etusivu` (default `/` view) — there is no separate `?nakyma=kartta` route. BottomNav "Koti" links to `/`; "Lista" links to `/?nakyma=lista`.
+**Note:** The map is embedded inside `Etusivu` (default `/` view) — there is no separate `?nakyma=kartta` route. The map is `position: fixed, z-50` and covers the NavBar (`z-40`) — NavBar is only visible on non-home pages. Navigation to the list view is via the Search link in the right toolbar (`/?nakyma=lista`).
 
 ## Architectural Constraints
 
@@ -220,9 +221,10 @@ The `?nakyma=` query param is the single authoritative view-toggle mechanism.
 - **Global state:** No global React context, Redux, or Zustand. All state is component-local or URL-encoded.
 - **`supabaseAdmin` encapsulation:** Enforced by convention via comment in `lib/supabase.ts:8`. No automated bundle analysis to prevent accidental client import.
 - **RLS:** Phase 1 migration (`supabase/migrations/20260519000001_enable_rls.sql`) enables RLS on `liikuntapaikat`. Public `SELECT` is allowed; all writes require the `authenticated` role. The anon key (used in server components) can only read. The service role key (used in API routes) bypasses RLS entirely.
-- **Google Maps duplication:** `Etusivu.tsx` and `Kartta.tsx` both implement Google Maps with markers, day/night themes, and bottom sheets. `Kartta.tsx` is the newer, cleaner implementation (uses `OverlayView` instead of encoded SVG `data:` URLs for markers) but is not currently rendered.
+- **Google Maps duplication:** `Etusivu.tsx` and `Kartta.tsx` both implement Google Maps with markers and day/night themes. `Kartta.tsx` is not currently rendered.
+- **Etusivu map z-index:** Map is `position: fixed, z-50`. NavBar is `z-40`. On the home page (`/`) the map covers the NavBar entirely — NavBar is only visible on other routes.
 - **No `generateStaticParams`:** All pages are dynamically rendered on every request — no ISR or SSG.
-- **BottomNav Suspense:** Required because `BottomNav` uses `useSearchParams`. Currently wrapped in layout — but `app/layout.tsx` does NOT currently include `BottomNav` (it was removed). BottomNav is only rendered if re-added to the layout.
+- **BottomNav:** Dead file — `app/components/BottomNav.tsx` exists on disk but is not imported anywhere. Do not reference or revive it without a dedicated phase.
 
 ## Anti-Patterns
 
@@ -234,8 +236,8 @@ The `?nakyma=` query param is the single authoritative view-toggle mechanism.
 
 ### Map Logic Duplicated Between Etusivu and Kartta
 
-**What happens:** `Etusivu.tsx` contains a full inline Google Maps implementation (1,300+ lines total). `Kartta.tsx` is a separate component with overlapping capability. `Kartta.tsx` is not rendered anywhere.
-**Why it's wrong:** Phase 2 GPS work must touch `Etusivu.tsx` (the active map) — the cleaner `Kartta.tsx` abstractions are wasted. Any fix applied to one is not applied to the other.
+**What happens:** `Etusivu.tsx` contains a full inline Google Maps implementation (post-refactor: bottom sheet architecture). `Kartta.tsx` is a separate component with overlapping capability. `Kartta.tsx` is not rendered anywhere.
+**Why it's wrong:** The cleaner `Kartta.tsx` abstractions are wasted. Any fix applied to one is not applied to the other.
 **Do this instead:** Migrate `Etusivu` to use `Kartta` (or a shared `<MapWidget>` primitive) for the map portion, then delete the inline map code from `Etusivu.tsx`.
 
 ### Anon Client in Server Components for Critical Data Path

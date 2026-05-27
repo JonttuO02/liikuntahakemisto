@@ -8,7 +8,7 @@ last_activity: 2026-05-27
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
+  total_plans: 3
   completed_plans: 0
   percent: 0
 ---
@@ -17,10 +17,10 @@ progress:
 
 ## Current Position
 
-Phase: Phase 12 — Haku & korttilistaus etusivulle (not started)
-Plan: —
-Status: Roadmap defined; ready to plan Phase 12
-Last activity: 2026-05-27 — v1.2 roadmap created (Phases 12–15)
+Phase: Phase 12 — Haku & korttilistaus etusivulle (planned, ready to execute)
+Plan: 12-01 → 12-02 → 12-03 (sequential)
+Status: 3 plans written; ready for /gsd-execute-phase 12
+Last activity: 2026-05-27 — Phase 12 plans created
 
 [░░░░░░░░░░░░░░░░░░░░] 0% — 0/4 phases complete
 
@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 
 | Phase | Status | Plans |
 |-------|--------|-------|
-| 12. Haku & korttilistaus etusivulle | Not started | 0/TBD |
+| 12. Haku & korttilistaus etusivulle | Planned | 0/3 |
 | 13. Uusi korttimalli | Not started | 0/TBD |
 | 14. Profiilisivu & AI-kotipaikkakunta | Not started | 0/TBD |
 | 15. Arvostelut | Not started | 0/TBD |

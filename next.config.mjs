@@ -10,7 +10,18 @@ const withSerwist = withSerwistInit({
   swDest: "public/sw.js",
   disable: process.env.NODE_ENV === "development",
   reloadOnOnline: false,
-  additionalPrecacheEntries: [{ url: "/offline", revision }, { url: "/?nakyma=lista", revision }],
+  additionalPrecacheEntries: [{ url: "/offline", revision }],
 });
 
-export default withSerwist({});
+export default withSerwist({
+  async redirects() {
+    return [
+      {
+        source: '/',
+        has: [{ type: 'query', key: 'nakyma', value: 'lista' }],
+        destination: '/',
+        permanent: true,
+      },
+    ]
+  },
+});
