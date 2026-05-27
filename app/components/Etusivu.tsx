@@ -229,6 +229,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
   useEffect(() => {
     const key = 'saasuositus-' + new Date().toISOString().slice(0, 10)
+      + '-' + weatherKaupunki
       + (suosikitIds.size > 0 ? '-' + suosikitIds.size : '')
     try {
       const cached = sessionStorage.getItem(key)
@@ -240,11 +241,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       .map(id => paikat.find(p => p.id === id)?.nimi)
       .filter(Boolean) as string[]
 
-    const fetchOptions: RequestInit = suosikkiNimet.length > 0
-      ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ suosikit: suosikkiNimet }) }
-      : { method: 'GET' }
+    const fetchPromise = suosikkiNimet.length > 0
+      ? fetch('/api/saasuositus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ suosikit: suosikkiNimet, kaupunki: weatherKaupunki }) })
+      : fetch('/api/saasuositus?kaupunki=' + encodeURIComponent(weatherKaupunki))
 
-    fetch('/api/saasuositus', fetchOptions)
+    fetchPromise
       .then(r => r.json())
       .then((d: { text: string; temp: number; code: number; fallback?: boolean }) => {
         setAiTeksti(d.text)
@@ -255,7 +256,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   // changing on router.refresh() would cause spurious AI calls; suosikitSizeAndIds (a stable string) already covers
   // the meaningful dependency without creating a new reference on every render
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [suosikitSizeAndIds])
+  }, [suosikitSizeAndIds, weatherKaupunki])
 
   useEffect(() => {
     if (sheetPhase !== 'open') setValittu(null)
