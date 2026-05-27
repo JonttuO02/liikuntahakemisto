@@ -7,20 +7,20 @@ last_updated: "2026-05-27T16:00:00.000Z"
 last_activity: 2026-05-27
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 3
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 5
+  completed_plans: 3
+  percent: 25
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 12 — Haku & korttilistaus etusivulle (planned, ready to execute)
-Plan: 12-01 → 12-02 → 12-03 (sequential)
-Status: 3 plans written; ready for /gsd-execute-phase 12
-Last activity: 2026-05-27 — Phase 12 plans created
+Phase: Phase 13 — Uusi korttimalli (planned, ready to execute)
+Plan: —
+Status: Phase 13 planned (2 plans, 2 waves); ready to execute
+Last activity: 2026-05-27 — Phase 13 planned (commit 9cf5341)
 
 [░░░░░░░░░░░░░░░░░░░░] 0% — 0/4 phases complete
 
@@ -35,8 +35,8 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 
 | Phase | Status | Plans |
 |-------|--------|-------|
-| 12. Haku & korttilistaus etusivulle | Planned | 0/3 |
-| 13. Uusi korttimalli | Not started | 0/TBD |
+| 12. Haku & korttilistaus etusivulle | ✅ Complete | 3/3 |
+| 13. Uusi korttimalli | 📋 Planned | 0/2 |
 | 14. Profiilisivu & AI-kotipaikkakunta | Not started | 0/TBD |
 | 15. Arvostelut | Not started | 0/TBD |
 
