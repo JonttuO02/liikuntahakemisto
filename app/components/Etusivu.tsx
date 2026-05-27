@@ -24,7 +24,6 @@ import { pinUrl } from '@/lib/sportPins'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 import { deriveKaupungit } from '@/lib/cityFilter'
-import { Input } from '@/components/ui/input'
 import PaikkaKortti from './PaikkaKortti'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
@@ -162,7 +161,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     setFilterOpen(false)
   }
 
-  function openSearch() {
+  function toggleSearch() {
+    if (searchOpen) { setSearchOpen(false); return }
     closeOverlays()
     setValittu(null)
     setSearchHaku('')
@@ -467,7 +467,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           </button>
 
           <button
-            onClick={openSearch}
+            onClick={toggleSearch}
             className="w-10 h-10 shrink-0 flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
             aria-label="Hae liikuntapaikkoja"
           >
@@ -568,7 +568,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 className="flex items-center gap-1 pl-2"
               >
                 <button
-                  onClick={openSearch}
+                  onClick={toggleSearch}
                   className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                 >
                   <Search className="w-3.5 h-3.5" />
@@ -697,53 +697,66 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       </motion.div>
 
       {/* ── Search overlay ──────────────────────────────────── */}
+      {/* ── Search input bar — between toolbar pills, same row ──────────── */}
       <AnimatePresence>
         {searchOpen && (
           <motion.div
-            key="search-overlay"
+            key="search-bar"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed"
+            style={{
+              top: 'max(12px, env(safe-area-inset-top))',
+              left: 104,
+              right: 64,
+              height: 40,
+              zIndex: 64,
+            }}
+          >
+            <div className="glass rounded-full flex items-center gap-2 px-3 h-full">
+              <Search className="w-3.5 h-3.5 text-[rgba(17,17,17,0.4)] shrink-0 pointer-events-none" />
+              <input
+                autoFocus
+                type="search"
+                placeholder="Hae liikuntapaikkaa..."
+                value={searchHaku}
+                onChange={e => setSearchHaku(e.target.value)}
+                className="flex-1 min-w-0 bg-transparent border-0 outline-none text-sm text-[#111111] placeholder:text-[rgba(17,17,17,0.4)]"
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Search results — transparent container, cards float over map ── */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            key="search-results"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 glass flex flex-col"
-            style={{ zIndex: 72 }}
+            className="fixed overflow-y-auto"
+            style={{
+              top: 'calc(max(12px, env(safe-area-inset-top)) + 52px)',
+              left: 0,
+              right: 0,
+              bottom: HANDLE_H + 8,
+              zIndex: 61,
+            }}
           >
-            {/* X button */}
-            <button
-              onClick={() => setSearchOpen(false)}
-              className="glass-btn absolute right-4 w-8 h-8 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
-              style={{ top: 'max(12px, env(safe-area-inset-top) + 8px)', zIndex: 1 }}
-              aria-label="Sulje haku"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            {/* Filter header */}
-            <div
-              className="px-4 flex flex-col gap-3 shrink-0"
-              style={{ paddingTop: 'max(56px, calc(env(safe-area-inset-top) + 56px))', paddingBottom: 12 }}
-            >
-              {/* Search input */}
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgba(17,17,17,0.4)] pointer-events-none" />
-                <Input
-                  autoFocus
-                  type="search"
-                  placeholder="Hae liikuntapaikkaa..."
-                  value={searchHaku}
-                  onChange={e => setSearchHaku(e.target.value)}
-                  className="pl-11 h-12 rounded-full bg-white border border-[rgba(0,0,0,0.12)] text-[#111111] placeholder:text-[rgba(17,17,17,0.35)] text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-[#111111] focus-visible:ring-offset-0"
-                />
-              </div>
-
-              {/* Filters: city + sport */}
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="px-4 pb-4 mx-auto" style={{ maxWidth: 480 }}>
+              {/* Compact filter pills */}
+              <div className="flex items-center gap-2 flex-wrap mb-3">
                 {kaupungit.length > 2 && (
                   <select
                     value={searchKaupunki}
                     onChange={e => setSearchKaupunki(e.target.value)}
                     aria-label="Suodata kaupungin mukaan"
-                    className="h-10 rounded-full border border-[rgba(0,0,0,0.12)] bg-white px-4 text-sm font-bold text-[#111111] focus:outline-none focus:ring-1 focus:ring-[#111111] cursor-pointer"
+                    className="glass h-8 rounded-full px-3 text-xs font-bold text-[#111111] border-0 outline-none cursor-pointer"
                   >
                     {kaupungit.map(k => <option key={k} value={k}>{k}</option>)}
                   </select>
@@ -752,23 +765,17 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   value={searchLaji}
                   onChange={e => setSearchLaji(e.target.value)}
                   aria-label="Suodata lajin mukaan"
-                  className="h-10 rounded-full border border-[rgba(0,0,0,0.12)] bg-white px-4 text-sm font-bold text-[#111111] focus:outline-none focus:ring-1 focus:ring-[#111111] cursor-pointer"
+                  className="glass h-8 rounded-full px-3 text-xs font-bold text-[#111111] border-0 outline-none cursor-pointer"
                 >
                   {LAJIT_FILTTERI.map(l => <option key={l} value={l}>{l}</option>)}
                 </select>
-              </div>
-
-              {/* Price + auki nyt filters */}
-              <div className="flex items-center gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
                 {HINTA_FILTTERI.map(({ label, max }) => (
                   <motion.button
                     key={label}
                     onClick={() => setSearchHinta(max)}
                     whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
-                    className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
-                      ${searchHinta === max
-                        ? 'bg-[#111111] text-white'
-                        : 'glass-btn text-[rgba(17,17,17,0.6)] hover:text-[#111111]'}`}
+                    className={`h-8 px-3 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
+                      ${searchHinta === max ? 'bg-[#111111] text-white' : 'glass text-[rgba(17,17,17,0.6)] hover:text-[#111111]'}`}
                   >
                     {label}
                   </motion.button>
@@ -776,40 +783,33 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 <motion.button
                   onClick={() => setSearchAukinyt(v => !v)}
                   whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
-                    ${searchAukinyt
-                      ? 'bg-[#111111] text-white'
-                      : 'glass-btn text-[rgba(17,17,17,0.6)] hover:text-[#111111]'}`}
+                  className={`h-8 px-3 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
+                    ${searchAukinyt ? 'bg-[#111111] text-white' : 'glass text-[rgba(17,17,17,0.6)] hover:text-[#111111]'}`}
                 >
                   Auki nyt
                 </motion.button>
+                <span className="text-xs text-[rgba(17,17,17,0.4)] tabular-nums ml-auto">
+                  {searchSuodatettu.length} paikkaa
+                </span>
               </div>
 
-              {/* Result count */}
-              <p className="text-xs text-[rgba(17,17,17,0.4)] tabular-nums">
-                {searchSuodatettu.length} paikkaa
-              </p>
-            </div>
-
-            {/* Scrollable card list */}
-            <div
-              className="flex-1 overflow-y-auto px-4 flex flex-col gap-3"
-              style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}
-            >
+              {/* Card list — individual glass cards, map visible between them */}
               {searchSuodatettu.length > 0 ? (
-                searchSuodatettu.map(p => (
-                  <PaikkaKortti
-                    key={p.id}
-                    paikka={p}
-                    distanceStr={distancesMap[p.id] != null ? formatDistance(distancesMap[p.id]) : undefined}
-                    aukinyt={searchAukinyt}
-                    isSuosikki={suosikitIds.has(p.id)}
-                    onToggleSuosikki={toggleSuosikki}
-                  />
-                ))
+                <div className="flex flex-col gap-3">
+                  {searchSuodatettu.map(p => (
+                    <PaikkaKortti
+                      key={p.id}
+                      paikka={p}
+                      distanceStr={distancesMap[p.id] != null ? formatDistance(distancesMap[p.id]) : undefined}
+                      aukinyt={searchAukinyt}
+                      isSuosikki={suosikitIds.has(p.id)}
+                      onToggleSuosikki={toggleSuosikki}
+                    />
+                  ))}
+                </div>
               ) : (
-                <div className="flex flex-col items-center py-16">
-                  <p className="text-[rgba(17,17,17,0.5)]">Ei tuloksia</p>
+                <div className="flex flex-col items-center py-12">
+                  <p className="glass rounded-2xl px-6 py-4 text-[rgba(17,17,17,0.5)] text-sm">Ei tuloksia</p>
                   <motion.button
                     onClick={() => {
                       setSearchHaku('')
