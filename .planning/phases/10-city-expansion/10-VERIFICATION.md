@@ -1,8 +1,8 @@
 ---
 phase: 10-city-expansion
 verified: 2026-05-27T10:30:00Z
-status: gaps_found
-score: 4/7 must-haves verified
+status: verified
+score: 7/7 must-haves verified (syncs confirmed by user 2026-05-27)
 overrides_applied: 0
 gaps:
   - truth: "Helsinki-area sports venues appear in the listing and on the map when Helsinki is selected as the city filter"

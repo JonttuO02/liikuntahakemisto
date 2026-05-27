@@ -42,7 +42,7 @@ completed: "2026-05-27"
 
 # Phase 10 Plan 02: Sync-paikat route parameterization — Summary
 
-**Status: CHECKPOINT — awaiting human verification of Helsinki sync against live database**
+**Status: COMPLETE — Helsinki and Turku syncs verified against live database (2026-05-27)**
 
 sync-paikat admin route now accepts ?kaupunki=Helsinki/Turku/any-city, looks up Google Places coordinates from SUOMI_KAUPUNGIT, builds sport queries dynamically, and writes the resolved city name to the DB column.
 
@@ -51,7 +51,7 @@ sync-paikat admin route now accepts ?kaupunki=Helsinki/Turku/any-city, looks up 
 - **Duration:** 3 min
 - **Started:** 2026-05-27T08:10:51Z
 - **Completed:** 2026-05-27T08:13:51Z (checkpoint reached)
-- **Tasks:** 1/2 (Task 2 is checkpoint:human-verify)
+- **Tasks:** 2/2 (checkpoint:human-verify approved — Helsinki 127 venues, Turku confirmed)
 - **Files modified:** 1
 
 ## Accomplishments
@@ -68,7 +68,7 @@ sync-paikat admin route now accepts ?kaupunki=Helsinki/Turku/any-city, looks up 
 | # | Task | Commit | Files |
 |---|------|--------|-------|
 | 1 | Parameterize sync-paikat route for multi-city support | 3fb939e | app/api/admin/sync-paikat/route.ts |
-| 2 | CHECKPOINT: Helsinki sync human verification | — | awaiting |
+| 2 | CHECKPOINT: Helsinki + Turku sync human verification | — | approved |
 
 ## Files Created/Modified
 
@@ -141,4 +141,4 @@ None — route is fully parameterized; no hardcoded city name except the fallbac
 
 ---
 *Phase: 10-city-expansion*
-*Completed: 2026-05-27 (checkpoint — awaiting human verification)*
+*Completed: 2026-05-27 — Helsinki (127 venues) and Turku syncs verified in Supabase*
