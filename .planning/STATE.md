@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.1
-milestone_name: Phases
-status: complete
-last_updated: "2026-05-27T12:00:00.000Z"
+milestone_name: Käyttäjät, Kartta & Laatu
+status: archived
+last_updated: "2026-05-27T15:00:00.000Z"
 last_activity: 2026-05-27
 progress:
   total_phases: 6
   completed_phases: 6
-  total_plans: 19
-  completed_plans: 24
+  total_plans: 23
+  completed_plans: 23
   percent: 100
 ---
 
@@ -17,116 +17,72 @@ progress:
 
 ## Current Position
 
-Phase: 11 (PWA) — COMPLETE
-Plan: 3 of 3 (all done)
-Status: Complete — v1.1 milestone complete; all 6 phases done
-Last activity: 2026-05-27
+Milestone v1.1 — COMPLETE AND ARCHIVED (2026-05-27)
+
+All 6 phases (6–11) done. All 19 v1.1 requirements delivered.
+Next: `/gsd:new-milestone` to start v1.2 planning.
 
 ## Project Reference
 
-See: .planning/PROJECT.md
+See: .planning/PROJECT.md (updated 2026-05-27 after v1.1 milestone)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 11 — PWA
+**Current focus:** Planning next milestone (v1.2)
 
 ## Phase Progress
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| 6. UI Polish & Data Foundation | ✅ Complete | UAT passed; 1 inline fix (city filter sentinel off-by-one) |
-| 7. Map Infrastructure | ✅ Complete | 2/2 plans done; 4 manual UAT checks pending (GPS + day/night + preview button absent) |
-| 8. Map Features | ✅ Complete | 3/3 plans done; Etusivu refactored to bottom sheet architecture |
-| 9. Auth & Favorites | ✅ Complete | All 4 plans done: foundation, AuthModal, favorites engine, AI personalization |
-| 10. City Expansion | ✅ Complete | 4/4 plans done: SUOMI_KAUPUNGIT, sync parameterization, saasuositus city-aware, Etusivu map-center debounce |
-| 11. PWA | ✅ Complete | 3/3 plans done: icons+packages, service worker, manifest+viewport+offline page; build verified |
+| 6. UI Polish & Data Foundation | ✅ Complete | All 7 plans done; GDPR, Sponsoroitu, city filter, card UI |
+| 7. Map Infrastructure | ✅ Complete | AdvancedMarker migration, RecenterButton |
+| 8. Map Features | ✅ Complete | GPS ring, pin→mini-card, /?id= deep link, bottom sheet arch |
+| 9. Auth & Favorites | ✅ Complete | Supabase Auth, HeartButton, AI personalization |
+| 10. City Expansion | ✅ Complete | Helsinki + Turku sync, nearestKaupunki, city-aware AI |
+| 11. PWA | ✅ Complete | Serwist SW, manifest, offline page; build verified |
+
+## Deferred Items
+
+Items acknowledged and deferred at milestone close on 2026-05-27:
+
+| Category | Item | Status |
+|----------|------|--------|
+| feature | /suosikit favorites page | Deferred to v1.2 |
+| bug | Sydän-nappi session edge cases | Deferred to v1.2 |
+| ops | Google OAuth callback URL manual setup | Requires external config |
 
 ## Active Decisions
 
-(inherited from v1.0)
+(carried forward — see PROJECT.md Key Decisions for full list)
 
 - APIProvider placed in layout.tsx so Maps JS API loads once at app startup
 - useGPS auto-requests location on mount; status starts as 'requesting' not 'idle'
 - lib/aukiolo.ts is single source of truth for open-status + grouped-hours logic
-- sessionStorage cache key scoped to calendar day (YYYY-MM-DD)
-- ANTHROPIC_API_KEY is server-only env var — SDK reads it automatically, never NEXT_PUBLIC_
-
-(v1.1 additions)
-
-- LEGAL-01 ships in Phase 6 — must be live before auth (Phase 9) goes out ✅ DONE
-- AdvancedMarker migration complete ✅ DONE — Phase 8 map features now unblocked
-- Supabase Auth uses per-request createServerClient — never the existing module-scope singleton
-- middleware.ts created ✅ — refreshes Supabase session on every non-static request (Phase 9 Plan 01)
-- toggleSuosikki calls getUser() on each invocation — avoids stale auth state from closure
-- suosikitIds: Set<number> lives in both LiikuntapaikatLista and Etusivu — drives AI personalization (09-04 complete)
-- AI route: GET for anonymous users, POST with suosikkiNimet[] for signed-in users; cache key includes count suffix
-- fetchWeather() shared helper in route.ts — single source of truth for Open Meteo fetch + weather description
-- HeartButton is a standalone client component (no shared auth state) — manages own subscription lifecycle
-- Map focus URL: /?id=<paikka_id> — focusId effect sets sheetPhase('sliding'), closes sheet and pans map (NOT /?nakyma=kartta&id=...)
-- PWA must use Serwist (@serwist/next + serwist) — next-pwa and @ducanh2912/next-pwa are abandoned
-- Service worker must exclude _rsc requests and be disabled in dev mode
-- useGPS now takes { autoRequest?: boolean } param (default false) — Etusivu passes true, LiikuntapaikatLista uses default
-- PWA manifest start_url = /?nakyma=lista — offline-capable listing view; app/manifest.ts serves /manifest.webmanifest
-- themeColor #4F46E5 lives in viewport export (Viewport type), NOT metadata — avoids Next.js 14 deprecation warning
-- other: { mobile-web-app-capable: yes } replaces deprecated appleWebApp.capable: true in layout.tsx
-- Offline fallback page uses plain <a href> not Next.js <Link> — must be full navigation so SW can intercept when client-side router is unavailable offline
-
-(post-phase-8 bottom sheet refactor)
-
-- Etusivu bottom sheet architecture: `sheetPhase: 'open' | 'sliding' | 'closed'` replaces old `kartaAuki` boolean
-  - 'open': sheet at 82% viewport height
-  - 'sliding': y animates to contentH (off-screen), triggers onAnimationComplete
-  - 'closed': sheet narrows to 160px-wide pill at bottom center, y springs up to show 44px (HANDLE_H)
-- Map is always position: fixed, top/left/right/bottom: 0, z-50 — covers NavBar (z-40)
-- NavBar is NOT visible on the home page (/) — map z-50 covers NavBar z-40; NavBar remains in layout.tsx and shows on all other pages (/paikat/[id], /suosikit, /tietosuoja)
-- Left top-corner toolbar (z-64): SlidersHorizontal icon expands right to show filter dropdown + venue count
-- Right top-corner toolbar (z-64): MoreHorizontal icon expands left to show Search link (/?nakyma=lista) + Heart link (/suosikit)
-- Shared backdrop (z-63): closes all toolbars/filter on outside click
-- Filter pills removed from Etusivu — replaced by left toolbar dropdown
-- AI widget and Karuselli now live inside the bottom sheet (not in page flow)
-- Map gestureHandling: 'none' when sheet open, 'greedy' otherwise
-- Heart/auth state in home page context: must go in the right toolbar (MoreHorizontal), NOT in NavBar (NavBar not visible on home page)
-- MAP_BOTTOM_SHEET_PLAN.md in .planning/ is now implemented
+- sessionStorage cache key scoped to calendar day (YYYY-MM-DD) + kaupunki
+- Supabase Auth uses per-request createServerClient — never module-scope singleton
+- Map focus URL: /?id=<paikka_id> — no ?nakyma=kartta (dead param)
+- PWA uses Serwist (@serwist/next + serwist) — next-pwa abandoned
+- themeColor in viewport export (Viewport type), NOT metadata
 
 ## Accumulated Context
 
 ### Key Constraints
 
-- Supabase Auth v1.1: suosikit vaativat tilin, muu toimii anonyymisti
-- AdvancedMarker requires NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID env var + mapId on both Map instances ✅ DONE
-- supabase.auth.getUser() server-side — never getSession() (reads unvalidated cookie)
-- RLS INSERT needs WITH CHECK not USING for favorites table
-- sync-paikat hardcodes Tampere in kaupunki column — fix before running Helsinki/Turku syncs
-- AUTH-03 token budget: include max 5–10 favorites in Claude Haiku prompt
+- Supabase anon key = read-only (RLS)
+- supabase.auth.getUser() server-side — never getSession()
+- ANTHROPIC_API_KEY is server-only env var
 - deriveKaupungit always prepends 'Kaikki' sentinel — city filter threshold must be > 2, not > 1
+- sync-paikat hardcodes Tampere in kaupunki column — fix before running new city syncs
 
 ### Architecture Notes
 
-- Supabase anon key = read-only (RLS v1.0:sta)
-- v1.1 adds Supabase Auth + favorites table (user_id → paikka_id)
-- kaupunki column needs verification in live Supabase DB before DATA-05/06
-- 3 new npm packages total: @supabase/ssr, @serwist/next, serwist
-- All other v1.1 features use already-installed packages
-- lib/urlUtils.ts added in Phase 6 — isSafeUrl() guards all varauslinkki href renders
-- RecenterButton uses useMap() — resolves correctly within the single always-mounted fixed map
-- Etusivu.tsx bottom sheet refactor: kartaAuki boolean, 3D preview map, fullscreen expand animation, kartaInteractive, EASE_MAP — all removed; replaced by sheetPhase state machine
-
-### Open Questions (before Phase 9)
-
-- Google OAuth: Configure callback URL in Google Cloud Console + Supabase dashboard redirect URL
-
-### Open Questions (before Phase 11)
-
-- PWA icons: Generate public/icon-192x192.png and public/icon-512x512.png from acta-symbol.svg
-- Confirm next dev (not --turbo) is standard — Serwist requires webpack
+- v1.1: Supabase Auth + favorites table (user_id → paikka_id) + @supabase/ssr
+- 3 new packages: @supabase/ssr, @serwist/next, serwist
+- Etusivu bottom sheet: sheetPhase 'open'|'sliding'|'closed' state machine
+- Map z-50 > NavBar z-40: NavBar hidden on home page (/)
+- AI route: GET for anon, POST with suosikkiNimet[] for signed-in
 
 ## Performance Metrics
 
-- Requirements total: 19 (v1.1)
-- Requirements mapped: 19/19
-- Phases: 6 (phases 6–11)
-
-## Session Continuity
-
-- Last session: 2026-05-27 — Phase 11 Plan 03 complete: manifest.ts, layout.tsx (viewport + mobile-web-app-capable), offline/page.tsx. Checkpoint approved; deprecated appleWebApp.capable fix applied (27c7a89). Build verified: public/sw.js 44 KB, /manifest.webmanifest static, /offline static 838 B. v1.1 milestone complete.
-- Stopped at: None — all phases complete
-- Resume: N/A — v1.1 complete; run /gsd:verify-work 11 for final UAT
+- Requirements total: 19 (v1.1) — all 19 delivered
+- Phases: 6 (phases 6–11) — all complete
+- Timeline: 6 days (2026-05-21 → 2026-05-27)

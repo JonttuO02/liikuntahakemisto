@@ -2,30 +2,7 @@
 
 ## What This Is
 
-Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä.
-
-## Current Milestone: v1.1 Käyttäjät, Kartta & Laatu
-
-**Goal:** Lisätään käyttäjätilit ja suosikit, parannetaan karttakokemusta merkittävästi, hiotaan listakorttien UI, laajennetaan Helsinki + Turku, ja lisätään PWA, GDPR-sivu sekä toimiva mainosmyynti.
-
-**Target features:**
-- Supabase Auth: email + Google OAuth, suosikit tietokannassa
-- Kartta: re-center-nappi, zoom-perusteinen ryppäät→info-kortit, GPS-tarkkuusrengas
-- "Näytä kartalla" avaa oman karttanäkymän zoomattuna (ei Google Maps)
-- Listakorttien UI: hinnat ylös, "vain jäsenyys" -teksti, "Varaa aika" pois listasta
-- Lajifiltteri: pudotusvalikko (yksivalinta)
-- AI-widget: paikkakunnan nimi lämpötilan vieressä
-- Kaupunkilaajennus: Helsinki + Turku (Google Places sync)
-- GDPR-tietosuojasivu
-- Mainosmyynti: "Sponsoroitu"-badge featured-paikoille
-- PWA: offline-tuki + "Lisää kotinäyttöön"
-
-## History: v1.0 MVP (shipped 2026-05-21)
-
-- **Stack:** Next.js 14 App Router, TypeScript strict, Tailwind v3, Framer Motion, Supabase, @vis.gl/react-google-maps, @anthropic-ai/sdk
-- **Data:** Tampere-alueen liikuntapaikat, aukioloajat (Google Places), hinnat (manuaalisesti top 20)
-- **Features:** GPS-kartta, aukioloajat-badget, "Auki nyt" filter, profiilisivu, AI-sääwidget
-- **Codebase:** ~48 muutettua tiedostoa, +6640 riviä tuotantokoodia
+Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
 
 ## Core Value
 
@@ -64,66 +41,83 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ AI-03: sessionStorage cache, ei re-fetch samana päivänä — v1.0
 - ✓ ADS-01: featured boolean -kenttä Supabasessa — v1.0
 
-### Active (v1.1)
+### Validated (v1.1)
 
-- [ ] AUTH-01: Supabase Auth kirjautuminen (email + Google OAuth)
-- [ ] AUTH-02: Suosikit Supabasessa, synkkaantuu eri laitteiden välillä
-- [ ] AUTH-03: Personoitu AI-suosittelu suosikkien perusteella
-- [ ] MAP-04: Re-center-nappi käyttäjän sijaintiin kartalla
-- [ ] MAP-05: GPS-tarkkuusrengas sijaintimerkissä
-- [ ] MAP-06: Zoom-perusteinen näkymä — ryppäät → info-kortit
-- [ ] MAP-07: "Näytä kartalla" avaa oman karttanäkymän zoomattuna
-- [ ] UI-05: "Kertakäynti OK" → hinta jos saatavilla, muuten "vain jäsenyys"
-- [ ] UI-06: Hintatiedot ylös kortissa, useampi hinta omille riveille
-- [ ] UI-07: "Varaa aika" -nappi pois listakortista; profiilisivulla URL-teksti
-- [ ] UI-08: Lajifiltteri pudotusvalikkona (yksivalinta)
-- [ ] AI-04: Paikkakunnan nimi lämpötilan vieressä AI-widgetissä
-- [ ] DATA-05: Helsinki-alueen liikuntapaikat tietokannassa
-- [ ] DATA-06: Turku-alueen liikuntapaikat tietokannassa
-- [ ] DATA-07: Kaupunki-kenttä skeemassa + kaupunkifiltteri UI:ssa
-- [ ] LEGAL-01: GDPR-tietosuojasivu (/tietosuoja)
-- [ ] ADS-02: "Sponsoroitu"-badge featured-paikoille listassa ja kartalla
-- [ ] PWA-01: Service worker + offline-tuki perusnäkymille
-- [ ] PWA-02: Web App Manifest + "Lisää kotinäyttöön" -prompt
+- ✓ LEGAL-01: GDPR-tietosuojasivu (/tietosuoja) — v1.1
+- ✓ ADS-02: "Sponsoroitu"-badge featured-paikoille listassa ja kartalla — v1.1
+- ✓ AI-04: AI-widgetissä näkyy paikkakunnan nimi lämpötilan vieressä — v1.1
+- ✓ UI-05: Listakortissa näytetään kertakäyntihinta; muuten "vain jäsenyys" — v1.1
+- ✓ UI-06: Hintatiedot kortin yläosassa, useampi hinta omilla riveillään — v1.1
+- ✓ UI-07: "Varaa aika" poistettu listakortista; profiilisivulla URL-teksti — v1.1
+- ✓ UI-08: Lajifiltteri pudotusvalikko (yksivalinta) — v1.1
+- ✓ DATA-07: Kaupunki-kenttä skeemassa + kaupunkifiltteri UI:ssa — v1.1
+- ✓ MAP-04: Re-center-nappi karttanäkymässä — v1.1
+- ✓ MAP-05: GPS-tarkkuusrengas sijaintimerkissä — v1.1
+- ✓ MAP-06: Zoom-perusteinen pin→info-kortti-muutos — v1.1
+- ✓ MAP-07: "Näytä kartalla" avaa oman karttanäkymän zoomattuna — v1.1
+- ✓ AUTH-01: Supabase Auth kirjautuminen (email + Google OAuth) — v1.1
+- ✓ AUTH-02: Suosikit Supabasessa, synkkaantuu laitteiden välillä — v1.1
+- ✓ AUTH-03: Personoitu AI-suosittelu suosikkien perusteella — v1.1
+- ✓ DATA-05: Helsinki-alueen liikuntapaikat tietokannassa — v1.1
+- ✓ DATA-06: Turku-alueen liikuntapaikat tietokannassa — v1.1
+- ✓ PWA-01: Service worker + offline-tuki perusnäkymille — v1.1
+- ✓ PWA-02: Web App Manifest + "Lisää kotinäyttöön" -prompt — v1.1
+
+### Active (v1.2)
+
+- [ ] Suosikkipaikat-sivu kirjautuneelle käyttäjälle (/suosikit, full favorites page)
+- [ ] Kartta: etäisyyspohjainen suodatus
+- [ ] Käyttäjäprofiili ja asetukset
 
 ### Out of Scope
 
 - Varausjärjestelmä — linkitetään palveluntarjoajan omaan sivuun
 - Arvostelut ja käyttäjäkommentit — v2+
 - Reaaliaikainen paikkatieto (kapasiteetti, jonot) — vaatii venue-API-integraation per paikka
-- Mobiiliappi (iOS/Android) — web-first ensin
+- Mobiiliappi (iOS/Android) — web-first ensin, PWA riittää
 - Maksujärjestelmä — ei osteta sovelluksessa
+- Klusterointi (cluster markers) — korvattu zoom-perusteisella pin→kortti-muutoksella
+- Push-ilmoitukset — ei tarvetta v1.1:ssä
+- Anonyymi Supabase-tili — suosikit vaativat oikean kirjautumisen
 
 ## Context
 
-**Nykytila:** v1.1 suunnitteilla. v1.0 kaikki 19 vaatimusta toimitettu ja arkistoitu.
+**Nykytila:** v1.1 toimitettu 2026-05-27. Kaikki 19 v1.1-vaatimusta toteutettu. Sovellus toimii Tampereen, Helsingin ja Turun alueella. Käyttäjätilit, suosikit ja personoitu AI-suosittelu live. PWA asennettavissa ja toimii offline-tilassa.
 
-**Data-arkkitehtuuri:** Google Places API hakee automaattisesti aukioloajat → upsertit Supabaseen. Kertakäyntihinnat manuaalisesti top 20 palvelulle. AI-widget: Claude Haiku + Open-Meteo, sessionStorage-cache per kalenteripäivä. v1.1 lisää kaupunki-kentän skeemaan ja Supabase Auth -käyttäjätaulut.
+**Data-arkkitehtuuri:** Google Places API hakee automaattisesti aukioloajat → upsertit Supabaseen. Kertakäyntihinnat manuaalisesti top 20 palvelulle. AI-widget: Claude Haiku + Open-Meteo, sessionStorage-cache per kalenteripäivä + per kaupunki. Supabase Auth käyttäjätaulut + suosikit (user_id → paikka_id). Sync-skripti tukee ?kaupunki= parametria Helsinki/Turku/Tampere-datalle.
 
-**Tekninen ympäristö:** Next.js 14 App Router, React 18, TypeScript strict, Tailwind v3, Framer Motion, Supabase (Postgres + RLS + Auth), Google Maps/Places API, Open-Meteo, @anthropic-ai/sdk, Vitest.
+**Tekninen ympäristö:** Next.js 14 App Router, React 18, TypeScript strict, Tailwind v3, Framer Motion, Supabase (Postgres + RLS + Auth + @supabase/ssr), Google Maps/Places API, Open-Meteo, @anthropic-ai/sdk, @serwist/next + serwist (PWA), Vitest.
 
-**Data ops (manuaaliset):** `/api/admin/sync-paikat` — aukioloajat, `npx tsx scripts/seed-hinnat.ts` — hinnat.
+**Data ops (manuaaliset):** `/api/admin/sync-paikat?kaupunki=Helsinki|Turku|Tampere` — aukioloajat, `npx tsx scripts/seed-hinnat.ts` — hinnat.
 
 ## Constraints
 
 - **Stack**: Next.js 14 + Supabase + Tailwind v3 — ei vaihdeta runkoa
-- **Design**: Indigo-väripaletti (CLAUDE.md), Emil Kowalski -animaatiofilosofia
+- **Design**: Glassmorphism + Indigo-väripaletti (CLAUDE.md), Emil Kowalski -animaatiofilosofia
 - **Data**: GOOGLE_PLACES_API_KEY server-only, kartta client-side (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY)
-- **Kirjautuminen**: Supabase Auth v1.1:ssä — suosikit vaativat tilin, kaikki muu toimii anonyymisti
+- **Kirjautuminen**: Supabase Auth — suosikit vaativat tilin, kaikki muu toimii anonyymisti
+- **PWA**: Serwist (@serwist/next + serwist) — next-pwa ja @ducanh2912/next-pwa hylätty
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Next.js App Router + Supabase | Nopea kehitys, skaalautuva, hyvä SSR-tuki | ✓ Toimii hyvin |
-| Kartta etusivun pääominaisuus | GPS-pohjainen löytäminen on ydinkokemus | ✓ Toteutettu 3D→fullscreen |
-| Ei kirjautumista v1:ssä | Matala kynnys, nähdään käyttö ennen pakottamista | ✓ Kaikki anonyymi |
-| Tampere-first | Fokus ensin, skaalaus myöhemmin | ✓ v1.0 Tampere |
-| Sääpohjainen AI-suosittelu | Erilaistava ominaisuus, Open-Meteo ilmainen | ✓ Claude Haiku + sessionStorage |
-| Mainostila bisnesmalliksi | Käyttäjille ilmainen, liikunta-ala kohderyhmä | — featured boolean valmis |
+| Kartta etusivun pääominaisuus | GPS-pohjainen löytäminen on ydinkokemus | ✓ Toteutettu bottom sheet -arkkitehtuurilla |
+| Ei kirjautumista v1:ssä | Matala kynnys, nähdään käyttö ennen pakottamista | ✓ Kaikki anonyymi v1.0:ssa |
+| Tampere-first | Fokus ensin, skaalaus myöhemmin | ✓ v1.0 Tampere; v1.1 +Helsinki +Turku |
+| Sääpohjainen AI-suosittelu | Erilaistava ominaisuus, Open-Meteo ilmainen | ✓ Claude Haiku + sessionStorage + personointi |
+| Mainostila bisnesmalliksi | Käyttäjille ilmainen, liikunta-ala kohderyhmä | ✓ Sponsoroitu-badge v1.1 |
 | @vis.gl/react-google-maps | Korvasi @react-google-maps/api — ei double-load flashia | ✓ MAP-03 |
 | lib/aukiolo.ts single source of truth | Aukioloaika-logiikka yhdessä paikassa, TDD | ✓ Vitest + 100% coverage |
 | sessionStorage cache aina (myös fallback) | AI-03: ei re-fetch samana päivänä riippumatta Claude-tilasta | ✓ Bugi korjattu UAT:ssa |
+| Supabase Auth per-request createServerClient | Ei jaeta auth-singletoneja requestien välillä | ✓ Phase 9 |
+| toggleSuosikki kutsuu getUser() joka kerta | Vältää vanhentuneen auth-staten closureen jääminen | ✓ Phase 9 |
+| AI route: GET anon / POST kirjautunut | Cache-avain sisältää suosikkimäärän suffiksin | ✓ Phase 9 |
+| Map focus URL: /?id=<paikka_id> | Ei ?nakyma=kartta (dead param per CLAUDE.md); sheet ei aukea | ✓ Phase 8 |
+| Serwist PWA (ei next-pwa) | next-pwa ja @ducanh2912/next-pwa hylätty/abandoned | ✓ Phase 11 |
+| themeColor viewport exportissa | Next.js 14 metadata deprecation vältetty | ✓ Phase 11 |
+| offline/page.tsx käyttää <a href> | SW voi interceptoida kun client-side router ei saatavilla | ✓ Phase 11 |
 
 ---
 
@@ -146,4 +140,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-05-21 — v1.1 milestone started*
+*Last updated: 2026-05-27 after v1.1 milestone*

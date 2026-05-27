@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 MVP** — Phases 1–5 (shipped 2026-05-21)
-- 🔄 **v1.1 Käyttäjät, Kartta & Laatu** — Phases 6–11 (active)
+- ✅ **v1.1 Käyttäjät, Kartta & Laatu** — Phases 6–11 (shipped 2026-05-27)
 
 ---
 
@@ -22,111 +22,19 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 
 </details>
 
-### v1.1 Phases
+<details>
+<summary>✅ v1.1 Käyttäjät, Kartta & Laatu (Phases 6–11) — SHIPPED 2026-05-27</summary>
 
-- [x] **Phase 6: UI Polish & Data Foundation** — Tighten card UI, add GDPR page, sponsored badge, city filter, AI widget city name — 2026-05-22
-- [x] **Phase 7: Map Infrastructure** — Migrate to AdvancedMarker, add mapId env var, implement re-center button
-- [x] **Phase 8: Map Features** — GPS accuracy ring, zoom-dependent pin-to-card, in-app map focus; Etusivu refactored to bottom sheet architecture
-- [x] **Phase 9: Auth & Favorites** — Supabase Auth (email + Google OAuth), favorites synced across devices, personalized AI — 2026-05-23
-- [x] **Phase 10: City Expansion** — Helsinki and Turku data via Google Places sync — 2026-05-27
-- [x] **Phase 11: PWA** — Service worker with offline support and home screen install prompt (completed 2026-05-27)
+- [x] **Phase 6: UI Polish & Data Foundation** — Tighten card UI, add GDPR page, sponsored badge, city filter, AI widget city name (7/7 plans) — 2026-05-22
+- [x] **Phase 7: Map Infrastructure** — Migrate to AdvancedMarker, add mapId env var, implement re-center button (2/2 plans) — 2026-05-22
+- [x] **Phase 8: Map Features** — GPS accuracy ring, zoom-dependent pin-to-card, in-app map focus; Etusivu refactored to bottom sheet architecture (3/3 plans) — 2026-05-22
+- [x] **Phase 9: Auth & Favorites** — Supabase Auth (email + Google OAuth), favorites synced across devices, personalized AI (4/4 plans) — 2026-05-23
+- [x] **Phase 10: City Expansion** — Helsinki and Turku data via Google Places sync (4/4 plans) — 2026-05-27
+- [x] **Phase 11: PWA** — Service worker with offline support and home screen install prompt (3/3 plans) — 2026-05-27
 
----
+Full archive: `.planning/milestones/v1.1-ROADMAP.md`
 
-## Phase Details
-
-### Phase 6: UI Polish & Data Foundation
-**Goal**: Users see tighter card information, a legal privacy page, sponsored badges, and can filter by city
-**Depends on**: Nothing (zero new packages, pure UI and schema work)
-**Requirements**: LEGAL-01, ADS-02, AI-04, UI-05, UI-06, UI-07, UI-08, DATA-07
-**Success Criteria** (what must be TRUE):
-  1. User can navigate to `/tietosuoja` and read the GDPR privacy policy before logging in
-  2. Featured venues show a "Sponsoroitu" badge on both list cards and map pins
-  3. List card shows a single-select sport dropdown instead of pill filters
-  4. Card displays walk-in price at the top if available, or the text "vain jäsenyys"; "Varaa aika" button is absent from list cards
-  5. AI widget shows the city name next to the temperature reading
-  6. User can filter venues by city using a city selector in the UI
-**Plans:** 7 plans
-  - [x] 06-01-PLAN.md — Add featured column to SELECT (ADS-02 data unblock)
-  - [x] 06-02-PLAN.md — Create /tietosuoja GDPR page (LEGAL-01)
-  - [x] 06-03-PLAN.md — Replace Varaa aika button with Varaussivu Row on profile page (UI-07 profile half)
-  - [x] 06-04-PLAN.md — TDD lib/priceUtils.ts and lib/cityFilter.ts helpers (UI-05/DATA-07 logic + tests)
-  - [x] 06-05-PLAN.md — PaikkaKortti: Sponsoroitu badge, price-at-top, Näytä tiedot CTA (ADS-02/UI-05/UI-06/UI-07 list half)
-  - [x] 06-06-PLAN.md — LiikuntapaikatLista: sport dropdown, city dropdown, Tietosuoja footer (UI-08/DATA-07/LEGAL-01 wiring)
-  - [x] 06-07-PLAN.md — Etusivu: WEATHER_CITY label + bottom-sheet Sponsoroitu badge (AI-04/ADS-02 map half)
-**UI hint**: yes
-
-### Phase 7: Map Infrastructure
-**Goal**: The map uses AdvancedMarker throughout, enabling all upcoming map feature work
-**Depends on**: Phase 6
-**Requirements**: MAP-04
-**Success Criteria** (what must be TRUE):
-  1. Both map instances (preview and fullscreen) render markers correctly after the AdvancedMarker migration
-  2. A re-center button is visible on the map; tapping it moves the map view back to the user's GPS position
-  3. `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_DAY` and `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID_NIGHT` env vars are documented and both Map components pass `mapId`
-**Plans:** 2 plans
-  - [x] 07-01-PLAN.md — AdvancedMarker migration, mapId switching, remove MapStyleController, env var docs
-  - [x] 07-02-PLAN.md — Add RecenterButton (MAP-04) to fullscreen map
-**UI hint**: yes
-
-### Phase 8: Map Features
-**Goal**: The map shows rich contextual information at close zoom and links directly from venue detail pages
-**Depends on**: Phase 7
-**Requirements**: MAP-05, MAP-06, MAP-07
-**Success Criteria** (what must be TRUE):
-  1. The user's location marker displays a translucent accuracy ring that reflects GPS precision
-  2. At normal zoom the map shows pin icons; zooming in past the threshold transforms each pin into a small card showing name, sport, and price
-  3. Tapping "Näytä kartalla" on a venue detail page opens the app's own map view centered and zoomed on that venue — no navigation to Google Maps
-**Plans:** 3 plans
-  - [x] 08-01-PLAN.md — GPS accuracy ring + zoom state infrastructure (MAP-05, MAP-06 groundwork)
-  - [x] 08-02-PLAN.md — Pin-to-mini-card transformation + expanded bottom sheet (MAP-06)
-  - [x] 08-03-PLAN.md — Map focus via URL (`/?id=<paikka_id>`) + profile page link change (MAP-07)
-**UI hint**: yes
-
-> **Post-phase-8 note:** After phase 8 execution, `Etusivu.tsx` was fully refactored with a bottom sheet architecture (`sheetPhase` state machine). The 3D preview map and `kartaAuki` boolean are gone. Map focus URL is `/?id=<paikka_id>` — the `focusId` effect closes the sheet and pans the map. NavBar is hidden on the home page (map `z-50` > NavBar `z-40`). Left/right top-corner toolbars replace filter pills.
-
-### Phase 9: Auth & Favorites
-**Goal**: Users can create accounts, save favorites that persist across devices, and receive personalized AI recommendations
-**Depends on**: Phase 6 (LEGAL-01 must be live before auth ships)
-**Requirements**: AUTH-01, AUTH-02, AUTH-03
-**Success Criteria** (what must be TRUE):
-  1. User can sign up and sign in with email/password or Google OAuth without leaving the app
-  2. A signed-in user can heart/un-heart any venue; favorites persist when switching devices or browsers
-  3. The AI weather recommendation references the user's saved favorites when they are signed in
-  4. Signed-out users can browse the full directory without being prompted or gated
-**Plans**: 4 plans
-  - [x] 09-01-PLAN.md — Foundation: @supabase/ssr, middleware.ts, lib/supabaseSSR.ts, Suosikki type, migration SQL
-  - [x] 09-02-PLAN.md — AuthModal + server auth wiring
-  - [x] 09-03-PLAN.md — Heart buttons + favorites engine
-  - [x] 09-04-PLAN.md — AI personalization
-**UI hint**: yes
-
-### Phase 10: City Expansion
-**Goal**: Helsinki and Turku venues are in the database and discoverable alongside Tampere
-**Depends on**: Phase 6 (DATA-07 city field and UI must exist before multi-city data is useful)
-**Requirements**: DATA-05, DATA-06
-**Success Criteria** (what must be TRUE):
-  1. Helsinki-area sports venues appear in the listing and on the map when Helsinki is selected as the city filter
-  2. Turku-area sports venues appear in the listing and on the map when Turku is selected as the city filter
-  3. Syncing Helsinki or Turku data does not overwrite or corrupt existing Tampere venue records
-**Plans**: 4 plans
-  - [x] 10-01-PLAN.md — SUOMI_KAUPUNGIT constants + nearestKaupunki geo utility
-  - [x] 10-02-PLAN.md — Sync route parameterization (?kaupunki= support, SPORT_LAJIT, dynamic parseOsoite)
-  - [x] 10-03-PLAN.md — Weather API city-awareness (fetchWeather lat/lng params, GET/POST kaupunki)
-  - [x] 10-04-PLAN.md — Etusivu map-center tracking + weatherKaupunki trigger
-
-### Phase 11: PWA
-**Goal**: The app is installable and shows cached content when the device is offline
-**Depends on**: Phase 9 (complete API surface needed for caching strategy)
-**Requirements**: PWA-01, PWA-02
-**Success Criteria** (what must be TRUE):
-  1. A user on Android or iOS can add the app to their home screen via a browser install prompt or share sheet
-  2. After at least one online visit, the listing page loads and shows previously cached venue cards without a network connection
-  3. Service worker does not break client-side navigation or RSC requests in production
-**Plans**: 3 plans
-  - [x] 11-01-PLAN.md — Install @serwist/next + serwist + pureimage; generate placeholder PWA icons (192, 512)
-  - [x] 11-02-PLAN.md — Create app/sw.ts (all caching strategies); wrap next.config.mjs with withSerwist; update tsconfig + .gitignore
-  - [x] 11-03-PLAN.md — Create app/manifest.ts; update app/layout.tsx viewport + manifest metadata; create app/offline/page.tsx
+</details>
 
 ---
 
@@ -144,4 +52,4 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 8. Map Features | v1.1 | 3/3 | ✅ Complete | 2026-05-22 |
 | 9. Auth & Favorites | v1.1 | 4/4 | ✅ Complete | 2026-05-23 |
 | 10. City Expansion | v1.1 | 4/4 | ✅ Complete | 2026-05-27 |
-| 11. PWA | v1.1 | 3/3 | Complete   | 2026-05-27 |
+| 11. PWA | v1.1 | 3/3 | ✅ Complete | 2026-05-27 |
