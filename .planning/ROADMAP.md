@@ -4,6 +4,7 @@
 
 - ✅ **v1.0 MVP** — Phases 1–5 (shipped 2026-05-21)
 - ✅ **v1.1 Käyttäjät, Kartta & Laatu** — Phases 6–11 (shipped 2026-05-27)
+- 🚧 **v1.2 UI-uudistus & Arvostelut** — Phases 12–15 (in progress)
 
 ---
 
@@ -38,10 +39,72 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
 
 ---
 
+### 🚧 v1.2 UI-uudistus & Arvostelut (In Progress)
+
+**Milestone Goal:** Poistetaan erillinen listanäkymä ja integroidaan haku sekä paikkojenselailu etusivulle uudella diagonaalisella korttimallilla; lisätään arvostelusysteemi kirjautuneille käyttäjille ja kotikaupunkipersonointi AI-suositukseen.
+
+- [ ] **Phase 12: Haku & korttilistaus etusivulle** — Search icon in left toolbar + real-time card list panel; remove LiikuntapaikatLista and /?nakyma=lista route
+- [ ] **Phase 13: Uusi korttimalli** — Diagonal split card with Google Static Maps snapshot for home page list
+- [ ] **Phase 14: Profiilisivu & AI-kotipaikkakunta** — /profiili page, Supabase profiles table, home city field, AI home/away context
+- [ ] **Phase 15: Arvostelut** — Reviews table, ReviewForm, ReviewList on venue profile page, star average
+
+---
+
+## Phase Details
+
+### Phase 12: Haku & korttilistaus etusivulle
+**Goal**: Käyttäjä voi hakea liikuntapaikkoja suoraan etusivulta ja selata kaikkia paikkoja korttilistana — erillinen listanäkymäsivu on poistettu
+**Depends on**: Phase 11
+**Requirements**: UI-09, UI-10
+**Success Criteria** (what must be TRUE):
+  1. Käyttäjä klikkaa hakuikonin vasemmasta toolbarista ja hakukenttä avautuu — tulokset päivittyvät reaaliaikaisesti kirjoittaessa
+  2. Kaikki (filtterin mukainen) liikuntapaikat näkyvät scrollattavana korttilistana hakukentän alla etusivulla
+  3. Osoitteeseen `/?nakyma=lista` navigointi ohjaa etusivulle eikä erillistä listasivua enää renderöidä
+  4. `LiikuntapaikatLista`-komponentti ja siihen liittyvä reitti on poistettu koodipohjasta kokonaan
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 13: Uusi korttimalli
+**Goal**: Etusivun korttilistassa jokainen kortti käyttää uutta diagonaalista mallia jossa paikan tiedot ja Static Maps -snapshot ovat rinnakkain
+**Depends on**: Phase 12
+**Requirements**: UI-11
+**Success Criteria** (what must be TRUE):
+  1. Etusivun korttilistassa jokainen kortti näyttää vasemmalla puolella paikan nimen, lajin, hinnan, aukioloajan ja etäisyyden
+  2. Kortissa on oikealla puolella Google Static Maps -kuvakaappaus paikan sijainnista pin-ikonin kanssa
+  3. Kartan zoom-kortit (MAP-06-ominaisuus) pysyvät ennallaan — ne eivät käytä uutta diagonaalimallia
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 14: Profiilisivu & AI-kotipaikkakunta
+**Goal**: Kirjautuneella käyttäjällä on profiilisivu jossa voi tallentaa kotipaikkakuntansa, ja AI-suositus hyödyntää tätä tietoa
+**Depends on**: Phase 11
+**Requirements**: AUTH-04, AI-05
+**Success Criteria** (what must be TRUE):
+  1. Kirjautunut käyttäjä näkee `/profiili`-sivulla sähköpostiosoitteensa ja voi kirjoittaa kotipaikkakuntansa tekstikenttään
+  2. Kotipaikkakunta tallentuu Supabaseen ja on edelleen näkyvissä sivun uudelleenlatauksessa
+  3. Kun kotipaikkakunta on asetettu, `/api/saasuositus`-promptiin lisätään tieto kotikaupungista ja nykyisestä sijaintikaupungista — Claude käyttää tätä kontekstia generoidessaan suosituksen (ei näytetä eksplisiittistä "kotona/reissussa"-tekstiä käyttäjälle)
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 15: Arvostelut
+**Goal**: Kirjautunut käyttäjä voi jättää arvostelun liikuntapaikalle ja kaikki paikan arvostelut näkyvät profiilisivulla tähtiarvosanojen keskiarvoineen
+**Depends on**: Phase 14
+**Requirements**: REVIEW-01, REVIEW-02, REVIEW-03, REVIEW-04
+**Success Criteria** (what must be TRUE):
+  1. Kirjautunut käyttäjä voi jättää arvostelun (1–5 tähteä + vapaa teksti) paikan profiilisivulla — toinen arvostelu samaan paikkaan ei onnistu
+  2. Arvostelija valitsee per arvostelu näkyykö oma nimi vai jääkö arvostelu anonyymiksi
+  3. Arvostelu sisältää käyntipäivämäärän (date picker) ja ruuhka-arvion (hiljaista / sopivasti / ruuhkaista)
+  4. Paikan profiilisivu näyttää kaikki kyseisen paikan arvostelut sekä tähtiarvosanojen laskennallisen keskiarvon
+  5. Kirjautumaton käyttäjä näkee olemassa olevat arvostelut mutta ei arvostelulomaketta
+**Plans**: TBD
+**UI hint**: yes
+
+---
+
 ## Progress Table
 
 | Phase | Milestone | Plans Complete | Status | Completed |
-|-------|-----------|---------------|--------|-----------|
+|-------|-----------|----------------|--------|-----------|
 | 1. Foundation & Security | v1.0 | 14/14 | ✅ Complete | 2026-05-19 |
 | 2. Map & GPS | v1.0 | 3/3 | ✅ Complete | 2026-05-21 |
 | 3. Data Enrichment | v1.0 | 2/2 | ✅ Complete | 2026-05-21 |
@@ -53,3 +116,7 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
 | 9. Auth & Favorites | v1.1 | 4/4 | ✅ Complete | 2026-05-23 |
 | 10. City Expansion | v1.1 | 4/4 | ✅ Complete | 2026-05-27 |
 | 11. PWA | v1.1 | 3/3 | ✅ Complete | 2026-05-27 |
+| 12. Haku & korttilistaus etusivulle | v1.2 | 0/TBD | Not started | - |
+| 13. Uusi korttimalli | v1.2 | 0/TBD | Not started | - |
+| 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 0/TBD | Not started | - |
+| 15. Arvostelut | v1.2 | 0/TBD | Not started | - |

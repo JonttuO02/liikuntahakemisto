@@ -6,7 +6,7 @@ status: planning
 last_updated: "2026-05-27T16:00:00.000Z"
 last_activity: 2026-05-27
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,10 +17,12 @@ progress:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Phase 12 — Haku & korttilistaus etusivulle (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-27 — Milestone v1.2 started
+Status: Roadmap defined; ready to plan Phase 12
+Last activity: 2026-05-27 — v1.2 roadmap created (Phases 12–15)
+
+[░░░░░░░░░░░░░░░░░░░░] 0% — 0/4 phases complete
 
 ## Project Reference
 
@@ -31,7 +33,12 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 
 ## Phase Progress
 
-(Phases TBD — roadmap pending)
+| Phase | Status | Plans |
+|-------|--------|-------|
+| 12. Haku & korttilistaus etusivulle | Not started | 0/TBD |
+| 13. Uusi korttimalli | Not started | 0/TBD |
+| 14. Profiilisivu & AI-kotipaikkakunta | Not started | 0/TBD |
+| 15. Arvostelut | Not started | 0/TBD |
 
 ## Active Decisions
 
@@ -53,16 +60,18 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 - supabase.auth.getUser() server-side — never getSession()
 - ANTHROPIC_API_KEY is server-only env var
 - deriveKaupungit always prepends 'Kaikki' sentinel — city filter threshold must be > 2, not > 1
-- /?nakyma=lista is now DEAD — LiikuntapaikatLista being removed in v1.2
+- /?nakyma=lista is DEAD — LiikuntapaikatLista being removed in Phase 12
+- Static Maps API key = NEXT_PUBLIC_GOOGLE_MAPS_API_KEY (same as JS API key)
 
 ### Architecture Notes
 
-- v1.2: Static Maps API (NEXT_PUBLIC_ or server?) TBD at plan phase
-- v1.2: reviews table needs Supabase migration + RLS (1 review/user/paikka constraint)
-- v1.2: kotikaupunki stored in Supabase user metadata or separate profiles table TBD
-- Google Maps Static API key same as JS API key (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY)
+- Phase 12: Search panel lives in Etusivu.tsx left toolbar; sheetPhase state machine may need new state for search open/closed
+- Phase 13: Google Static Maps snapshot via `https://maps.googleapis.com/maps/api/staticmap` — uses NEXT_PUBLIC_GOOGLE_MAPS_API_KEY; rendered client-side in <img> tag
+- Phase 14: kotikaupunki stored in a separate `profiles` Supabase table (user_id FK → auth.users); service role key for writes, RLS for reads
+- Phase 15: reviews table needs Supabase migration + RLS (1 review/user/paikka enforced by unique constraint); average computed via Postgres aggregate or Supabase view
 
 ### Open Questions
 
 - Google OAuth callback URL still needs manual setup in Google Cloud Console + Supabase dashboard
-- Static Maps API: use same NEXT_PUBLIC_GOOGLE_MAPS_API_KEY or a separate server-side key?
+- Static Maps API: confirm HTTP referrer restrictions are compatible with img src usage (vs server-side proxy)
+- Phase 14 dependency: does Phase 14 need Phase 12/13 complete first, or can it run in parallel? (Roadmap has Phase 14 depends on Phase 11 — parallel with 12/13 is valid)

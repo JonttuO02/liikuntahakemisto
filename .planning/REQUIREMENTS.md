@@ -21,7 +21,7 @@
 
 ## AI — Personointi
 
-- [ ] **AI-05**: Kirjautunut käyttäjä voi asettaa kotipaikkakuntansa profiiliin (vapaa tekstikenttä); AI-sääsuositus käyttää tätä tietoa ja kertoo onko käyttäjä kotona vai reissussa — vaikuttaa suositeltavan palvelun tyypiin
+- [ ] **AI-05**: Kirjautunut käyttäjä voi asettaa kotipaikkakuntansa profiiliin (vapaa tekstikenttä); kotipaikkakunta ja nykyinen sijaintikaupunki lisätään `/api/saasuositus`-promptiin kontekstiksi — Claude käyttää tietoa generoidessaan personoidun suosituksen (kotona/reissussa-konteksti on osa promptia, ei käyttäjälle näytettävää tekstiä)
 
 ## AUTH — Profiili
 
@@ -48,18 +48,18 @@
 
 ## Traceability
 
-| REQ-ID    | Phase   | Status  |
-|-----------|---------|---------|
-| UI-09     | TBD     | Pending |
-| UI-10     | TBD     | Pending |
-| UI-11     | TBD     | Pending |
-| REVIEW-01 | TBD     | Pending |
-| REVIEW-02 | TBD     | Pending |
-| REVIEW-03 | TBD     | Pending |
-| REVIEW-04 | TBD     | Pending |
-| AI-05     | TBD     | Pending |
-| AUTH-04   | TBD     | Pending |
+| REQ-ID    | Phase    | Status  |
+|-----------|----------|---------|
+| UI-09     | Phase 12 | Pending |
+| UI-10     | Phase 12 | Pending |
+| UI-11     | Phase 13 | Pending |
+| REVIEW-01 | Phase 15 | Pending |
+| REVIEW-02 | Phase 15 | Pending |
+| REVIEW-03 | Phase 15 | Pending |
+| REVIEW-04 | Phase 15 | Pending |
+| AI-05     | Phase 14 | Pending |
+| AUTH-04   | Phase 14 | Pending |
 
 ---
 
-*Last updated: 2026-05-27 — v1.2 requirements defined*
+*Last updated: 2026-05-27 — v1.2 roadmap created; traceability filled*
