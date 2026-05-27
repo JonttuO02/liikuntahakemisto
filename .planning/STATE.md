@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
-status: active
-last_updated: "2026-05-27T12:00:00.000Z"
-last_activity: "2026-05-27 — Phase 11 planned: 3 plans (install+icons, Serwist SW config, manifest+offline page) in 2 waves"
+status: executing
+last_updated: "2026-05-27T11:26:17.664Z"
+last_activity: 2026-05-27 -- Phase 11 execution started
 progress:
   total_phases: 6
   completed_phases: 4
@@ -17,17 +17,17 @@ progress:
 
 ## Current Position
 
-Phase: 11 — PWA 📋 Planned
-Plan: 0/3 plans done
-Status: active
-Last activity: 2026-05-27 — Phase 11 planned: 3 plans (install+icons, Serwist SW config, manifest+offline page) in 2 waves
+Phase: 11 (PWA) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 11
+Last activity: 2026-05-27 -- Phase 11 execution started
 
 ## Project Reference
 
 See: .planning/PROJECT.md
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.1 — Käyttäjät, Kartta & Laatu
+**Current focus:** Phase 11 — PWA
 
 ## Phase Progress
 
