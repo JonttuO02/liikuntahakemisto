@@ -70,7 +70,7 @@ export default function SuosikitClient() {
           Kirjaudu sisään
         </button>
         <Link
-          href="/"
+          href="/?nakyma=lista"
           className="mt-4 text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)] underline underline-offset-2"
         >
           Takaisin hakemistoon
@@ -101,7 +101,7 @@ export default function SuosikitClient() {
           Selaa hakemistoa ja lisää sydämellä.
         </p>
         <Link
-          href="/"
+          href="/?nakyma=lista"
           className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-6 py-2.5 rounded-full [transition:background-color_150ms_var(--ease-out)]"
         >
           Selaa hakemistoa
@@ -131,7 +131,7 @@ export default function SuosikitClient() {
         ))}
       </ul>
       <Link
-        href="/"
+        href="/?nakyma=lista"
         className="mt-8 inline-block text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)] underline underline-offset-2"
       >
         Takaisin hakemistoon

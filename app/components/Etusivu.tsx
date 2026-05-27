@@ -502,18 +502,18 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 <Link
                   href="/?nakyma=lista"
                   onClick={closeOverlays}
-                  className="w-8 h-8 rounded-full glass-btn flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
-                  aria-label="Haku"
+                  className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                 >
                   <Search className="w-3.5 h-3.5" />
+                  Haku
                 </Link>
                 <Link
                   href="/suosikit"
                   onClick={closeOverlays}
-                  className="w-8 h-8 rounded-full glass-btn flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
-                  aria-label="Suosikit"
+                  className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                 >
                   <Heart className="w-3.5 h-3.5" />
+                  Suosikit
                 </Link>
                 {supabaseUser ? (
                   <button
@@ -525,18 +525,18 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                       })
                       closeOverlays()
                     }}
-                    className="w-8 h-8 rounded-full glass-btn flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
-                    aria-label="Kirjaudu ulos"
+                    className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                   >
                     <LogOut className="w-3.5 h-3.5" />
+                    Kirjaudu ulos
                   </button>
                 ) : (
                   <button
                     onClick={() => { setAuthModalOpen(true); closeOverlays() }}
-                    className="w-8 h-8 rounded-full glass-btn flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
-                    aria-label="Kirjaudu"
+                    className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                   >
                     <User className="w-3.5 h-3.5" />
+                    Kirjaudu
                   </button>
                 )}
               </motion.div>

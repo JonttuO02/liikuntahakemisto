@@ -12,6 +12,7 @@ import { getOpenStatus } from '@/lib/aukiolo'
 import Link from 'next/link'
 import PaikkaKortti, { korttiVariants } from './PaikkaKortti'
 import AuthModal from './AuthModal'
+import NavPill from './NavPill'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 
 import type { Liikuntapaikka } from '@/lib/types'
@@ -128,41 +129,23 @@ export default function LiikuntapaikatLista({ paikat }: { paikat: Liikuntapaikka
 
   return (
     <div className="min-h-screen bg-white">
-
-      {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section className="bg-white border-b border-[rgba(0,0,0,0.07)]">
-        <div className="max-w-5xl mx-auto px-4 pt-10 pb-7 sm:pt-14 sm:pb-9">
-
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: EASE_OUT }}
-          >
-            <h1 className="font-serif text-4xl sm:text-6xl font-bold text-[#111111] leading-tight tracking-tight">
-              Löydä liikuntasi
-            </h1>
-            <p className="mt-2 text-[rgba(17,17,17,0.45)] text-sm sm:text-base">
-              {aktiivKaupunki === 'Kaikki' ? 'Kaikki kaupungit' : aktiivKaupunki}&nbsp;·&nbsp;{suodatettu.length} paikkaa
-            </p>
-
-            {/* Search bar */}
-            <div className="mt-5 relative max-w-lg">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgba(17,17,17,0.4)] pointer-events-none" />
-              <Input
-                type="search"
-                placeholder="Hae liikuntapaikkaa..."
-                value={haku}
-                onChange={e => setHaku(e.target.value)}
-                className="pl-11 h-12 rounded-full bg-white border border-[rgba(0,0,0,0.12)] text-[#111111] placeholder:text-[rgba(17,17,17,0.35)] text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-[#111111] focus-visible:ring-offset-0"
-              />
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      <NavPill />
 
       {/* ── Controls ─────────────────────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-4 pt-5 pb-2">
         <div className="flex flex-col gap-3">
+
+          {/* Search bar */}
+          <div className="relative max-w-lg">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgba(17,17,17,0.4)] pointer-events-none" />
+            <Input
+              type="search"
+              placeholder="Hae liikuntapaikkaa..."
+              value={haku}
+              onChange={e => setHaku(e.target.value)}
+              className="pl-11 h-12 rounded-full bg-white border border-[rgba(0,0,0,0.12)] text-[#111111] placeholder:text-[rgba(17,17,17,0.35)] text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-[#111111] focus-visible:ring-offset-0"
+            />
+          </div>
 
           {/* Row 1: city + sport dropdowns + Etäisyydet */}
           <div className="flex flex-wrap items-center gap-2">

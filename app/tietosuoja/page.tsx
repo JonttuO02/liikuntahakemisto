@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
+import NavPill from '@/app/components/NavPill'
 
 export default function TietosuojaPage() {
   return (
     <div className="min-h-screen bg-white">
+      <NavPill />
       <div className="max-w-2xl mx-auto px-4 pt-10 pb-16">
 
         {/* Takaisin-linkki */}

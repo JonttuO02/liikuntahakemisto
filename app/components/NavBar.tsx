@@ -28,7 +28,7 @@ export default function NavBar({ userEmail }: NavBarProps) {
 
   return (
     <>
-      <div className="sticky top-0 z-50 relative">
+      <div className="sticky top-0 z-50">
 
         <header className="glass-nav">
           <div className="max-w-5xl mx-auto px-4 h-14 flex items-center">
@@ -39,83 +39,88 @@ export default function NavBar({ userEmail }: NavBarProps) {
               <ActaLogo />
             </Link>
 
+            {/* Right side — expanding pill (grows left) */}
             <div className="flex-1 flex justify-end">
-              <button
-                onClick={() => setOpen(o => !o)}
-                aria-label={open ? 'Sulje valikko' : 'Avaa valikko'}
-                className="glass-btn w-9 h-9 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+              <motion.div
+                layout
+                transition={{ layout: { type: 'spring', damping: 30, stiffness: 350 } }}
+                className="glass rounded-full flex items-center overflow-hidden"
+                style={{ height: 36 }}
               >
-                <AnimatePresence mode="wait" initial={false}>
-                  {open ? (
-                    <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                      <X className="w-4 h-4" />
-                    </motion.span>
-                  ) : (
-                    <motion.span key="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                      <Menu className="w-4 h-4" />
-                    </motion.span>
+                {/* Expanded content — appears to the left of trigger */}
+                <AnimatePresence>
+                  {open && (
+                    <motion.div
+                      key="nav-content"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.12, delay: 0.06 }}
+                      className="flex items-center gap-1 pl-2 whitespace-nowrap"
+                    >
+                      {clientEmail ? (
+                        <>
+                          <span className="text-xs font-bold text-[#111111] max-w-[90px] truncate px-1">{clientEmail}</span>
+                          <button
+                            onClick={() => { setOpen(false); handleSignOut() }}
+                            className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+                          >
+                            <LogOut className="w-3.5 h-3.5" />
+                            Kirjaudu ulos
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => { setOpen(false); setAuthModalOpen(true) }}
+                          className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+                        >
+                          <User className="w-3.5 h-3.5" />
+                          Kirjaudu
+                        </button>
+                      )}
+                      <Link
+                        href="/?nakyma=lista"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+                      >
+                        <Search className="w-3.5 h-3.5" />
+                        Haku
+                      </Link>
+                      <Link
+                        href="/suosikit"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+                      >
+                        <Heart className="w-3.5 h-3.5" />
+                        Suosikit
+                      </Link>
+                    </motion.div>
                   )}
                 </AnimatePresence>
-              </button>
+
+                {/* Trigger */}
+                <button
+                  onClick={() => setOpen(o => !o)}
+                  aria-label={open ? 'Sulje valikko' : 'Avaa valikko'}
+                  className="w-9 h-9 shrink-0 flex items-center justify-center text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+                >
+                  <AnimatePresence mode="wait" initial={false}>
+                    {open ? (
+                      <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+                        <X className="w-4 h-4" />
+                      </motion.span>
+                    ) : (
+                      <motion.span key="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+                        <Menu className="w-4 h-4" />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </button>
+              </motion.div>
             </div>
 
           </div>
         </header>
-
-        {/* Dropdown ribbon — absolute so it overlays content without shifting layout */}
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="absolute left-0 right-0 glass-nav border-t border-[rgba(0,0,0,0.06)]"
-            >
-              <div className="max-w-5xl mx-auto px-4 h-11 flex items-center justify-end gap-1">
-
-                {/* Auth state: signed out shows User icon, signed in shows email + LogOut */}
-                {clientEmail ? (
-                  <>
-                    <span className="text-sm font-bold text-[#111111] max-w-[140px] truncate">{clientEmail}</span>
-                    <button
-                      onClick={() => { setOpen(false); handleSignOut() }}
-                      className="glass-btn flex items-center gap-1.5 px-3 h-9 rounded-full text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Kirjaudu ulos
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => { setOpen(false); setAuthModalOpen(true) }}
-                    className="glass-btn flex items-center gap-1.5 px-3 h-9 rounded-full text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
-                  >
-                    <User className="w-4 h-4" />
-                    Kirjaudu
-                  </button>
-                )}
-
-                <Link
-                  href="/?nakyma=lista"
-                  onClick={() => setOpen(false)}
-                  className="glass-btn flex items-center gap-1.5 px-3 h-9 rounded-full text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
-                >
-                  <Search className="w-4 h-4" />
-                  Haku
-                </Link>
-                <Link
-                  href="/suosikit"
-                  onClick={() => setOpen(false)}
-                  className="glass-btn flex items-center gap-1.5 px-3 h-9 rounded-full text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
-                >
-                  <Heart className="w-4 h-4" />
-                  Suosikit
-                </Link>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
       </div>
 

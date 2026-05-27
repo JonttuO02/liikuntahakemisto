@@ -9,6 +9,7 @@ import { isSafeUrl } from '@/lib/urlUtils'
 import { formatGroupedHours } from '@/lib/aukiolo'
 import HoursTable from '@/app/components/HoursTable'
 import HeartButton from '@/app/components/HeartButton'
+import NavPill from '@/app/components/NavPill'
 
 export default async function PaikkaPage({ params }: { params: { id: string } }) {
   const supabase = createServerSupabase(cookies())
@@ -31,6 +32,7 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
 
   return (
     <div className="min-h-screen bg-white">
+      <NavPill />
 
       {/* ── Hero ───────────────────────────────────────────────── */}
       <section className="bg-white border-b border-[rgba(0,0,0,0.07)]">
