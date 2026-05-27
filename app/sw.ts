@@ -3,6 +3,7 @@ import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import {
   ExpirationPlugin,
   NetworkFirst,
+  NetworkOnly,
   Serwist,
   StaleWhileRevalidate,
 } from "serwist";
@@ -92,6 +93,13 @@ const customStrategies = [
         }),
       ],
     }),
+  },
+  // Entry 4: /api/ routes — NetworkOnly to prevent auth token caching
+  // Must be placed before defaultCache which contains a NetworkFirst "apis" rule with 24h TTL
+  {
+    matcher: ({ sameOrigin, url }: { sameOrigin: boolean; url: URL }) =>
+      sameOrigin && url.pathname.startsWith('/api/'),
+    handler: new NetworkOnly(),
   },
 ];
 
