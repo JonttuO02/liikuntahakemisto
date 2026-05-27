@@ -14,7 +14,6 @@ import { hintateksti, cn } from '@/lib/utils'
 import Karuselli from './Karuselli'
 import HoursTable from './HoursTable'
 import type { Liikuntapaikka } from '@/lib/types'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { formatGroupedHours, getOpenStatus } from '@/lib/aukiolo'
 import { isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
@@ -105,7 +104,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [supabaseUser, setSupabaseUser]     = useState<{ id: string; email?: string } | null>(null)
   const [authModalOpen, setAuthModalOpen]   = useState(false)
   const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null)
-  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>(TAMPERE)
+  const [_mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>(TAMPERE)
   const [weatherKaupunki, setWeatherKaupunki] = useState<string>('Tampere')
   const inFlight = useRef<Set<number>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)

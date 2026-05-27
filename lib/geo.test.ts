@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { haversineKm, formatDistance, nearestKaupunki } from './geo'
+import { haversineKm, nearestKaupunki } from './geo'
 
 describe('haversineKm', () => {
   it('returns approximately 0 for the same coordinates', () => {
