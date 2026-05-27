@@ -2,25 +2,25 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
-status: executing
-last_updated: "2026-05-27T11:37:39.012Z"
+status: complete
+last_updated: "2026-05-27T12:00:00.000Z"
 last_activity: 2026-05-27
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 19
-  completed_plans: 23
-  percent: 83
+  completed_plans: 24
+  percent: 100
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 11 (PWA) — EXECUTING
-Plan: 3 of 3
-Status: Checkpoint — awaiting human verify (11-03 Tasks 1–3 complete, build verification pending)
-Last activity: 2026-05-27 -- Phase 11 Plan 03 executed (manifest.ts, layout.tsx viewport, offline page)
+Phase: 11 (PWA) — COMPLETE
+Plan: 3 of 3 (all done)
+Status: Complete — v1.1 milestone complete; all 6 phases done
+Last activity: 2026-05-27
 
 ## Project Reference
 
@@ -38,7 +38,7 @@ See: .planning/PROJECT.md
 | 8. Map Features | ✅ Complete | 3/3 plans done; Etusivu refactored to bottom sheet architecture |
 | 9. Auth & Favorites | ✅ Complete | All 4 plans done: foundation, AuthModal, favorites engine, AI personalization |
 | 10. City Expansion | ✅ Complete | 4/4 plans done: SUOMI_KAUPUNGIT, sync parameterization, saasuositus city-aware, Etusivu map-center debounce |
-| 11. PWA | 🔄 Executing (3/3 tasks done, checkpoint pending) | manifest.ts, layout viewport, offline page built — awaiting build verify |
+| 11. PWA | ✅ Complete | 3/3 plans done: icons+packages, service worker, manifest+viewport+offline page; build verified |
 
 ## Active Decisions
 
@@ -65,6 +65,10 @@ See: .planning/PROJECT.md
 - PWA must use Serwist (@serwist/next + serwist) — next-pwa and @ducanh2912/next-pwa are abandoned
 - Service worker must exclude _rsc requests and be disabled in dev mode
 - useGPS now takes { autoRequest?: boolean } param (default false) — Etusivu passes true, LiikuntapaikatLista uses default
+- PWA manifest start_url = /?nakyma=lista — offline-capable listing view; app/manifest.ts serves /manifest.webmanifest
+- themeColor #4F46E5 lives in viewport export (Viewport type), NOT metadata — avoids Next.js 14 deprecation warning
+- other: { mobile-web-app-capable: yes } replaces deprecated appleWebApp.capable: true in layout.tsx
+- Offline fallback page uses plain <a href> not Next.js <Link> — must be full navigation so SW can intercept when client-side router is unavailable offline
 
 (post-phase-8 bottom sheet refactor)
 
@@ -123,6 +127,6 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- Last session: 2026-05-27 — Phase 11 Plan 03 executed: manifest.ts (MetadataRoute.Manifest), layout.tsx (viewport + manifest metadata), offline/page.tsx (Finnish server component). Checkpoint 4 reached — awaiting human build verification.
-- Stopped at: 11-03-PLAN.md Task 4 (human-verify checkpoint)
-- Resume: Approve checkpoint after `npm run build` and `npm run start` verification
+- Last session: 2026-05-27 — Phase 11 Plan 03 complete: manifest.ts, layout.tsx (viewport + mobile-web-app-capable), offline/page.tsx. Checkpoint approved; deprecated appleWebApp.capable fix applied (27c7a89). Build verified: public/sw.js 44 KB, /manifest.webmanifest static, /offline static 838 B. v1.1 milestone complete.
+- Stopped at: None — all phases complete
+- Resume: N/A — v1.1 complete; run /gsd:verify-work 11 for final UAT
