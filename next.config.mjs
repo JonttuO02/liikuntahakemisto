@@ -8,6 +8,7 @@ const revision =
 const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
   swDest: "public/sw.js",
+  swTsconfigPath: "./tsconfig.sw.json",
   disable: process.env.NODE_ENV === "development",
   reloadOnOnline: false,
   additionalPrecacheEntries: [{ url: "/offline", revision }],
