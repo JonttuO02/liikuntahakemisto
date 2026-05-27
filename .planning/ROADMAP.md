@@ -28,7 +28,7 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **Phase 7: Map Infrastructure** — Migrate to AdvancedMarker, add mapId env var, implement re-center button
 - [x] **Phase 8: Map Features** — GPS accuracy ring, zoom-dependent pin-to-card, in-app map focus; Etusivu refactored to bottom sheet architecture
 - [x] **Phase 9: Auth & Favorites** — Supabase Auth (email + Google OAuth), favorites synced across devices, personalized AI — 2026-05-23
-- [ ] **Phase 10: City Expansion** — Helsinki and Turku data via Google Places sync
+- [x] **Phase 10: City Expansion** — Helsinki and Turku data via Google Places sync — 2026-05-27
 - [ ] **Phase 11: PWA** — Service worker with offline support and home screen install prompt
 
 ---
@@ -110,10 +110,10 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
   2. Turku-area sports venues appear in the listing and on the map when Turku is selected as the city filter
   3. Syncing Helsinki or Turku data does not overwrite or corrupt existing Tampere venue records
 **Plans**: 4 plans
-  - [ ] 10-01-PLAN.md — SUOMI_KAUPUNGIT constants + nearestKaupunki geo utility
-  - [ ] 10-02-PLAN.md — Sync route parameterization (?kaupunki= support, SPORT_LAJIT, dynamic parseOsoite)
-  - [ ] 10-03-PLAN.md — Weather API city-awareness (fetchWeather lat/lng params, GET/POST kaupunki)
-  - [ ] 10-04-PLAN.md — Etusivu map-center tracking + weatherKaupunki trigger
+  - [x] 10-01-PLAN.md — SUOMI_KAUPUNGIT constants + nearestKaupunki geo utility
+  - [x] 10-02-PLAN.md — Sync route parameterization (?kaupunki= support, SPORT_LAJIT, dynamic parseOsoite)
+  - [x] 10-03-PLAN.md — Weather API city-awareness (fetchWeather lat/lng params, GET/POST kaupunki)
+  - [x] 10-04-PLAN.md — Etusivu map-center tracking + weatherKaupunki trigger
 
 ### Phase 11: PWA
 **Goal**: The app is installable and shows cached content when the device is offline
@@ -140,5 +140,5 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 7. Map Infrastructure | v1.1 | 2/2 | ✅ Complete | 2026-05-22 |
 | 8. Map Features | v1.1 | 3/3 | ✅ Complete | 2026-05-22 |
 | 9. Auth & Favorites | v1.1 | 4/4 | ✅ Complete | 2026-05-23 |
-| 10. City Expansion | v1.1 | 0/4 | Not started | - |
+| 10. City Expansion | v1.1 | 4/4 | ✅ Complete | 2026-05-27 |
 | 11. PWA | v1.1 | 0/? | Not started | - |

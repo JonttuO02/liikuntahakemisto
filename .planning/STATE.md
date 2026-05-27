@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
 status: active
-last_updated: "2026-05-23T07:00:00Z"
-last_activity: 2026-05-23 — Phase 9 complete: AI personalization — POST /api/saasuositus with favorites in Haiku prompt, cache-busting by favorites count
+last_updated: "2026-05-27T00:00:00.000Z"
+last_activity: "2026-05-27 — Phase 10 planned: 4 plans in 3 waves covering sync parameterization + map-center-aware AI widget"
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 16
+  total_plans: 17
   completed_plans: 16
-  percent: 65
+  percent: 67
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 9 — Auth & Favorites ✅ Complete
-Plan: 09-04 ✅
+Phase: 10 — City Expansion ✅ Complete
+Plan: 4/4 plans done
 Status: active
-Last activity: 2026-05-23 — Phase 9 Plan 04 complete: AI personalization with POST /api/saasuositus, favorites in Haiku prompt, cache-busting by count
+Last activity: 2026-05-27 — Phase 10 complete: SUOMI_KAUPUNGIT, sync parameterization, saasuositus city-aware, Etusivu map-center debounce
 
 ## Project Reference
 
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md
 | 7. Map Infrastructure | ✅ Complete | 2/2 plans done; 4 manual UAT checks pending (GPS + day/night + preview button absent) |
 | 8. Map Features | ✅ Complete | 3/3 plans done; Etusivu refactored to bottom sheet architecture |
 | 9. Auth & Favorites | ✅ Complete | All 4 plans done: foundation, AuthModal, favorites engine, AI personalization |
-| 10. City Expansion | Not started | Fix sync-paikat hardcoded Tampere first |
+| 10. City Expansion | ✅ Complete | 4/4 plans done: SUOMI_KAUPUNGIT, sync parameterization, saasuositus city-aware, Etusivu map-center debounce |
 | 11. PWA | Not started | Must be last — needs complete API surface |
 
 ## Active Decisions
@@ -123,6 +123,6 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-- Last session: Phase 9 Plan 04 executed — POST /api/saasuositus with shared fetchWeather() helper, Etusivu AI effect updated to POST with favorites
-- Stopped at: Phase 9 complete (all 4 plans done); ready for Phase 10 (City Expansion)
+- Last session: Phase 10 planned — sync parameterization (?kaupunki= param), SUOMI_KAUPUNGIT constants, nearestKaupunki utility, fetchWeather parameterization, Etusivu mapCenter debounce
+- Stopped at: Phase 10 planned (4 plans verified); ready to execute
 - Resume: /gsd:execute-phase 10
