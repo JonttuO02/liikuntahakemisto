@@ -124,8 +124,8 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
   2. After at least one online visit, the listing page loads and shows previously cached venue cards without a network connection
   3. Service worker does not break client-side navigation or RSC requests in production
 **Plans**: 3 plans
-  - [ ] 11-01-PLAN.md — Install @serwist/next + serwist + pureimage; generate placeholder PWA icons (192, 512)
-  - [ ] 11-02-PLAN.md — Create app/sw.ts (all caching strategies); wrap next.config.mjs with withSerwist; update tsconfig + .gitignore
+  - [x] 11-01-PLAN.md — Install @serwist/next + serwist + pureimage; generate placeholder PWA icons (192, 512)
+  - [x] 11-02-PLAN.md — Create app/sw.ts (all caching strategies); wrap next.config.mjs with withSerwist; update tsconfig + .gitignore
   - [ ] 11-03-PLAN.md — Create app/manifest.ts; update app/layout.tsx viewport + manifest metadata; create app/offline/page.tsx
 
 ---
@@ -144,4 +144,4 @@ Full archive: `.planning/milestones/v1.0-ROADMAP.md`
 | 8. Map Features | v1.1 | 3/3 | ✅ Complete | 2026-05-22 |
 | 9. Auth & Favorites | v1.1 | 4/4 | ✅ Complete | 2026-05-23 |
 | 10. City Expansion | v1.1 | 4/4 | ✅ Complete | 2026-05-27 |
-| 11. PWA | v1.1 | 0/3 | 📋 Planned | - |
+| 11. PWA | v1.1 | 2/3 | In Progress|  |
