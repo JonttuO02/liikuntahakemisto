@@ -4,6 +4,16 @@
 
 Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
 
+## Current Milestone: v1.2 UI-uudistus & Arvostelut
+
+**Goal:** Poistetaan erillinen listanäkymä ja integroidaan haku sekä paikkojenselailu etusivulle uudella diagonaalisella korttimallilla, sekä lisätään arvostelusysteemi kirjautuneille käyttäjille.
+
+**Target features:**
+- Haku etusivulle: vasen toolbar + hakupalkki + korttilistaus (ei erillistä /?nakyma=lista -sivua)
+- Uusi korttimalli: diagonaalinen jako — vasen = tiedot, oikea = Google Static Maps snapshot + pin
+- Arvostelusysteemi: tähtiarvosana + teksti + anonyymi/julkinen valinta + käyntipäivä + ruuhka-arvio
+- AI-personointi: kotikaupunki profiiliin → ehdotus tietää onko käyttäjä kotona vai reissussa
+
 ## Core Value
 
 Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
@@ -65,14 +75,25 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ### Active (v1.2)
 
-- [ ] Suosikkipaikat-sivu kirjautuneelle käyttäjälle (/suosikit, full favorites page)
-- [ ] Kartta: etäisyyspohjainen suodatus
-- [ ] Käyttäjäprofiili ja asetukset
+- [ ] UI-09: Hakukenttä etusivun vasemmasta toolbarista (ei erillistä listasivua)
+- [ ] UI-10: Hakutulokset korttilistana etusivulla (diagonaalinen korttimalli)
+- [ ] UI-11: /?nakyma=lista poistettu; LiikuntapaikatLista-komponentti poistettu
+- [ ] UI-12: Uusi korttimalli — vasen: tiedot, oikea: Google Static Maps snapshot
+- [ ] REVIEW-01: Kirjautunut käyttäjä voi jättää arvostelun (tähtiarvosana + teksti), max 1/paikka
+- [ ] REVIEW-02: Arvostelija valitsee näkyykö nimi vai anonyymi
+- [ ] REVIEW-03: Arvostelu sisältää käyntipäivän + ruuhka-arvion
+- [ ] REVIEW-04: Paikan profiilisivu näyttää arvostelut + tähtiarvosanojen keskiarvo
+- [ ] AI-05: Kotikaupunki profiiliin; AI-suositus tunnistaa kotona/reissussa-kontekstin
+
+### Future (deferred from v1.1)
+
+- Suosikkipaikat-sivu kirjautuneelle käyttäjälle (/suosikit)
+- Kartta: etäisyyspohjainen suodatus
+- Käyttäjäprofiili ja asetukset (laaja)
 
 ### Out of Scope
 
 - Varausjärjestelmä — linkitetään palveluntarjoajan omaan sivuun
-- Arvostelut ja käyttäjäkommentit — v2+
 - Reaaliaikainen paikkatieto (kapasiteetti, jonot) — vaatii venue-API-integraation per paikka
 - Mobiiliappi (iOS/Android) — web-first ensin, PWA riittää
 - Maksujärjestelmä — ei osteta sovelluksessa
@@ -140,4 +161,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-05-27 after v1.1 milestone*
+*Last updated: 2026-05-27 — v1.2 milestone started*
