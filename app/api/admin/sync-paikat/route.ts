@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
-import { TAMPERE } from '@/lib/constants'
+import { SUOMI_KAUPUNGIT } from '@/lib/constants'
 
 const API_KEY = process.env.GOOGLE_PLACES_API_KEY
 
@@ -32,11 +32,11 @@ function parseAukioloajat(
   return Object.keys(result).length > 0 ? result : null
 }
 
-function parseOsoite(name: string, formattedAddress: string): string | null {
+function parseOsoite(name: string, formattedAddress: string, kaupunki: string): string | null {
   const parts = formattedAddress.split(', ')
   const ilmanNimea = parts[0] === name ? parts.slice(1) : parts
   const filtered = ilmanNimea.filter(
-    p => p !== 'Finland' && p !== 'Suomi' && !/tampere/i.test(p)
+    p => p !== 'Finland' && p !== 'Suomi' && p.toLowerCase() !== kaupunki.toLowerCase()
   )
   return filtered[0]?.trim() ?? null
 }
@@ -62,20 +62,20 @@ async function fetchPlaceDetails(placeId: string): Promise<PlaceDetailsResult> {
   }
 }
 
-interface SportQuery {
+interface SportLaji {
   hakutermi: string
   laji: string
 }
 
-const SPORT_QUERIES: SportQuery[] = [
-  { hakutermi: 'padel Tampere',               laji: 'padel' },
-  { hakutermi: 'uimahalli Tampere',            laji: 'uinti' },
-  { hakutermi: 'jooga Tampere',                laji: 'jooga' },
-  { hakutermi: 'kiipeily bouldering Tampere',  laji: 'kiipeily' },
-  { hakutermi: 'jääkiekko halli Tampere',      laji: 'jääkiekko' },
-  { hakutermi: 'kuntosali fitness Tampere',    laji: 'kuntosali' },
-  { hakutermi: 'tennis Tampere',               laji: 'tennis' },
-  { hakutermi: 'liikuntahalli Tampere',        laji: 'liikuntahalli' },
+const SPORT_LAJIT: SportLaji[] = [
+  { hakutermi: 'padel',               laji: 'padel' },
+  { hakutermi: 'uimahalli',            laji: 'uinti' },
+  { hakutermi: 'jooga',                laji: 'jooga' },
+  { hakutermi: 'kiipeily bouldering',  laji: 'kiipeily' },
+  { hakutermi: 'jääkiekko halli',      laji: 'jääkiekko' },
+  { hakutermi: 'kuntosali fitness',    laji: 'kuntosali' },
+  { hakutermi: 'tennis',               laji: 'tennis' },
+  { hakutermi: 'liikuntahalli',        laji: 'liikuntahalli' },
 ]
 
 interface PlacesResult {
@@ -89,11 +89,12 @@ interface PlacesResult {
 async function fetchSportQuery(
   hakutermi: string,
   laji: string,
-  apiKey: string
+  apiKey: string,
+  coords: { lat: number; lng: number }
 ): Promise<Array<PlacesResult & { assignedLaji: string }>> {
   const url = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json')
   url.searchParams.set('query', hakutermi)
-  url.searchParams.set('location', `${TAMPERE.lat},${TAMPERE.lng}`)
+  url.searchParams.set('location', `${coords.lat},${coords.lng}`)
   url.searchParams.set('radius', '15000')
   url.searchParams.set('language', 'fi')
   url.searchParams.set('region', 'fi')
@@ -123,9 +124,14 @@ export async function GET(req: Request) {
     )
   }
 
-  // Run all sport queries in parallel
+  const kaupunki = new URL(req.url).searchParams.get('kaupunki') ?? 'Tampere'
+  const cityCoords = SUOMI_KAUPUNGIT.find(c => c.nimi === kaupunki) ?? { lat: 61.4978, lng: 23.7610 }
+
+  // Run all sport queries in parallel, building query as `${hakutermi} ${kaupunki}`
   const queryResults = await Promise.all(
-    SPORT_QUERIES.map(({ hakutermi, laji }) => fetchSportQuery(hakutermi, laji, API_KEY!))
+    SPORT_LAJIT.map(({ hakutermi, laji }) =>
+      fetchSportQuery(`${hakutermi} ${kaupunki}`, laji, API_KEY!, cityCoords)
+    )
   )
 
   // Deduplicate by place_id — first occurrence wins (preserves the assigned laji)
@@ -151,8 +157,8 @@ export async function GET(req: Request) {
     place_id:     p.place_id,
     nimi:         p.name,
     laji:         p.assignedLaji,
-    osoite:       parseOsoite(p.name, p.formatted_address),
-    kaupunki:     'Tampere',
+    osoite:       parseOsoite(p.name, p.formatted_address, kaupunki),
+    kaupunki:     kaupunki,
     latitude:     p.geometry?.location?.lat ?? null,
     longitude:    p.geometry?.location?.lng ?? null,
     varauslinkki: details[i].website,
