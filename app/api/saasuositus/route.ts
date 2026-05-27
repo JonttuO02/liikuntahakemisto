@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { SUOMI_KAUPUNGIT } from '@/lib/constants'
 
 const client = new Anthropic()
 
 const DAY_FI = ['sunnuntai', 'maanantai', 'tiistai', 'keskiviikko', 'torstai', 'perjantai', 'lauantai'] as const
 
-function getTimeBasedFallback(): string {
+function getTimeBasedFallback(kaupunki: string): string {
   const h = new Date().getHours()
-  if (h >= 6 && h < 11)  return 'Huomenta · Löydä paras liikuntapaikka Tampereelta'
-  if (h >= 11 && h < 17) return 'Hei · Löydä paras liikuntapaikka Tampereelta'
-  return 'Iltaa · Löydä paras liikuntapaikka Tampereelta'
+  if (h >= 6 && h < 11)  return `Huomenta · Löydä paras liikuntapaikka ${kaupunki}lta`
+  if (h >= 11 && h < 17) return `Hei · Löydä paras liikuntapaikka ${kaupunki}lta`
+  return `Iltaa · Löydä paras liikuntapaikka ${kaupunki}lta`
 }
 
 interface WeatherData {
@@ -19,13 +20,13 @@ interface WeatherData {
   weatherDesc: string
 }
 
-async function fetchWeather(): Promise<WeatherData> {
+async function fetchWeather(lat: number, lng: number): Promise<WeatherData> {
   let temp = 15
   let code = 0
 
   try {
     const res = await fetch(
-      'https://api.open-meteo.com/v1/forecast?latitude=61.4978&longitude=23.7610&current=temperature_2m,weather_code',
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code`,
       { next: { revalidate: 1800 } }
     )
     if (res.ok) {
@@ -48,8 +49,14 @@ async function fetchWeather(): Promise<WeatherData> {
   return { temp, code, day, weatherDesc }
 }
 
-export async function GET() {
-  const { temp, code, day, weatherDesc } = await fetchWeather()
+function lookupCity(kaupunki: string): { lat: number; lng: number } {
+  return SUOMI_KAUPUNGIT.find(c => c.nimi === kaupunki) ?? { lat: 61.4978, lng: 23.7610 }
+}
+
+export async function GET(request: Request) {
+  const kaupunki = new URL(request.url).searchParams.get('kaupunki') ?? 'Tampere'
+  const city = lookupCity(kaupunki)
+  const { temp, code, day, weatherDesc } = await fetchWeather(city.lat, city.lng)
 
   let text: string
   try {
@@ -58,13 +65,13 @@ export async function GET() {
       max_tokens: 100,
       messages: [{
         role: 'user',
-        content: `Tänään on ${day} Tampereella. Lämpötila on ${temp}°C ja sää on ${weatherDesc}. Kirjoita YKSI lyhyt suomenkielinen lause joka suosittelee sopivaa liikuntapalvelua tai -lajia tähän säähän Tampereella. Mainitse "Tampere" tai viittaa liikuntapaikan löytämiseen. Älä käytä emojeja.`,
+        content: `Tänään on ${day} ${kaupunki}ssa. Lämpötila on ${temp}°C ja sää on ${weatherDesc}. Kirjoita YKSI lyhyt suomenkielinen lause joka suosittelee sopivaa liikuntapalvelua tai -lajia tähän säähän ${kaupunki}ssa. Mainitse "${kaupunki}" tai viittaa liikuntapaikan löytämiseen. Älä käytä emojeja.`,
       }],
     })
     const block = msg.content[0]
-    text = block.type === 'text' ? block.text.trim() : getTimeBasedFallback()
+    text = block.type === 'text' ? block.text.trim() : getTimeBasedFallback(kaupunki)
   } catch {
-    return NextResponse.json({ text: getTimeBasedFallback(), temp, code, fallback: true })
+    return NextResponse.json({ text: getTimeBasedFallback(kaupunki), temp, code, fallback: true })
   }
 
   return NextResponse.json({ text, temp, code, fallback: false })
@@ -72,6 +79,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   let suosikit: string[] = []
+  let kaupunki = 'Tampere'
   try {
     const body = await request.json()
     suosikit = Array.isArray(body.suosikit)
@@ -80,15 +88,17 @@ export async function POST(request: Request) {
           .filter((s: unknown): s is string => typeof s === 'string')
           .map((s: string) => s.replace(/[^\w\sÄäÖöÅå\-,.'()&]/g, '').slice(0, 80))
       : []
+    if (typeof body.kaupunki === 'string') kaupunki = body.kaupunki
   } catch {}
 
-  const { temp, code, day, weatherDesc } = await fetchWeather()
+  const city = lookupCity(kaupunki)
+  const { temp, code, day, weatherDesc } = await fetchWeather(city.lat, city.lng)
 
   const suosikkiLista = suosikit.length
     ? `\nKäyttäjän suosikit: ${suosikit.join(', ')}.`
     : ''
 
-  const prompt = `Tänään on ${day} Tampereella. Lämpötila on ${temp}°C ja sää on ${weatherDesc}. Kirjoita YKSI lyhyt suomenkielinen lause joka suosittelee sopivaa liikuntapalvelua tai -lajia tähän säähän Tampereella. Mainitse "Tampere" tai viittaa liikuntapaikan löytämiseen. Älä käytä emojeja.${suosikkiLista}`
+  const prompt = `Tänään on ${day} ${kaupunki}ssa. Lämpötila on ${temp}°C ja sää on ${weatherDesc}. Kirjoita YKSI lyhyt suomenkielinen lause joka suosittelee sopivaa liikuntapalvelua tai -lajia tähän säähän ${kaupunki}ssa. Mainitse "${kaupunki}" tai viittaa liikuntapaikan löytämiseen. Älä käytä emojeja.${suosikkiLista}`
 
   try {
     const msg = await client.messages.create({
@@ -97,9 +107,9 @@ export async function POST(request: Request) {
       messages: [{ role: 'user', content: prompt }],
     })
     const block = msg.content[0]
-    const text = block.type === 'text' ? block.text.trim() : getTimeBasedFallback()
+    const text = block.type === 'text' ? block.text.trim() : getTimeBasedFallback(kaupunki)
     return NextResponse.json({ text, temp, code, fallback: false })
   } catch {
-    return NextResponse.json({ text: getTimeBasedFallback(), temp, code, fallback: true })
+    return NextResponse.json({ text: getTimeBasedFallback(kaupunki), temp, code, fallback: true })
   }
 }
