@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
@@ -10,7 +10,11 @@ const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-serif'
 export const metadata: Metadata = {
   title: 'Liikuntahakemisto',
   description: 'Löydä liikuntapaikat läheltäsi Tampereella',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, statusBarStyle: 'default' },
 }
+
+export const viewport: Viewport = { themeColor: '#4F46E5' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
