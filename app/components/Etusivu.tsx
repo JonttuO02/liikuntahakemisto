@@ -104,7 +104,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [supabaseUser, setSupabaseUser]     = useState<{ id: string; email?: string } | null>(null)
   const [authModalOpen, setAuthModalOpen]   = useState(false)
   const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null)
-  const [_mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>(TAMPERE)
   const [weatherKaupunki, setWeatherKaupunki] = useState<string>('Tampere')
   const inFlight = useRef<Set<number>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -327,7 +326,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           onCameraChanged={ev => {
             setZoomLevel(ev.detail.zoom)
             const center = ev.detail.center
-            setMapCenter(center)
             if (debounceRef.current) clearTimeout(debounceRef.current)
             debounceRef.current = setTimeout(() => {
               const nearest = nearestKaupunki(center.lat, center.lng)
