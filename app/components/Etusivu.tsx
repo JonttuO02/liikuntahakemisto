@@ -18,6 +18,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { formatGroupedHours, getOpenStatus } from '@/lib/aukiolo'
 import { isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
+import { nearestKaupunki } from '@/lib/geo'
 import { isSafeUrl } from '@/lib/urlUtils'
 import { useGPS } from '@/hooks/useGPS'
 import { pinUrl } from '@/lib/sportPins'
@@ -26,7 +27,6 @@ import AuthModal from './AuthModal'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
-const WEATHER_CITY = 'Tampere'
 const HANDLE_H = 44 // visible sheet tab height when closed
 
 const SPORT_ICONS: Record<string, LucideIcon> = {
@@ -105,7 +105,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [supabaseUser, setSupabaseUser]     = useState<{ id: string; email?: string } | null>(null)
   const [authModalOpen, setAuthModalOpen]   = useState(false)
   const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null)
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>(TAMPERE)
+  const [weatherKaupunki, setWeatherKaupunki] = useState<string>('Tampere')
   const inFlight = useRef<Set<number>>(new Set())
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { coords }                  = useGPS({ autoRequest: true })
   const searchParams = useSearchParams()
   const focusId = searchParams.get('id')
@@ -226,6 +229,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
   useEffect(() => {
     const key = 'saasuositus-' + new Date().toISOString().slice(0, 10)
+      + '-' + weatherKaupunki
       + (suosikitIds.size > 0 ? '-' + suosikitIds.size : '')
     try {
       const cached = sessionStorage.getItem(key)
@@ -237,11 +241,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       .map(id => paikat.find(p => p.id === id)?.nimi)
       .filter(Boolean) as string[]
 
-    const fetchOptions: RequestInit = suosikkiNimet.length > 0
-      ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ suosikit: suosikkiNimet }) }
-      : { method: 'GET' }
+    const fetchPromise = suosikkiNimet.length > 0
+      ? fetch('/api/saasuositus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ suosikit: suosikkiNimet, kaupunki: weatherKaupunki }) })
+      : fetch('/api/saasuositus?kaupunki=' + encodeURIComponent(weatherKaupunki))
 
-    fetch('/api/saasuositus', fetchOptions)
+    fetchPromise
       .then(r => r.json())
       .then((d: { text: string; temp: number; code: number; fallback?: boolean }) => {
         setAiTeksti(d.text)
@@ -252,7 +256,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   // changing on router.refresh() would cause spurious AI calls; suosikitSizeAndIds (a stable string) already covers
   // the meaningful dependency without creating a new reference on every render
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [suosikitSizeAndIds])
+  }, [suosikitSizeAndIds, weatherKaupunki])
 
   useEffect(() => {
     if (sheetPhase !== 'open') setValittu(null)
@@ -321,7 +325,16 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           clickableIcons={false}
           keyboardShortcuts={false}
           onClick={() => setValittu(null)}
-          onCameraChanged={ev => setZoomLevel(ev.detail.zoom)}
+          onCameraChanged={ev => {
+            setZoomLevel(ev.detail.zoom)
+            const center = ev.detail.center
+            setMapCenter(center)
+            if (debounceRef.current) clearTimeout(debounceRef.current)
+            debounceRef.current = setTimeout(() => {
+              const nearest = nearestKaupunki(center.lat, center.lng)
+              setWeatherKaupunki(prev => nearest !== prev ? nearest : prev)
+            }, 3000)
+          }}
         >
           {paikatKartalla.map(p => {
             const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
@@ -599,7 +612,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 <div className="flex items-center gap-1.5">
                   <span className="text-base leading-none select-none" aria-hidden>{getWeatherEmoji(saa.code)}</span>
                   <span className="text-sm font-bold text-[#111111] tabular-nums">
-                    {saa.temp}°{' '}<span className="font-normal text-[rgba(17,17,17,0.45)]">{WEATHER_CITY}</span>
+                    {saa.temp}°{' '}<span className="font-normal text-[rgba(17,17,17,0.45)]">{weatherKaupunki}</span>
                   </span>
                 </div>
               )}
