@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Phases
 status: active
-last_updated: "2026-05-27T00:00:00.000Z"
-last_activity: "2026-05-27 — Phase 10 planned: 4 plans in 3 waves covering sync parameterization + map-center-aware AI widget"
+last_updated: "2026-05-27T10:46:30.677Z"
+last_activity: "2026-05-27 — Phase 10 complete: SUOMI_KAUPUNGIT, sync parameterization, saasuositus city-aware, Etusivu map-center debounce"
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 17
-  completed_plans: 16
+  total_plans: 16
+  completed_plans: 20
   percent: 67
 ---
 
