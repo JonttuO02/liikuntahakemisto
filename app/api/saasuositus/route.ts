@@ -55,7 +55,8 @@ function lookupCity(kaupunki: string): { lat: number; lng: number } {
 }
 
 export async function GET(request: Request) {
-  const kaupunki = new URL(request.url).searchParams.get('kaupunki') ?? 'Tampere'
+  const rawKaupunki = new URL(request.url).searchParams.get('kaupunki') ?? 'Tampere'
+  const kaupunki = rawKaupunki.replace(/[^\w\sÄäÖöÅå\-,.'()&]/g, '').slice(0, 80).trim() || 'Tampere'
   const city = lookupCity(kaupunki)
   const { temp, code, day, weatherDesc } = await fetchWeather(city.lat, city.lng)
 
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
           .filter((s: unknown): s is string => typeof s === 'string')
           .map((s: string) => s.replace(/[^\w\sÄäÖöÅå\-,.'()&]/g, '').slice(0, 80))
       : []
-    if (typeof body.kaupunki === 'string') kaupunki = body.kaupunki
+    if (typeof body.kaupunki === 'string') kaupunki = body.kaupunki.replace(/[^\w\sÄäÖöÅå\-,.'()&]/g, '').slice(0, 80).trim() || 'Tampere'
     // Sanitize kotikaupunki — same allowlist as suosikit names (T-14-08)
     if (typeof body.kotikaupunki === 'string' && body.kotikaupunki.trim()) {
       kotikaupunki = body.kotikaupunki

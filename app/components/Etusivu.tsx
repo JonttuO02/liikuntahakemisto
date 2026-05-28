@@ -283,7 +283,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   // changing on router.refresh() would cause spurious AI calls; suosikitSizeAndIds (a stable string) already covers
   // the meaningful dependency without creating a new reference on every render
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [suosikitSizeAndIds, weatherKaupunki])
+  }, [suosikitSizeAndIds, weatherKaupunki, kotikaupunki])
 
   useEffect(() => {
     if (sheetPhase !== 'open') setValittu(null)
