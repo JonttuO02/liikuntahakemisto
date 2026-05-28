@@ -110,6 +110,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [zoomLevel, setZoomLevel]   = useState(14)
   const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
   const [suosikitIds, setSuosikitIds]       = useState<Set<number>>(new Set())
+  const [kotikaupunki, setKotikaupunki]     = useState<string>('')
   const [supabaseUser, setSupabaseUser]     = useState<{ id: string; email?: string } | null>(null)
   const [authModalOpen, setAuthModalOpen]   = useState(false)
   const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null)
@@ -224,8 +225,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       if (user) {
         const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
         if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
+        // Load kotikaupunki from profiles (PGRST116 = no row yet for new users, safe to ignore)
+        const { data: profileData } = await supabase.from('profiles').select('kotikaupunki').eq('user_id', user.id).single()
+        setKotikaupunki(profileData?.kotikaupunki ?? '')
       } else {
         setSuosikitIds(new Set())
+        setKotikaupunki('')
       }
     })
   }, [])
@@ -263,8 +268,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       .map(id => paikat.find(p => p.id === id)?.nimi)
       .filter(Boolean) as string[]
 
-    const fetchPromise = suosikkiNimet.length > 0
-      ? fetch('/api/saasuositus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ suosikit: suosikkiNimet, kaupunki: weatherKaupunki }) })
+    const fetchPromise = supabaseUser !== null
+      ? fetch('/api/saasuositus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ suosikit: suosikkiNimet, kaupunki: weatherKaupunki, ...(kotikaupunki ? { kotikaupunki } : {}) }) })
       : fetch('/api/saasuositus?kaupunki=' + encodeURIComponent(weatherKaupunki))
 
     fetchPromise
