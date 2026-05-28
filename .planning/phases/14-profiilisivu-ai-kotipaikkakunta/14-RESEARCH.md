@@ -516,7 +516,7 @@ async function handleSave() {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Suosikit page back-link uses dead `/?nakyma=lista` route**
    - What we know: `SuosikitClient.tsx` has `href="/?nakyma=lista"` back-links (lines 74, 135) — but CLAUDE.md says `?nakyma=lista` is dead and Phase 12 removes LiikuntapaikatLista.
