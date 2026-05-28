@@ -39,4 +39,7 @@ describe('computeAvgRating', () => {
   it('returns 5 when all ratings are 5', () => {
     expect(computeAvgRating([5, 5, 5, 5, 5])).toBe(5)
   })
+  it('returns a non-integer average without rounding', () => {
+    expect(computeAvgRating([1, 2])).toBe(1.5)
+  })
 })
