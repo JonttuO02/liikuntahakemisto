@@ -46,7 +46,7 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
 - [ ] **Phase 12: Haku & korttilistaus etusivulle** — Search icon in left toolbar + real-time card list panel; remove LiikuntapaikatLista and /?nakyma=lista route
 - [ ] **Phase 13: Uusi korttimalli** — Diagonal split card with Google Static Maps snapshot for home page list
 - [x] **Phase 14: Profiilisivu & AI-kotipaikkakunta** — /profiili page, Supabase profiles table, home city field, AI home/away context (completed 2026-05-28)
-- [ ] **Phase 15: Arvostelut** — Reviews table, ReviewForm, ReviewList on venue profile page, star average
+- [x] **Phase 15: Arvostelut** — Reviews table, ReviewForm, ReviewList on venue profile page, star average (completed 2026-05-28)
 
 ---
 
@@ -103,11 +103,11 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
   3. Arvostelu sisältää käyntipäivämäärän (date picker) ja ruuhka-arvion (hiljaista / sopivasti / ruuhkaista)
   4. Paikan profiilisivu näyttää kaikki kyseisen paikan arvostelut sekä tähtiarvosanojen laskennallisen keskiarvon
   5. Kirjautumaton käyttäjä näkee olemassa olevat arvostelut mutta ei arvostelulomaketta
-**Plans:** 4 plans
-  - [ ] 15-01-PLAN.md — Wave 0: reviewUtils helpers (TDD) + reviews migration + [BLOCKING] supabase db push
-  - [ ] 15-02-PLAN.md — StarPicker controlled input + ReviewSection shell (.glass card, StarAverage, list, Näytä kaikki)
-  - [ ] 15-03-PLAN.md — ReviewForm: auth machine (4 states), upsert with onConflict, router.refresh()
-  - [ ] 15-04-PLAN.md — Integrate ReviewSection into app/paikat/[id]/page.tsx + human verification (REVIEW-01..04 end-to-end)
+**Plans:** 4/4 plans complete
+  - [x] 15-01-PLAN.md — Wave 0: reviewUtils helpers (TDD) + reviews migration + [BLOCKING] supabase db push
+  - [x] 15-02-PLAN.md — StarPicker controlled input + ReviewSection shell (.glass card, StarAverage, list, Näytä kaikki)
+  - [x] 15-03-PLAN.md — ReviewForm: auth machine (4 states), upsert with onConflict, router.refresh()
+  - [x] 15-04-PLAN.md — Integrate ReviewSection into app/paikat/[id]/page.tsx + human verification (REVIEW-01..04 end-to-end)
 **UI hint**: yes
 
 ---
@@ -130,4 +130,4 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
 | 12. Haku & korttilistaus etusivulle | v1.2 | 0/TBD | Not started | - |
 | 13. Uusi korttimalli | v1.2 | 0/2 | Not started | - |
 | 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 5/5 | Complete   | 2026-05-28 |
-| 15. Arvostelut | v1.2 | 0/4 | Not started | - |
+| 15. Arvostelut | v1.2 | 4/4 | Complete   | 2026-05-28 |
