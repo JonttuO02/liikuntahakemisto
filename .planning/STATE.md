@@ -4,25 +4,24 @@ milestone: v1.2
 milestone_name: UI-uudistus & Arvostelut
 status: executing
 last_updated: "2026-05-28T09:01:09.952Z"
-last_activity: 2026-05-28 -- Phase 14 execution started
+last_activity: 2026-05-28 -- Phase 14 UAT complete (6/7 passed, 1 skipped — no API credits)
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 10
-  completed_plans: 1
-  percent: 0
+  completed_plans: 5
+  percent: 25
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 14 (Profiilisivu & AI-kotipaikkakunta) — EXECUTING
-Plan: 1 of 5
-Status: Executing Phase 14
-Last activity: 2026-05-28 -- Phase 14 execution started
+Phase: 14 (Profiilisivu & AI-kotipaikkakunta) — COMPLETE ✅
+Next: Phase 15 (Arvostelut)
+Last activity: 2026-05-28 -- Phase 14 UAT complete (6/7 passed, 1 skipped — no API credits)
 
-[░░░░░░░░░░░░░░░░░░░░] 0% — 0/4 phases complete
+[█████░░░░░░░░░░░░░░░] 25% — 1/4 phases complete
 
 ## Project Reference
 
@@ -37,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 |-------|--------|-------|
 | 12. Haku & korttilistaus etusivulle | ✅ Complete | 3/3 |
 | 13. Uusi korttimalli | 📋 Planned | 0/2 |
-| 14. Profiilisivu & AI-kotipaikkakunta | 📋 Planned | 0/5 |
+| 14. Profiilisivu & AI-kotipaikkakunta | ✅ Complete | 5/5 |
 | 15. Arvostelut | Not started | 0/TBD |
 
 ## Active Decisions
