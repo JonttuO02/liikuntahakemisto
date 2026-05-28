@@ -1,10 +1,11 @@
 ---
 phase: 15
 slug: arvostelut
-status: draft
+status: approved
 shadcn_initialized: true
 preset: b0 (nova/neutral/lucide/inter)
 created: 2026-05-28
+reviewed_at: 2026-05-28
 ---
 
 # Phase 15 — UI Design Contract: Arvostelut
@@ -62,6 +63,8 @@ All sizes drawn from the 4-size / 2-weight system in CLAUDE.md. No new sizes or 
 | Display heading | 30–36px (text-3xl sm:text-4xl) | 700 (bold) | 1.2 (leading-tight) | `font-serif text-3xl sm:text-4xl font-bold leading-tight tracking-tight` | Venue name in hero — existing, not modified |
 
 > Semibold (600) is banned. Use bold (700) for emphasis, normal (400) for body. No exceptions.
+
+> **Icon-sizing note:** `text-2xl` appears on StarPicker star buttons (`className="text-2xl leading-none"`). This is an icon-sizing utility applied to a Unicode glyph character — it is not a typographic scale entry and does not constitute a 5th font-size in the typography system.
 
 ---
 
@@ -134,8 +137,8 @@ Display value = `hovered || value`. On `mouseLeave` from container: reset hovere
 div.flex.gap-2
 └── motion.button × 3  ["Hiljaista", "Sopivasti", "Ruuhkaista"]
     whileTap={{ scale: 0.95 }}
-    active:   bg-[#111111] text-white font-bold text-sm px-3 py-1.5 rounded-full
-    inactive: border border-[rgba(0,0,0,0.12)] text-[#111111] font-bold text-sm px-3 py-1.5 rounded-full
+    active:   bg-[#111111] text-white font-bold text-sm px-3 py-2 rounded-full
+    inactive: border border-[rgba(0,0,0,0.12)] text-[#111111] font-bold text-sm px-3 py-2 rounded-full
     [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
 ```
 
