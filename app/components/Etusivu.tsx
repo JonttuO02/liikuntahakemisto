@@ -24,7 +24,7 @@ import { pinUrl } from '@/lib/sportPins'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 import { deriveKaupungit } from '@/lib/cityFilter'
-import PaikkaKortti from './PaikkaKortti'
+import DiagonaalKortti from './DiagonaalKortti'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
@@ -797,13 +797,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               {searchSuodatettu.length > 0 ? (
                 <div className="flex flex-col gap-3">
                   {searchSuodatettu.map(p => (
-                    <PaikkaKortti
+                    <DiagonaalKortti
                       key={p.id}
                       paikka={p}
                       distanceStr={distancesMap[p.id] != null ? formatDistance(distancesMap[p.id]) : undefined}
-                      aukinyt={searchAukinyt}
-                      isSuosikki={suosikitIds.has(p.id)}
-                      onToggleSuosikki={toggleSuosikki}
                     />
                   ))}
                 </div>
