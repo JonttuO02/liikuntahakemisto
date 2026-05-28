@@ -26,7 +26,6 @@ const CROWD: { value: Crowd; label: string }[] = [
   { value: 'ruuhkaista', label: 'Ruuhkaista' },
 ]
 
-const today = new Date().toISOString().split('T')[0]
 
 function ExistingReviewView({ review }: { review: ExistingReview }) {
   const filledStars = '★'.repeat(review.rating)
@@ -56,6 +55,7 @@ export default function ReviewForm({ paikkaId }: { paikkaId: number }) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const currentUser = useRef<{ id: string; email?: string } | null>(null)
   const router = useRouter()
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
@@ -92,6 +92,12 @@ export default function ReviewForm({ paikkaId }: { paikkaId: number }) {
     })
   }, [paikkaId])
 
+  useEffect(() => {
+    return () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+    }
+  }, [])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const user = currentUser.current
@@ -107,8 +113,7 @@ export default function ReviewForm({ paikkaId }: { paikkaId: number }) {
       is_anonymous: isAnonymous,
       visit_date: visitDate || null,
       crowd_rating: crowdRating,
-      reviewer_name: user.email?.split('@')[0] ?? null,
-      updated_at: new Date().toISOString(),
+      reviewer_name: isAnonymous ? null : (user.email?.split('@')[0] ?? null),
     }
     const { error } = await supabase
       .from('reviews')
@@ -120,12 +125,15 @@ export default function ReviewForm({ paikkaId }: { paikkaId: number }) {
     } else {
       setSubmitError(null)
       setSaved(true)
+      setEditing(false)
       router.refresh()
-      setTimeout(() => setSaved(false), 2500)
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current)
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2500)
     }
   }
 
   function buildForm({ disabled }: { disabled: boolean }) {
+    const today = new Date().toISOString().split('T')[0]
     const isEditMode = !!existingReview && editing
     const submitLabel = submitting
       ? 'Tallennetaan…'
@@ -157,6 +165,7 @@ export default function ReviewForm({ paikkaId }: { paikkaId: number }) {
             value={teksti}
             onChange={(e) => setTeksti(e.target.value)}
             rows={3}
+            maxLength={2000}
             aria-label="Kommentti"
             disabled={disabled}
             className="border border-[rgba(0,0,0,0.12)] rounded-xl px-3 py-2 text-sm text-[#111111] bg-white focus:outline-none focus:border-[rgba(0,0,0,0.3)] w-full resize-y"
