@@ -575,6 +575,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   Haku
                 </button>
                 <Link
+                  href="/profiili"
+                  onClick={closeOverlays}
+                  className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  Profiili
+                </Link>
+                <Link
                   href="/suosikit"
                   onClick={closeOverlays}
                   className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"

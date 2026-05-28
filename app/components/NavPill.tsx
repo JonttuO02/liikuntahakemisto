@@ -58,6 +58,10 @@ export default function NavPill() {
                   <Search className="w-3.5 h-3.5" />
                   Haku
                 </Link>
+                <Link href="/profiili" onClick={() => setOpen(false)} className={BTN}>
+                  <User className="w-3.5 h-3.5" />
+                  Profiili
+                </Link>
                 <Link href="/suosikit" onClick={() => setOpen(false)} className={BTN}>
                   <Heart className="w-3.5 h-3.5" />
                   Suosikit
