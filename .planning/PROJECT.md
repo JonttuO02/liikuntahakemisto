@@ -73,17 +73,20 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ PWA-01: Service worker + offline-tuki perusnäkymille — v1.1
 - ✓ PWA-02: Web App Manifest + "Lisää kotinäyttöön" -prompt — v1.1
 
+### Validated (v1.2)
+
+- ✓ REVIEW-01: Kirjautunut käyttäjä voi jättää arvostelun (tähtiarvosana + teksti), max 1/paikka — Phase 15
+- ✓ REVIEW-02: Arvostelija valitsee näkyykö nimi vai anonyymi — Phase 15
+- ✓ REVIEW-03: Arvostelu sisältää käyntipäivän + ruuhka-arvion — Phase 15
+- ✓ REVIEW-04: Paikan profiilisivu näyttää arvostelut + tähtiarvosanojen keskiarvo — Phase 15
+- ✓ AI-05: Kotikaupunki profiiliin; AI-suositus tunnistaa kotona/reissussa-kontekstin — Phase 14
+
 ### Active (v1.2)
 
 - [ ] UI-09: Hakukenttä etusivun vasemmasta toolbarista (ei erillistä listasivua)
 - [ ] UI-10: Hakutulokset korttilistana etusivulla (diagonaalinen korttimalli)
 - [ ] UI-11: /?nakyma=lista poistettu; LiikuntapaikatLista-komponentti poistettu
 - [ ] UI-12: Uusi korttimalli — vasen: tiedot, oikea: Google Static Maps snapshot
-- [ ] REVIEW-01: Kirjautunut käyttäjä voi jättää arvostelun (tähtiarvosana + teksti), max 1/paikka
-- [ ] REVIEW-02: Arvostelija valitsee näkyykö nimi vai anonyymi
-- [ ] REVIEW-03: Arvostelu sisältää käyntipäivän + ruuhka-arvion
-- [ ] REVIEW-04: Paikan profiilisivu näyttää arvostelut + tähtiarvosanojen keskiarvo
-- [ ] AI-05: Kotikaupunki profiiliin; AI-suositus tunnistaa kotona/reissussa-kontekstin
 
 ### Future (deferred from v1.1)
 
@@ -139,6 +142,12 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 | Serwist PWA (ei next-pwa) | next-pwa ja @ducanh2912/next-pwa hylätty/abandoned | ✓ Phase 11 |
 | themeColor viewport exportissa | Next.js 14 metadata deprecation vältetty | ✓ Phase 11 |
 | offline/page.tsx käyttää <a href> | SW voi interceptoida kun client-side router ei saatavilla | ✓ Phase 11 |
+| kotikaupunki erillisessä profiles-taulussa | user_id FK → auth.users; browser client + RLS writes (anon key) | ✓ Phase 14 |
+| buildReissuKonteksti palauttaa string \| null | null = ei kotikaupunkia → prompt identtinen Phase 9:n kanssa | ✓ Phase 14 |
+| reviews SELECT USING(true) | Arvostelut ovat julkisia (REVIEW-04); poikkeaa profiles/suosikit-mallista | ✓ Phase 15 |
+| reviewer_name = email prefix (split('@')[0]) | T-15-02: user_id ja täysi sähköposti eivät koskaan renderöidy julkisesti | ✓ Phase 15 |
+| computeAvgRating palauttaa raakakeskiarvon | Pyöristys renderöintiaikaan — helppo testata tasavertaisesti | ✓ Phase 15 |
+| onConflict: 'user_id,paikka_id' upsertissä | Max 1 arvostelu/käyttäjä/paikka compositeUNIQUE:lla | ✓ Phase 15 |
 
 ---
 
@@ -161,4 +170,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-05-27 — v1.2 milestone started*
+*Last updated: 2026-05-28 — after Phase 15 (Arvostelut)*

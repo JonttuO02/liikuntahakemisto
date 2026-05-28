@@ -17,19 +17,19 @@ progress:
 
 ## Current Position
 
-Phase: 15 — COMPLETE
-Plan: 1 of 4
-Next: Phase 15 (Arvostelut)
-Last activity: 2026-05-28 -- Phase 15 marked complete
+Phase: 12 — Haku & korttilistaus etusivulle
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-05-28 -- Phase 15 UAT complete (9/9 passed), Phase 15 verified
 
-[█████░░░░░░░░░░░░░░░] 25% — 1/4 phases complete
+[██████████░░░░░░░░░░] 50% — 2/4 phases complete
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-27)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 15 — Arvostelut
+**Current focus:** Phase 12 — Haku & korttilistaus etusivulle
 
 ## Phase Progress
 
@@ -38,7 +38,7 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 | 12. Haku & korttilistaus etusivulle | ✅ Complete | 3/3 |
 | 13. Uusi korttimalli | 📋 Planned | 0/2 |
 | 14. Profiilisivu & AI-kotipaikkakunta | ✅ Complete | 5/5 |
-| 15. Arvostelut | 📋 Planned | 0/4 |
+| 15. Arvostelut | ✅ Complete | 4/4 |
 
 ## Active Decisions
 
