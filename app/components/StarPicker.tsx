@@ -21,6 +21,11 @@ export default function StarPicker({
       role="group"
       aria-label="Tähtiarvosana"
       onMouseLeave={() => setHovered(0)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          setHovered(0)
+        }
+      }}
     >
       {STARS.map((n) => (
         <motion.button
