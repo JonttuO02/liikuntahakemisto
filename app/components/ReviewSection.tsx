@@ -15,12 +15,13 @@ export type ReviewRow = {
 
 function ReviewCard({ review }: { review: ReviewRow }) {
   const filledStars = '★'.repeat(review.rating)
+  const emptyStars  = '☆'.repeat(5 - review.rating)
   const displayName = resolveDisplayName(review.is_anonymous, review.reviewer_name)
 
   return (
     <div className="flex flex-col gap-2 py-3 border-b border-[rgba(0,0,0,0.07)] last:border-0">
       <div className="flex items-center gap-2">
-        <span className="text-amber-400 text-sm">{filledStars}</span>
+        <span className="text-amber-400 text-sm">{filledStars}{emptyStars}</span>
         <span className="font-bold text-sm text-[#111111]">{displayName}</span>
       </div>
       {review.teksti.trim() !== '' && (
