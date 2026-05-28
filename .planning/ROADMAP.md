@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 MVP** — Phases 1–5 (shipped 2026-05-21)
 - ✅ **v1.1 Käyttäjät, Kartta & Laatu** — Phases 6–11 (shipped 2026-05-27)
-- 🚧 **v1.2 UI-uudistus & Arvostelut** — Phases 12–15 (in progress)
+- ✅ **v1.2 UI-uudistus & Arvostelut** — Phases 12–15 (shipped 2026-05-28)
 
 ---
 
@@ -43,10 +43,11 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
 
 **Milestone Goal:** Poistetaan erillinen listanäkymä ja integroidaan haku sekä paikkojenselailu etusivulle uudella diagonaalisella korttimallilla; lisätään arvostelusysteemi kirjautuneille käyttäjille ja kotikaupunkipersonointi AI-suositukseen.
 
-- [ ] **Phase 12: Haku & korttilistaus etusivulle** — Search icon in left toolbar + real-time card list panel; remove LiikuntapaikatLista and /?nakyma=lista route
-- [ ] **Phase 13: Uusi korttimalli** — Diagonal split card with Google Static Maps snapshot for home page list
+- [x] **Phase 12: Haku & korttilistaus etusivulle** — Search icon in left toolbar + real-time card list panel; remove LiikuntapaikatLista and /?nakyma=lista route (completed 2026-05-27)
+- [x] **Phase 13: Uusi korttimalli** — Diagonal split card with Google Static Maps snapshot for home page list (completed 2026-05-28)
 - [x] **Phase 14: Profiilisivu & AI-kotipaikkakunta** — /profiili page, Supabase profiles table, home city field, AI home/away context (completed 2026-05-28)
-- [x] **Phase 15: Arvostelut** — Reviews table, ReviewForm, ReviewList on venue profile page, star average (completed 2026-05-28)
+- [x] **Phase 15: Arvostelut** — Reviews table, ReviewForm, ReviewList on venue profile page, star average
+ (completed 2026-05-28)
 
 ---
 
@@ -127,7 +128,7 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
 | 9. Auth & Favorites | v1.1 | 4/4 | ✅ Complete | 2026-05-23 |
 | 10. City Expansion | v1.1 | 4/4 | ✅ Complete | 2026-05-27 |
 | 11. PWA | v1.1 | 3/3 | ✅ Complete | 2026-05-27 |
-| 12. Haku & korttilistaus etusivulle | v1.2 | 0/TBD | Not started | - |
-| 13. Uusi korttimalli | v1.2 | 0/2 | Not started | - |
+| 12. Haku & korttilistaus etusivulle | v1.2 | 3/3 | ✅ Complete | 2026-05-27 |
+| 13. Uusi korttimalli | v1.2 | 2/2 | ✅ Complete | 2026-05-28 |
 | 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 5/5 | Complete   | 2026-05-28 |
 | 15. Arvostelut | v1.2 | 4/4 | Complete   | 2026-05-28 |

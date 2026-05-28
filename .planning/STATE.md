@@ -2,41 +2,39 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: UI-uudistus & Arvostelut
-status: Phase 15 complete
-last_updated: "2026-05-28T20:29:09.842Z"
-last_activity: 2026-05-28 -- Phase 15 marked complete
+status: milestone complete
+last_updated: "2026-05-28T21:00:00.000Z"
+last_activity: 2026-05-28 -- v1.2 milestone complete, all 4 phases shipped
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 4
   total_plans: 14
-  completed_plans: 10
-  percent: 50
+  completed_plans: 14
+  percent: 100
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 12 — Haku & korttilistaus etusivulle
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-05-28 -- Phase 15 UAT complete (9/9 passed), Phase 15 verified
+Phase: v1.2 COMPLETE — all 4 phases shipped
+Last activity: 2026-05-28 -- Phase 15 UAT complete (9/9 passed), v1.2 milestone done
 
-[██████████░░░░░░░░░░] 50% — 2/4 phases complete
+[████████████████████] 100% — 4/4 phases complete
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-27)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 12 — Haku & korttilistaus etusivulle
+**Current focus:** v1.2 milestone complete — ready for /gsd:complete-milestone
 
 ## Phase Progress
 
 | Phase | Status | Plans |
 |-------|--------|-------|
 | 12. Haku & korttilistaus etusivulle | ✅ Complete | 3/3 |
-| 13. Uusi korttimalli | 📋 Planned | 0/2 |
+| 13. Uusi korttimalli | ✅ Complete | 2/2 |
 | 14. Profiilisivu & AI-kotipaikkakunta | ✅ Complete | 5/5 |
 | 15. Arvostelut | ✅ Complete | 4/4 |
 

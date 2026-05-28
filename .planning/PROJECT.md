@@ -75,6 +75,10 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ### Validated (v1.2)
 
+- ✓ UI-09: Hakukenttä etusivun vasemmasta toolbarista (ei erillistä listasivua) — Phase 12
+- ✓ UI-10: Hakutulokset korttilistana etusivulla (diagonaalinen korttimalli) — Phase 12
+- ✓ UI-11: /?nakyma=lista poistettu; LiikuntapaikatLista-komponentti poistettu — Phase 12
+- ✓ UI-12: Uusi korttimalli — vasen: tiedot, oikea: Google Static Maps snapshot — Phase 13
 - ✓ REVIEW-01: Kirjautunut käyttäjä voi jättää arvostelun (tähtiarvosana + teksti), max 1/paikka — Phase 15
 - ✓ REVIEW-02: Arvostelija valitsee näkyykö nimi vai anonyymi — Phase 15
 - ✓ REVIEW-03: Arvostelu sisältää käyntipäivän + ruuhka-arvion — Phase 15
@@ -83,10 +87,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ### Active (v1.2)
 
-- [ ] UI-09: Hakukenttä etusivun vasemmasta toolbarista (ei erillistä listasivua)
-- [ ] UI-10: Hakutulokset korttilistana etusivulla (diagonaalinen korttimalli)
-- [ ] UI-11: /?nakyma=lista poistettu; LiikuntapaikatLista-komponentti poistettu
-- [ ] UI-12: Uusi korttimalli — vasen: tiedot, oikea: Google Static Maps snapshot
+(all v1.2 requirements validated — milestone complete)
 
 ### Future (deferred from v1.1)
 
@@ -170,4 +171,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-05-28 — after Phase 15 (Arvostelut)*
+*Last updated: 2026-05-28 — v1.2 milestone complete (Phases 12–15 all shipped)*
