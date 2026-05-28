@@ -10,6 +10,8 @@ import { formatGroupedHours } from '@/lib/aukiolo'
 import HoursTable from '@/app/components/HoursTable'
 import HeartButton from '@/app/components/HeartButton'
 import NavPill from '@/app/components/NavPill'
+import ReviewSection from '@/app/components/ReviewSection'
+import { computeAvgRating } from '@/lib/reviewUtils'
 
 export default async function PaikkaPage({ params }: { params: { id: string } }) {
   const supabase = createServerSupabase(cookies())
@@ -23,6 +25,14 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
     .single()
 
   if (!paikka) notFound()
+
+  const { data: reviewsData } = await supabase
+    .from('reviews')
+    .select('id, rating, teksti, is_anonymous, reviewer_name, created_at')
+    .eq('paikka_id', id)
+    .order('created_at', { ascending: false })
+  const reviewList = reviewsData ?? []
+  const avgRating = computeAvgRating(reviewList.map(r => r.rating))
 
   const laji        = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
   const hoursGroups = formatGroupedHours(paikka.aukioloajat ?? null)
@@ -131,6 +141,7 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
           </div>
         </div>
       </div>
+      <ReviewSection paikkaId={id} initialReviews={reviewList} avgRating={avgRating} reviewCount={reviewList.length} />
     </div>
   )
 }
