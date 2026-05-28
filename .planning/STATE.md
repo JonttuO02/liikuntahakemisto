@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: UI-uudistus & Arvostelut
 status: executing
-last_updated: "2026-05-28T09:00:00.000Z"
-last_activity: 2026-05-28 — Phase 14 planned (5 plans, 3 waves)
+last_updated: "2026-05-28T09:01:09.952Z"
+last_activity: 2026-05-28 -- Phase 14 execution started
 progress:
   total_phases: 4
   completed_phases: 0
@@ -17,10 +17,10 @@ progress:
 
 ## Current Position
 
-Phase: Phase 14 — Profiilisivu & AI-kotipaikkakunta (planned, ready to execute)
-Plan: —
-Status: Phase 14 planned (5 plans, 3 waves); ready to execute
-Last activity: 2026-05-28 — Phase 14 planned (5 plans, 3 waves)
+Phase: 14 (Profiilisivu & AI-kotipaikkakunta) — EXECUTING
+Plan: 1 of 5
+Status: Executing Phase 14
+Last activity: 2026-05-28 -- Phase 14 execution started
 
 [░░░░░░░░░░░░░░░░░░░░] 0% — 0/4 phases complete
 
@@ -29,7 +29,7 @@ Last activity: 2026-05-28 — Phase 14 planned (5 plans, 3 waves)
 See: .planning/PROJECT.md (updated 2026-05-27)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.2 — UI-uudistus & Arvostelut
+**Current focus:** Phase 14 — Profiilisivu & AI-kotipaikkakunta
 
 ## Phase Progress
 

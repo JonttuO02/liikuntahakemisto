@@ -85,9 +85,9 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
   1. Kirjautunut käyttäjä näkee `/profiili`-sivulla sähköpostiosoitteensa ja voi kirjoittaa kotipaikkakuntansa tekstikenttään
   2. Kotipaikkakunta tallentuu Supabaseen ja on edelleen näkyvissä sivun uudelleenlatauksessa
   3. Kun kotipaikkakunta on asetettu, `/api/saasuositus`-promptiin lisätään tieto kotikaupungista ja nykyisestä sijaintikaupungista — Claude käyttää tätä kontekstia generoidessaan suosituksen (ei näytetä eksplisiittistä "kotona/reissussa"-tekstiä käyttäjälle)
-**Plans:** 5 plans
-  - [ ] 14-01-PLAN.md — Supabase profiles migration (CREATE TABLE + RLS) + buildReissuKonteksti helper with unit tests
-  - [ ] 14-02-PLAN.md — Add Profiili navigation link to NavPill.tsx and Etusivu.tsx inline pill
+**Plans:** 2/5 plans executed
+  - [x] 14-01-PLAN.md — Supabase profiles migration (CREATE TABLE + RLS) + buildReissuKonteksti helper with unit tests
+  - [x] 14-02-PLAN.md — Add Profiili navigation link to NavPill.tsx and Etusivu.tsx inline pill
   - [ ] 14-03-PLAN.md — Create /profiili page shell and ProfiiliClient component (auth machine, profiles upsert)
   - [ ] 14-04-PLAN.md — Extend Etusivu.tsx (kotikaupunki state + profiles fetch + POST trigger) and route.ts (kotikaupunki parsing + reissussa prompt)
   - [ ] 14-05-PLAN.md — Human verification of full Phase 14 feature
@@ -125,5 +125,5 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
 | 11. PWA | v1.1 | 3/3 | ✅ Complete | 2026-05-27 |
 | 12. Haku & korttilistaus etusivulle | v1.2 | 0/TBD | Not started | - |
 | 13. Uusi korttimalli | v1.2 | 0/2 | Not started | - |
-| 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 0/5 | Planned | - |
+| 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 2/5 | In Progress|  |
 | 15. Arvostelut | v1.2 | 0/TBD | Not started | - |
