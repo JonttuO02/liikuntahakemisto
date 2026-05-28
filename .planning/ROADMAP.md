@@ -103,7 +103,11 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
   3. Arvostelu sisältää käyntipäivämäärän (date picker) ja ruuhka-arvion (hiljaista / sopivasti / ruuhkaista)
   4. Paikan profiilisivu näyttää kaikki kyseisen paikan arvostelut sekä tähtiarvosanojen laskennallisen keskiarvon
   5. Kirjautumaton käyttäjä näkee olemassa olevat arvostelut mutta ei arvostelulomaketta
-**Plans**: TBD
+**Plans:** 4 plans
+  - [ ] 15-01-PLAN.md — Wave 0: reviewUtils helpers (TDD) + reviews migration + [BLOCKING] supabase db push
+  - [ ] 15-02-PLAN.md — StarPicker controlled input + ReviewSection shell (.glass card, StarAverage, list, Näytä kaikki)
+  - [ ] 15-03-PLAN.md — ReviewForm: auth machine (4 states), upsert with onConflict, router.refresh()
+  - [ ] 15-04-PLAN.md — Integrate ReviewSection into app/paikat/[id]/page.tsx + human verification (REVIEW-01..04 end-to-end)
 **UI hint**: yes
 
 ---
@@ -126,4 +130,4 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
 | 12. Haku & korttilistaus etusivulle | v1.2 | 0/TBD | Not started | - |
 | 13. Uusi korttimalli | v1.2 | 0/2 | Not started | - |
 | 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 5/5 | Complete   | 2026-05-28 |
-| 15. Arvostelut | v1.2 | 0/TBD | Not started | - |
+| 15. Arvostelut | v1.2 | 0/4 | Not started | - |

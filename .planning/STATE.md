@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: UI-uudistus & Arvostelut
 status: executing
-last_updated: "2026-05-28T09:01:09.952Z"
-last_activity: 2026-05-28 -- Phase 14 UAT complete (6/7 passed, 1 skipped — no API credits)
+last_updated: "2026-05-28T10:00:00.000Z"
+last_activity: 2026-05-28 -- Phase 15 planned (4 plans, 4 waves)
 progress:
   total_phases: 4
   completed_phases: 1
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 | 12. Haku & korttilistaus etusivulle | ✅ Complete | 3/3 |
 | 13. Uusi korttimalli | 📋 Planned | 0/2 |
 | 14. Profiilisivu & AI-kotipaikkakunta | ✅ Complete | 5/5 |
-| 15. Arvostelut | Not started | 0/TBD |
+| 15. Arvostelut | 📋 Planned | 0/4 |
 
 ## Active Decisions
 

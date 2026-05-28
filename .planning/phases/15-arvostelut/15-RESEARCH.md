@@ -540,17 +540,11 @@ export default function ReviewSection({ paikkaId, initialReviews, avgRating, rev
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Display name for non-anonymous reviews**
-   - What we know: `is_anonymous = false` means show the author's name
-   - What's unclear: The `reviews` table as designed only stores `user_id`, not a display name. The user's email is available via auth but should not be shown publicly.
-   - Recommendation: Store a `display_name text` column in the `reviews` table at INSERT time, populated from the user's `profiles` record or email prefix. This avoids a JOIN on every page load. Planner decides: add `display_name text` column to migration, populated at write time.
+1. **Display name for non-anonymous reviews** — RESOLVED: `reviewer_name text` column added to `reviews` migration. Populated at INSERT/UPDATE time from the authenticated user's email prefix.
 
-2. **Route for user display name source**
-   - What we know: `profiles` table has `kotikaupunki` but no `display_name`
-   - What's unclear: What name to show for non-anonymous reviews? Email prefix (before @)? Full email?
-   - Recommendation: Use email prefix (everything before `@`) as the display name at write time. Store it in a `reviewer_name text` column. This avoids exposing full email addresses.
+2. **Route for user display name source** — RESOLVED: Email prefix (`user.email.split('@')[0]`) stored as `reviewer_name` at write time in ReviewForm. Never exposes full email or `user_id` in public review display. `is_anonymous=true` renders "Anonyymi" regardless of `reviewer_name` value.
 
 ---
 
