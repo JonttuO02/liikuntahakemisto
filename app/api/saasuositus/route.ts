@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { SUOMI_KAUPUNGIT } from '@/lib/constants'
+import { buildReissuKonteksti } from '@/lib/buildReissuKonteksti'
 
 const client = new Anthropic()
 
@@ -80,6 +81,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   let suosikit: string[] = []
   let kaupunki = 'Tampere'
+  let kotikaupunki: string | undefined
   try {
     const body = await request.json()
     suosikit = Array.isArray(body.suosikit)
@@ -89,6 +91,13 @@ export async function POST(request: Request) {
           .map((s: string) => s.replace(/[^\w\sÄäÖöÅå\-,.'()&]/g, '').slice(0, 80))
       : []
     if (typeof body.kaupunki === 'string') kaupunki = body.kaupunki
+    // Sanitize kotikaupunki — same allowlist as suosikit names (T-14-08)
+    if (typeof body.kotikaupunki === 'string' && body.kotikaupunki.trim()) {
+      kotikaupunki = body.kotikaupunki
+        .replace(/[^\w\sÄäÖöÅå\-,.'()&]/g, '')
+        .slice(0, 80)
+        .trim()
+    }
   } catch {}
 
   const city = lookupCity(kaupunki)
@@ -98,7 +107,9 @@ export async function POST(request: Request) {
     ? `\nKäyttäjän suosikit: ${suosikit.join(', ')}.`
     : ''
 
-  const prompt = `Tänään on ${day} ${kaupunki}ssa. Lämpötila on ${temp}°C ja sää on ${weatherDesc}. Kirjoita YKSI lyhyt suomenkielinen lause joka suosittelee sopivaa liikuntapalvelua tai -lajia tähän säähän ${kaupunki}ssa. Mainitse "${kaupunki}" tai viittaa liikuntapaikan löytämiseen. Älä käytä emojeja.${suosikkiLista}`
+  const reissuKonteksti = buildReissuKonteksti(kotikaupunki, kaupunki)
+
+  const prompt = `Tänään on ${day} ${kaupunki}ssa. Lämpötila on ${temp}°C ja sää on ${weatherDesc}. Kirjoita YKSI lyhyt suomenkielinen lause joka suosittelee sopivaa liikuntapalvelua tai -lajia tähän säähän ${kaupunki}ssa. Mainitse "${kaupunki}" tai viittaa liikuntapaikan löytämiseen. Älä käytä emojeja.${suosikkiLista}${reissuKonteksti}`
 
   try {
     const msg = await client.messages.create({
