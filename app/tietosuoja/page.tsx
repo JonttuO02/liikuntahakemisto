@@ -31,7 +31,7 @@ export default function TietosuojaPage() {
             Rekisterinpitäjä
           </h2>
           <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed mb-4">
-            Tämän palvelun rekisterinpitäjä on Liikuntahakemisto. Rekisterinpitäjä vastaa
+            Tämän palvelun rekisterinpitäjä on AKTIIVI. Rekisterinpitäjä vastaa
             henkilötietojen käsittelystä tässä palvelussa EU:n yleisen tietosuoja-asetuksen
             (GDPR) mukaisesti.
           </p>
