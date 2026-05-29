@@ -99,6 +99,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [saa, setSaa]               = useState<SaaTiedot | null>(null)
   const [aiTeksti, setAiTeksti]     = useState<string | null>(null)
   const [valittu, setValittu]       = useState<Liikuntapaikka | null>(null)
+  const [expandedCluster, setExpandedCluster] = useState<(Liikuntapaikka & { latitude: number; longitude: number })[] | null>(null)
   // 'open' → 'sliding' (y to contentH) → onAnimationComplete → 'closed' (pill)
   const [sheetPhase, setSheetPhase] = useState<'open' | 'sliding' | 'closed'>('open')
   const [rightOpen, setRightOpen]   = useState(false)
@@ -317,6 +318,25 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     [paikat, searchLaji, lajitKartalla]
   )
 
+  const mapItems = useMemo(() => {
+    const groups: Record<string, (Liikuntapaikka & { latitude: number; longitude: number })[]> = {}
+    for (const p of paikatKartalla) {
+      const key = Math.round(p.latitude * 10000) + ',' + Math.round(p.longitude * 10000)
+      if (!groups[key]) groups[key] = []
+      groups[key].push(p)
+    }
+    return Object.values(groups).map(items =>
+      items.length === 1
+        ? { type: 'single' as const, paikka: items[0] }
+        : {
+            type: 'cluster' as const,
+            lat: items.reduce((s, p) => s + p.latitude, 0) / items.length,
+            lng: items.reduce((s, p) => s + p.longitude, 0) / items.length,
+            items,
+          }
+    )
+  }, [paikatKartalla])
+
   const anyOverlayOpen = rightOpen
 
   const kaupungit = useMemo(() => deriveKaupungit(paikat), [paikat])
@@ -379,7 +399,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           gestureHandling={sheetPhase === 'open' ? 'none' : 'greedy'}
           clickableIcons={false}
           keyboardShortcuts={false}
-          onClick={() => setValittu(null)}
+          onClick={() => { setValittu(null); setExpandedCluster(null) }}
           onCameraChanged={ev => {
             setZoomLevel(ev.detail.zoom)
             const center = ev.detail.center
