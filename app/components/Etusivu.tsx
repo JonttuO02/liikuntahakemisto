@@ -158,8 +158,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     setRightOpen(false)
   }
 
-  function toggleSearch(focused: boolean) {
-    if (searchOpen) { setSearchOpen(false); return }
+  function openSearch(focused: boolean) {
     closeOverlays()
     setValittu(null)
     setSearchHaku('')
@@ -462,9 +461,9 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         <div className="glass rounded-full flex items-center" style={{ height: 40 }}>
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={() => toggleSearch(true)}
+            onClick={() => searchOpen && searchFocused ? setSearchOpen(false) : searchOpen ? setSearchFocused(true) : openSearch(true)}
             className="w-10 h-10 shrink-0 flex items-center justify-center [transition:color_150ms_ease] relative"
-            style={{ color: isFilterActive || searchOpen ? '#111111' : 'rgba(17,17,17,0.7)' }}
+            style={{ color: isFilterActive || (searchOpen && searchFocused) ? '#111111' : 'rgba(17,17,17,0.7)' }}
             aria-label="Haku ja filtterit"
           >
             <Search className="w-4 h-4" />
@@ -478,7 +477,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           <div className="w-px h-4 bg-[rgba(0,0,0,0.1)]" />
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={() => toggleSearch(false)}
+            onClick={() => searchOpen && !searchFocused ? setSearchOpen(false) : searchOpen ? setSearchFocused(false) : openSearch(false)}
             className="w-10 h-10 shrink-0 flex items-center justify-center [transition:color_150ms_ease]"
             style={{ color: searchOpen && !searchFocused ? '#111111' : 'rgba(17,17,17,0.7)' }}
             aria-label="Näytä lista"
