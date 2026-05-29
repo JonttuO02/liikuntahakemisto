@@ -558,7 +558,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
           {/* Trigger button */}
           <button
-            onClick={() => { setRightOpen(r => !r) }}
+            onClick={() => {
+              if (searchOpen) {
+                setSearchOpen(false)
+                setTimeout(() => setRightOpen(true), 180)
+              } else {
+                setRightOpen(r => !r)
+              }
+            }}
             className="w-10 h-10 shrink-0 flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
           >
             <MoreHorizontal className="w-4 h-4" />
@@ -721,7 +728,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               top: 'calc(max(12px, env(safe-area-inset-top)) + 52px)',
               left: 0,
               right: 0,
-              bottom: HANDLE_H + 8,
+              maxHeight: `calc(100dvh - max(12px, env(safe-area-inset-top)) - 52px - ${HANDLE_H + 8}px)`,
               zIndex: 61,
             }}
           >
