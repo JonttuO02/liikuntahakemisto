@@ -29,9 +29,40 @@ import AktiiviLogo from './AktiiviLogo'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
-const TAB_H = 52      // bump height: plateau above shoulder level
-const TAB_W = 150     // plateau width (logo area)
-const TAB_SLOPE = 65  // horizontal width of each diagonal ramp
+const TAB_H = 58         // bump height: plateau above shoulder level
+const TAB_W = 140        // plateau width (logo area)
+const TAB_SLOPE = 60     // horizontal width of each diagonal ramp
+const BUMP_R1 = 20       // sheet shoulder corner radius
+const BUMP_R2 = 10       // bump junction corner radius
+const BUMP_SCALE_OPEN = 0.88          // clip-path bump scale when sheet is open (subtle)
+const BUMP_CONTENT_SCALE_OPEN = 0.80  // logo wrapper scale when open (more noticeable)
+
+function makeBumpPath(bumpScale: number, cx: number, hw: number, fullW: number, totalH: number): string {
+  const diagLen = Math.sqrt(TAB_SLOPE * TAB_SLOPE + TAB_H * TAB_H)
+  const dxN = TAB_SLOPE / diagLen
+  const dyN = TAB_H / diagLen
+  // Scale from center-bottom of bump: shoulder level y=TAB_H stays fixed, x=cx stays fixed
+  const sy = (y: number) => TAB_H - bumpScale * (TAB_H - y)
+  const sx = (x: number) => cx + bumpScale * (x - cx)
+  return [
+    `M ${sx(cx - hw + BUMP_R2)},${sy(0)}`,
+    `L ${sx(cx + hw - BUMP_R2)},${sy(0)}`,
+    `Q ${sx(cx + hw)},${sy(0)} ${sx(cx + hw + BUMP_R2 * dxN)},${sy(BUMP_R2 * dyN)}`,
+    `L ${sx(cx + hw + TAB_SLOPE - BUMP_R2 * dxN)},${sy(TAB_H - BUMP_R2 * dyN)}`,
+    `Q ${sx(cx + hw + TAB_SLOPE)},${TAB_H} ${sx(cx + hw + TAB_SLOPE + BUMP_R2)},${TAB_H}`,
+    `L ${fullW - BUMP_R1},${TAB_H}`,
+    `Q ${fullW},${TAB_H} ${fullW},${TAB_H + BUMP_R1}`,
+    `L ${fullW},${totalH}`,
+    `L 0,${totalH}`,
+    `L 0,${TAB_H + BUMP_R1}`,
+    `Q 0,${TAB_H} ${BUMP_R1},${TAB_H}`,
+    `L ${sx(cx - hw - TAB_SLOPE - BUMP_R2)},${TAB_H}`,
+    `Q ${sx(cx - hw - TAB_SLOPE)},${TAB_H} ${sx(cx - hw - TAB_SLOPE + BUMP_R2 * dxN)},${sy(TAB_H - BUMP_R2 * dyN)}`,
+    `L ${sx(cx - hw - BUMP_R2 * dxN)},${sy(BUMP_R2 * dyN)}`,
+    `Q ${sx(cx - hw)},${sy(0)} ${sx(cx - hw + BUMP_R2)},${sy(0)}`,
+    `Z`,
+  ].join(' ')
+}
 
 const SPORT_ICONS: Record<string, LucideIcon> = {
   padel: Zap, kuntosali: Dumbbell, jooga: Leaf,
@@ -125,6 +156,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [searchAukinyt, setSearchAukinyt]     = useState(false)
   const [searchKaupunki, setSearchKaupunki]   = useState('Kaikki')
   const [gradIndex, setGradIndex]             = useState(0)
+  const [bumpExpanded, setBumpExpanded]       = useState(false) // false = open/small; true = closed/large
   const gradMounted = useRef(false)
   const inFlight = useRef<Set<number>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -139,44 +171,20 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   // The motion.div is taller by TAB_H so the bump area is always visible.
   const sheetAnimY = sheetPhase === 'open' ? 0 : contentH
 
-  // Trapezoid bump clip-path:
-  //   flat plateau (logo) at top center, straight diagonal ramps on each side,
-  //   flat shoulders at sheet level, rounded corners at all junctions.
   const cx = fullW / 2
   const hw = TAB_W / 2
   const totalH = contentH + TAB_H
-  const diagLen = Math.sqrt(TAB_SLOPE * TAB_SLOPE + TAB_H * TAB_H)
-  const dxN = TAB_SLOPE / diagLen  // normalized diagonal direction
-  const dyN = TAB_H / diagLen
-  const r1 = 20  // sheet shoulder corner radius (where vertical meets horizontal)
-  const r2 = 10  // bump corner radius (plateau ↔ diagonal, diagonal ↔ shoulder)
-  const bumpClipPath = [
-    `M ${cx - hw + r2},0`,
-    `L ${cx + hw - r2},0`,
-    `Q ${cx + hw},0 ${cx + hw + r2 * dxN},${r2 * dyN}`,
-    `L ${cx + hw + TAB_SLOPE - r2 * dxN},${TAB_H - r2 * dyN}`,
-    `Q ${cx + hw + TAB_SLOPE},${TAB_H} ${cx + hw + TAB_SLOPE + r2},${TAB_H}`,
-    `L ${fullW - r1},${TAB_H}`,
-    `Q ${fullW},${TAB_H} ${fullW},${TAB_H + r1}`,
-    `L ${fullW},${totalH}`,
-    `L 0,${totalH}`,
-    `L 0,${TAB_H + r1}`,
-    `Q 0,${TAB_H} ${r1},${TAB_H}`,
-    `L ${cx - hw - TAB_SLOPE - r2},${TAB_H}`,
-    `Q ${cx - hw - TAB_SLOPE},${TAB_H} ${cx - hw - TAB_SLOPE + r2 * dxN},${TAB_H - r2 * dyN}`,
-    `L ${cx - hw - r2 * dxN},${r2 * dyN}`,
-    `Q ${cx - hw},0 ${cx - hw + r2},0`,
-    `Z`,
-  ].join(' ')
 
-  // Logo scale: full when closed (pill visible), shrunk when open (header subtle)
-  const logoScale = sheetPhase === 'open' ? 0.65 : 1
+  // Clip-path and logo wrapper scale both controlled by bumpExpanded:
+  //   false (open) = smaller bump + smaller logo;  true (closed) = full size
+  const activeBumpPath = makeBumpPath(bumpExpanded ? 1.0 : BUMP_SCALE_OPEN, cx, hw, fullW, totalH)
+  const bumpContentScale = bumpExpanded ? 1.0 : BUMP_CONTENT_SCALE_OPEN
 
   const sheetTransition = sheetPhase === 'sliding'
     ? { y: { type: 'spring' as const, damping: 28, stiffness: 280 } }
     : sheetPhase === 'closed'
     ? { y: { type: 'spring' as const, damping: 32, stiffness: 350 } }
-    : { y: { type: 'spring' as const, damping: 28, stiffness: 280, delay: 0.18 } }
+    : { y: { type: 'spring' as const, damping: 28, stiffness: 280, delay: 0.22 } }
 
   function closeOverlays() {
     setLeftOpen(false)
@@ -323,6 +331,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   useEffect(() => {
     if (!gradMounted.current) { gradMounted.current = true; return }
     if (sheetPhase === 'open') setGradIndex(i => (i + 1) % 5)
+  }, [sheetPhase])
+
+  // Bump scale: shrink immediately when opening (before y rises), expand after sheet fully closed
+  useEffect(() => {
+    if (sheetPhase === 'open')   setBumpExpanded(false)
+    if (sheetPhase === 'closed') setBumpExpanded(true)
+    // 'sliding': no change — bump stays small until sheet reaches bottom
   }, [sheetPhase])
 
   const suodatettu = useMemo(
@@ -678,15 +693,17 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         style={{
           position: 'fixed', bottom: 0, left: 0, right: 0,
           height: contentH + TAB_H, zIndex: 60, overflow: 'hidden',
-          clipPath: `path('${bumpClipPath}')`,
+          clipPath: `path('${activeBumpPath}')`,
+          transition: 'clip-path 0.22s ease-out',
         }}
       >
-        {/* Logo in bump area — scales down when sheet opens */}
+        {/* Logo in bump area — bump+logo scale together: shrink before sheet rises, grow after it lowers */}
         <motion.div
-          animate={{ scale: logoScale }}
-          transition={{ scale: { duration: 0.2, ease: 'easeOut' } }}
+          animate={{ scale: bumpContentScale }}
+          transition={{ scale: { duration: 0.22, ease: 'easeOut' } }}
           style={{
             position: 'absolute', top: 0, left: 0, right: 0, height: TAB_H,
+            transformOrigin: 'center bottom',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: sheetPhase === 'closed' ? 'pointer' : 'default',
           }}

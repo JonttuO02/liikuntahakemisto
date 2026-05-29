@@ -65,7 +65,7 @@ export default function AktiiviLogo({ gradientIndex }: AktiiviLogoProps) {
       viewBox="0 0 1672 940"
       role="img"
       aria-label="AKTIIVI"
-      style={{ height: 56, width: 'auto' }}
+      style={{ height: 50, width: 'auto' }}
       preserveAspectRatio="xMidYMid meet"
     >
       <title>AKTIIVI</title>
