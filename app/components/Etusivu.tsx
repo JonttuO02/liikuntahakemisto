@@ -765,8 +765,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 </span>
               </div>
 
-              {/* Card list — individual glass cards, map visible between them */}
-              {searchSuodatettu.length > 0 ? (
+              {/* Card list — only in browse mode (LayoutList), not when typing (Search) */}
+              {!searchFocused && (searchSuodatettu.length > 0 ? (
                 <div className="flex flex-col gap-3">
                   {searchSuodatettu.map(p => (
                     <DiagonaalKortti
@@ -793,7 +793,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                     Tyhjennä haku
                   </motion.button>
                 </div>
-              )}
+              ))}
             </div>
           </motion.div>
         )}
