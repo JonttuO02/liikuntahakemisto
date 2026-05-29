@@ -27,7 +27,6 @@ import { deriveKaupungit } from '@/lib/cityFilter'
 import DiagonaalKortti from './DiagonaalKortti'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
-const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
 const HANDLE_H = 44 // visible sheet tab height when closed
 
 const SPORT_ICONS: Record<string, LucideIcon> = {
@@ -291,10 +290,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   }, [suosikitSizeAndIds, weatherKaupunki, kotikaupunki])
 
   useEffect(() => {
-    if (sheetPhase !== 'open') setValittu(null)
-  }, [sheetPhase])
-
-  useEffect(() => {
     if (!focusId) return
     const id = Number(focusId)
     const target = paikat.find(p => p.id === id)
@@ -415,27 +410,103 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               const p = item.paikka
               return (
                 <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1}>
-                  <AnimatePresence mode="wait" initial={false}>
-                    {zoomLevel < 16 ? (
-                      <motion.div key="pin" exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-                        onClick={() => setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })}>
-                        <img src={pinUrl(p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
-                      </motion.div>
-                    ) : (
-                      <motion.div key="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}
-                        className="glass rounded-xl px-2.5 py-2 flex flex-col gap-1 cursor-pointer"
-                        style={{ minWidth: 100, maxWidth: 140 }}
-                        onClick={e => { e.stopPropagation(); setValittu(p); setSearchOpen(false) }}>
-                        <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white truncate" style={{ backgroundColor: lajiKonfig[p.laji]?.color ?? '#6b7280' }}>
-                          {lajiKonfig[p.laji]?.label ?? p.laji}
-                        </span>
-                        <span className="font-bold text-sm text-[#111111] truncate leading-tight">{p.nimi}</span>
-                        {(p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)) && (
-                          <span className="text-[10px] text-[rgba(17,17,17,0.55)] truncate">{p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)}</span>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <div style={{ position: 'relative' }}>
+                    <AnimatePresence mode="wait" initial={false}>
+                      {zoomLevel < 16 ? (
+                        <motion.div key="pin" exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                          onClick={() => setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })}>
+                          <img src={pinUrl(p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
+                        </motion.div>
+                      ) : valittu?.id === item.paikka.id ? (
+                        <motion.div
+                          key="expanded"
+                          initial={{ opacity: 0, scale: 0.92, y: 4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.92, y: 4 }}
+                          transition={{ duration: 0.2 }}
+                          onClick={e => e.stopPropagation()}
+                          className="glass rounded-2xl"
+                          style={{
+                            position: 'absolute',
+                            bottom: 'calc(100% + 8px)',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: 280,
+                            zIndex: 10,
+                          }}
+                        >
+                          <div className="p-3 flex flex-col gap-2">
+                            {/* Row 1: laji badge + X close */}
+                            <div className="flex items-center justify-between gap-2">
+                              <span
+                                className="inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white"
+                                style={{ backgroundColor: lajiKonfig[item.paikka.laji]?.color ?? '#6b7280' }}
+                              >
+                                {lajiKonfig[item.paikka.laji]?.label ?? item.paikka.laji}
+                              </span>
+                              <button
+                                onClick={() => setValittu(null)}
+                                className="glass-btn w-6 h-6 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)] shrink-0"
+                                aria-label="Sulje"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+
+                            {/* Row 2: venue name */}
+                            <span className="font-bold text-sm text-[#111111] leading-tight">{item.paikka.nimi}</span>
+
+                            {/* Row 3: open status */}
+                            {(() => {
+                              const status = getOpenStatus(item.paikka.aukioloajat)
+                              if (status.status === 'no-data') return null
+                              return (
+                                <span className="text-xs">
+                                  {status.status === 'open'
+                                    ? <span className="text-green-700 font-bold">● Auki nyt{status.hours ? ` · ${status.hours}` : ''}</span>
+                                    : <span className="text-[rgba(17,17,17,0.45)]">Suljettu{status.hours ? ` · ${status.hours}` : ''}</span>
+                                  }
+                                </span>
+                              )
+                            })()}
+
+                            {/* Row 4: price + distance */}
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-sm font-bold text-[#111111] tabular-nums">
+                                {item.paikka.hinta_kuvaus || hintateksti(item.paikka.hinta_min, item.paikka.hinta_max) || <span className="text-[rgba(17,17,17,0.4)] font-normal">Lisätään pian</span>}
+                              </span>
+                              {distancesMap[item.paikka.id] != null && (
+                                <span className="text-xs text-[rgba(17,17,17,0.45)] shrink-0">
+                                  {formatDistance(distancesMap[item.paikka.id])}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Row 5: CTA */}
+                            <Link
+                              href={`/paikat/${item.paikka.id}`}
+                              className="w-full text-center border border-[rgba(0,0,0,0.12)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.3)] font-medium text-sm px-4 py-2 rounded-full [transition:color_150ms_var(--ease-out),border-color_150ms_var(--ease-out)]"
+                            >
+                              Näytä tiedot
+                            </Link>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div key="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}
+                          className="glass rounded-xl px-2.5 py-2 flex flex-col gap-1 cursor-pointer"
+                          style={{ minWidth: 100, maxWidth: 140 }}
+                          onClick={e => { e.stopPropagation(); setValittu(p); setSearchOpen(false) }}>
+                          <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white truncate" style={{ backgroundColor: lajiKonfig[p.laji]?.color ?? '#6b7280' }}>
+                            {lajiKonfig[p.laji]?.label ?? p.laji}
+                          </span>
+                          <span className="font-bold text-sm text-[#111111] truncate leading-tight">{p.nimi}</span>
+                          {(p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)) && (
+                            <span className="text-[10px] text-[rgba(17,17,17,0.55)] truncate">{p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)}</span>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </AdvancedMarker>
               )
             }
@@ -919,154 +990,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         }}
       />
 
-      {/* ── Selected venue bottom sheet ────────────────────────────────── */}
-      <AnimatePresence>
-        {valittu && (
-          <motion.div
-            key={valittu.id}
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ duration: 0.38, ease: EASE_DRAWER }}
-            drag="y"
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 0.4 }}
-            onDragEnd={(_, info) => {
-              if (info.velocity.y > 300 || info.offset.y > 80) setValittu(null)
-            }}
-            className="fixed bottom-0 inset-x-0 rounded-t-3xl"
-            style={{
-              zIndex: 70,
-              background:           'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
-              backdropFilter:       'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              borderTop:            '1px solid rgba(255,255,255,1)',
-              boxShadow:            '0 -8px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,1)',
-              paddingBottom:        'max(env(safe-area-inset-bottom), 80px)',
-              maxHeight:            '90vh',
-            }}
-          >
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 bg-[rgba(0,0,0,0.12)] rounded-full" />
-            </div>
-            <button
-              onClick={() => setValittu(null)}
-              className="glass-btn absolute top-3 right-4 w-7 h-7 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-
-            <div className="px-5 pt-2 pb-2" style={{ overflowY: 'auto' as const }}>
-              {(() => {
-                const laji = lajiKonfig[valittu.laji] ?? { label: valittu.laji, color: '#6b7280' }
-                const Icon = SPORT_ICONS[valittu.laji] ?? Activity
-                return (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full text-white" style={{ backgroundColor: laji.color }}>
-                    <Icon className="w-3 h-3" />{laji.label}
-                  </span>
-                )
-              })()}
-              {valittu.featured && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200 ml-1.5">
-                  Sponsoroitu
-                </span>
-              )}
-
-              <div className="mt-2 flex items-start justify-between gap-2">
-                <h2 className="font-serif text-xl font-bold text-[#111111] leading-snug flex-1">{valittu.nimi}</h2>
-                <motion.button
-                  whileTap={{ scale: 0.85, transition: { duration: 0.12, ease: 'easeOut' } }}
-                  onClick={() => toggleSuosikki(valittu.id)}
-                  className="shrink-0 w-8 h-8 rounded-full glass-btn flex items-center justify-center"
-                  aria-label={suosikitIds.has(valittu.id) ? 'Poista suosikeista' : 'Lisää suosikkeihin'}
-                >
-                  <Heart className={cn('w-4 h-4', suosikitIds.has(valittu.id) ? 'fill-[#111111] text-[#111111]' : 'text-[rgba(17,17,17,0.35)]')} />
-                </motion.button>
-              </div>
-
-              {(valittu.osoite || valittu.kaupunki) && (
-                <p className="mt-1.5 text-sm text-[rgba(17,17,17,0.45)] flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 shrink-0" />
-                  {[valittu.osoite, valittu.kaupunki].filter(Boolean).join(', ')}
-                </p>
-              )}
-
-              {(() => {
-                const status = getOpenStatus(valittu.aukioloajat)
-                if (status.status === 'no-data') return null
-                return (
-                  <p className="mt-1.5 text-sm">
-                    {status.status === 'open'
-                      ? <span className="text-green-700 font-bold">● Auki nyt{status.hours ? ` · ${status.hours}` : ''}</span>
-                      : <span className="text-[rgba(17,17,17,0.45)]">Suljettu{status.hours ? ` · ${status.hours}` : ''}</span>
-                    }
-                  </p>
-                )
-              })()}
-
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <div>
-                  {(() => {
-                    const priceStr = hintateksti(valittu.hinta_min, valittu.hinta_max)
-                    const displayPrice = valittu.hinta_kuvaus || priceStr || null
-                    return displayPrice
-                      ? <p className="font-serif text-xl font-bold text-[#111111] tabular-nums">{displayPrice}</p>
-                      : <p className="text-sm text-[rgba(17,17,17,0.4)]">Lisätään pian</p>
-                  })()}
-                </div>
-                {isSafeUrl(valittu.varauslinkki) ? (
-                  <motion.a href={valittu.varauslinkki} target="_blank" rel="noopener noreferrer" whileTap={{ scale: 0.97 }}
-                    className="shrink-0 bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-6 py-3 rounded-full [transition:background-color_150ms_var(--ease-out)]">
-                    Varaa →
-                  </motion.a>
-                ) : (
-                  <Link href={`/paikat/${valittu.id}`}
-                    className="shrink-0 border border-[rgba(0,0,0,0.15)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.3)] font-medium text-sm px-5 py-3 rounded-full [transition:color_150ms_var(--ease-out),border-color_150ms_var(--ease-out)]">
-                    Näytä tiedot
-                  </Link>
-                )}
-              </div>
-
-              {(() => {
-                const groups = formatGroupedHours(valittu.aukioloajat)
-                if (groups.length === 0) return null
-                return (
-                  <div className="mt-4 pt-4 border-t border-[rgba(0,0,0,0.07)]">
-                    <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-2">Aukioloajat</p>
-                    <HoursTable groups={groups} />
-                  </div>
-                )
-              })()}
-
-              {valittu.puhelin && (
-                <div className="mt-3">
-                  <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">Puhelin</p>
-                  <a href={`tel:${valittu.puhelin}`} className="text-sm font-bold text-[#111111] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]">
-                    {valittu.puhelin}
-                  </a>
-                </div>
-              )}
-
-              {isSafeUrl(valittu.varauslinkki) && (
-                <div className="mt-3">
-                  <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">Varaussivu</p>
-                  <a href={valittu.varauslinkki!} target="_blank" rel="noopener noreferrer"
-                    className="text-sm text-[#111111] font-bold underline underline-offset-2 break-all hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]">
-                    {valittu.varauslinkki}
-                  </a>
-                </div>
-              )}
-
-              {valittu.kuvaus && (
-                <div className="mt-3">
-                  <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">Kuvaus</p>
-                  <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed">{valittu.kuvaus}</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   )
 }
