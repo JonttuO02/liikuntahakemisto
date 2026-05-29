@@ -391,14 +391,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           }}
         >
           {paikatKartalla.map(p => {
-            const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
             return (
               <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1}>
                 <AnimatePresence mode="wait" initial={false}>
                   {zoomLevel < 16 ? (
                     <motion.div key="pin" exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
                       onClick={() => setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })}>
-                      <img src={pinUrl(color, p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
+                      <img src={pinUrl(p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
                     </motion.div>
                   ) : (
                     <motion.div key="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}
