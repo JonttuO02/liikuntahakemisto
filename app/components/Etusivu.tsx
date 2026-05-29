@@ -64,30 +64,6 @@ function makeBumpPath(bumpScale: number, cx: number, hw: number, fullW: number, 
   ].join(' ')
 }
 
-// Open path tracing only the top edge (wall corner → shoulder → diagonal → plateau → diagonal → shoulder → wall corner)
-// Drawn as a stroke inside the clipped glass element; outer half is clipped, inner half is visible.
-function makeTopEdgePath(bumpScale: number, cx: number, hw: number, fullW: number): string {
-  const diagLen = Math.sqrt(TAB_SLOPE * TAB_SLOPE + TAB_H * TAB_H)
-  const dxN = TAB_SLOPE / diagLen
-  const dyN = TAB_H / diagLen
-  const sy = (y: number) => TAB_H - bumpScale * (TAB_H - y)
-  const sx = (x: number) => cx + bumpScale * (x - cx)
-  return [
-    `M 0,${TAB_H + BUMP_R1}`,
-    `Q 0,${TAB_H} ${BUMP_R1},${TAB_H}`,
-    `L ${sx(cx - hw - TAB_SLOPE - BUMP_R2)},${TAB_H}`,
-    `Q ${sx(cx - hw - TAB_SLOPE)},${TAB_H} ${sx(cx - hw - TAB_SLOPE + BUMP_R2 * dxN)},${sy(TAB_H - BUMP_R2 * dyN)}`,
-    `L ${sx(cx - hw - BUMP_R2 * dxN)},${sy(BUMP_R2 * dyN)}`,
-    `Q ${sx(cx - hw)},${sy(0)} ${sx(cx - hw + BUMP_R2)},${sy(0)}`,
-    `L ${sx(cx + hw - BUMP_R2)},${sy(0)}`,
-    `Q ${sx(cx + hw)},${sy(0)} ${sx(cx + hw + BUMP_R2 * dxN)},${sy(BUMP_R2 * dyN)}`,
-    `L ${sx(cx + hw + TAB_SLOPE - BUMP_R2 * dxN)},${sy(TAB_H - BUMP_R2 * dyN)}`,
-    `Q ${sx(cx + hw + TAB_SLOPE)},${TAB_H} ${sx(cx + hw + TAB_SLOPE + BUMP_R2)},${TAB_H}`,
-    `L ${fullW - BUMP_R1},${TAB_H}`,
-    `Q ${fullW},${TAB_H} ${fullW},${TAB_H + BUMP_R1}`,
-  ].join(' ')
-}
-
 const SPORT_ICONS: Record<string, LucideIcon> = {
   padel: Zap, kuntosali: Dumbbell, jooga: Leaf,
   uinti: Waves, tennis: Target, liikuntahalli: Building2, liikunta: Activity,
@@ -201,9 +177,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
   // Clip-path and logo wrapper scale both controlled by bumpExpanded:
   //   false (open) = smaller bump + smaller logo;  true (closed) = full size
-  const bumpScale = bumpExpanded ? 1.0 : BUMP_SCALE_OPEN
-  const activeBumpPath = makeBumpPath(bumpScale, cx, hw, fullW, totalH)
-  const activeTopEdge = makeTopEdgePath(bumpScale, cx, hw, fullW)
+  const activeBumpPath = makeBumpPath(bumpExpanded ? 1.0 : BUMP_SCALE_OPEN, cx, hw, fullW, totalH)
   const bumpContentScale = bumpExpanded ? 1.0 : BUMP_CONTENT_SCALE_OPEN
 
   const sheetTransition = sheetPhase === 'sliding'
@@ -791,22 +765,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           <Karuselli isDark={isDark} />
         </motion.div>
         </div>{/* end content area */}
-
-        {/* Top-edge border — open path, strokeWidth 7 → 3.5px visible inside clip, matches logo line weight */}
-        <svg
-          aria-hidden
-          style={{ position: 'absolute', top: 0, left: 0, width: fullW, height: totalH, pointerEvents: 'none' }}
-        >
-          <path
-            d={activeTopEdge}
-            fill="none"
-            stroke="#111111"
-            strokeWidth={7}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            style={{ transition: 'd 0.22s ease-out' }}
-          />
-        </svg>
       </motion.div>
 
       {/* ── Search overlay ──────────────────────────────────── */}
