@@ -450,7 +450,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         <div className="fixed inset-0" style={{ zIndex: 63 }} onClick={closeOverlays} />
       )}
 
-      {/* ── Top-left toolbar — search + list toggle ────────────────────── */}
+      {/* ── Top-left toolbar — search (always) + list toggle (only when search open) */}
       <div
         className="fixed"
         style={{
@@ -459,12 +459,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           zIndex: 64,
         }}
       >
-        <div className="glass rounded-full flex items-center" style={{ height: 40 }}>
+        <div className="glass rounded-full flex items-center overflow-hidden" style={{ height: 40 }}>
+          {/* Search button — always visible */}
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={() => searchOpen && searchFocused ? setSearchOpen(false) : searchOpen ? setSearchFocused(true) : openSearch(true)}
+            onClick={() => searchOpen ? setSearchOpen(false) : openSearch(true)}
             className="w-10 h-10 shrink-0 flex items-center justify-center [transition:color_150ms_ease] relative"
-            style={{ color: isFilterActive || (searchOpen && searchFocused) ? '#111111' : 'rgba(17,17,17,0.7)' }}
+            style={{ color: isFilterActive || searchOpen ? '#111111' : 'rgba(17,17,17,0.7)' }}
             aria-label="Haku ja filtterit"
           >
             <Search className="w-4 h-4" />
@@ -475,16 +476,31 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               />
             )}
           </motion.button>
-          <div className="w-px h-4 bg-[rgba(0,0,0,0.1)]" />
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => searchOpen && !searchFocused ? setSearchOpen(false) : searchOpen ? setSearchFocused(false) : openSearch(false)}
-            className="w-10 h-10 shrink-0 flex items-center justify-center [transition:color_150ms_ease]"
-            style={{ color: searchOpen && !searchFocused ? '#111111' : 'rgba(17,17,17,0.7)' }}
-            aria-label="Näytä lista"
-          >
-            <LayoutList className="w-4 h-4" />
-          </motion.button>
+
+          {/* LayoutList — slides in when search opens, slides out when search closes */}
+          <AnimatePresence>
+            {searchOpen && (
+              <motion.div
+                key="list-toggle"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 41, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className="flex items-center overflow-hidden shrink-0"
+              >
+                <div className="w-px h-4 bg-[rgba(0,0,0,0.1)] shrink-0" />
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSearchFocused(f => !f)}
+                  className="w-10 h-10 shrink-0 flex items-center justify-center [transition:color_150ms_ease]"
+                  style={{ color: !searchFocused ? '#111111' : 'rgba(17,17,17,0.7)' }}
+                  aria-label="Näytä lista"
+                >
+                  <LayoutList className="w-4 h-4" />
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
