@@ -1,0 +1,43 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-05-29T00:00:00.000Z",
+  "phase": "16",
+  "phase_name": "brandi-logo-uloke",
+  "phase_dir": ".planning/phases/16-brandi-logo-uloke",
+  "plan": 3,
+  "task": null,
+  "total_tasks": null,
+  "status": "paused",
+  "completed_tasks": [
+    {"id": 1, "name": "Rebrand metadata to AKTIIVI (layout, manifest, tietosuoja)", "status": "done", "commit": "plan 01 complete"},
+    {"id": 2, "name": "Create AktiiviLogo.tsx with gradient sweep animation", "status": "done", "commit": "plan 02 complete"},
+    {"id": 3, "name": "Wire AktiiviLogo into Etusivu bottom sheet uloke", "status": "done", "commit": "plan 03 complete (d651fe4 current HEAD after revert)"}
+  ],
+  "remaining_tasks": [
+    {"id": 4, "name": "Plan 4+: Visual polish of uloke — make logo feel integrated with sheet", "status": "not_started"}
+  ],
+  "blockers": [
+    {
+      "description": "CSS clip-path clips all native borders/box-shadow/outline — none of these follow the bump shape. filter: drop-shadow is the only CSS-native approach that follows clip-path, but it renders outside the element (between glass and map). User found all tried approaches unsatisfying.",
+      "type": "technical",
+      "workaround": "Need fresh design thinking — either different material treatment, SVG-based inner border with proper sync, or a design direction change (e.g. simpler top shape without bump)"
+    }
+  ],
+  "human_actions_pending": [],
+  "decisions": [
+    {"decision": "Reverted feat(16): dark top-edge border — didn't look right", "rationale": "User rejected all border/outline approaches this session", "phase": "16"},
+    {"decision": "Sheet now has no filter/shadow/border overlay — bare glass clip-path only", "rationale": "All approaches reverted to clean baseline", "phase": "16"}
+  ],
+  "uncommitted_files": [
+    ".planning/MAP_BOTTOM_SHEET_PLAN.md",
+    ".planning/debug/",
+    ".planning/phases/15-arvostelut/15-REVIEW-FIX.md",
+    ".planning/phases/16-brandi-logo-uloke/16-PLAN.md",
+    "app/AKTIIVI-logo-rounded-white-bg.svg",
+    "app/AKTIIVI-logo-rounded-white.svg",
+    "app/AKTIIVI-logo-rounded.svg",
+    "public/aktiivi-logo.svg"
+  ],
+  "next_action": "Read .planning/MAP_BOTTOM_SHEET_PLAN.md and .planning/phases/16-brandi-logo-uloke/16-DISCUSSION-LOG.md to understand the uloke design intent, then propose a concrete Plan 4 approach for making the logo/bump feel visually integrated",
+  "context_notes": "The AktiiviLogo bump (uloke) protrudes from the top of the bottom sheet. Visually it looks 'irtonainen' (disconnected/floating) because the glass surface has no visible edge definition where the clip-path cuts. Tried: drop-shadow filter, SVG sibling stroke, inner SVG stroke. All unsatisfactory. The technical root cause is that clip-path clips all CSS border properties."
+}
