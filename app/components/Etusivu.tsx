@@ -261,7 +261,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   useEffect(() => {
     const key = 'saasuositus-' + new Date().toISOString().slice(0, 10)
       + '-' + weatherKaupunki
-      + (suosikitIds.size > 0 ? '-' + suosikitIds.size : '')
+      + (suosikitIds.size > 0 ? '-' + suosikitSizeAndIds : '')
     try {
       const cached = sessionStorage.getItem(key)
       if (cached) { setAiTeksti(cached); return }
