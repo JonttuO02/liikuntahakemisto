@@ -29,7 +29,8 @@ import AktiiviLogo from './AktiiviLogo'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
-const HANDLE_H = 44 // visible sheet tab height when closed
+const TAB_H = 72  // uloke height (logo 56px + 8px padding top/bottom)
+const TAB_W = 200 // uloke width (logo ~100px + 50px padding each side)
 
 const SPORT_ICONS: Record<string, LucideIcon> = {
   padel: Zap, kuntosali: Dumbbell, jooga: Leaf,
@@ -106,7 +107,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [rightOpen, setRightOpen]   = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
   const [fullH, setFullH]           = useState(700)
-  const [fullW, setFullW]           = useState(390)
   const [isDark, setIsDark]         = useState(false)
   const [zoomLevel, setZoomLevel]   = useState(14)
   const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
@@ -131,33 +131,16 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const focusId = searchParams.get('id')
   const router = useRouter()
 
-  const contentH  = Math.round(fullH * 0.82)
-  const PILL_W    = 194
-  const pillInset = Math.round((fullW - PILL_W) / 2)
+  const contentH = Math.round(fullH * 0.82)
 
-  // Per-phase animation targets
-  const sheetAnimY      = sheetPhase === 'open' ? 0 : sheetPhase === 'sliding' ? contentH : contentH - HANDLE_H
-  const sheetAnimLeft   = sheetPhase === 'closed' ? pillInset : 0
-  const sheetAnimRight  = sheetPhase === 'closed' ? pillInset : 0
-  const sheetAnimRadius = sheetPhase === 'closed' ? '24px 24px 24px 24px' : '24px 24px 0px 0px'
+  // Sheet always full-width; only Y animates. Closed = sheet fully below viewport, uloke visible at bottom.
+  const sheetAnimY = sheetPhase === 'open' ? 0 : contentH
 
-  // Transition differs per phase
   const sheetTransition = sheetPhase === 'sliding'
     ? { y: { type: 'spring' as const, damping: 28, stiffness: 280 } }
     : sheetPhase === 'closed'
-    ? {
-        // narrowing happens off-screen first, then y pops the pill into view
-        y:            { type: 'spring' as const, damping: 32, stiffness: 350, delay: 0.18 },
-        left:         { type: 'spring' as const, damping: 28, stiffness: 280 },
-        right:        { type: 'spring' as const, damping: 28, stiffness: 280 },
-        borderRadius: { duration: 0.2, ease: 'easeInOut' as const },
-      }
-    : { // open
-        y:            { type: 'spring' as const, damping: 28, stiffness: 280, delay: 0.1 },
-        left:         { duration: 0.15, ease: 'easeOut' as const },
-        right:        { duration: 0.15, ease: 'easeOut' as const },
-        borderRadius: { duration: 0.15, ease: 'easeOut' as const },
-      }
+    ? { y: { type: 'spring' as const, damping: 32, stiffness: 350 } }
+    : { y: { type: 'spring' as const, damping: 28, stiffness: 280, delay: 0.1 } }
 
   function closeOverlays() {
     setLeftOpen(false)
@@ -239,7 +222,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   }, [])
 
   useEffect(() => {
-    const update = () => { setFullH(window.innerHeight); setFullW(window.innerWidth) }
+    const update = () => { setFullH(window.innerHeight) }
     update()
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
@@ -642,38 +625,54 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       </div>
 
       {/* ── Main bottom sheet ──────────────────────────────────────────── */}
-      {/* Tab (HANDLE_H) stays visible at bottom when closed — no separate FAB */}
+      {/* Sheet always full-width. Uloke (logo pill) protrudes above; when closed, sheet hides fully. */}
       <motion.div
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={0.1}
-        initial={{ left: 0, right: 0, y: 0, borderRadius: '24px 24px 0px 0px' }}
-        animate={{ y: sheetAnimY, left: sheetAnimLeft, right: sheetAnimRight, borderRadius: sheetAnimRadius }}
+        initial={{ y: 0 }}
+        animate={{ y: sheetAnimY }}
         transition={sheetTransition}
         onAnimationComplete={() => { if (sheetPhase === 'sliding') setSheetPhase('closed') }}
         onDragEnd={(_, info) => {
           if (info.velocity.y > 300 || info.offset.y > 80) setSheetPhase('sliding')
           else if (info.velocity.y < -300 || info.offset.y < -80) setSheetPhase('open')
         }}
-        className="glass"
-        style={{ position: 'fixed', bottom: 0, height: contentH, zIndex: 60, overflow: 'hidden' }}
+        style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: contentH, zIndex: 60, overflow: 'visible' }}
       >
-        {/* Drag handle — also tap to open when closed */}
+        {/* Uloke — logo pill protruding above sheet top edge; IS the pill when closed */}
         <div
-          className="flex justify-center pt-3 pb-2"
-          style={{ cursor: sheetPhase === 'open' ? 'grab' : 'pointer' }}
+          className="glass"
+          style={{
+            position: 'absolute',
+            top: -TAB_H,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: TAB_W,
+            height: TAB_H,
+            borderRadius: '20px 20px 0 0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: sheetPhase === 'closed' ? 'pointer' : 'grab',
+            zIndex: 1,
+          }}
           onClick={() => { if (sheetPhase !== 'open') setSheetPhase('open') }}
         >
           <AktiiviLogo gradientIndex={gradIndex} />
         </div>
 
-        {/* Sheet content — fades out during slide-down so text doesn't squish during narrowing */}
+        {/* Glass sheet surface — clips content, always full-width */}
+        <div className="glass" style={{ overflow: 'hidden', height: '100%', borderRadius: '24px 24px 0 0' }}>
+
+        {/* Sheet content — fades out during slide-down */}
         <motion.div
           animate={{ opacity: sheetPhase === 'open' ? 1 : 0 }}
           transition={{ duration: 0.18, ease: 'easeIn' }}
           className="flex flex-col gap-3 px-4 overflow-y-auto"
           style={{
-            height: 'calc(100% - 40px)',
+            height: '100%',
+            paddingTop: 16,
             paddingBottom: 'max(env(safe-area-inset-bottom), 16px)',
           }}
         >
@@ -715,6 +714,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           {/* Ad carousel */}
           <Karuselli isDark={isDark} />
         </motion.div>
+        </div>{/* end glass sheet surface */}
       </motion.div>
 
       {/* ── Search overlay ──────────────────────────────────── */}
@@ -765,7 +765,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               top: 'calc(max(12px, env(safe-area-inset-top)) + 52px)',
               left: 0,
               right: 0,
-              bottom: HANDLE_H + 8,
+              bottom: TAB_H + 8,
               zIndex: 61,
             }}
           >
