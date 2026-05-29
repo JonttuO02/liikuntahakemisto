@@ -62,10 +62,10 @@ export default function AktiiviLogo({ gradientIndex }: AktiiviLogoProps) {
 
   return (
     <svg
-      viewBox="0 0 1672 940"
+      viewBox="100 200 1480 580"
       role="img"
       aria-label="AKTIIVI"
-      style={{ height: 54, width: 'auto' }}
+      style={{ height: 56, width: 'auto' }}
       preserveAspectRatio="xMidYMid meet"
     >
       <title>AKTIIVI</title>
