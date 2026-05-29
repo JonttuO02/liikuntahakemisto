@@ -2,25 +2,25 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: AKTIIVI — Redesign & Polish
-status: Phase 17 complete — Phase 18 not started
-last_updated: "2026-05-29T17:00:00.000Z"
-last_activity: 2026-05-29 — Phase 17 complete (toolbar refactor, 1/1 plans)
+status: Phase 18 in progress — 18-01 complete, 18-02 next
+last_updated: "2026-05-29T19:00:00.000Z"
+last_activity: 2026-05-29 — Phase 18 plan 01 complete (MAP-08 — unified red pins)
 progress:
   total_phases: 3
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 4
-  percent: 33
+  completed_phases: 2
+  total_plans: 5
+  completed_plans: 6
+  percent: 67
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 17 — Toolbar & Haku-UX (complete)
-Plan: 17-01 (Wave 1 — 2/2 tasks done)
-Status: Phase 17 complete, Phase 18 not started
-Last activity: 2026-05-29 — Phase 17 complete (toolbar refactored, unified filter state)
+Phase: 18 — Kartan pinnit & korttianimaatio (in progress)
+Plan: 18-02 (Wave 2 — not started)
+Status: 18-01 complete — unified red pins with sport SVG icons (MAP-08)
+Last activity: 2026-05-29 — Phase 18 plan 01 complete (MAP-08 — unified red pins)
 
 ## Project Reference
 
@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 |-------|------|--------------|--------|
 | 16. Brändi & Logo-uloke | AKTIIVI rebrand + logo watermark at sheet bottom | BRAND-01, UI-13, UI-14, UI-15, UI-16 | ✅ Complete (4/4 plans) |
 | 17. Toolbar & Haku-UX | Unified search+filter button + dedicated list-toggle | UI-17, UI-18 | ✅ Complete (1/1 plan) |
-| 18. Kartan pinnit & korttianimaatio | Unified pins with sport SVG icons, clustering, in-place card expansion | MAP-08, MAP-09, MAP-10 | Not started |
+| 18. Kartan pinnit & korttianimaatio | Unified pins with sport SVG icons, clustering, in-place card expansion | MAP-08, MAP-09, MAP-10 | In Progress (1/3 plans) |
 
 ## Active Decisions
 
@@ -53,6 +53,7 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 - themeColor in viewport export (Viewport type), NOT metadata
 - lib/aukiolo.ts single source of truth for open-status logic
 - sessionStorage cache key scoped to calendar day + kaupunki
+- Pin color is always #ef4444 — sport identity communicated by icon shape, not color (Plan 18-01)
 
 ## Accumulated Context
 
