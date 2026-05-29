@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: AKTIIVI — Redesign & Polish
-status: in_progress
+status: Plan 03 shipped — AktiiviLogo wired into Etusivu bottom sheet handle
 last_updated: "2026-05-29T00:00:00.000Z"
-last_activity: 2026-05-29 — Phase 16 Plan 02 complete — AktiiviLogo SVG component with gradient sweep
+last_activity: 2026-05-29 — Phase 16 Plan 03 complete (commits fd9aed1, 541b755)
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 2
-  completed_plans: 2
-  percent: 10
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 4
+  percent: 40
 ---
 
 # Project State
@@ -18,9 +18,9 @@ progress:
 ## Current Position
 
 Phase: 16 — Brändi & Logo-uloke (in progress)
-Plan: 01 (complete), 02 (complete), 03+ (pending)
-Status: Plan 02 shipped — AktiiviLogo SVG component with animated gradient sweep
-Last activity: 2026-05-29 — Phase 16 Plan 02 complete (commit 282f84c)
+Plan: 01 (complete), 02 (complete), 03 (complete), 04+ (pending)
+Status: Plan 03 shipped — AktiiviLogo wired into Etusivu bottom sheet handle with gradient cycle
+Last activity: 2026-05-29 — Phase 16 Plan 03 complete (commits fd9aed1, 541b755)
 
 ## Project Reference
 
@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
-| 16. Brändi & Logo-uloke | AKTIIVI rebrand + always-visible logo tab with gradient animation | BRAND-01, UI-13, UI-14, UI-15, UI-16 | In progress (2/? plans) |
+| 16. Brändi & Logo-uloke | AKTIIVI rebrand + always-visible logo tab with gradient animation | BRAND-01, UI-13, UI-14, UI-15, UI-16 | In progress (3/? plans) |
 | 17. Toolbar & Haku-UX | Unified search+filter button + dedicated list-toggle | UI-17, UI-18 | Not started |
 | 18. Kartan pinnit & korttianimaatio | Unified pins with sport SVG icons, clustering, in-place card expansion | MAP-08, MAP-09, MAP-10 | Not started |
 
@@ -46,6 +46,8 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 - manifest start_url is '/' — dead /?nakyma=lista param removed (Plan 16-01)
 - AktiiviLogo uses animate(element, keyframes, options) imperative API for SVG rect width (Plan 16-02)
 - AktiiviLogo prevIndex tracked via useState+useRef combo: useState triggers re-render, useRef gives immediate access in animation callback (Plan 16-02)
+- PILL_W set to 194 to fit AKTIIVI wordmark in closed pill — simpler than Framer Motion x-transform centering (Plan 16-03)
+- gradMounted useRef guard skips first mount so gradient 0 shows statically; sweep fires on first user close+reopen (Plan 16-03)
 - APIProvider placed in layout.tsx so Maps JS API loads once at app startup
 - Supabase Auth uses per-request createServerClient — never module-scope singleton
 - Map focus URL: /?id=<paikka_id> — no ?nakyma=kartta (dead param)
