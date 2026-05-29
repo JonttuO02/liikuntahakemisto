@@ -132,7 +132,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const router = useRouter()
 
   const contentH  = Math.round(fullH * 0.82)
-  const PILL_W    = 160
+  const PILL_W    = 194
   const pillInset = Math.round((fullW - PILL_W) / 2)
 
   // Per-phase animation targets
@@ -664,7 +664,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           style={{ cursor: sheetPhase === 'open' ? 'grab' : 'pointer' }}
           onClick={() => { if (sheetPhase !== 'open') setSheetPhase('open') }}
         >
-          <div className="w-10 h-1 bg-[rgba(0,0,0,0.12)] rounded-full" />
+          <AktiiviLogo gradientIndex={gradIndex} />
         </div>
 
         {/* Sheet content — fades out during slide-down so text doesn't squish during narrowing */}
