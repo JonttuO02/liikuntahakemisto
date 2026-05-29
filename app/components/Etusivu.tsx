@@ -77,13 +77,15 @@ function RecenterButton({ coords }: { coords: { lat: number; lng: number } | nul
 
 function MapAutoZoom({ target, onComplete }: { target: { lat: number; lng: number } | null; onComplete: () => void }) {
   const map = useMap()
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
   useEffect(() => {
     if (!map || !target) return
     map.panTo(target)
     map.setZoom(16)
-    onComplete()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, target, onComplete])
+    const timer = setTimeout(() => onCompleteRef.current(), 400)
+    return () => clearTimeout(timer)
+  }, [map, target])
   return null
 }
 
@@ -122,6 +124,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [searchFocused, setSearchFocused]     = useState(false)
   const inFlight = useRef<Set<number>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingValittuRef = useRef<Liikuntapaikka | null>(null)
   const { coords }                  = useGPS({ autoRequest: true })
   const searchParams = useSearchParams()
   const focusId = searchParams.get('id')
@@ -412,90 +415,22 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1}>
                   <div style={{ position: 'relative' }}>
                     <AnimatePresence mode="wait" initial={false}>
-                      {zoomLevel < 16 ? (
+                      {zoomLevel < 16 && (
                         <motion.div key="pin" exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
                           onClick={() => setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })}>
-                          <img src={pinUrl(p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
+                          <img src={pinUrl(p.laji)} width={28} height={38} alt="" className="gmap-pin" />
                         </motion.div>
-                      ) : valittu?.id === item.paikka.id ? (
-                        <motion.div
-                          key="expanded"
-                          initial={{ opacity: 0, scale: 0.92, y: 4 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.92, y: 4 }}
-                          transition={{ duration: 0.2 }}
-                          onClick={e => e.stopPropagation()}
-                          className="glass rounded-2xl"
-                          style={{
-                            position: 'absolute',
-                            bottom: 'calc(100% + 8px)',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            width: 280,
-                            zIndex: 10,
-                          }}
-                        >
-                          <div className="p-3 flex flex-col gap-2">
-                            {/* Row 1: laji badge + X close */}
-                            <div className="flex items-center justify-between gap-2">
-                              <span
-                                className="inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white"
-                                style={{ backgroundColor: lajiKonfig[item.paikka.laji]?.color ?? '#6b7280' }}
-                              >
-                                {lajiKonfig[item.paikka.laji]?.label ?? item.paikka.laji}
-                              </span>
-                              <button
-                                onClick={() => setValittu(null)}
-                                className="glass-btn w-6 h-6 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)] shrink-0"
-                                aria-label="Sulje"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-
-                            {/* Row 2: venue name */}
-                            <span className="font-bold text-sm text-[#111111] leading-tight">{item.paikka.nimi}</span>
-
-                            {/* Row 3: open status */}
-                            {(() => {
-                              const status = getOpenStatus(item.paikka.aukioloajat)
-                              if (status.status === 'no-data') return null
-                              return (
-                                <span className="text-xs">
-                                  {status.status === 'open'
-                                    ? <span className="text-green-700 font-bold">● Auki nyt{status.hours ? ` · ${status.hours}` : ''}</span>
-                                    : <span className="text-[rgba(17,17,17,0.45)]">Suljettu{status.hours ? ` · ${status.hours}` : ''}</span>
-                                  }
-                                </span>
-                              )
-                            })()}
-
-                            {/* Row 4: price + distance */}
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-sm font-bold text-[#111111] tabular-nums">
-                                {item.paikka.hinta_kuvaus || hintateksti(item.paikka.hinta_min, item.paikka.hinta_max) || <span className="text-[rgba(17,17,17,0.4)] font-normal">Lisätään pian</span>}
-                              </span>
-                              {distancesMap[item.paikka.id] != null && (
-                                <span className="text-xs text-[rgba(17,17,17,0.45)] shrink-0">
-                                  {formatDistance(distancesMap[item.paikka.id])}
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Row 5: CTA */}
-                            <Link
-                              href={`/paikat/${item.paikka.id}`}
-                              className="w-full text-center border border-[rgba(0,0,0,0.12)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.3)] font-medium text-sm px-4 py-2 rounded-full [transition:color_150ms_var(--ease-out),border-color_150ms_var(--ease-out)]"
-                            >
-                              Näytä tiedot
-                            </Link>
-                          </div>
-                        </motion.div>
-                      ) : (
-                        <motion.div key="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}
+                      )}
+                      {zoomLevel >= 16 && valittu?.id !== p.id && (
+                        <motion.div key="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
                           className="glass rounded-xl px-2.5 py-2 flex flex-col gap-1 cursor-pointer"
                           style={{ minWidth: 100, maxWidth: 140 }}
-                          onClick={e => { e.stopPropagation(); setValittu(p); setSearchOpen(false) }}>
+                          onClick={e => {
+                            e.stopPropagation()
+                            pendingValittuRef.current = p
+                            setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })
+                            setSearchOpen(false)
+                          }}>
                           <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white truncate" style={{ backgroundColor: lajiKonfig[p.laji]?.color ?? '#6b7280' }}>
                             {lajiKonfig[p.laji]?.label ?? p.laji}
                           </span>
@@ -586,7 +521,16 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           )}
           <MapPanController coords={coords} />
           {sheetPhase !== 'open' && <RecenterButton coords={coords} />}
-          <MapAutoZoom target={autoZoomTarget} onComplete={() => setAutoZoomTarget(null)} />
+          <MapAutoZoom
+            target={autoZoomTarget}
+            onComplete={() => {
+              setAutoZoomTarget(null)
+              if (pendingValittuRef.current) {
+                setValittu(pendingValittuRef.current)
+                pendingValittuRef.current = null
+              }
+            }}
+          />
         </Map>
       </div>
 
@@ -989,6 +933,125 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           setAuthModalOpen(false)
         }}
       />
+
+      {/* ── Expanded venue card — fixed center overlay ─────────────────── */}
+      {valittu && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 65 }}
+          onClick={() => setValittu(null)}
+        />
+      )}
+      <AnimatePresence>
+        {valittu && (
+          <motion.div
+            key={valittu.id}
+            initial={{ opacity: 0, scale: 0.55 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.55 }}
+            transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
+            onClick={e => e.stopPropagation()}
+            className="glass rounded-2xl"
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              x: '-50%',
+              y: '-50%',
+              width: 'min(340px, calc(100vw - 32px))',
+              zIndex: 66,
+              boxShadow: '0 12px 48px rgba(0,0,0,0.2)',
+              maxHeight: 'calc(100vh - 120px)',
+              overflowY: 'auto',
+            } as React.CSSProperties}
+          >
+            <div className="p-4 flex flex-col gap-3">
+              {/* Header: laji badge + suosikki + sulku */}
+              <div className="flex items-center justify-between gap-2">
+                <span
+                  className="inline-flex text-[10px] font-bold px-2 py-1 rounded-full text-white"
+                  style={{ backgroundColor: lajiKonfig[valittu.laji]?.color ?? '#6b7280' }}
+                >
+                  {lajiKonfig[valittu.laji]?.label ?? valittu.laji}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <motion.button
+                    whileTap={{ scale: 0.85, transition: { duration: 0.12 } }}
+                    onClick={() => toggleSuosikki(valittu.id)}
+                    className="glass-btn w-7 h-7 rounded-full flex items-center justify-center"
+                    aria-label={suosikitIds.has(valittu.id) ? 'Poista suosikeista' : 'Lisää suosikkeihin'}
+                  >
+                    <Heart className={cn('w-3.5 h-3.5', suosikitIds.has(valittu.id) ? 'fill-[#111111] text-[#111111]' : 'text-[rgba(17,17,17,0.35)]')} />
+                  </motion.button>
+                  <button
+                    onClick={() => setValittu(null)}
+                    className="glass-btn w-7 h-7 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+                    aria-label="Sulje"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Nimi */}
+              <p className="font-bold text-base text-[#111111] leading-snug">{valittu.nimi}</p>
+
+              {/* Osoite */}
+              {(valittu.osoite || valittu.kaupunki) && (
+                <p className="text-sm text-[rgba(17,17,17,0.45)] flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 shrink-0" />
+                  {[valittu.osoite, valittu.kaupunki].filter(Boolean).join(', ')}
+                </p>
+              )}
+
+              {/* Aukiolo + etäisyys */}
+              <div className="flex items-center justify-between gap-2">
+                {(() => {
+                  const status = getOpenStatus(valittu.aukioloajat)
+                  if (status.status === 'no-data') return <span />
+                  return (
+                    <span className="text-sm">
+                      {status.status === 'open'
+                        ? <span className="text-green-700 font-bold">● Auki nyt{status.hours ? ` · ${status.hours}` : ''}</span>
+                        : <span className="text-[rgba(17,17,17,0.45)]">Suljettu{status.hours ? ` · ${status.hours}` : ''}</span>
+                      }
+                    </span>
+                  )
+                })()}
+                {distancesMap[valittu.id] != null && (
+                  <span className="text-sm text-[rgba(17,17,17,0.45)] shrink-0 tabular-nums">
+                    {formatDistance(distancesMap[valittu.id])}
+                  </span>
+                )}
+              </div>
+
+              {/* Hinta */}
+              <div className="pt-1 border-t border-[rgba(0,0,0,0.07)]">
+                <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">Hinta</p>
+                {(() => {
+                  const priceStr = hintateksti(valittu.hinta_min, valittu.hinta_max)
+                  const display = valittu.hinta_kuvaus || priceStr
+                  return display
+                    ? <p className="font-serif text-xl font-bold text-[#111111] tabular-nums">{display}</p>
+                    : <p className="text-sm text-[rgba(17,17,17,0.4)]">Lisätään pian</p>
+                })()}
+              </div>
+
+              {/* Kuvaus */}
+              {valittu.kuvaus && (
+                <p className="text-sm text-[rgba(17,17,17,0.6)] line-clamp-2 leading-relaxed">{valittu.kuvaus}</p>
+              )}
+
+              {/* CTA */}
+              <Link
+                href={`/paikat/${valittu.id}`}
+                className="w-full text-center bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-3 rounded-full [transition:background-color_150ms_var(--ease-out)]"
+              >
+                Näytä kaikki tiedot →
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </>
   )

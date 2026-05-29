@@ -13,17 +13,17 @@ const SPORT_ICONS_SVG: Record<string, string> = {
   liikunta: g(`<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>`),
 }
 
-const PIN_FILL = '#ef4444'
+const PIN_FILL = '#c0392b'
 
 function buildPinSvg(innerContent: string): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 38" width="28" height="38"><path d="M14 0C6.268 0 0 6.268 0 14c0 5.25 2.875 9.83 7.125 12.3L14 38l6.875-11.7C25.125 23.83 28 19.25 28 14 28 6.268 21.732 0 14 0Z" fill="${PIN_FILL}"/><circle cx="14" cy="14" r="8" fill="white"/>${innerContent}</svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 38" width="28" height="38"><path d="M14 0C6.268 0 0 6.268 0 14c0 5.25 2.875 9.83 7.125 12.3L14 38l6.875-11.7C25.125 23.83 28 19.25 28 14 28 6.268 21.732 0 14 0Z" fill="${PIN_FILL}"/><circle cx="14" cy="14" r="10" fill="white"/>${innerContent}</svg>`
 }
 
 export function pinUrl(laji: string): string {
   const iconContent = SPORT_ICONS_SVG[laji.toLowerCase()]
   const iconSvg = iconContent
-    ? `<svg x="7" y="7" width="14" height="14" viewBox="0 0 24 24">${iconContent}</svg>`
-    : `<svg x="7" y="7" width="14" height="14" viewBox="0 0 24 24"><g stroke="#374151" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/></g></svg>`
+    ? `<svg x="5" y="5" width="18" height="18" viewBox="0 0 24 24">${iconContent}</svg>`
+    : `<svg x="5" y="5" width="18" height="18" viewBox="0 0 24 24"><g stroke="#374151" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/></g></svg>`
 
   const svg = buildPinSvg(iconSvg)
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
