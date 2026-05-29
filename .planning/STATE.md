@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: AKTIIVI — Redesign & Polish
-status: Phase 18 in progress — 18-01 complete, 18-02 next
-last_updated: "2026-05-29T19:00:00.000Z"
-last_activity: 2026-05-29 — Phase 18 plan 01 complete (MAP-08 — unified red pins)
+status: completed
+last_updated: "2026-05-29T19:30:00.000Z"
+last_activity: 2026-05-29 — Phase 18 plan 02 complete (MAP-09 — same-address clustering)
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 5
-  completed_plans: 6
+  completed_plans: 7
   percent: 67
 ---
 
@@ -18,9 +18,9 @@ progress:
 ## Current Position
 
 Phase: 18 — Kartan pinnit & korttianimaatio (in progress)
-Plan: 18-02 (Wave 2 — not started)
-Status: 18-01 complete — unified red pins with sport SVG icons (MAP-08)
-Last activity: 2026-05-29 — Phase 18 plan 01 complete (MAP-08 — unified red pins)
+Plan: 18-03 (Wave 3 — not started)
+Status: 18-02 complete — same-address clustering with glass popup (MAP-09)
+Last activity: 2026-05-29 — Phase 18 plan 02 complete (MAP-09 — same-address clustering)
 
 ## Project Reference
 
@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 |-------|------|--------------|--------|
 | 16. Brändi & Logo-uloke | AKTIIVI rebrand + logo watermark at sheet bottom | BRAND-01, UI-13, UI-14, UI-15, UI-16 | ✅ Complete (4/4 plans) |
 | 17. Toolbar & Haku-UX | Unified search+filter button + dedicated list-toggle | UI-17, UI-18 | ✅ Complete (1/1 plan) |
-| 18. Kartan pinnit & korttianimaatio | Unified pins with sport SVG icons, clustering, in-place card expansion | MAP-08, MAP-09, MAP-10 | In Progress (1/3 plans) |
+| 18. Kartan pinnit & korttianimaatio | Unified pins with sport SVG icons, clustering, in-place card expansion | MAP-08, MAP-09, MAP-10 | In Progress (2/3 plans) |
 
 ## Active Decisions
 
@@ -54,6 +54,8 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 - lib/aukiolo.ts single source of truth for open-status logic
 - sessionStorage cache key scoped to calendar day + kaupunki
 - Pin color is always #ef4444 — sport identity communicated by icon shape, not color (Plan 18-01)
+- Cluster grouping key uses ±0.0001° rounding (~11m); popup uses reference equality for toggle (Plan 18-02)
+- Record<string,T[]> used for coord grouping (TS 5.9.3 Map<K,V> generic regression workaround) (Plan 18-02)
 
 ## Accumulated Context
 

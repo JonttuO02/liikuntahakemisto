@@ -10,14 +10,14 @@
 
 ### Brändi
 
-- [ ] **BRAND-01:** Sovelluksen brändinimi päivitetään AKTIIVIKSI — sivun otsikko (`<title>`), meta-tagit (`og:title`, `og:description`, `description`), `manifest.json` PWA-nimi ja lyhytnimi, sekä muut UI-pinnat joissa tuote mainitaan
+- [x] **BRAND-01:** Sovelluksen brändinimi päivitetään AKTIIVIKSI — sivun otsikko (`<title>`), meta-tagit (`og:title`, `og:description`, `description`), `manifest.json` PWA-nimi ja lyhytnimi, sekä muut UI-pinnat joissa tuote mainitaan
 
 ### UI — Bottom Sheet Logo-uloke
 
-- [ ] **UI-13:** Käyttäjä näkee pienen ulokkeen bottom sheetin yläreunassa kun sheet on kiinni; uloke on aina näkyvissä ja toimii avauspainikkeena
-- [ ] **UI-14:** Ulokkeessa näkyy AKTIIVI-logo (SVG); kun bottom sheet on auki, logo näkyy sheetin yläreunassa osana headeria
-- [ ] **UI-15:** Käyttäjä näkee logon tekstiosan vaihtuvan sporttiseen liukuvärianimaatioon joka kerta kun bottom sheet avataan (5 liukuväriä — esim. keltainen→punainen, sininen, pinkki, vihreä, violetti; kierrätys)
-- [ ] **UI-16:** Kun bottom sheet suljetaan, logon väri pysyy viimeksi näytettynä — väri ei resetoidu sulkiessa
+- [x] **UI-13:** Käyttäjä näkee pienen ulokkeen bottom sheetin yläreunassa kun sheet on kiinni; uloke on aina näkyvissä ja toimii avauspainikkeena
+- [x] **UI-14:** Ulokkeessa näkyy AKTIIVI-logo (SVG); kun bottom sheet on auki, logo näkyy sheetin yläreunassa osana headeria *(toteutettu vesileimana sheetin alaosassa — tab-lähestymistapa hylättiin)*
+- [x] **UI-15:** Käyttäjä näkee logon tekstiosan vaihtuvan sporttiseen liukuvärianimaatioon joka kerta kun bottom sheet avataan (5 liukuväriä — esim. keltainen→punainen, sininen, pinkki, vihreä, violetti; kierrätys)
+- [x] **UI-16:** Kun bottom sheet suljetaan, logon väri pysyy viimeksi näytettynä — väri ei resetoidu sulkiessa
 
 ### UI — Toolbar & Haku
 
@@ -27,7 +27,7 @@
 ### Kartta — Pinnit
 
 - [ ] **MAP-08:** Kartan kaikki pinnit käyttävät yhtenäistä väriä (ei lajikohtaista värikoodausta); laji erotetaan custom SVG -ikonilla pinnin sisällä
-- [ ] **MAP-09:** Samassa osoitteessa olevat paikat näytetään klusterina kartalla; klusteria klikkaamalla käyttäjä näkee listan kaikista ko. osoitteen paikoista
+- [x] **MAP-09:** Samassa osoitteessa olevat paikat näytetään klusterina kartalla; klusteria klikkaamalla käyttäjä näkee listan kaikista ko. osoitteen paikoista
 
 ### Kartta — Korttianimaatio
 
@@ -57,13 +57,13 @@
 
 | REQ-ID | Phase | Plan |
 |--------|-------|------|
-| BRAND-01 | Phase 16 | TBD |
-| UI-13 | Phase 16 | TBD |
-| UI-14 | Phase 16 | TBD |
-| UI-15 | Phase 16 | TBD |
-| UI-16 | Phase 16 | TBD |
+| BRAND-01 | Phase 16 | 16-01 |
+| UI-13 | Phase 16 | 16-03, 16-04 |
+| UI-14 | Phase 16 | 16-02, 16-04 |
+| UI-15 | Phase 16 | 16-04 |
+| UI-16 | Phase 16 | 16-04 |
 | UI-17 | Phase 17 | TBD |
 | UI-18 | Phase 17 | TBD |
 | MAP-08 | Phase 18 | TBD |
-| MAP-09 | Phase 18 | TBD |
+| MAP-09 | Phase 18 | 18-02 |
 | MAP-10 | Phase 18 | TBD |
