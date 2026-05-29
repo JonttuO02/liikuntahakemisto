@@ -83,7 +83,8 @@ function MapAutoZoom({ target, onComplete }: { target: { lat: number; lng: numbe
     map.panTo(target)
     map.setZoom(16)
     onComplete()
-  }, [map, target])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, target, onComplete])
   return null
 }
 
