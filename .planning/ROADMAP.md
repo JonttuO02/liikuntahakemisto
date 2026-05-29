@@ -54,7 +54,7 @@ Full archive: `.planning/milestones/v1.2-ROADMAP.md`
 
 ### v1.3 AKTIIVI — Redesign & Polish (Phases 16–18)
 
-- [ ] **Phase 16: Brändi & Logo-uloke** — Rebrand to AKTIIVI, build the always-visible bottom sheet tab with animated SVG logo
+- [x] **Phase 16: Brändi & Logo-uloke** — Rebrand to AKTIIVI, build the always-visible bottom sheet tab with animated SVG logo
 - [ ] **Phase 17: Toolbar & Haku-UX** — Unify search + filters into one button; add dedicated list-toggle button
 - [ ] **Phase 18: Kartan pinnit & korttianimaatio** — Unified pin color with sport SVG icons, same-address clustering, in-place card expansion
 
@@ -119,6 +119,6 @@ Full archive: `.planning/milestones/v1.2-ROADMAP.md`
 | 13. Uusi korttimalli | v1.2 | 2/2 | ✅ Complete | 2026-05-28 |
 | 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 5/5 | ✅ Complete | 2026-05-28 |
 | 15. Arvostelut | v1.2 | 4/4 | ✅ Complete | 2026-05-28 |
-| 16. Brändi & Logo-uloke | v1.3 | 3/? | In progress | - |
-| 17. Toolbar & Haku-UX | v1.3 | 0/? | Not started | - |
+| 16. Brändi & Logo-uloke | v1.3 | 4/4 | ✅ Complete | 2026-05-29 |
+| 17. Toolbar & Haku-UX | v1.3 | 0/1 | Planned | - |
 | 18. Kartan pinnit & korttianimaatio | v1.3 | 0/? | Not started | - |

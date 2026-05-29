@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: AKTIIVI — Redesign & Polish
-status: Phase 17 context gathered — ready for planning
-last_updated: "2026-05-29T13:30:00.000Z"
-last_activity: 2026-05-29 — Phase 17 context gathered (toolbar & haku-UX)
+status: Phase 17 planned — ready to execute
+last_updated: "2026-05-29T15:00:00.000Z"
+last_activity: 2026-05-29 — Phase 17 planned (toolbar & haku-UX, 1 plan)
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 1
+  total_plans: 2
   completed_plans: 4
   percent: 33
 ---
@@ -17,10 +17,10 @@ progress:
 
 ## Current Position
 
-Phase: 17 — Toolbar & Haku-UX (not started)
-Plan: none yet
-Status: Phase 16 complete, Phase 17 up next
-Last activity: 2026-05-29 — Phase 16 closed (watermark logo, AKTIIVI rebrand)
+Phase: 17 — Toolbar & Haku-UX (planned, ready to execute)
+Plan: 17-01 (Wave 1 — 2 tasks, single file)
+Status: Phase 16 complete, Phase 17 planned
+Last activity: 2026-05-29 — Phase 17 planned (1 plan created, checker passed)
 
 ## Project Reference
 
@@ -34,7 +34,7 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
 | 16. Brändi & Logo-uloke | AKTIIVI rebrand + logo watermark at sheet bottom | BRAND-01, UI-13, UI-14, UI-15, UI-16 | ✅ Complete (4/4 plans) |
-| 17. Toolbar & Haku-UX | Unified search+filter button + dedicated list-toggle | UI-17, UI-18 | Not started |
+| 17. Toolbar & Haku-UX | Unified search+filter button + dedicated list-toggle | UI-17, UI-18 | Planned (1/1 plan) |
 | 18. Kartan pinnit & korttianimaatio | Unified pins with sport SVG icons, clustering, in-place card expansion | MAP-08, MAP-09, MAP-10 | Not started |
 
 ## Active Decisions
