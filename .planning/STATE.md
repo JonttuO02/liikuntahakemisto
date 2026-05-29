@@ -2,25 +2,25 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: AKTIIVI — Redesign & Polish
-status: planning
+status: in_progress
 last_updated: "2026-05-29T00:00:00.000Z"
-last_activity: 2026-05-29 -- Roadmap created; Phases 16-18 defined
+last_activity: 2026-05-29 — Phase 16 Plan 01 complete — metadata rebrand to AKTIIVI
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 1
+  completed_plans: 1
+  percent: 5
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 16 — Brändi & Logo-uloke (not started)
-Plan: —
-Status: Roadmap defined; ready for Phase 16 planning
-Last activity: 2026-05-29 — v1.3 roadmap written (Phases 16–18)
+Phase: 16 — Brändi & Logo-uloke (in progress)
+Plan: 01 (complete), 02+ (pending)
+Status: Plan 01 shipped — metadata/manifest/tietosuoja rebranded to AKTIIVI
+Last activity: 2026-05-29 — Phase 16 Plan 01 complete (commits 4f046c1, f970057)
 
 ## Project Reference
 
@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
-| 16. Brändi & Logo-uloke | AKTIIVI rebrand + always-visible logo tab with gradient animation | BRAND-01, UI-13, UI-14, UI-15, UI-16 | Not started |
+| 16. Brändi & Logo-uloke | AKTIIVI rebrand + always-visible logo tab with gradient animation | BRAND-01, UI-13, UI-14, UI-15, UI-16 | In progress (1/? plans) |
 | 17. Toolbar & Haku-UX | Unified search+filter button + dedicated list-toggle | UI-17, UI-18 | Not started |
 | 18. Kartan pinnit & korttianimaatio | Unified pins with sport SVG icons, clustering, in-place card expansion | MAP-08, MAP-09, MAP-10 | Not started |
 
@@ -41,6 +41,9 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 
 (carried forward from v1.2 — see PROJECT.md Key Decisions for full list)
 
+- Brand name is AKTIIVI — no "Liikuntahakemisto" in any user-visible metadata (Plan 16-01)
+- og:title auto-derives from metadata.title — no separate openGraph block needed (Plan 16-01)
+- manifest start_url is '/' — dead /?nakyma=lista param removed (Plan 16-01)
 - APIProvider placed in layout.tsx so Maps JS API loads once at app startup
 - Supabase Auth uses per-request createServerClient — never module-scope singleton
 - Map focus URL: /?id=<paikka_id> — no ?nakyma=kartta (dead param)

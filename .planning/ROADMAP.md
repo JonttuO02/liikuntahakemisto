@@ -119,6 +119,6 @@ Full archive: `.planning/milestones/v1.2-ROADMAP.md`
 | 13. Uusi korttimalli | v1.2 | 2/2 | ✅ Complete | 2026-05-28 |
 | 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 5/5 | ✅ Complete | 2026-05-28 |
 | 15. Arvostelut | v1.2 | 4/4 | ✅ Complete | 2026-05-28 |
-| 16. Brändi & Logo-uloke | v1.3 | 0/? | Not started | - |
+| 16. Brändi & Logo-uloke | v1.3 | 1/? | In progress | - |
 | 17. Toolbar & Haku-UX | v1.3 | 0/? | Not started | - |
 | 18. Kartan pinnit & korttianimaatio | v1.3 | 0/? | Not started | - |
