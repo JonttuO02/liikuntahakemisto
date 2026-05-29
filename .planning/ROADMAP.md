@@ -5,6 +5,7 @@
 - ✅ **v1.0 MVP** — Phases 1–5 (shipped 2026-05-21)
 - ✅ **v1.1 Käyttäjät, Kartta & Laatu** — Phases 6–11 (shipped 2026-05-27)
 - ✅ **v1.2 UI-uudistus & Arvostelut** — Phases 12–15 (shipped 2026-05-28)
+- 🔄 **v1.3 AKTIIVI — Redesign & Polish** — Phases 16–18 (active)
 
 ---
 
@@ -51,6 +52,54 @@ Full archive: `.planning/milestones/v1.2-ROADMAP.md`
 
 ---
 
+### v1.3 AKTIIVI — Redesign & Polish (Phases 16–18)
+
+- [ ] **Phase 16: Brändi & Logo-uloke** — Rebrand to AKTIIVI, build the always-visible bottom sheet tab with animated SVG logo
+- [ ] **Phase 17: Toolbar & Haku-UX** — Unify search + filters into one button; add dedicated list-toggle button
+- [ ] **Phase 18: Kartan pinnit & korttianimaatio** — Unified pin color with sport SVG icons, same-address clustering, in-place card expansion
+
+---
+
+## Phase Details
+
+### Phase 16: Brändi & Logo-uloke
+**Goal**: The app is rebranded to AKTIIVI and users see an always-visible logo tab at the top of the bottom sheet that opens it with an animated gradient logo
+**Depends on**: Phase 15 (v1.2 complete)
+**Requirements**: BRAND-01, UI-13, UI-14, UI-15, UI-16
+**Success Criteria** (what must be TRUE):
+  1. Browser tab title, og:title, meta description, and manifest.json all show "AKTIIVI" — no "Liikuntahakemisto" visible in any metadata or installable PWA name
+  2. A small tab/handle is always visible at the top of the bottom sheet even when the sheet is fully closed; tapping it opens the sheet
+  3. The AKTIIVI SVG logo appears inside the tab when closed, and in the sheet header when the sheet is open
+  4. Every time the sheet is opened, the logo text animates through a sporty gradient (cycles through 5 gradients: e.g. yellow-red, blue, pink, green, violet)
+  5. After closing the sheet, reopening it shows the next gradient in the cycle — the logo does not reset to a default color between opens
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 17: Toolbar & Haku-UX
+**Goal**: Users can access search and filters from a single unified button, and toggle the venue list independently, from both map and list contexts
+**Depends on**: Phase 16
+**Requirements**: UI-17, UI-18
+**Success Criteria** (what must be TRUE):
+  1. There is exactly one button in the toolbar that opens both the search field and the filter panel together — no separate search-only or filter-only buttons
+  2. That combined search+filter button works identically whether the user is in map view or list view
+  3. There is a separate, clearly distinct button dedicated only to toggling the list view open and closed — it does not also trigger search or filters
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 18: Kartan pinnit & korttianimaatio
+**Goal**: The map uses visually unified pins differentiated by sport icon, groups co-located venues into clusters, and expands venue cards in-place on the map rather than in a bottom sheet
+**Depends on**: Phase 17
+**Requirements**: MAP-08, MAP-09, MAP-10
+**Success Criteria** (what must be TRUE):
+  1. All map pins use the same base color; the sport type is communicated only by a custom SVG icon rendered inside the pin — no per-sport pin color variation
+  2. Multiple venues sharing the same address appear as a single cluster pin; tapping the cluster pin shows a list of all venues at that address
+  3. Tapping a pin or its mini-card causes that card to animate and expand in-place on the map into a full detail card; the map remains centered on that venue throughout the animation
+  4. No bottom-sheet card slides up from the bottom when a pin is tapped — the entire interaction is map-layer only
+**Plans**: TBD
+**UI hint**: yes
+
+---
+
 ## Progress Table
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -70,3 +119,6 @@ Full archive: `.planning/milestones/v1.2-ROADMAP.md`
 | 13. Uusi korttimalli | v1.2 | 2/2 | ✅ Complete | 2026-05-28 |
 | 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 5/5 | ✅ Complete | 2026-05-28 |
 | 15. Arvostelut | v1.2 | 4/4 | ✅ Complete | 2026-05-28 |
+| 16. Brändi & Logo-uloke | v1.3 | 0/? | Not started | - |
+| 17. Toolbar & Haku-UX | v1.3 | 0/? | Not started | - |
+| 18. Kartan pinnit & korttianimaatio | v1.3 | 0/? | Not started | - |

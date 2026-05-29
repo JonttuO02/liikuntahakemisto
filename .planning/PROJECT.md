@@ -4,6 +4,20 @@
 
 Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
 
+## Current Milestone: v1.3 AKTIIVI — Redesign & Polish
+
+**Goal:** Uudistetaan brändi AKTIIVIKSI, rakennetaan animoitu logo-uloke bottom sheetiin, korjataan toolbar/haku-UX ja uudistetaan kartan pinnit sekä korttianimaatiot.
+
+**Target features:**
+- Rebrand: sovelluksen nimi → AKTIIVI (meta-tagit, manifest, otsikko)
+- Bottom sheet logo-uloke — aina näkyvä tab, AKTIIVI-logo SVG, värianimaatio avatessa
+- Toolbar UX-korjaus — haku+filtteri yhdistetty, lista-toggle erillinen nappi
+- Kartan pinnit — yhtenäinen väri + custom SVG -ikonit lajeittain
+- Päällekkäisten pinnien klusterointi samassa osoitteessa
+- Kartan korttianimaatio — in-place laajeneminen, ei alareuna-kortti
+
+---
+
 ## Shipped: v1.2 UI-uudistus & Arvostelut (2026-05-28)
 
 **Delivered:** Hakupaneeli etusivulle (LiikuntapaikatLista poistettu), DiagonaalKortti diagonal split -korttimalli, /profiili-sivu kotikaupunki-kentällä, AI kotona/reissussa -konteksti, arvostelusysteemi (tähtiarvosana + teksti + anonyymi/julkinen + käyntipäivä + ruuhka-arvio, max 1/käyttäjä/paikka).
@@ -79,9 +93,18 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ REVIEW-04: Paikan profiilisivu näyttää arvostelut + tähtiarvosanojen keskiarvo — Phase 15
 - ✓ AI-05: Kotikaupunki profiiliin; AI-suositus tunnistaa kotona/reissussa-kontekstin — Phase 14
 
-### Active (v1.2)
+### Active (v1.3)
 
-(all v1.2 requirements validated — milestone complete)
+- [ ] BRAND-01: Sovelluksen brändinimi → AKTIIVI (meta-tagit, manifest, otsikko)
+- [ ] UI-13: Bottom sheet -uloke aina näkyvissä, toimii avauspainikkeena
+- [ ] UI-14: AKTIIVI-logo ulokkeessa ja sheetin yläreunassa auki-tilassa
+- [ ] UI-15: Logon tekstiväri vaihtuu animaatiolla joka kerta kun sheet avataan (5 sporttista liukuväriä)
+- [ ] UI-16: Sulkiessa väri pysyy — ei resetoidu
+- [ ] UI-17: Haku + filtterit yhdistetty yhteen nappiin, toimii kartta- ja listanäkymässä
+- [ ] UI-18: Erillinen nappi lista-näkymän toggle
+- [ ] MAP-08: Pinnit yhtenäinen väri + custom SVG -ikonit lajeittain
+- [ ] MAP-09: Sama-osoite-pinnit klusteriksi
+- [ ] MAP-10: Pinnikortti laajenee in-place animaatiolla — ei alareuna-kortti
 
 ### Future (deferred from v1.1)
 
@@ -165,4 +188,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-05-28 — v1.2 milestone archived (Phases 12–15 all shipped)*
+*Last updated: 2026-05-29 — v1.3 milestone started (AKTIIVI — Redesign & Polish)*
