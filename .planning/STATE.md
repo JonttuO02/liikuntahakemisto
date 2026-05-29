@@ -2,38 +2,38 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: AKTIIVI — Redesign & Polish
-status: Plan 03 shipped — AktiiviLogo wired into Etusivu bottom sheet handle
-last_updated: "2026-05-29T00:00:00.000Z"
-last_activity: 2026-05-29 — Phase 16 Plan 03 complete (commits fd9aed1, 541b755)
+status: Phase 17 context gathered — ready for planning
+last_updated: "2026-05-29T13:30:00.000Z"
+last_activity: 2026-05-29 — Phase 17 context gathered (toolbar & haku-UX)
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 1
   completed_plans: 4
-  percent: 40
+  percent: 33
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 16 — Brändi & Logo-uloke (in progress)
-Plan: 01 (complete), 02 (complete), 03 (complete), 04+ (pending)
-Status: Plan 03 shipped — AktiiviLogo wired into Etusivu bottom sheet handle with gradient cycle
-Last activity: 2026-05-29 — Phase 16 Plan 03 complete (commits fd9aed1, 541b755)
+Phase: 17 — Toolbar & Haku-UX (not started)
+Plan: none yet
+Status: Phase 16 complete, Phase 17 up next
+Last activity: 2026-05-29 — Phase 16 closed (watermark logo, AKTIIVI rebrand)
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-29)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.3 — AKTIIVI rebrand, logo-uloke, toolbar UX, kartan pinni- & korttiuudistus
+**Current focus:** v1.3 — AKTIIVI rebrand, toolbar UX, kartan pinni- & korttiuudistus
 
 ## Phase Progress
 
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
-| 16. Brändi & Logo-uloke | AKTIIVI rebrand + always-visible logo tab with gradient animation | BRAND-01, UI-13, UI-14, UI-15, UI-16 | In progress (3/? plans) |
+| 16. Brändi & Logo-uloke | AKTIIVI rebrand + logo watermark at sheet bottom | BRAND-01, UI-13, UI-14, UI-15, UI-16 | ✅ Complete (4/4 plans) |
 | 17. Toolbar & Haku-UX | Unified search+filter button + dedicated list-toggle | UI-17, UI-18 | Not started |
 | 18. Kartan pinnit & korttianimaatio | Unified pins with sport SVG icons, clustering, in-place card expansion | MAP-08, MAP-09, MAP-10 | Not started |
 
@@ -44,10 +44,8 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 - Brand name is AKTIIVI — no "Liikuntahakemisto" in any user-visible metadata (Plan 16-01)
 - og:title auto-derives from metadata.title — no separate openGraph block needed (Plan 16-01)
 - manifest start_url is '/' — dead /?nakyma=lista param removed (Plan 16-01)
-- AktiiviLogo uses animate(element, keyframes, options) imperative API for SVG rect width (Plan 16-02)
-- AktiiviLogo prevIndex tracked via useState+useRef combo: useState triggers re-render, useRef gives immediate access in animation callback (Plan 16-02)
-- PILL_W set to 194 to fit AKTIIVI wordmark in closed pill — simpler than Framer Motion x-transform centering (Plan 16-03)
-- gradMounted useRef guard skips first mount so gradient 0 shows statically; sweep fires on first user close+reopen (Plan 16-03)
+- AktiiviLogo.tsx exists as a standalone SVG component with gradient sweep animation (Plan 16-02)
+- AKTIIVI logo watermark: position absolute bottom-0, opacity 0.08, mask-image fade upward, tight viewBox "120 200 1430 560" (Plan 16-04)
 - APIProvider placed in layout.tsx so Maps JS API loads once at app startup
 - Supabase Auth uses per-request createServerClient — never module-scope singleton
 - Map focus URL: /?id=<paikka_id> — no ?nakyma=kartta (dead param)
@@ -68,10 +66,8 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 
 ### Architecture Notes
 
-- v1.3: AKTIIVI SVG-logo tulee käyttäjältä — placeholder käytetään kunnes logo toimitetaan
-- v1.3: Bottom sheet -uloke (tab/handle) rakennetaan Etusivu.tsx:n sheetPhase state machinen päälle
-- v1.3: Logon värianimaatio — Framer Motion + SVG text fill (gradient definitions in SVG/CSS)
-- v1.3: Toolbar UX — hakupainike yhdistetään filtteri-paneeliin; lista-toggle eriytetään
+- v1.3: Search and filter are currently separate UI elements — Phase 17 unifies them into one button
+- v1.3: List view toggle (?nakyma=lista) currently has no dedicated button — Phase 17 adds one
 - v1.3: Kartan pinnit — @vis.gl/react-google-maps AdvancedMarker, SVG-ikonit lajeittain (lib/lajit.ts)
 - v1.3: Klusterointi — sama-osoite-case: ryhmittely koordinaattien perusteella, popup/list
 - v1.3: Kortti in-place — sheet state machine / Framer Motion layoutId animation
@@ -79,5 +75,4 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 ### Open Questions
 
 - Google OAuth callback URL still needs manual setup in Google Cloud Console + Supabase dashboard
-- v1.3: Sporttisten liukuvärien 5 väriä päätetään logo-ulokevaiheen UI-SPEC:issä
 - v1.3: Klusterin click → lista vai sheet expansion? (todennäköisesti pieni popup kartalla)
