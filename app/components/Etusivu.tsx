@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MapPin, Moon, Sun, Locate, SlidersHorizontal, Search, Heart, MoreHorizontal, LogOut, User } from 'lucide-react'
+import { X, MapPin, Moon, Sun, Locate, Search, Heart, MoreHorizontal, LogOut, User, LayoutList } from 'lucide-react'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
 import { Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
@@ -98,12 +98,9 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [saa, setSaa]               = useState<SaaTiedot | null>(null)
   const [aiTeksti, setAiTeksti]     = useState<string | null>(null)
   const [valittu, setValittu]       = useState<Liikuntapaikka | null>(null)
-  const [aktiivinen, setAktiivinen] = useState('Kaikki')
   // 'open' → 'sliding' (y to contentH) → onAnimationComplete → 'closed' (pill)
   const [sheetPhase, setSheetPhase] = useState<'open' | 'sliding' | 'closed'>('open')
-  const [leftOpen, setLeftOpen]     = useState(false)
   const [rightOpen, setRightOpen]   = useState(false)
-  const [filterOpen, setFilterOpen] = useState(false)
   const [fullH, setFullH]           = useState(700)
   const [fullW, setFullW]           = useState(390)
   const [isDark, setIsDark]         = useState(false)
@@ -121,6 +118,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [searchHinta, setSearchHinta]         = useState<number | null>(null)
   const [searchAukinyt, setSearchAukinyt]     = useState(false)
   const [searchKaupunki, setSearchKaupunki]   = useState('Kaikki')
+  const [searchFocused, setSearchFocused]     = useState(false)
   const inFlight = useRef<Set<number>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { coords }                  = useGPS({ autoRequest: true })
@@ -157,16 +155,15 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       }
 
   function closeOverlays() {
-    setLeftOpen(false)
     setRightOpen(false)
-    setFilterOpen(false)
   }
 
-  function toggleSearch() {
+  function toggleSearch(focused: boolean) {
     if (searchOpen) { setSearchOpen(false); return }
     closeOverlays()
     setValittu(null)
     setSearchHaku('')
+    setSearchFocused(focused)
     if (sheetPhase === 'open') setSheetPhase('sliding')
     setSearchOpen(true)
   }
@@ -298,26 +295,22 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     setSheetPhase('sliding')
   }, [focusId, paikat]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const suodatettu = useMemo(
-    () => paikat.filter(p => aktiivinen === 'Kaikki' || p.laji.toLowerCase() === aktiivinen.toLowerCase()),
-    [paikat, aktiivinen]
-  )
-
   const lajitKartalla = useMemo(
     () => new Set(LAJIT_FILTTERI.filter(l => l !== 'Kaikki').map(l => l.toLowerCase())),
     []
   )
 
   const paikatKartalla = useMemo(
-    () => suodatettu.filter(
+    () => paikat.filter(
       (p): p is Liikuntapaikka & { latitude: number; longitude: number } =>
+        (searchLaji === 'Kaikki' || p.laji.toLowerCase() === searchLaji.toLowerCase()) &&
         p.latitude != null && p.longitude != null &&
         lajitKartalla.has(p.laji.toLowerCase())
     ),
-    [suodatettu, lajitKartalla]
+    [paikat, searchLaji, lajitKartalla]
   )
 
-  const anyOverlayOpen = leftOpen || rightOpen || filterOpen
+  const anyOverlayOpen = rightOpen
 
   const kaupungit = useMemo(() => deriveKaupungit(paikat), [paikat])
 
@@ -344,6 +337,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     }),
     [paikat, searchLaji, searchHaku, searchHinta, searchAukinyt, searchKaupunki]
   )
+
+  const isFilterActive = searchLaji !== 'Kaikki' || searchHinta !== null || searchAukinyt || searchKaupunki !== 'Kaikki'
 
   return (
     <>
@@ -448,7 +443,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         <div className="fixed inset-0" style={{ zIndex: 63 }} onClick={closeOverlays} />
       )}
 
-      {/* ── Top-left toolbar — filter + count ──────────────────────────── */}
+      {/* ── Top-left toolbar — search + list toggle ────────────────────── */}
       <div
         className="fixed"
         style={{
@@ -457,93 +452,33 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           zIndex: 64,
         }}
       >
-        <motion.div
-          layout
-          transition={{ layout: { type: 'spring', damping: 30, stiffness: 350 } }}
-          className="glass rounded-full flex items-center overflow-hidden"
-          style={{ height: 40 }}
-        >
-          {/* Trigger button */}
-          <button
-            onClick={() => { setLeftOpen(l => !l); setRightOpen(false); setFilterOpen(false) }}
-            className="w-10 h-10 shrink-0 flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={toggleSearch}
-            className="w-10 h-10 shrink-0 flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
-            aria-label="Hae liikuntapaikkoja"
+        <div className="glass rounded-full flex items-center" style={{ height: 40 }}>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => toggleSearch(true)}
+            className="w-10 h-10 shrink-0 flex items-center justify-center [transition:color_150ms_ease] relative"
+            style={{ color: isFilterActive || searchOpen ? '#111111' : 'rgba(17,17,17,0.7)' }}
+            aria-label="Haku ja filtterit"
           >
             <Search className="w-4 h-4" />
-          </button>
-
-          {/* Expanded content */}
-          <AnimatePresence>
-            {leftOpen && (
-              <motion.div
-                key="left-content"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.12, delay: 0.06 }}
-                className="flex items-center gap-2.5 pr-4 whitespace-nowrap"
-              >
-                {/* Filter selector */}
-                <button
-                  onClick={() => setFilterOpen(f => !f)}
-                  className="flex items-center gap-1 text-sm font-bold text-[#111111] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_ease]"
-                >
-                  {aktiivinen === 'Kaikki' ? 'Kaikki lajit' : aktiivinen}
-                  <motion.span
-                    animate={{ rotate: filterOpen ? 180 : 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="inline-flex"
-                  >
-                    ▾
-                  </motion.span>
-                </button>
-
-                {/* Divider */}
-                <div className="w-px h-4 bg-[rgba(0,0,0,0.1)]" />
-
-                {/* Count */}
-                <span className="text-sm text-[rgba(17,17,17,0.5)]">
-                  {suodatettu.length} kohdetta
-                </span>
-              </motion.div>
+            {isFilterActive && (
+              <span
+                className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#111111]"
+                aria-hidden="true"
+              />
             )}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* Filter dropdown */}
-        <AnimatePresence>
-          {filterOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -6, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.97 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="absolute top-full left-0 mt-2 glass rounded-2xl py-1.5 min-w-[160px] shadow-xl"
-              style={{ zIndex: 65 }}
-            >
-              {LAJIT_FILTTERI.map(laji => (
-                <button
-                  key={laji}
-                  onClick={() => { setAktiivinen(laji); setFilterOpen(false) }}
-                  className={`w-full text-left px-4 py-2.5 text-sm font-bold [transition:color_100ms_ease]
-                    ${aktiivinen === laji
-                      ? 'text-[#111111]'
-                      : 'text-[rgba(17,17,17,0.5)] hover:text-[#111111] hover:bg-[rgba(0,0,0,0.03)]'
-                    }`}
-                >
-                  {laji}
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </motion.button>
+          <div className="w-px h-4 bg-[rgba(0,0,0,0.1)]" />
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => toggleSearch(false)}
+            className="w-10 h-10 shrink-0 flex items-center justify-center [transition:color_150ms_ease]"
+            style={{ color: searchOpen && !searchFocused ? '#111111' : 'rgba(17,17,17,0.7)' }}
+            aria-label="Näytä lista"
+          >
+            <LayoutList className="w-4 h-4" />
+          </motion.button>
+        </div>
       </div>
 
       {/* ── Top-right toolbar — search + favorites ─────────────────────── */}
@@ -572,13 +507,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 transition={{ duration: 0.12, delay: 0.06 }}
                 className="flex items-center gap-1 pl-2"
               >
-                <button
-                  onClick={toggleSearch}
-                  className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
-                >
-                  <Search className="w-3.5 h-3.5" />
-                  Haku
-                </button>
                 <Link
                   href="/profiili"
                   onClick={closeOverlays}
@@ -625,7 +553,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
           {/* Trigger button */}
           <button
-            onClick={() => { setRightOpen(r => !r); setLeftOpen(false); setFilterOpen(false) }}
+            onClick={() => { setRightOpen(r => !r) }}
             className="w-10 h-10 shrink-0 flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
           >
             <MoreHorizontal className="w-4 h-4" />
@@ -762,7 +690,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             <div className="glass rounded-full flex items-center gap-2 px-3 h-full">
               <Search className="w-3.5 h-3.5 text-[rgba(17,17,17,0.4)] shrink-0 pointer-events-none" />
               <input
-                autoFocus
+                autoFocus={searchFocused}
                 type="search"
                 placeholder="Hae liikuntapaikkaa..."
                 value={searchHaku}
