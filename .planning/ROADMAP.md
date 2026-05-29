@@ -72,7 +72,11 @@ Full archive: `.planning/milestones/v1.2-ROADMAP.md`
   3. The AKTIIVI SVG logo appears inside the tab when closed, and in the sheet header when the sheet is open
   4. Every time the sheet is opened, the logo text animates through a sporty gradient (cycles through 5 gradients: e.g. yellow-red, blue, pink, green, violet)
   5. After closing the sheet, reopening it shows the next gradient in the cycle — the logo does not reset to a default color between opens
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 18-01-PLAN.md -- Unified red pins with sport SVG icons (MAP-08)
+- [ ] 18-02-PLAN.md -- Same-address clustering with popup (MAP-09)
+- [ ] 18-03-PLAN.md -- In-place card expansion, bottom sheet removal (MAP-10)
 **UI hint**: yes
 
 ### Phase 17: Toolbar & Haku-UX
@@ -83,7 +87,11 @@ Full archive: `.planning/milestones/v1.2-ROADMAP.md`
   1. There is exactly one button in the toolbar that opens both the search field and the filter panel together — no separate search-only or filter-only buttons
   2. That combined search+filter button works identically whether the user is in map view or list view
   3. There is a separate, clearly distinct button dedicated only to toggling the list view open and closed — it does not also trigger search or filters
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 18-01-PLAN.md -- Unified red pins with sport SVG icons (MAP-08)
+- [ ] 18-02-PLAN.md -- Same-address clustering with popup (MAP-09)
+- [ ] 18-03-PLAN.md -- In-place card expansion, bottom sheet removal (MAP-10)
 **UI hint**: yes
 
 ### Phase 18: Kartan pinnit & korttianimaatio
@@ -95,7 +103,11 @@ Full archive: `.planning/milestones/v1.2-ROADMAP.md`
   2. Multiple venues sharing the same address appear as a single cluster pin; tapping the cluster pin shows a list of all venues at that address
   3. Tapping a pin or its mini-card causes that card to animate and expand in-place on the map into a full detail card; the map remains centered on that venue throughout the animation
   4. No bottom-sheet card slides up from the bottom when a pin is tapped — the entire interaction is map-layer only
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 18-01-PLAN.md -- Unified red pins with sport SVG icons (MAP-08)
+- [ ] 18-02-PLAN.md -- Same-address clustering with popup (MAP-09)
+- [ ] 18-03-PLAN.md -- In-place card expansion, bottom sheet removal (MAP-10)
 **UI hint**: yes
 
 ---
@@ -121,4 +133,4 @@ Full archive: `.planning/milestones/v1.2-ROADMAP.md`
 | 15. Arvostelut | v1.2 | 4/4 | ✅ Complete | 2026-05-28 |
 | 16. Brändi & Logo-uloke | v1.3 | 4/4 | ✅ Complete | 2026-05-29 |
 | 17. Toolbar & Haku-UX | v1.3 | 1/1 | ✅ Complete | 2026-05-29 |
-| 18. Kartan pinnit & korttianimaatio | v1.3 | 0/? | Not started | - |
+| 18. Kartan pinnit & korttianimaatio | v1.3 | 0/3 | Not started | - |
