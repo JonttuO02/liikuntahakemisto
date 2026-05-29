@@ -25,6 +25,7 @@ import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 import { deriveKaupungit } from '@/lib/cityFilter'
 import DiagonaalKortti from './DiagonaalKortti'
+import AktiiviLogo from './AktiiviLogo'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
@@ -121,6 +122,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [searchHinta, setSearchHinta]         = useState<number | null>(null)
   const [searchAukinyt, setSearchAukinyt]     = useState(false)
   const [searchKaupunki, setSearchKaupunki]   = useState('Kaikki')
+  const [gradIndex, setGradIndex]             = useState(0)
+  const gradMounted = useRef(false)
   const inFlight = useRef<Set<number>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { coords }                  = useGPS({ autoRequest: true })
@@ -297,6 +300,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     setAutoZoomTarget({ lat: target.latitude, lng: target.longitude })
     setSheetPhase('sliding')
   }, [focusId, paikat]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!gradMounted.current) { gradMounted.current = true; return }
+    if (sheetPhase === 'open') setGradIndex(i => (i + 1) % 5)
+  }, [sheetPhase])
 
   const suodatettu = useMemo(
     () => paikat.filter(p => aktiivinen === 'Kaikki' || p.laji.toLowerCase() === aktiivinen.toLowerCase()),
