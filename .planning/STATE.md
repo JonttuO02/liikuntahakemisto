@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: UI-uudistus & Arvostelut
-status: milestone complete
-last_updated: "2026-05-28T21:00:00.000Z"
-last_activity: 2026-05-28 -- v1.2 milestone complete, all 4 phases shipped
+status: archived
+last_updated: "2026-05-28T23:59:00.000Z"
+last_activity: 2026-05-28 -- v1.2 milestone archived; /gsd:new-milestone to start v1.3
 progress:
   total_phases: 4
   completed_phases: 4
@@ -17,17 +17,17 @@ progress:
 
 ## Current Position
 
-Phase: v1.2 COMPLETE — all 4 phases shipped
-Last activity: 2026-05-28 -- Phase 15 UAT complete (9/9 passed), v1.2 milestone done
+Phase: v1.2 ARCHIVED — milestone closed 2026-05-28
+Last activity: 2026-05-28 -- v1.2 milestone archived (14 plans, 4 phases); run /gsd:new-milestone to start v1.3
 
 [████████████████████] 100% — 4/4 phases complete
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-27)
+See: .planning/PROJECT.md (updated 2026-05-28)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.2 milestone complete — ready for /gsd:complete-milestone
+**Current focus:** v1.2 archived — run /gsd:new-milestone to plan v1.3
 
 ## Phase Progress
 

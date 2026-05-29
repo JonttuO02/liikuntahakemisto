@@ -77,6 +77,48 @@
 
 ---
 
+## Milestone: v1.2 — UI-uudistus & Arvostelut
+
+**Shipped:** 2026-05-28
+**Phases:** 4 (phases 12–15) | **Plans:** 14 | **Timeline:** 2 days
+
+### What Was Built
+- Hakukenttä etusivulle: left toolbar search overlay, real-time card list, LiikuntapaikatLista deleted
+- DiagonaalKortti diagonal split: clip-path + Google Static Maps 200×128 snapshot
+- /profiili page: Supabase profiles table, kotikaupunki persistence
+- AI kotona/reissussa: buildReissuKonteksti injects home city + current city into /api/saasuositus prompt
+- Reviews system: TDD reviewUtils helpers (9 tests), reviews table + RLS, StarPicker, ReviewForm with upsert (composite UNIQUE), ReviewSection on venue page
+
+### What Worked
+- TDD for reviewUtils: resolveDisplayName + computeAvgRating helpers tested before wiring to UI — caught edge cases (empty string anon, non-integer average)
+- Worktree isolation for Phase 15 plans (15-02, 15-03, 15-04) — enabled parallel execution without merge conflicts
+- Verify scripts per plan: regex guard for `user_id` in reviews SELECT (T-15-02 defense in depth)
+- Composite UNIQUE constraint enforced at DB level (not just app level) — max 1 review per user per place is reliable
+
+### What Was Inefficient
+- Phase 12 and 13 executed without SUMMARY.md generation — gaps discovered at milestone close
+- buildReissuKonteksti live AI test skipped due to missing Claude API credits — unit test coverage is good but E2E unverified
+- REQUIREMENTS.md checkboxes not ticked during execution (same issue as v1.1) — only PROJECT.md was updated
+
+### Patterns Established
+- Privacy-by-default for user data in SELECT: always list columns explicitly; verify scripts can guard specific exclusions (T-15-02 pattern)
+- RLS policy for public data: `SELECT USING(true)` is explicit and intentional — document divergence from private-read pattern
+- kotikaupunki in a separate `profiles` table (not auth.users metadata) — clean separation, browser client can write with RLS
+- computeAvgRating: return raw float, round at render time — testable with exact equality, no rounding decisions in utility layer
+
+### Key Lessons
+1. Always generate SUMMARY.md files after plan execution — they're the source for milestone accomplishments
+2. Review REQUIREMENTS.md during execution, not just at milestone close — prevents the "all Pending" gap at archive time
+3. For AI features: budget API credits for E2E verification, or document the gap explicitly at verification time
+4. Composite UNIQUE constraints at the DB level are more reliable than app-layer enforcement alone — prefer DB constraints for business rules like "1 review per user per place"
+
+### Cost Observations
+- Model mix: primarily Sonnet (execution), Opus (planning/discussion)
+- Sessions: ~2 sessions over 2 days
+- Notable: 148 files changed with +11,524/-14,298 lines across 4 phases — high churn ratio due to removing LiikuntapaikatLista and refactoring Etusivu
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -85,6 +127,7 @@
 |-----------|--------|-------|----------|------------|
 | v1.0 | 5 | 25 | 3 days | Foundation: security + data + AI |
 | v1.1 | 6 | 23 | 6 days | Added auth, map arch, PWA |
+| v1.2 | 4 | 14 | 2 days | UI overhaul: search integration, new card model, reviews, AI personalization |
 
 ### Cumulative Quality
 
@@ -92,9 +135,12 @@
 |-----------|-------|-----------------|--------------|
 | v1.0 | lib/aukiolo.ts 100% | aukiolo, priceUtils | 0 major |
 | v1.1 | lib/priceUtils + lib/cityFilter | priceUtils, cityFilter | @supabase/ssr, @serwist/next, serwist |
+| v1.2 | lib/reviewUtils 9 tests (TDD) | reviewUtils (resolveDisplayName, computeAvgRating) | 0 major |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. TDD for utility functions: always write tests for lib/ functions before wiring to UI
 2. Cache key design: include all dimensions that affect the result (date + city + user context)
 3. Single source of truth in lib/: prevents duplicate logic across components
+4. Generate SUMMARY.md after every plan execution — missing summaries create gaps at milestone close
+5. DB-level constraints beat app-level enforcement for business rules (composite UNIQUE for reviews)

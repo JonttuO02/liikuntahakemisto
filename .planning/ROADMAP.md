@@ -37,79 +37,17 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
 
 </details>
 
----
+<details>
+<summary>✅ v1.2 UI-uudistus & Arvostelut (Phases 12–15) — SHIPPED 2026-05-28</summary>
 
-### 🚧 v1.2 UI-uudistus & Arvostelut (In Progress)
+- [x] **Phase 12: Haku & korttilistaus etusivulle** — Search overlay + real-time card list in Etusivu; remove LiikuntapaikatLista and /?nakyma=lista (3/3 plans) — 2026-05-27
+- [x] **Phase 13: Uusi korttimalli** — DiagonaalKortti with clip-path diagonal split + Google Static Maps thumbnail (2/2 plans) — 2026-05-28
+- [x] **Phase 14: Profiilisivu & AI-kotipaikkakunta** — /profiili page, profiles table, kotikaupunki persistence, buildReissuKonteksti AI context (5/5 plans) — 2026-05-28
+- [x] **Phase 15: Arvostelut** — reviews table + RLS, StarPicker, ReviewForm (upsert max 1/user/place), ReviewSection on venue page (4/4 plans) — 2026-05-28
 
-**Milestone Goal:** Poistetaan erillinen listanäkymä ja integroidaan haku sekä paikkojenselailu etusivulle uudella diagonaalisella korttimallilla; lisätään arvostelusysteemi kirjautuneille käyttäjille ja kotikaupunkipersonointi AI-suositukseen.
+Full archive: `.planning/milestones/v1.2-ROADMAP.md`
 
-- [x] **Phase 12: Haku & korttilistaus etusivulle** — Search icon in left toolbar + real-time card list panel; remove LiikuntapaikatLista and /?nakyma=lista route (completed 2026-05-27)
-- [x] **Phase 13: Uusi korttimalli** — Diagonal split card with Google Static Maps snapshot for home page list (completed 2026-05-28)
-- [x] **Phase 14: Profiilisivu & AI-kotipaikkakunta** — /profiili page, Supabase profiles table, home city field, AI home/away context (completed 2026-05-28)
-- [x] **Phase 15: Arvostelut** — Reviews table, ReviewForm, ReviewList on venue profile page, star average
- (completed 2026-05-28)
-
----
-
-## Phase Details
-
-### Phase 12: Haku & korttilistaus etusivulle
-**Goal**: Käyttäjä voi hakea liikuntapaikkoja suoraan etusivulta ja selata kaikkia paikkoja korttilistana — erillinen listanäkymäsivu on poistettu
-**Depends on**: Phase 11
-**Requirements**: UI-09, UI-10
-**Success Criteria** (what must be TRUE):
-  1. Käyttäjä klikkaa hakuikonin vasemmasta toolbarista ja hakukenttä avautuu — tulokset päivittyvät reaaliaikaisesti kirjoittaessa
-  2. Kaikki (filtterin mukainen) liikuntapaikat näkyvät scrollattavana korttilistana hakukentän alla etusivulla
-  3. Osoitteeseen `/?nakyma=lista` navigointi ohjaa etusivulle eikä erillistä listasivua enää renderöidä
-  4. `LiikuntapaikatLista`-komponentti ja siihen liittyvä reitti on poistettu koodipohjasta kokonaan
-**Plans**: TBD
-**UI hint**: yes
-
-### Phase 13: Uusi korttimalli
-**Goal**: Etusivun korttilistassa jokainen kortti käyttää uutta diagonaalista mallia jossa paikan tiedot ja Static Maps -snapshot ovat rinnakkain
-**Depends on**: Phase 12
-**Requirements**: UI-11
-**Success Criteria** (what must be TRUE):
-  1. Etusivun korttilistassa jokainen kortti näyttää vasemmalla puolella paikan nimen, lajin, hinnan, aukioloajan ja etäisyyden
-  2. Kortissa on oikealla puolella Google Static Maps -kuvakaappaus paikan sijainnista pin-ikonin kanssa
-  3. Kartan zoom-kortit (MAP-06-ominaisuus) pysyvät ennallaan — ne eivät käytä uutta diagonaalimallia
-**Plans:** 2 plans
-  - [ ] 13-01-PLAN.md — Create DiagonaalKortti.tsx component (clip-path diagonal split, Static Maps thumbnail, sport-color fallback)
-  - [ ] 13-02-PLAN.md — Swap PaikkaKortti → DiagonaalKortti in Etusivu.tsx + human verification of visual rendering and Static Maps loading
-**UI hint**: yes
-
-### Phase 14: Profiilisivu & AI-kotipaikkakunta
-**Goal**: Kirjautuneella käyttäjällä on profiilisivu jossa voi tallentaa kotipaikkakuntansa, ja AI-suositus hyödyntää tätä tietoa
-**Depends on**: Phase 11
-**Requirements**: AUTH-04, AI-05
-**Success Criteria** (what must be TRUE):
-  1. Kirjautunut käyttäjä näkee `/profiili`-sivulla sähköpostiosoitteensa ja voi kirjoittaa kotipaikkakuntansa tekstikenttään
-  2. Kotipaikkakunta tallentuu Supabaseen ja on edelleen näkyvissä sivun uudelleenlatauksessa
-  3. Kun kotipaikkakunta on asetettu, `/api/saasuositus`-promptiin lisätään tieto kotikaupungista ja nykyisestä sijaintikaupungista — Claude käyttää tätä kontekstia generoidessaan suosituksen (ei näytetä eksplisiittistä "kotona/reissussa"-tekstiä käyttäjälle)
-**Plans:** 5/5 plans complete
-  - [x] 14-01-PLAN.md — Supabase profiles migration (CREATE TABLE + RLS) + buildReissuKonteksti helper with unit tests
-  - [x] 14-02-PLAN.md — Add Profiili navigation link to NavPill.tsx and Etusivu.tsx inline pill
-  - [x] 14-03-PLAN.md — Create /profiili page shell and ProfiiliClient component (auth machine, profiles upsert)
-  - [x] 14-04-PLAN.md — Extend Etusivu.tsx (kotikaupunki state + profiles fetch + POST trigger) and route.ts (kotikaupunki parsing + reissussa prompt)
-  - [x] 14-05-PLAN.md — Human verification of full Phase 14 feature
-**UI hint**: yes
-
-### Phase 15: Arvostelut
-**Goal**: Kirjautunut käyttäjä voi jättää arvostelun liikuntapaikalle ja kaikki paikan arvostelut näkyvät profiilisivulla tähtiarvosanojen keskiarvoineen
-**Depends on**: Phase 14
-**Requirements**: REVIEW-01, REVIEW-02, REVIEW-03, REVIEW-04
-**Success Criteria** (what must be TRUE):
-  1. Kirjautunut käyttäjä voi jättää arvostelun (1–5 tähteä + vapaa teksti) paikan profiilisivulla — toinen arvostelu samaan paikkaan ei onnistu
-  2. Arvostelija valitsee per arvostelu näkyykö oma nimi vai jääkö arvostelu anonyymiksi
-  3. Arvostelu sisältää käyntipäivämäärän (date picker) ja ruuhka-arvion (hiljaista / sopivasti / ruuhkaista)
-  4. Paikan profiilisivu näyttää kaikki kyseisen paikan arvostelut sekä tähtiarvosanojen laskennallisen keskiarvon
-  5. Kirjautumaton käyttäjä näkee olemassa olevat arvostelut mutta ei arvostelulomaketta
-**Plans:** 4/4 plans complete
-  - [x] 15-01-PLAN.md — Wave 0: reviewUtils helpers (TDD) + reviews migration + [BLOCKING] supabase db push
-  - [x] 15-02-PLAN.md — StarPicker controlled input + ReviewSection shell (.glass card, StarAverage, list, Näytä kaikki)
-  - [x] 15-03-PLAN.md — ReviewForm: auth machine (4 states), upsert with onConflict, router.refresh()
-  - [x] 15-04-PLAN.md — Integrate ReviewSection into app/paikat/[id]/page.tsx + human verification (REVIEW-01..04 end-to-end)
-**UI hint**: yes
+</details>
 
 ---
 
@@ -130,5 +68,5 @@ Full archive: `.planning/milestones/v1.1-ROADMAP.md`
 | 11. PWA | v1.1 | 3/3 | ✅ Complete | 2026-05-27 |
 | 12. Haku & korttilistaus etusivulle | v1.2 | 3/3 | ✅ Complete | 2026-05-27 |
 | 13. Uusi korttimalli | v1.2 | 2/2 | ✅ Complete | 2026-05-28 |
-| 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 5/5 | Complete   | 2026-05-28 |
-| 15. Arvostelut | v1.2 | 4/4 | Complete   | 2026-05-28 |
+| 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 5/5 | ✅ Complete | 2026-05-28 |
+| 15. Arvostelut | v1.2 | 4/4 | ✅ Complete | 2026-05-28 |

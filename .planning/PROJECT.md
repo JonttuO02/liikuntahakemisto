@@ -4,15 +4,9 @@
 
 Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
 
-## Current Milestone: v1.2 UI-uudistus & Arvostelut
+## Shipped: v1.2 UI-uudistus & Arvostelut (2026-05-28)
 
-**Goal:** Poistetaan erillinen listanäkymä ja integroidaan haku sekä paikkojenselailu etusivulle uudella diagonaalisella korttimallilla, sekä lisätään arvostelusysteemi kirjautuneille käyttäjille.
-
-**Target features:**
-- Haku etusivulle: vasen toolbar + hakupalkki + korttilistaus (ei erillistä /?nakyma=lista -sivua)
-- Uusi korttimalli: diagonaalinen jako — vasen = tiedot, oikea = Google Static Maps snapshot + pin
-- Arvostelusysteemi: tähtiarvosana + teksti + anonyymi/julkinen valinta + käyntipäivä + ruuhka-arvio
-- AI-personointi: kotikaupunki profiiliin → ehdotus tietää onko käyttäjä kotona vai reissussa
+**Delivered:** Hakupaneeli etusivulle (LiikuntapaikatLista poistettu), DiagonaalKortti diagonal split -korttimalli, /profiili-sivu kotikaupunki-kentällä, AI kotona/reissussa -konteksti, arvostelusysteemi (tähtiarvosana + teksti + anonyymi/julkinen + käyntipäivä + ruuhka-arvio, max 1/käyttäjä/paikka).
 
 ## Core Value
 
@@ -107,7 +101,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ## Context
 
-**Nykytila:** v1.1 toimitettu 2026-05-27. Kaikki 19 v1.1-vaatimusta toteutettu. Sovellus toimii Tampereen, Helsingin ja Turun alueella. Käyttäjätilit, suosikit ja personoitu AI-suosittelu live. PWA asennettavissa ja toimii offline-tilassa.
+**Nykytila:** v1.2 toimitettu 2026-05-28. Kaikki 9 v1.2-vaatimusta toteutettu. Sovellus toimii Tampereen, Helsingin ja Turun alueella. Käyttäjätilit, suosikit, profiilisivu, arvostelusysteemi ja personoitu AI-suosittelu live. PWA asennettavissa ja toimii offline-tilassa. Erillinen listanäkymäsivu poistettu — haku ja korttilistaus integroitu etusivulle.
 
 **Data-arkkitehtuuri:** Google Places API hakee automaattisesti aukioloajat → upsertit Supabaseen. Kertakäyntihinnat manuaalisesti top 20 palvelulle. AI-widget: Claude Haiku + Open-Meteo, sessionStorage-cache per kalenteripäivä + per kaupunki. Supabase Auth käyttäjätaulut + suosikit (user_id → paikka_id). Sync-skripti tukee ?kaupunki= parametria Helsinki/Turku/Tampere-datalle.
 
@@ -171,4 +165,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-05-28 — v1.2 milestone complete (Phases 12–15 all shipped)*
+*Last updated: 2026-05-28 — v1.2 milestone archived (Phases 12–15 all shipped)*
