@@ -20,7 +20,7 @@ import { TAMPERE } from '@/lib/constants'
 import { nearestKaupunki, haversineKm, formatDistance } from '@/lib/geo'
 import { isSafeUrl } from '@/lib/urlUtils'
 import { useGPS } from '@/hooks/useGPS'
-import { pinUrl } from '@/lib/sportPins'
+import { pinUrl, clusterPinUrl } from '@/lib/sportPins'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 import { deriveKaupungit } from '@/lib/cityFilter'
@@ -410,30 +410,93 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             }, 3000)
           }}
         >
-          {paikatKartalla.map(p => {
+          {mapItems.map(item => {
+            if (item.type === 'single') {
+              const p = item.paikka
+              return (
+                <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1}>
+                  <AnimatePresence mode="wait" initial={false}>
+                    {zoomLevel < 16 ? (
+                      <motion.div key="pin" exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                        onClick={() => setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })}>
+                        <img src={pinUrl(p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
+                      </motion.div>
+                    ) : (
+                      <motion.div key="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}
+                        className="glass rounded-xl px-2.5 py-2 flex flex-col gap-1 cursor-pointer"
+                        style={{ minWidth: 100, maxWidth: 140 }}
+                        onClick={e => { e.stopPropagation(); setValittu(p); setSearchOpen(false) }}>
+                        <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white truncate" style={{ backgroundColor: lajiKonfig[p.laji]?.color ?? '#6b7280' }}>
+                          {lajiKonfig[p.laji]?.label ?? p.laji}
+                        </span>
+                        <span className="font-bold text-sm text-[#111111] truncate leading-tight">{p.nimi}</span>
+                        {(p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)) && (
+                          <span className="text-[10px] text-[rgba(17,17,17,0.55)] truncate">{p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)}</span>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </AdvancedMarker>
+              )
+            }
+            // cluster
             return (
-              <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1}>
-                <AnimatePresence mode="wait" initial={false}>
-                  {zoomLevel < 16 ? (
-                    <motion.div key="pin" exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-                      onClick={() => setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })}>
-                      <img src={pinUrl(p.laji)} width={28} height={38} alt="" className="gmap-pin" data-active={valittu?.id === p.id ? "true" : undefined} />
-                    </motion.div>
-                  ) : (
-                    <motion.div key="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}
-                      className="glass rounded-xl px-2.5 py-2 flex flex-col gap-1 cursor-pointer"
-                      style={{ minWidth: 100, maxWidth: 140 }}
-                      onClick={e => { e.stopPropagation(); setValittu(p); setSearchOpen(false) }}>
-                      <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white truncate" style={{ backgroundColor: lajiKonfig[p.laji]?.color ?? '#6b7280' }}>
-                        {lajiKonfig[p.laji]?.label ?? p.laji}
-                      </span>
-                      <span className="font-bold text-sm text-[#111111] truncate leading-tight">{p.nimi}</span>
-                      {(p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)) && (
-                        <span className="text-[10px] text-[rgba(17,17,17,0.55)] truncate">{p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)}</span>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              <AdvancedMarker
+                key={'cluster-' + item.items.map(p => p.id).join('-')}
+                position={{ lat: item.lat, lng: item.lng }}
+                zIndex={expandedCluster === item.items ? 20 : 2}
+              >
+                <div style={{ position: 'relative' }}>
+                  <motion.div whileTap={{ scale: 0.95 }}>
+                    <img
+                      src={clusterPinUrl(item.items.length)}
+                      width={28}
+                      height={38}
+                      alt=""
+                      style={{ cursor: 'pointer', display: 'block' }}
+                      onClick={e => { e.stopPropagation(); setExpandedCluster(expandedCluster === item.items ? null : item.items); setSearchOpen(false) }}
+                    />
+                  </motion.div>
+                  <AnimatePresence>
+                    {expandedCluster === item.items && (
+                      <motion.div
+                        key="cluster-popup"
+                        initial={{ opacity: 0, scale: 0.95, y: 4 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.18 }}
+                        className="glass rounded-2xl py-2"
+                        style={{
+                          position: 'absolute',
+                          bottom: 'calc(100% + 8px)',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: 200,
+                          maxHeight: 240,
+                          overflowY: 'auto',
+                          zIndex: 10,
+                        }}
+                        onClick={e => e.stopPropagation()}
+                      >
+                        {item.items.map(venue => (
+                          <button
+                            key={venue.id}
+                            onClick={() => { setValittu(venue); setExpandedCluster(null); setSearchOpen(false) }}
+                            className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-[rgba(0,0,0,0.04)] [transition:background-color_150ms_ease]"
+                          >
+                            <span
+                              className="inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white shrink-0"
+                              style={{ backgroundColor: lajiKonfig[venue.laji]?.color ?? '#6b7280' }}
+                            >
+                              {lajiKonfig[venue.laji]?.label ?? venue.laji}
+                            </span>
+                            <span className="font-bold text-xs text-[#111111] truncate leading-tight">{venue.nimi}</span>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </AdvancedMarker>
             )
           })}
