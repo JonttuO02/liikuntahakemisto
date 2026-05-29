@@ -507,13 +507,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 transition={{ duration: 0.12, delay: 0.06 }}
                 className="flex items-center gap-1 pl-2"
               >
-                <button
-                  onClick={() => toggleSearch(true)}
-                  className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
-                >
-                  <Search className="w-3.5 h-3.5" />
-                  Haku
-                </button>
                 <Link
                   href="/profiili"
                   onClick={closeOverlays}
@@ -560,7 +553,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
           {/* Trigger button */}
           <button
-            onClick={() => { setRightOpen(r => !r); setLeftOpen(false); setFilterOpen(false) }}
+            onClick={() => { setRightOpen(r => !r) }}
             className="w-10 h-10 shrink-0 flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
           >
             <MoreHorizontal className="w-4 h-4" />
@@ -697,7 +690,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             <div className="glass rounded-full flex items-center gap-2 px-3 h-full">
               <Search className="w-3.5 h-3.5 text-[rgba(17,17,17,0.4)] shrink-0 pointer-events-none" />
               <input
-                autoFocus
+                autoFocus={searchFocused}
                 type="search"
                 placeholder="Hae liikuntapaikkaa..."
                 value={searchHaku}
