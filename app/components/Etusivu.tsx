@@ -533,12 +533,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 {supabaseUser ? (
                   <button
                     onClick={() => {
-                      createBrowserSupabase().auth.signOut().then(() => {
-                        setSupabaseUser(null)
-                        setSuosikitIds(new Set())
-                        router.refresh()
-                      })
+                      // Optimistic clears before signOut — prevents a narrow window
+                      // where supabaseUser is non-null but session is being torn down
+                      setSupabaseUser(null)
+                      setSuosikitIds(new Set())
                       closeOverlays()
+                      createBrowserSupabase().auth.signOut().then(() => router.refresh())
                     }}
                     className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                   >
