@@ -404,7 +404,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                     <motion.div key="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}
                       className="glass rounded-xl px-2.5 py-2 flex flex-col gap-1 cursor-pointer"
                       style={{ minWidth: 100, maxWidth: 140 }}
-                      onClick={e => { e.stopPropagation(); setValittu(p) }}>
+                      onClick={e => { e.stopPropagation(); setValittu(p); setSearchOpen(false) }}>
                       <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white truncate" style={{ backgroundColor: lajiKonfig[p.laji]?.color ?? '#6b7280' }}>
                         {lajiKonfig[p.laji]?.label ?? p.laji}
                       </span>
