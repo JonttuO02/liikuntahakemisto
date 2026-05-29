@@ -2,10 +2,10 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Liikuntahakemisto',
-    short_name: 'Liikunta',
+    name: 'AKTIIVI',
+    short_name: 'AKTIIVI',
     description: 'Löydä liikuntapaikat läheltäsi',
-    start_url: '/?nakyma=lista',
+    start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#4F46E5',

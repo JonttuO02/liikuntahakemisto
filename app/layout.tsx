@@ -8,8 +8,8 @@ const inter    = Inter({ subsets: ['latin'], variable: '--font-sans' })
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-serif' })
 
 export const metadata: Metadata = {
-  title: 'Liikuntahakemisto',
-  description: 'Löydä liikuntapaikat läheltäsi Tampereella',
+  title: 'AKTIIVI',
+  description: 'Löydä liikuntapaikat läheltäsi — AKTIIVI',
   manifest: '/manifest.webmanifest',
   appleWebApp: { statusBarStyle: 'default' },
   other: { 'mobile-web-app-capable': 'yes' },
