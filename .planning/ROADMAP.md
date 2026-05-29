@@ -74,9 +74,9 @@ Full archive: `.planning/milestones/v1.2-ROADMAP.md`
   5. After closing the sheet, reopening it shows the next gradient in the cycle — the logo does not reset to a default color between opens
 **Plans**: 3 plans
 Plans:
-- [ ] 18-01-PLAN.md -- Unified red pins with sport SVG icons (MAP-08)
-- [ ] 18-02-PLAN.md -- Same-address clustering with popup (MAP-09)
-- [ ] 18-03-PLAN.md -- In-place card expansion, bottom sheet removal (MAP-10)
+- [x] 18-01-PLAN.md -- Unified red pins with sport SVG icons (MAP-08)
+- [x] 18-02-PLAN.md -- Same-address clustering with popup (MAP-09)
+- [x] 18-03-PLAN.md -- In-place card expansion, bottom sheet removal (MAP-10)
 **UI hint**: yes
 
 ### Phase 17: Toolbar & Haku-UX
@@ -89,7 +89,7 @@ Plans:
   3. There is a separate, clearly distinct button dedicated only to toggling the list view open and closed — it does not also trigger search or filters
 **Plans**: 3 plans
 Plans:
-- [ ] 18-01-PLAN.md -- Unified red pins with sport SVG icons (MAP-08)
+- [x] 18-01-PLAN.md -- Unified red pins with sport SVG icons (MAP-08)
 - [ ] 18-02-PLAN.md -- Same-address clustering with popup (MAP-09)
 - [ ] 18-03-PLAN.md -- In-place card expansion, bottom sheet removal (MAP-10)
 **UI hint**: yes
@@ -133,4 +133,4 @@ Plans:
 | 15. Arvostelut | v1.2 | 4/4 | ✅ Complete | 2026-05-28 |
 | 16. Brändi & Logo-uloke | v1.3 | 4/4 | ✅ Complete | 2026-05-29 |
 | 17. Toolbar & Haku-UX | v1.3 | 1/1 | ✅ Complete | 2026-05-29 |
-| 18. Kartan pinnit & korttianimaatio | v1.3 | 0/3 | Not started | - |
+| 18. Kartan pinnit & korttianimaatio | v1.3 | 3/4 | In Progress|  |
