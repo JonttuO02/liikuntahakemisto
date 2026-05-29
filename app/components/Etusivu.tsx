@@ -497,9 +497,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           zIndex: 64,
         }}
       >
-        <motion.div
-          layout
-          transition={{ layout: { type: 'spring', damping: 30, stiffness: 350 } }}
+        <div
           className="glass rounded-full flex items-center overflow-hidden"
           style={{ height: 40 }}
         >
@@ -565,7 +563,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           >
             <MoreHorizontal className="w-4 h-4" />
           </button>
-        </motion.div>
+        </div>
       </div>
 
       {/* ── Main bottom sheet ──────────────────────────────────────────── */}
