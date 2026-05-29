@@ -29,9 +29,9 @@ import AktiiviLogo from './AktiiviLogo'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
-const TAB_H = 48      // uloke height (logo 40px + 4px padding)
-const TAB_W = 100     // uloke width (logo ~130px rendered, tight sides)
-const TAB_SLOPE = 80  // horizontal extent of the arch curve on each side
+const TAB_H = 52      // bump height: plateau above shoulder level
+const TAB_W = 150     // plateau width (logo area)
+const TAB_SLOPE = 65  // horizontal width of each diagonal ramp
 
 const SPORT_ICONS: Record<string, LucideIcon> = {
   padel: Zap, kuntosali: Dumbbell, jooga: Leaf,
@@ -139,11 +139,35 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   // The motion.div is taller by TAB_H so the bump area is always visible.
   const sheetAnimY = sheetPhase === 'open' ? 0 : contentH
 
-  // Arch clip-path: flat sides → bezier curve up → arch peak → bezier down → flat sides → bottom
+  // Trapezoid bump clip-path:
+  //   flat plateau (logo) at top center, straight diagonal ramps on each side,
+  //   flat shoulders at sheet level, rounded corners at all junctions.
   const cx = fullW / 2
   const hw = TAB_W / 2
   const totalH = contentH + TAB_H
-  const bumpClipPath = `M 0,${TAB_H} L ${cx - hw - TAB_SLOPE},${TAB_H} C ${cx - hw},${TAB_H} ${cx - hw * 0.5},0 ${cx},0 C ${cx + hw * 0.5},0 ${cx + hw},${TAB_H} ${cx + hw + TAB_SLOPE},${TAB_H} L ${fullW},${TAB_H} L ${fullW},${totalH} L 0,${totalH} Z`
+  const diagLen = Math.sqrt(TAB_SLOPE * TAB_SLOPE + TAB_H * TAB_H)
+  const dxN = TAB_SLOPE / diagLen  // normalized diagonal direction
+  const dyN = TAB_H / diagLen
+  const r1 = 20  // sheet shoulder corner radius (where vertical meets horizontal)
+  const r2 = 10  // bump corner radius (plateau ↔ diagonal, diagonal ↔ shoulder)
+  const bumpClipPath = [
+    `M ${cx - hw + r2},0`,
+    `L ${cx + hw - r2},0`,
+    `Q ${cx + hw},0 ${cx + hw + r2 * dxN},${r2 * dyN}`,
+    `L ${cx + hw + TAB_SLOPE - r2 * dxN},${TAB_H - r2 * dyN}`,
+    `Q ${cx + hw + TAB_SLOPE},${TAB_H} ${cx + hw + TAB_SLOPE + r2},${TAB_H}`,
+    `L ${fullW - r1},${TAB_H}`,
+    `Q ${fullW},${TAB_H} ${fullW},${TAB_H + r1}`,
+    `L ${fullW},${totalH}`,
+    `L 0,${totalH}`,
+    `L 0,${TAB_H + r1}`,
+    `Q 0,${TAB_H} ${r1},${TAB_H}`,
+    `L ${cx - hw - TAB_SLOPE - r2},${TAB_H}`,
+    `Q ${cx - hw - TAB_SLOPE},${TAB_H} ${cx - hw - TAB_SLOPE + r2 * dxN},${TAB_H - r2 * dyN}`,
+    `L ${cx - hw - r2 * dxN},${r2 * dyN}`,
+    `Q ${cx - hw},0 ${cx - hw + r2},0`,
+    `Z`,
+  ].join(' ')
 
   // Logo scale: full when closed (pill visible), shrunk when open (header subtle)
   const logoScale = sheetPhase === 'open' ? 0.65 : 1
