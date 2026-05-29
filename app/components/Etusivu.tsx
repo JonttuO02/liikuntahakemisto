@@ -34,8 +34,8 @@ const TAB_W = 140        // plateau width (logo area)
 const TAB_SLOPE = 60     // horizontal width of each diagonal ramp
 const BUMP_R1 = 20       // sheet shoulder corner radius
 const BUMP_R2 = 10       // bump junction corner radius
-const BUMP_SCALE_OPEN = 0.88          // clip-path bump scale when sheet is open (subtle)
-const BUMP_CONTENT_SCALE_OPEN = 0.80  // logo wrapper scale when open (more noticeable)
+const BUMP_SCALE_OPEN = 0.78          // clip-path bump scale when sheet is open
+const BUMP_CONTENT_SCALE_OPEN = 0.74  // logo wrapper scale when open (40/54 keeps logo at ~40px)
 
 function makeBumpPath(bumpScale: number, cx: number, hw: number, fullW: number, totalH: number): string {
   const diagLen = Math.sqrt(TAB_SLOPE * TAB_SLOPE + TAB_H * TAB_H)
