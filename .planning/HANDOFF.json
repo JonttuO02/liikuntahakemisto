@@ -6,38 +6,35 @@
   "phase_dir": ".planning/phases/16-brandi-logo-uloke",
   "plan": 3,
   "task": null,
-  "total_tasks": null,
   "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "Rebrand metadata to AKTIIVI (layout, manifest, tietosuoja)", "status": "done", "commit": "plan 01 complete"},
-    {"id": 2, "name": "Create AktiiviLogo.tsx with gradient sweep animation", "status": "done", "commit": "plan 02 complete"},
-    {"id": 3, "name": "Wire AktiiviLogo into Etusivu bottom sheet uloke", "status": "done", "commit": "plan 03 complete (d651fe4 current HEAD after revert)"}
+    {"id": 1, "name": "Rebrand metadata to AKTIIVI", "status": "done"},
+    {"id": 2, "name": "Create AktiiviLogo.tsx component", "status": "done"},
+    {"id": 3, "name": "Wire AktiiviLogo into Etusivu bump — REVERTED this session", "status": "reverted"}
   ],
   "remaining_tasks": [
-    {"id": 4, "name": "Plan 4+: Visual polish of uloke — make logo feel integrated with sheet", "status": "not_started"}
+    {"id": 4, "name": "Redesign uloke approach from scratch — bump+logo integration", "status": "not_started"}
   ],
   "blockers": [
     {
-      "description": "CSS clip-path clips all native borders/box-shadow/outline — none of these follow the bump shape. filter: drop-shadow is the only CSS-native approach that follows clip-path, but it renders outside the element (between glass and map). User found all tried approaches unsatisfying.",
-      "type": "technical",
-      "workaround": "Need fresh design thinking — either different material treatment, SVG-based inner border with proper sync, or a design direction change (e.g. simpler top shape without bump)"
+      "description": "The entire bump/uloke implementation (clip-path geometry, AktiiviLogo wiring, shadow experiments) was reverted. Etusivu.tsx is now at commit 3d1cd6c state — pre-bump, pill animation with HANDLE_H, no AktiiviLogo wired in.",
+      "type": "design",
+      "workaround": "Start fresh with a new design approach for how the logo tab should look and feel"
     }
   ],
-  "human_actions_pending": [],
   "decisions": [
-    {"decision": "Reverted feat(16): dark top-edge border — didn't look right", "rationale": "User rejected all border/outline approaches this session", "phase": "16"},
-    {"decision": "Sheet now has no filter/shadow/border overlay — bare glass clip-path only", "rationale": "All approaches reverted to clean baseline", "phase": "16"}
+    {
+      "decision": "Etusivu.tsx reverted to commit 3d1cd6c (pre-bump state)",
+      "rationale": "Multiple bump/visual integration approaches failed. User wants to start fresh.",
+      "phase": "16"
+    },
+    {
+      "decision": "box-shadow on inner div at shoulder level WORKS for creating shadow",
+      "rationale": "filter:drop-shadow blocked by backdrop-filter compositing. box-shadow on a non-clipped child div at top:TAB_H with '0 0 40px 20px rgba(0,0,0,0.55)' created visible shadow. Keep this technique.",
+      "phase": "16"
+    }
   ],
-  "uncommitted_files": [
-    ".planning/MAP_BOTTOM_SHEET_PLAN.md",
-    ".planning/debug/",
-    ".planning/phases/15-arvostelut/15-REVIEW-FIX.md",
-    ".planning/phases/16-brandi-logo-uloke/16-PLAN.md",
-    "app/AKTIIVI-logo-rounded-white-bg.svg",
-    "app/AKTIIVI-logo-rounded-white.svg",
-    "app/AKTIIVI-logo-rounded.svg",
-    "public/aktiivi-logo.svg"
-  ],
-  "next_action": "Read .planning/MAP_BOTTOM_SHEET_PLAN.md and .planning/phases/16-brandi-logo-uloke/16-DISCUSSION-LOG.md to understand the uloke design intent, then propose a concrete Plan 4 approach for making the logo/bump feel visually integrated",
-  "context_notes": "The AktiiviLogo bump (uloke) protrudes from the top of the bottom sheet. Visually it looks 'irtonainen' (disconnected/floating) because the glass surface has no visible edge definition where the clip-path cuts. Tried: drop-shadow filter, SVG sibling stroke, inner SVG stroke. All unsatisfactory. The technical root cause is that clip-path clips all CSS border properties."
+  "uncommitted_files": ["app/components/Etusivu.tsx"],
+  "next_action": "Discuss what the new uloke/logo tab design should look like before implementing. The box-shadow technique (inner div at shoulder level) is proven to work for adding shadow.",
+  "context_notes": "Etusivu.tsx is staged (M) — the git checkout 3d1cd6c revert is staged but not committed. Commit this as WIP before resuming. AktiiviLogo.tsx component still exists and works — only the Etusivu wiring was reverted."
 }
