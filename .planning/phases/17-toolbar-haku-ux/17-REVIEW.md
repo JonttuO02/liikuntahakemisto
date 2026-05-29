@@ -7,9 +7,9 @@ files_reviewed_list:
   - app/components/Etusivu.tsx
 findings:
   critical: 2
-  warning: 5
+  warning: 6
   info: 3
-  total: 10
+  total: 11
 status: issues_found
 ---
 
@@ -18,7 +18,7 @@ status: issues_found
 **Reviewed:** 2026-05-29
 **Depth:** standard
 **Files Reviewed:** 1
-**Status:** issues_found
+**Status:** issues_found (updated 2026-05-29 — WR-06 lisätty käyttäjäpalautteen perusteella)
 
 ## Summary
 
@@ -214,6 +214,46 @@ const key = 'saasuositus-' + new Date().toISOString().slice(0, 10)
 CLAUDE.md animation rules state: "No `layout` animations unless absolutely required — they cause reflow jank." The `layout` prop here triggers a layout measurement on every open/close of the right panel, which forces a reflow of the surrounding fixed-position toolbar. On low-end devices this produces a visible jank frame as the pill resizes. The same effect can be achieved without `layout` by animating `width` or using `AnimatePresence` with a fixed-width inner container.
 
 **Fix:** Replace `layout` with an explicit `max-width` transition or remove it and use `overflow: hidden` with an `AnimatePresence` fade, which is already present for the inner content.
+
+---
+
+### WR-06: Hakupainike avaa myös listan — `searchFocused` ei ohjaa overlayn sisältöä
+
+**File:** `app/components/Etusivu.tsx` (hakuoverlay JSX + `searchFocused`-tila)
+
+**Issue:** Search-painike kutsuu `toggleSearch(true)` ja LayoutList-painike kutsuu `toggleSearch(false)`. Molemmissa tapauksissa sama `searchOpen`-tila asettuu trueksi ja overlay renderöidään identtisenä sisältönä — sekä hakupalkki + filtterit **että** paikkakortit näkyvät kummassakin moodissa. `searchFocused`-tila (true/false) ohjaa ainoastaan `autoFocus`-attribuuttia haun `<input>`-elementissä, ei ollenkaan sitä mitä overlayssa näytetään.
+
+Vaatimus SC-1 edellyttää: hakupainike avaa hakukentän ja filtterit. SC-3 edellyttää: lista-painike ei laukaise hakua tai filttereitä. Nykyinen toteutus rikkoo kummankin: käyttäjä joka haluaa hakea voi nähdä listanäkymän samanaikaisesti, eikä painikkeilla ole visuaalisesti erottuvaa toimintaa.
+
+**Fix:** Käytä `searchFocused`-tilaa conditionally renderöimään overlayn sisältö kahdessa moodissa:
+
+```tsx
+{/* Search-moodi: hakupalkki + filtterit, EI listakortteja */}
+{searchOpen && searchFocused && (
+  <>
+    <input autoFocus ... />
+    <FilterPills ... />
+  </>
+)}
+
+{/* Lista-moodi: kortit + filtterit, hakupalkki ilman autoFocusta */}
+{searchOpen && !searchFocused && (
+  <>
+    <input autoFocus={false} ... />
+    <FilterPills ... />
+    <CardList ... />
+  </>
+)}
+```
+
+Tai yhdistettynä yhdellä ehdolla:
+
+```tsx
+{/* Kortit näytetään vain lista-moodissa */}
+{searchOpen && !searchFocused && <CardList ... />}
+```
+
+Hakupalkki ja filtterit näytetään aina kun `searchOpen`, mutta paikkakortit vain kun `!searchFocused`. Tällöin Search-painike → pelkkä haku+filtteri; LayoutList-painike → lista + mahdollisuus hakea.
 
 ---
 
