@@ -208,6 +208,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     }
   }
 
+  // Clear debounce timer on unmount to prevent stale state update after navigation
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
   useEffect(() => { setIsDark(isNightHour()) }, [])
 
   useEffect(() => {
