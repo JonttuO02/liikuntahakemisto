@@ -29,8 +29,9 @@ import AktiiviLogo from './AktiiviLogo'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const EASE_DRAWER: [number, number, number, number] = [0.32, 0.72, 0, 1]
-const TAB_H = 72  // uloke height (logo 56px + 8px padding top/bottom)
-const TAB_W = 200 // uloke width (logo ~100px + 50px padding each side)
+const TAB_H = 48      // uloke height (logo 40px + 4px padding)
+const TAB_W = 100     // uloke width (logo ~130px rendered, tight sides)
+const TAB_SLOPE = 80  // horizontal extent of the arch curve on each side
 
 const SPORT_ICONS: Record<string, LucideIcon> = {
   padel: Zap, kuntosali: Dumbbell, jooga: Leaf,
@@ -107,6 +108,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [rightOpen, setRightOpen]   = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
   const [fullH, setFullH]           = useState(700)
+  const [fullW, setFullW]           = useState(390)
   const [isDark, setIsDark]         = useState(false)
   const [zoomLevel, setZoomLevel]   = useState(14)
   const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
@@ -134,13 +136,23 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const contentH = Math.round(fullH * 0.82)
 
   // Sheet always full-width; only Y animates. Closed = sheet fully below viewport, uloke visible at bottom.
+  // The motion.div is taller by TAB_H so the bump area is always visible.
   const sheetAnimY = sheetPhase === 'open' ? 0 : contentH
+
+  // Arch clip-path: flat sides → bezier curve up → arch peak → bezier down → flat sides → bottom
+  const cx = fullW / 2
+  const hw = TAB_W / 2
+  const totalH = contentH + TAB_H
+  const bumpClipPath = `M 0,${TAB_H} L ${cx - hw - TAB_SLOPE},${TAB_H} C ${cx - hw},${TAB_H} ${cx - hw * 0.5},0 ${cx},0 C ${cx + hw * 0.5},0 ${cx + hw},${TAB_H} ${cx + hw + TAB_SLOPE},${TAB_H} L ${fullW},${TAB_H} L ${fullW},${totalH} L 0,${totalH} Z`
+
+  // Logo scale: full when closed (pill visible), shrunk when open (header subtle)
+  const logoScale = sheetPhase === 'open' ? 0.65 : 1
 
   const sheetTransition = sheetPhase === 'sliding'
     ? { y: { type: 'spring' as const, damping: 28, stiffness: 280 } }
     : sheetPhase === 'closed'
     ? { y: { type: 'spring' as const, damping: 32, stiffness: 350 } }
-    : { y: { type: 'spring' as const, damping: 28, stiffness: 280, delay: 0.1 } }
+    : { y: { type: 'spring' as const, damping: 28, stiffness: 280, delay: 0.18 } }
 
   function closeOverlays() {
     setLeftOpen(false)
@@ -222,7 +234,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   }, [])
 
   useEffect(() => {
-    const update = () => { setFullH(window.innerHeight) }
+    const update = () => { setFullH(window.innerHeight); setFullW(window.innerWidth) }
     update()
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
@@ -625,7 +637,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       </div>
 
       {/* ── Main bottom sheet ──────────────────────────────────────────── */}
-      {/* Sheet always full-width. Uloke (logo pill) protrudes above; when closed, sheet hides fully. */}
+      {/* Single glass element: arch clip-path creates the bump, no seam. */}
       <motion.div
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
@@ -638,32 +650,29 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           if (info.velocity.y > 300 || info.offset.y > 80) setSheetPhase('sliding')
           else if (info.velocity.y < -300 || info.offset.y < -80) setSheetPhase('open')
         }}
-        style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: contentH, zIndex: 60, overflow: 'visible' }}
+        className="glass"
+        style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0,
+          height: contentH + TAB_H, zIndex: 60, overflow: 'hidden',
+          clipPath: `path('${bumpClipPath}')`,
+        }}
       >
-        {/* Uloke — logo pill protruding above sheet top edge; IS the pill when closed */}
-        <div
-          className="glass"
+        {/* Logo in bump area — scales down when sheet opens */}
+        <motion.div
+          animate={{ scale: logoScale }}
+          transition={{ scale: { duration: 0.2, ease: 'easeOut' } }}
           style={{
-            position: 'absolute',
-            top: -TAB_H,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: TAB_W,
-            height: TAB_H,
-            borderRadius: '20px 20px 0 0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: sheetPhase === 'closed' ? 'pointer' : 'grab',
-            zIndex: 1,
+            position: 'absolute', top: 0, left: 0, right: 0, height: TAB_H,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: sheetPhase === 'closed' ? 'pointer' : 'default',
           }}
           onClick={() => { if (sheetPhase !== 'open') setSheetPhase('open') }}
         >
           <AktiiviLogo gradientIndex={gradIndex} />
-        </div>
+        </motion.div>
 
-        {/* Glass sheet surface — clips content, always full-width */}
-        <div className="glass" style={{ overflow: 'hidden', height: '100%', borderRadius: '24px 24px 0 0' }}>
+        {/* Content area starts below the bump */}
+        <div style={{ position: 'absolute', top: TAB_H, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
 
         {/* Sheet content — fades out during slide-down */}
         <motion.div
@@ -714,7 +723,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           {/* Ad carousel */}
           <Karuselli isDark={isDark} />
         </motion.div>
-        </div>{/* end glass sheet surface */}
+        </div>{/* end content area */}
       </motion.div>
 
       {/* ── Search overlay ──────────────────────────────────── */}
