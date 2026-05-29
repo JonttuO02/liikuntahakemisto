@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: AKTIIVI — Redesign & Polish
 status: completed
-last_updated: "2026-05-29T19:30:00.000Z"
-last_activity: 2026-05-29 — Phase 18 plan 02 complete (MAP-09 — same-address clustering)
+last_updated: "2026-05-29T19:06:53.412Z"
+last_activity: 2026-05-29 — Phase 18 complete (unified pins, clustering, in-place card)
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 5
-  completed_plans: 7
-  percent: 67
+  completed_plans: 8
+  percent: 100
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 18 — Kartan pinnit & korttianimaatio (in progress)
-Plan: 18-03 (Wave 3 — not started)
-Status: 18-02 complete — same-address clustering with glass popup (MAP-09)
-Last activity: 2026-05-29 — Phase 18 plan 02 complete (MAP-09 — same-address clustering)
+Phase: 18 — Kartan pinnit & korttianimaatio (complete)
+Plan: 18-03 (Wave 3 — done)
+Status: Phase 18 complete — all 3 plans done (MAP-08, MAP-09, MAP-10)
+Last activity: 2026-05-29 — Phase 18 complete (unified pins, clustering, in-place card)
 
 ## Project Reference
 
@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-05-29)
 |-------|------|--------------|--------|
 | 16. Brändi & Logo-uloke | AKTIIVI rebrand + logo watermark at sheet bottom | BRAND-01, UI-13, UI-14, UI-15, UI-16 | ✅ Complete (4/4 plans) |
 | 17. Toolbar & Haku-UX | Unified search+filter button + dedicated list-toggle | UI-17, UI-18 | ✅ Complete (1/1 plan) |
-| 18. Kartan pinnit & korttianimaatio | Unified pins with sport SVG icons, clustering, in-place card expansion | MAP-08, MAP-09, MAP-10 | In Progress (2/3 plans) |
+| 18. Kartan pinnit & korttianimaatio | Unified pins with sport SVG icons, clustering, in-place card expansion | MAP-08, MAP-09, MAP-10 | ✅ Complete (3/3 plans) |
 
 ## Active Decisions
 
