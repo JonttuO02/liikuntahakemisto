@@ -17,14 +17,17 @@ export default function SuosikitClient() {
   const [favLoading, setFavLoading] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
     const supabase = createBrowserSupabase()
 
     async function loadFavorites(userId: string) {
+      if (cancelled) return
       setFavLoading(true)
       const { data, error } = await supabase
         .from('suosikit')
         .select('paikka_id, liikuntapaikat(*)')
         .eq('user_id', userId)
+      if (cancelled) return
       if (!error && data) {
         const rows = data as unknown as SuosikkiRow[]
         const places = rows
@@ -35,7 +38,7 @@ export default function SuosikitClient() {
       setFavLoading(false)
     }
 
-    return subscribeToAuthUser((user) => {
+    const unsub = subscribeToAuthUser((user) => {
       if (user) {
         setAuthState('authenticated')
         loadFavorites(user.id)
@@ -44,6 +47,8 @@ export default function SuosikitClient() {
         setPaikat([])
       }
     })
+
+    return () => { cancelled = true; unsub() }
   }, [])
 
   // Still loading session from cookies
