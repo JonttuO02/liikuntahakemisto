@@ -4,9 +4,9 @@ milestone: v1.4
 milestone_name: UX-parannukset & Profiili
 status: planning
 last_updated: "2026-05-30T08:00:00.000Z"
-last_activity: 2026-05-30 — Milestone v1.4 started
+last_activity: 2026-05-30 — Roadmap created for v1.4 (Phases 19–22)
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,51 +17,59 @@ progress:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 19 of 22 (Filtteri, lista & paikka-UX) — not started
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-30 — Milestone v1.4 started
+Status: Ready to plan
+Last activity: 2026-05-30 — Roadmap created (Phases 19–22)
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-30)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.4 — Navigaatio-korjaukset, TO DO -lista, paikka kuvat, kiinnostuksen kohteet profiiliin
+**Current focus:** v1.4 — Phase 19: Filtteri, lista & paikka-UX
 
 ## Phase Progress
 
-(No phases yet — roadmap being created)
+| Phase | Goal | Status |
+|-------|------|--------|
+| 19. Filtteri, lista & paikka-UX | Kertakäynti-filtteri, kuva listakorttiin, pin-nappi, image_url | Not started |
+| 20. Navigaatio-korjaukset | Back-scroll, kartalle-kohdistus, bottomsheet-avaus, toolbar | Not started |
+| 21. TO DO -lista | Suosikit → TO DO, sydän → kirjanmerkki, /suosikit-sivu | Not started |
+| 22. Profiili & AI-kiinnostukset | Kiinnostuksen kohteet, AI-promptiin | Not started |
 
 ## Active Decisions
 
-(carried forward from v1.3 — see PROJECT.md Key Decisions for full list)
+(carried from v1.3 — see PROJECT.md Key Decisions for full list)
 
-- Brand name is AKTIIVI — no "Liikuntahakemisto" in any user-visible metadata
+- Brand name is AKTIIVI in all user-visible metadata
+- Map focus URL: /?id=<paikka_id> — never ?nakyma=kartta (dead param)
+- Pin color is always #ef4444 — sport identity via icon shape, not color
 - Supabase Auth uses per-request createServerClient — never module-scope singleton
-- Map focus URL: /?id=<paikka_id> — no ?nakyma=kartta (dead param)
 - PWA uses Serwist (@serwist/next + serwist)
-- Pin color is always #ef4444 — sport identity communicated by icon shape, not color
-- lib/aukiolo.ts single source of truth for open-status logic
-- sessionStorage cache key scoped to calendar day + kaupunki
+- v1.4: TO DO replaces suosikit entirely — heart icon → bookmark icon across all UI
+- v1.4: image_url is a manual field in paikat table; placeholder shown if null
+- v1.4: "Näytä kartalla" centers on venue coordinates, not user GPS; bottomsheet stays closed
+- v1.4: Bottom sheet starts closed on homepage load, animates open immediately
 
 ## Accumulated Context
 
 ### Key Constraints
 
-- Supabase anon key = read-only (RLS)
+- Supabase anon key = read-only (RLS); service role key for writes
 - supabase.auth.getUser() server-side — never getSession()
 - ANTHROPIC_API_KEY is server-only env var
-- deriveKaupungit always prepends 'Kaikki' sentinel — city filter threshold must be > 2, not > 1
-- Static Maps API key = NEXT_PUBLIC_GOOGLE_MAPS_API_KEY (same as JS API key)
-
-### Architecture Notes
-
-- v1.4: TO DO replaces suosikit entirely — heart icon → bookmark icon across all UI
-- v1.4: image_url is a manual field in Supabase paikat table; placeholder shown if null
-- v1.4: "Näytä kartalla" centers on place coordinates, not user GPS
-- v1.4: Bottom sheet starts closed on homepage load, animates open immediately
+- deriveKaupungit always prepends 'Kaikki' sentinel — city filter threshold must be > 2
+- Static Maps API key = NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
 ### Open Questions
 
 - Google OAuth callback URL still needs manual setup in Google Cloud Console + Supabase dashboard
+
+## Session Continuity
+
+Last session: 2026-05-30
+Stopped at: Roadmap created — ready to run /gsd:plan-phase 19
+Resume file: None
