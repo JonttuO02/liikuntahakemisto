@@ -4,6 +4,16 @@
 
 Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
 
+## Current Milestone: v1.4 UX-parannukset & Profiili
+
+**Goal:** Korjataan navigaation käyttäytyminen ja visuaaliset epäjohdonmukaisuudet; uudistetaan suosikit TO DO -listaksi; lisätään kiinnostuksen kohteet profiiliin AI-personointia varten.
+
+**Target features:**
+- Navigaatio-korjaukset (back-nappi → lista+scroll, "Näytä kartalla" → paikan koordinaatit, bottomsheet kiinni→automaattinen avaus, toolbar-cleanup)
+- Filtteri & lista-UX (kertakäynti-filtteri, kartta-snapshot → paikka kuva, AI-widget enemmän tilaa, pin-nappi listakorttiin)
+- TO DO -lista (suosikit → TO DO, sydän → kirjanmerkki-ikoni)
+- Profiili & AI (kiinnostuksen kohteet monivalintana, käytetään AI-suosituksissa)
+
 ## Shipped: v1.3 AKTIIVI — Redesign & Polish (2026-05-30)
 
 **Delivered:** AKTIIVI-rebrand kaikissa metadateissa, animoitu logo-vesileima bottom sheetissä, unified toolbar (Search+LayoutList), yhtenäiset punaset SVG-ikonipinnit, sama-osoite-klusterointi, CalloutCard clip-path spike + PaikkaSheet layoutId-laajeneminen.
@@ -98,6 +108,21 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ### Active (v1.4)
 
+- [ ] FILTER-01: Hintasuodattimet poistetaan; tilalle "Kertakäynti OK" -filtteri
+- [ ] UI-19: Listakortissa kartta-snapshot korvattu paikka kuvalla (image_url Supabasesta, placeholder fallback)
+- [ ] UI-20: Bottom sheetin mainos-kortit pienennetään; AI-widgetille enemmän tilaa yläosaan
+- [ ] UI-21: Listakorttiin pin-ikoni-nappi: sulkee listan ja kohdistaa kartan paikan koordinaatteihin
+- [ ] NAV-01: Paikan profiilisivun "Takaisin hakemistoon" palaa listaan entiseen scroll-kohtaan
+- [ ] NAV-02: "Näytä kartalla" kohdistaa paikan koordinaatteihin ilman GPS-recenteriä; bottomsheet pysyy kiinni
+- [ ] NAV-03: Etusivu latautuu bottomsheet kiinni; aukeaa automaattisesti animoituna heti
+- [ ] NAV-04: Suosikit- ja Profiili-sivujen toolbarista poistetaan haku-painike
+- [ ] NAV-05: Suosikit/TODO-sivun "Takaisin hakemistoon" korjataan oikeaan kohteeseen
+- [ ] TODO-01: Suosikit uudelleennimetty TO DO -listaksi; sydän → kirjanmerkki-ikoni
+- [ ] TODO-02: /suosikit-sivu näyttää TO DO -paikat käyttäjälle
+- [ ] PROFILE-01: Käyttäjä lisää profiiliin kiinnostuksen kohteet (lajit lib/lajit.ts, monivalinta)
+- [ ] PROFILE-02: AI-suositus käyttää kiinnostuksen kohteita personointiin
+- [ ] DATA-08: image_url-kenttä paikat-tauluun Supabasessa
+
 ### Future (deferred from v1.1)
 
 - Suosikkipaikat-sivu kirjautuneelle käyttäjälle (/suosikit)
@@ -184,4 +209,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-05-30 — after v1.3 milestone (AKTIIVI — Redesign & Polish)*
+*Last updated: 2026-05-30 — v1.4 milestone started (UX-parannukset & Profiili)*
