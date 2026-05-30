@@ -69,7 +69,7 @@ Full archive: `.planning/milestones/v1.3-ROADMAP.md`
 **Milestone Goal:** Korjataan navigaation käyttäytyminen ja visuaaliset epäjohdonmukaisuudet; uudistetaan suosikit TO DO -listaksi; lisätään kiinnostuksen kohteet profiiliin AI-personointia varten.
 
 - [ ] **Phase 19: Filtteri, lista & paikka-UX** — Kertakäynti-filtteri, paikka kuva listakortissa, AI-widget tila, pin-nappi listakortissa, image_url Supabaseen
-- [ ] **Phase 20: Navigaatio-korjaukset** — Back-scroll, "Näytä kartalla" paikan koordinaatit, bottomsheet-avausanimaatio, toolbar-cleanup (2 plans, Wave 1)
+- [x] **Phase 20: Navigaatio-korjaukset** — Back-scroll, "Näytä kartalla" paikan koordinaatit, bottomsheet-avausanimaatio, toolbar-cleanup (2/2 plans) — 2026-05-30
 - [ ] **Phase 21: TO DO -lista** — Suosikit → TO DO, sydän → kirjanmerkki, /suosikit toimiva TO DO -lista
 - [ ] **Phase 22: Profiili & AI-kiinnostukset** — Kiinnostuksen kohteet monivalintana profiiliin, käytetään AI-suosituksissa
 
@@ -100,8 +100,8 @@ Full archive: `.planning/milestones/v1.3-ROADMAP.md`
   5. The "Takaisin" button on the TO DO page navigates to a valid destination (not the removed /?nakyma=lista route)
 **Plans**: 2 plans
 Plans:
-- [ ] 20-01-PLAN.md — Remove NavPill Haku link (NAV-04) and fix SuosikitClient back-links (NAV-05)
-- [ ] 20-02-PLAN.md — Bottom sheet auto-open animation (NAV-03) and scroll+state restore on back-nav (NAV-01); confirm NAV-02 no-op
+- [x] 20-01-PLAN.md — Remove NavPill Haku link (NAV-04) and fix SuosikitClient back-links (NAV-05)
+- [x] 20-02-PLAN.md — Bottom sheet auto-open animation (NAV-03) and scroll+state restore on back-nav (NAV-01); confirm NAV-02 no-op
 **UI hint**: yes
 
 ### Phase 21: TO DO -lista
@@ -151,6 +151,6 @@ Plans:
 | 17. Toolbar & Haku-UX | v1.3 | 1/1 | ✅ Complete | 2026-05-29 |
 | 18. Kartan pinnit & korttianimaatio | v1.3 | 3/3 | ✅ Complete | 2026-05-30 |
 | 19. Filtteri, lista & paikka-UX | v1.4 | 0/? | Not started | - |
-| 20. Navigaatio-korjaukset | v1.4 | 0/2 | Not started | - |
+| 20. Navigaatio-korjaukset | v1.4 | 2/2 | ✅ Complete | 2026-05-30 |
 | 21. TO DO -lista | v1.4 | 0/? | Not started | - |
 | 22. Profiili & AI-kiinnostukset | v1.4 | 0/? | Not started | - |
