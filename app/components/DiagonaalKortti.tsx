@@ -55,7 +55,8 @@ export default function DiagonaalKortti({ paikka, distanceStr, onShowMap, onCard
       whileTap={{ scale: 0.98, transition: { duration: 0.12, ease: 'easeOut' } }}
     >
       <div className="absolute inset-0 rounded-2xl overflow-hidden">
-      <Link href={`/paikat/${paikka.id}`} className="absolute inset-0 block" onClick={() => onCardClick?.()}>
+      {/* z-10 ensures the MapPin button's z-20 always wins the stacking context */}
+      <Link href={`/paikat/${paikka.id}`} className="absolute inset-0 block z-10" onClick={() => onCardClick?.()}>
 
         {/* LEFT: info panel */}
         <div
