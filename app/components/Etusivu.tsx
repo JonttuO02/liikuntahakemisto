@@ -27,12 +27,6 @@ import PaikkaSheet from './PaikkaSheet'
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const HANDLE_H = 44 // visible sheet tab height when closed
 
-const HINTA_FILTTERI: { label: string; max: number | null }[] = [
-  { label: 'Kaikki hinnat', max: null },
-  { label: '≤10 €', max: 10 },
-  { label: '≤20 €', max: 20 },
-  { label: '≤30 €', max: 30 },
-]
 interface SaaTiedot { temp: number; code: number }
 
 function getWeatherEmoji(code: number): string {
