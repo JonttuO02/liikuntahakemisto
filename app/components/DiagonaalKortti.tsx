@@ -31,26 +31,13 @@ const SPORT_ICONS: Record<string, LucideIcon> = {
   liikunta:      Activity,
 }
 
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
-const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID ?? ''
-
-function staticMapsUrl(lat: number, lng: number, color: string): string {
-  const markerColor = '0x' + color.replace('#', '')
-  return (
-    `https://maps.googleapis.com/maps/api/staticmap` +
-    `?center=${lat},${lng}&zoom=12&size=200x128&scale=2` +
-    (MAP_ID ? `&map_id=${MAP_ID}` : '&maptype=roadmap') +
-    `&markers=color:${markerColor}%7Csize:mid%7C${lat},${lng}` +
-    `&key=${API_KEY}`
-  )
-}
-
 interface DiagonaalKorttiProps {
   paikka: Liikuntapaikka
   distanceStr?: string
+  onShowMap?: (paikka: Liikuntapaikka) => void
 }
 
-export default function DiagonaalKortti({ paikka, distanceStr }: DiagonaalKorttiProps) {
+export default function DiagonaalKortti({ paikka, distanceStr, onShowMap }: DiagonaalKorttiProps) {
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
   const openStatus   = getOpenStatus(paikka.aukioloajat)
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
@@ -111,29 +98,46 @@ export default function DiagonaalKortti({ paikka, distanceStr }: DiagonaalKortti
           )}
         </div>
 
-        {/* RIGHT: map image or fallback — starts at 50% so img center maps to visible panel center */}
+        {/* RIGHT: venue photo or sport-color fallback */}
         <div
           className="absolute top-0 right-0 bottom-0 overflow-hidden"
           style={{ left: '50%', clipPath: 'polygon(14% 0, 100% 0, 100% 100%, 4% 100%)' }}
         >
-          {hasCoords ? (
+          {paikka.image_url ? (
             <img
-              src={staticMapsUrl(paikka.latitude!, paikka.longitude!, laji.color)}
-              alt={`Karttakuva: ${paikka.nimi}`}
+              src={paikka.image_url}
+              alt={`Kuva: ${paikka.nimi}`}
               className="w-full h-full object-cover"
               loading="lazy"
+              onError={(e) => {
+                const img = e.currentTarget
+                img.style.display = 'none'
+                const fallback = img.parentElement?.querySelector('[data-fallback]') as HTMLElement | null
+                if (fallback) fallback.hidden = false
+              }}
             />
-          ) : (
-            <div
-              className="w-full h-full flex items-center justify-center"
-              style={{ backgroundColor: laji.color }}
-            >
-              <Icon className="w-8 h-8 text-white opacity-80" />
-            </div>
-          )}
+          ) : null}
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{ backgroundColor: laji.color }}
+            aria-hidden
+            data-fallback
+            hidden={!!paikka.image_url}
+          >
+            <Icon className="w-8 h-8 text-white opacity-80" />
+          </div>
         </div>
 
       </Link>
+      {hasCoords && (
+        <button
+          onClick={e => { e.stopPropagation(); e.preventDefault(); onShowMap?.(paikka) }}
+          aria-label="Näytä kartalla"
+          className="absolute bottom-3 left-3 z-20 w-7 h-7 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_ease]"
+        >
+          <MapPin className="w-3.5 h-3.5" />
+        </button>
+      )}
       </div>
     </motion.div>
   )

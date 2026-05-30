@@ -86,7 +86,8 @@ export default function Karuselli({ isDark }: { isDark: boolean }) {
             style={{
               width:  `${CARD_W * 100}%`,
               left:   `${((1 - CARD_W) / 2) * 100}%`,
-              bottom: '10%',
+              bottom: '5%',
+              maxHeight: 160,
               zIndex: isCenter ? 10 : Math.abs(offset) === 1 ? 5 : 1,
             }}
             animate={cardAnimate(offset, containerW)}

@@ -16,6 +16,7 @@ export type Liikuntapaikka = {
   aukioloajat?: Record<string, { open: string; close: string }> | null
   lajit_lista?: string[] | null
   featured?: boolean | null
+  image_url?: string | null
 }
 
 export type Suosikki = {

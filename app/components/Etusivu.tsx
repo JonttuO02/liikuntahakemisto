@@ -14,6 +14,7 @@ import { hintateksti } from '@/lib/utils'
 import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
 import { getOpenStatus } from '@/lib/aukiolo'
+import { isMembershipOnly } from '@/lib/priceUtils'
 import { isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
 import { nearestKaupunki, haversineKm, formatDistance } from '@/lib/geo'
@@ -33,12 +34,6 @@ const SPORT_ICONS: Record<string, LucideIcon> = {
   uinti: Waves, tennis: Target, liikuntahalli: Building2, liikunta: Activity,
 }
 
-const HINTA_FILTTERI: { label: string; max: number | null }[] = [
-  { label: 'Kaikki hinnat', max: null },
-  { label: '≤10 €', max: 10 },
-  { label: '≤20 €', max: 20 },
-  { label: '≤30 €', max: 30 },
-]
 
 interface SaaTiedot { temp: number; code: number }
 
@@ -186,8 +181,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [searchOpen, setSearchOpen]           = useState(false)
   const [searchHaku, setSearchHaku]           = useState('')
   const [searchLaji, setSearchLaji]           = useState('Kaikki')
-  const [searchHinta, setSearchHinta]         = useState<number | null>(null)
   const [searchAukinyt, setSearchAukinyt]     = useState(false)
+  const [searchKertakaynti, setSearchKertakaynti] = useState(false)
   const [searchKaupunki, setSearchKaupunki]   = useState('Kaikki')
   const [searchFocused, setSearchFocused]     = useState(false)
   const inFlight = useRef<Set<number>>(new Set())
@@ -433,19 +428,18 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
   const searchSuodatettu = useMemo(() =>
     paikat.filter(p => {
-      const matchesLaji     = searchLaji === 'Kaikki' || p.laji.toLowerCase() === searchLaji.toLowerCase()
-      const q               = searchHaku.toLowerCase()
-      const matchesHaku     = !searchHaku || p.nimi.toLowerCase().includes(q) || p.kuvaus?.toLowerCase().includes(q) || p.osoite?.toLowerCase().includes(q)
-      const hintaRef        = p.hinta_min ?? p.hinta_max
-      const matchesHinta    = searchHinta === null || (hintaRef != null && hintaRef <= searchHinta)
-      const matchesAuki     = !searchAukinyt || getOpenStatus(p.aukioloajat).status !== 'closed'
-      const matchesKaupunki = searchKaupunki === 'Kaikki' || p.kaupunki === searchKaupunki
-      return matchesLaji && matchesHaku && matchesHinta && matchesAuki && matchesKaupunki
+      const matchesLaji        = searchLaji === 'Kaikki' || p.laji.toLowerCase() === searchLaji.toLowerCase()
+      const q                  = searchHaku.toLowerCase()
+      const matchesHaku        = !searchHaku || p.nimi.toLowerCase().includes(q) || p.kuvaus?.toLowerCase().includes(q) || p.osoite?.toLowerCase().includes(q)
+      const matchesKertakaynti = !searchKertakaynti || !isMembershipOnly(p)
+      const matchesAuki        = !searchAukinyt || getOpenStatus(p.aukioloajat).status !== 'closed'
+      const matchesKaupunki    = searchKaupunki === 'Kaikki' || p.kaupunki === searchKaupunki
+      return matchesLaji && matchesHaku && matchesKertakaynti && matchesAuki && matchesKaupunki
     }),
-    [paikat, searchLaji, searchHaku, searchHinta, searchAukinyt, searchKaupunki]
+    [paikat, searchLaji, searchHaku, searchKertakaynti, searchAukinyt, searchKaupunki]
   )
 
-  const isFilterActive = searchLaji !== 'Kaikki' || searchHinta !== null || searchAukinyt || searchKaupunki !== 'Kaikki'
+  const isFilterActive = searchLaji !== 'Kaikki' || searchKertakaynti || searchAukinyt || searchKaupunki !== 'Kaikki'
 
   return (
     <LayoutGroup>
@@ -843,38 +837,42 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           }}
         >
           {/* AI Widget */}
-          <div className="glass rounded-2xl flex items-center px-4 py-3.5 gap-3 shrink-0">
-            <div className="flex-1 min-w-0 flex items-center">
-              {aiTeksti && <span className="text-sm font-medium text-[#111111]">{aiTeksti}</span>}
-            </div>
-            <div className="shrink-0 flex items-center gap-2">
+          <div className="glass rounded-2xl flex flex-col gap-1 px-4 py-4 shrink-0">
+            {/* Row 1: weather info + day/night toggle */}
+            <div className="flex items-center gap-2">
               {saa && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-base leading-none select-none" aria-hidden>{getWeatherEmoji(saa.code)}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm leading-none select-none" aria-hidden>{getWeatherEmoji(saa.code)}</span>
                   <span className="text-sm font-bold text-[#111111] tabular-nums">
                     {saa.temp}°{' '}<span className="font-normal text-[rgba(17,17,17,0.45)]">{weatherKaupunki}</span>
                   </span>
                 </div>
               )}
-              <motion.button
-                whileTap={{ scale: 0.88 }}
-                onClick={() => setIsDark(d => !d)}
-                className="glass-btn flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold"
-                style={{ color: isDark ? '#a0a0cc' : '#475569' }}
-              >
-                <AnimatePresence mode="wait" initial={false}>
-                  {isDark ? (
-                    <motion.span key="sun" className="flex items-center gap-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                      <Sun className="w-3 h-3" /> Päivä
-                    </motion.span>
-                  ) : (
-                    <motion.span key="moon" className="flex items-center gap-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                      <Moon className="w-3 h-3" /> Yö
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </motion.button>
+              <div className="ml-auto shrink-0">
+                <motion.button
+                  whileTap={{ scale: 0.88 }}
+                  onClick={() => setIsDark(d => !d)}
+                  className="glass-btn flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold"
+                  style={{ color: isDark ? '#a0a0cc' : '#475569' }}
+                >
+                  <AnimatePresence mode="wait" initial={false}>
+                    {isDark ? (
+                      <motion.span key="sun" className="flex items-center gap-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+                        <Sun className="w-3 h-3" /> Päivä
+                      </motion.span>
+                    ) : (
+                      <motion.span key="moon" className="flex items-center gap-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+                        <Moon className="w-3 h-3" /> Yö
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+              </div>
             </div>
+            {/* Row 2: AI recommendation text */}
+            {aiTeksti && (
+              <span className="text-sm font-normal text-[#111111]">{aiTeksti}</span>
+            )}
           </div>
 
           {/* Ad carousel */}
@@ -955,17 +953,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 >
                   {LAJIT_FILTTERI.map(l => <option key={l} value={l}>{l}</option>)}
                 </select>
-                {HINTA_FILTTERI.map(({ label, max }) => (
-                  <motion.button
-                    key={label}
-                    onClick={() => setSearchHinta(max)}
-                    whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
-                    className={`h-8 px-3 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
-                      ${searchHinta === max ? 'bg-[#111111] text-white' : 'glass text-[rgba(17,17,17,0.6)] hover:text-[#111111]'}`}
-                  >
-                    {label}
-                  </motion.button>
-                ))}
+                <motion.button
+                  onClick={() => setSearchKertakaynti(v => !v)}
+                  whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
+                  className={`h-8 px-3 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)] ${searchKertakaynti ? 'bg-[#111111] text-white' : 'glass text-[rgba(17,17,17,0.45)] hover:text-[#111111]'}`}
+                  aria-label={searchKertakaynti ? 'Poista kertakäynti-suodatin' : 'Näytä vain kertakäynnin mahdollistavat paikat'}
+                >
+                  Kertakäynti OK
+                </motion.button>
                 <motion.button
                   onClick={() => setSearchAukinyt(v => !v)}
                   whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
@@ -987,6 +982,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                       key={p.id}
                       paikka={p}
                       distanceStr={distancesMap[p.id] != null ? formatDistance(distancesMap[p.id]) : undefined}
+                      onShowMap={(paikka) => {
+                        setSearchOpen(false)
+                        if (paikka.latitude != null && paikka.longitude != null) {
+                          setAutoZoomTarget({ lat: paikka.latitude, lng: paikka.longitude })
+                        }
+                      }}
                     />
                   ))}
                 </div>
@@ -997,7 +998,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                     onClick={() => {
                       setSearchHaku('')
                       setSearchLaji('Kaikki')
-                      setSearchHinta(null)
+                      setSearchKertakaynti(false)
                       setSearchAukinyt(false)
                       setSearchKaupunki('Kaikki')
                     }}
