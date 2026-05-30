@@ -179,6 +179,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [searchFocused, setSearchFocused]     = useState(false)
   const inFlight = useRef<Set<number>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const rightOpenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingValittuRef = useRef<Liikuntapaikka | null>(null)
   const zoomRef = useRef(14)
   const searchResultsRef = useRef<HTMLDivElement>(null)
@@ -315,6 +316,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
+  // Clear right-open timer on unmount to prevent setState on unmounted component
+  useEffect(() => {
+    return () => {
+      if (rightOpenTimerRef.current) clearTimeout(rightOpenTimerRef.current)
     }
   }, [])
 
@@ -798,7 +806,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             onClick={() => {
               if (searchOpen) {
                 setSearchOpen(false)
-                setTimeout(() => setRightOpen(true), 180)
+                if (rightOpenTimerRef.current) clearTimeout(rightOpenTimerRef.current)
+                rightOpenTimerRef.current = setTimeout(() => setRightOpen(true), 180)
               } else {
                 setRightOpen(r => !r)
               }
