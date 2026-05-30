@@ -812,6 +812,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
       {/* ── Main bottom sheet ──────────────────────────────────────────── */}
       {/* Tab (HANDLE_H) stays visible at bottom when closed — no separate FAB */}
+      {/*
+        Intentional exception to CLAUDE.md "no layout animations" rule:
+        `left`/`right` are animated here to achieve the pill→full-sheet transition.
+        The sheet narrows to a centred pill when closed and expands to full width
+        when open. Replacing this with scaleX/translateX would require restructuring
+        the drag-constraint system and sheet content layout. Reflow jank is
+        acceptable on this one transition given the architectural constraints.
+      */}
       <motion.div
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
