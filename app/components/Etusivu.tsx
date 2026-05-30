@@ -156,7 +156,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [valittu, setValittu]       = useState<Liikuntapaikka | null>(null)
   const [expandedCluster, setExpandedCluster] = useState<(Liikuntapaikka & { latitude: number; longitude: number })[] | null>(null)
   // 'open' → 'sliding' (y to contentH) → onAnimationComplete → 'closed' (pill)
-  const [sheetPhase, setSheetPhase] = useState<'open' | 'sliding' | 'closed'>('open')
+  const [sheetPhase, setSheetPhase] = useState<'open' | 'sliding' | 'closed'>('closed')
   const [rightOpen, setRightOpen]   = useState(false)
   const [fullH, setFullH]           = useState(700)
   const [fullW, setFullW]           = useState(390)
@@ -181,6 +181,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingValittuRef = useRef<Liikuntapaikka | null>(null)
   const zoomRef = useRef(14)
+  const searchResultsRef = useRef<HTMLDivElement>(null)
   const { coords }                  = useGPS({ autoRequest: true })
   const searchParams = useSearchParams()
   const focusId = searchParams.get('id')
@@ -227,6 +228,22 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     setSearchOpen(true)
   }
 
+  function handleCardClick() {
+    try {
+      const scrollTop = searchResultsRef.current?.scrollTop ?? 0
+      const state = {
+        scrollTop,
+        searchHaku,
+        searchLaji,
+        searchKertakaynti,
+        searchAukinyt,
+        searchKaupunki,
+        searchOpen: true,
+      }
+      sessionStorage.setItem('etusivu-scroll-state', JSON.stringify(state))
+    } catch {}
+  }
+
   async function toggleSuosikki(id: number) {
     if (inFlight.current.has(id)) return   // debounce concurrent taps
     inFlight.current.add(id)
@@ -266,6 +283,29 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       inFlight.current.delete(id)
     }
   }
+
+  // Restore scroll position and search state when returning from a venue profile (NAV-01)
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('etusivu-scroll-state')
+      if (!raw) return
+      sessionStorage.removeItem('etusivu-scroll-state')
+      const s = JSON.parse(raw)
+      setSearchHaku(s.searchHaku ?? '')
+      setSearchLaji(s.searchLaji ?? 'Kaikki')
+      setSearchKertakaynti(s.searchKertakaynti ?? false)
+      setSearchAukinyt(s.searchAukinyt ?? false)
+      setSearchKaupunki(s.searchKaupunki ?? 'Kaikki')
+      if (s.searchOpen) setSearchOpen(true)
+      if (s.scrollTop) {
+        requestAnimationFrame(() => {
+          if (searchResultsRef.current) {
+            searchResultsRef.current.scrollTop = s.scrollTop
+          }
+        })
+      }
+    } catch {}
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Clear debounce timer on unmount to prevent stale state update after navigation
   useEffect(() => {
@@ -347,6 +387,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   // the meaningful dependency without creating a new reference on every render
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suosikitSizeAndIds, weatherKaupunki, kotikaupunki])
+
+  // Auto-open sheet on homepage load unless /?id=X is present (NAV-03)
+  useEffect(() => {
+    if (!focusId) setSheetPhase('open')
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!focusId) return
@@ -911,6 +956,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         {searchOpen && (
           <motion.div
             key="search-results"
+            ref={searchResultsRef}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -980,6 +1026,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                           setAutoZoomTarget({ lat: paikka.latitude, lng: paikka.longitude })
                         }
                       }}
+                      onCardClick={handleCardClick}
                     />
                   ))}
                 </div>
