@@ -403,7 +403,9 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   // Auto-open sheet on homepage load unless /?id=X is present (NAV-03)
   useEffect(() => {
     if (!focusId) setSheetPhase('open')
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // Run once on mount only — focusId from useSearchParams is stable at initial render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!focusId) return
@@ -412,7 +414,9 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     if (!target || target.latitude == null || target.longitude == null) return
     setAutoZoomTarget({ lat: target.latitude, lng: target.longitude })
     setSheetPhase('sliding')
-  }, [focusId, paikat]) // eslint-disable-line react-hooks/exhaustive-deps
+  // setAutoZoomTarget and setSheetPhase are stable useState setters — omitted intentionally
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusId, paikat])
 
   const lajitKartalla = useMemo(
     () => new Set(LAJIT_FILTTERI.filter(l => l !== 'Kaikki').map(l => l.toLowerCase())),
