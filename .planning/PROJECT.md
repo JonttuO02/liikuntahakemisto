@@ -4,19 +4,9 @@
 
 Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
 
-## Current Milestone: v1.3 AKTIIVI — Redesign & Polish
+## Shipped: v1.3 AKTIIVI — Redesign & Polish (2026-05-30)
 
-**Goal:** Uudistetaan brändi AKTIIVIKSI, rakennetaan animoitu logo-uloke bottom sheetiin, korjataan toolbar/haku-UX ja uudistetaan kartan pinnit sekä korttianimaatiot.
-
-**Target features:**
-- Rebrand: sovelluksen nimi → AKTIIVI (meta-tagit, manifest, otsikko)
-- Bottom sheet logo-uloke — aina näkyvä tab, AKTIIVI-logo SVG, värianimaatio avatessa
-- Toolbar UX-korjaus — haku+filtteri yhdistetty, lista-toggle erillinen nappi
-- Kartan pinnit — yhtenäinen väri + custom SVG -ikonit lajeittain
-- Päällekkäisten pinnien klusterointi samassa osoitteessa
-- Kartan korttianimaatio — in-place laajeneminen, ei alareuna-kortti
-
----
+**Delivered:** AKTIIVI-rebrand kaikissa metadateissa, animoitu logo-vesileima bottom sheetissä, unified toolbar (Search+LayoutList), yhtenäiset punaset SVG-ikonipinnit, sama-osoite-klusterointi, CalloutCard clip-path spike + PaikkaSheet layoutId-laajeneminen.
 
 ## Shipped: v1.2 UI-uudistus & Arvostelut (2026-05-28)
 
@@ -93,18 +83,20 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ REVIEW-04: Paikan profiilisivu näyttää arvostelut + tähtiarvosanojen keskiarvo — Phase 15
 - ✓ AI-05: Kotikaupunki profiiliin; AI-suositus tunnistaa kotona/reissussa-kontekstin — Phase 14
 
-### Active (v1.3)
+### Validated (v1.3)
 
-- [ ] BRAND-01: Sovelluksen brändinimi → AKTIIVI (meta-tagit, manifest, otsikko)
-- [ ] UI-13: Bottom sheet -uloke aina näkyvissä, toimii avauspainikkeena
-- [ ] UI-14: AKTIIVI-logo ulokkeessa ja sheetin yläreunassa auki-tilassa
-- [ ] UI-15: Logon tekstiväri vaihtuu animaatiolla joka kerta kun sheet avataan (5 sporttista liukuväriä)
-- [ ] UI-16: Sulkiessa väri pysyy — ei resetoidu
-- [ ] UI-17: Haku + filtterit yhdistetty yhteen nappiin, toimii kartta- ja listanäkymässä
-- [ ] UI-18: Erillinen nappi lista-näkymän toggle
-- [ ] MAP-08: Pinnit yhtenäinen väri + custom SVG -ikonit lajeittain
-- [ ] MAP-09: Sama-osoite-pinnit klusteriksi
-- [ ] MAP-10: Pinnikortti laajenee in-place animaatiolla — ei alareuna-kortti
+- ✓ BRAND-01: Sovelluksen brändinimi → AKTIIVI (meta-tagit, manifest, otsikko) — Phase 16
+- ✓ UI-13: Bottom sheet -uloke aina näkyvissä, toimii avauspainikkeena — Phase 16
+- ✓ UI-14: AKTIIVI-logo ulokkeessa ja sheetin yläreunassa auki-tilassa — Phase 16
+- ✓ UI-15: Logon tekstiväri vaihtuu animaatiolla joka kerta kun sheet avataan (5 sporttista liukuväriä) — Phase 16
+- ✓ UI-16: Sulkiessa väri pysyy — ei resetoidu — Phase 16
+- ✓ UI-17: Haku + filtterit yhdistetty yhteen nappiin, toimii kartta- ja listanäkymässä — Phase 17
+- ✓ UI-18: Erillinen nappi lista-näkymän toggle — Phase 17
+- ✓ MAP-08: Pinnit yhtenäinen väri + custom SVG -ikonit lajeittain — Phase 18
+- ✓ MAP-09: Sama-osoite-pinnit klusteriksi — Phase 18
+- ✓ MAP-10: Pinnikortti laajenee in-place animaatiolla — ei alareuna-kortti — Phase 18
+
+### Active (v1.4)
 
 ### Future (deferred from v1.1)
 
@@ -124,7 +116,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ## Context
 
-**Nykytila:** v1.2 toimitettu 2026-05-28. Kaikki 9 v1.2-vaatimusta toteutettu. Sovellus toimii Tampereen, Helsingin ja Turun alueella. Käyttäjätilit, suosikit, profiilisivu, arvostelusysteemi ja personoitu AI-suosittelu live. PWA asennettavissa ja toimii offline-tilassa. Erillinen listanäkymäsivu poistettu — haku ja korttilistaus integroitu etusivulle.
+**Nykytila:** v1.3 toimitettu 2026-05-30. Kaikki 10 v1.3-vaatimusta toteutettu. App rebrändätty AKTIIVIKSI kaikissa metadateissa ja PWA-manifestissa. Karttakokemus uudistettu: yhtenäiset punaset SVG-ikonipinnit, sama-osoite-klusterointi, CalloutCard clip-path spike + PaikkaSheet layoutId-animaatio. Toolbar-UX yhdistetty. Sovellus toimii Tampereen, Helsingin ja Turun alueella. Käyttäjätilit, suosikit, profiilisivu, arvostelusysteemi ja personoitu AI-suosittelu live. PWA asennettavissa ja toimii offline-tilassa.
 
 **Data-arkkitehtuuri:** Google Places API hakee automaattisesti aukioloajat → upsertit Supabaseen. Kertakäyntihinnat manuaalisesti top 20 palvelulle. AI-widget: Claude Haiku + Open-Meteo, sessionStorage-cache per kalenteripäivä + per kaupunki. Supabase Auth käyttäjätaulut + suosikit (user_id → paikka_id). Sync-skripti tukee ?kaupunki= parametria Helsinki/Turku/Tampere-datalle.
 
@@ -166,6 +158,10 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 | reviewer_name = email prefix (split('@')[0]) | T-15-02: user_id ja täysi sähköposti eivät koskaan renderöidy julkisesti | ✓ Phase 15 |
 | computeAvgRating palauttaa raakakeskiarvon | Pyöristys renderöintiaikaan — helppo testata tasavertaisesti | ✓ Phase 15 |
 | onConflict: 'user_id,paikka_id' upsertissä | Max 1 arvostelu/käyttäjä/paikka compositeUNIQUE:lla | ✓ Phase 15 |
+| Pin color #ef4444 kaikille pinneille | Laji erotetaan ikonikuvalla, ei värillä — visuaalinen yhtenäisyys | ✓ Phase 18 |
+| Record<string,T[]> klusteroinnissa | TS 5.9.3 Map<K,V> generic regression workaround | ✓ Phase 18 |
+| CalloutCard clip-path: path() spike | ResizeObserver mittaa korkeus, laskee polun — ei erillisiä elementtejä | ✓ Phase 18 |
+| translateX(-50%) erilliseen wrapper-diviin | layoutId-elementti ei saa omistaa conflictoivaa CSS-transformia | ✓ Phase 18 |
 
 ---
 
@@ -188,4 +184,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-05-29 — v1.3 milestone started (AKTIIVI — Redesign & Polish)*
+*Last updated: 2026-05-30 — after v1.3 milestone (AKTIIVI — Redesign & Polish)*

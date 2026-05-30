@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: AKTIIVI — Redesign & Polish
-status: completed
-last_updated: "2026-05-30T04:33:33.559Z"
-last_activity: 2026-05-29 — Phase 18 complete (unified pins, clustering, in-place card)
+status: archived
+last_updated: "2026-05-30T08:00:00.000Z"
+last_activity: 2026-05-30 — v1.3 milestone archived, ready for v1.4
 progress:
   total_phases: 3
   completed_phases: 2
@@ -17,10 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 18 — Kartan pinnit & korttianimaatio (complete)
-Plan: 18-03 (Wave 3 — done)
-Status: Phase 18 complete — all 3 plans done (MAP-08, MAP-09, MAP-10)
-Last activity: 2026-05-29 — Phase 18 complete (unified pins, clustering, in-place card)
+Milestone: v1.3 AKTIIVI — Redesign & Polish (archived 2026-05-30)
+Status: Between milestones — ready for v1.4 planning
+Last activity: 2026-05-30 — v1.3 milestone archived
 
 ## Project Reference
 

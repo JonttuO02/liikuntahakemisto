@@ -83,3 +83,32 @@
 
 - `.planning/milestones/v1.2-ROADMAP.md`
 - `.planning/milestones/v1.2-REQUIREMENTS.md`
+
+---
+
+## v1.3 AKTIIVI — Redesign & Polish — 2026-05-30
+
+**Shipped:** 2026-05-30
+**Phases:** 3 (phases 16–18) | **Plans:** 8
+**Timeline:** 2026-05-29 → 2026-05-30 (1 day)
+**Commits:** 57 | **Source files changed:** 7 | **Lines:** +746 / -317
+
+### What Shipped
+
+1. **AKTIIVI rebrand** — Sovelluksen nimi, meta-tagit, PWA-manifest; manifest start_url kiinteäksi
+2. **Animoitu logo-vesileima** — AktiiviLogo.tsx 5 sporttisella liukuvärillä, kierrätys per avaus; vesileima sheetin alaosaan
+3. **Unified toolbar** — Search+filter yhdessä pill-napissa, LayoutList-toggle erillinen; searchLaji yhteisenä tilana
+4. **Yhtenäiset SVG-ikonipinnit** — Kaikki pinnit #ef4444; laji custom SVG -ikonilla; clusterPinUrl klustereille
+5. **Sama-osoite-klusterointi** — ±0.0001° koordinaattiryhmittely, glass popup; Record<string,T[]> TS 5.9.3 workaround
+6. **CalloutCard + PaikkaSheet layoutId** — Clip-path spike, Framer Motion layoutId-siirtymä; translateX-bugikorjaus
+
+### Known Deferred Items at Close
+
+- Google OAuth callback URL — vaatii manuaalisen Google Cloud Console + Supabase dashboard -konfiguroinnin
+- /suosikit-sivu — edelleen deferred
+
+### Archives
+
+- `.planning/milestones/v1.3-ROADMAP.md`
+- `.planning/milestones/v1.3-REQUIREMENTS.md`
+- `.planning/milestones/v1.3-phases/` (phase directories)
