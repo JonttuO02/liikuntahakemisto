@@ -291,21 +291,25 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       if (!raw) return
       sessionStorage.removeItem('etusivu-scroll-state')
       const s = JSON.parse(raw)
-      setSearchHaku(s.searchHaku ?? '')
-      setSearchLaji(s.searchLaji ?? 'Kaikki')
-      setSearchKertakaynti(s.searchKertakaynti ?? false)
-      setSearchAukinyt(s.searchAukinyt ?? false)
-      setSearchKaupunki(s.searchKaupunki ?? 'Kaikki')
-      if (s.searchOpen) setSearchOpen(true)
-      if (s.scrollTop) {
+      if (typeof s !== 'object' || s === null) return
+      if (typeof s.searchHaku === 'string') setSearchHaku(s.searchHaku)
+      if (typeof s.searchLaji === 'string') setSearchLaji(s.searchLaji)
+      if (typeof s.searchKertakaynti === 'boolean') setSearchKertakaynti(s.searchKertakaynti)
+      if (typeof s.searchAukinyt === 'boolean') setSearchAukinyt(s.searchAukinyt)
+      if (typeof s.searchKaupunki === 'string') setSearchKaupunki(s.searchKaupunki)
+      if (s.searchOpen === true) setSearchOpen(true)
+      if (typeof s.scrollTop === 'number' && s.scrollTop > 0) {
         requestAnimationFrame(() => {
           if (searchResultsRef.current) {
             searchResultsRef.current.scrollTop = s.scrollTop
           }
         })
       }
-    } catch {}
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    } catch (err) {
+      console.warn('[Etusivu] Failed to restore scroll state', err)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Clear debounce timer on unmount to prevent stale state update after navigation
   useEffect(() => {
