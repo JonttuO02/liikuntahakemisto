@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, User, LogOut, MoreHorizontal, X } from 'lucide-react'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
@@ -13,13 +14,18 @@ export default function NavPill() {
   const [open, setOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
+  const router = useRouter()
 
   useEffect(() => subscribeToAuthUser(setUser), [])
 
-  function handleSignOut() {
+  async function handleSignOut() {
     setUser(null)
     setOpen(false)
-    createBrowserSupabase().auth.signOut()
+    try {
+      await createBrowserSupabase().auth.signOut()
+    } finally {
+      router.refresh()
+    }
   }
 
   return (
@@ -54,14 +60,19 @@ export default function NavPill() {
                 transition={{ duration: 0.12, delay: 0.06 }}
                 className="flex items-center gap-1 pl-2 whitespace-nowrap"
               >
-                <Link href="/profiili" onClick={() => setOpen(false)} className={BTN}>
-                  <User className="w-3.5 h-3.5" />
-                  Profiili
-                </Link>
-                <Link href="/suosikit" onClick={() => setOpen(false)} className={BTN}>
-                  <Heart className="w-3.5 h-3.5" />
-                  Suosikit
-                </Link>
+                {/* /profiili and /suosikit both have their own unauthenticated guest guards (ProfiiliClient, SuosikitClient) */}
+                {user && (
+                  <>
+                    <Link href="/profiili" onClick={() => setOpen(false)} className={BTN}>
+                      <User className="w-3.5 h-3.5" />
+                      Profiili
+                    </Link>
+                    <Link href="/suosikit" onClick={() => setOpen(false)} className={BTN}>
+                      <Heart className="w-3.5 h-3.5" />
+                      Suosikit
+                    </Link>
+                  </>
+                )}
                 {user ? (
                   <button onClick={handleSignOut} className={BTN}>
                     <LogOut className="w-3.5 h-3.5" />
