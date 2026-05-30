@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: UX-parannukset & Profiili
 status: executing
-last_updated: "2026-05-30T10:00:00.000Z"
-last_activity: 2026-05-30 — Phase 19 executed (all 3 plans complete)
+last_updated: "2026-05-30T12:00:00.000Z"
+last_activity: 2026-05-30 — Phase 20 planned (2 plans, 1 wave)
 progress:
   total_phases: 4
   completed_phases: 1
@@ -17,10 +17,10 @@ progress:
 
 ## Current Position
 
-Phase: 19 of 22 (Filtteri, lista & paikka-UX) — complete
+Phase: 20 of 22 (Navigaatio-korjaukset) — planned
 Plan: —
-Status: Phase 19 done — ready to verify or proceed to Phase 20
-Last activity: 2026-05-30 — Phase 19 executed (all 3 plans complete)
+Status: Phase 20 planned (2 plans ready) — ready to execute
+Last activity: 2026-05-30 — Phase 20 planned (2 plans, 1 wave)
 
 Progress: [██░░░░░░░░] 25%
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 | Phase | Goal | Status |
 |-------|------|--------|
 | 19. Filtteri, lista & paikka-UX | Kertakäynti-filtteri, kuva listakorttiin, pin-nappi, image_url | Done |
-| 20. Navigaatio-korjaukset | Back-scroll, kartalle-kohdistus, bottomsheet-avaus, toolbar | Not started |
+| 20. Navigaatio-korjaukset | Back-scroll, kartalle-kohdistus, bottomsheet-avaus, toolbar | Planned (2 plans) |
 | 21. TO DO -lista | Suosikit → TO DO, sydän → kirjanmerkki, /suosikit-sivu | Not started |
 | 22. Profiili & AI-kiinnostukset | Kiinnostuksen kohteet, AI-promptiin | Not started |
 
