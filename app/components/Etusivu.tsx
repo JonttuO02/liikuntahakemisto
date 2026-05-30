@@ -1,30 +1,29 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, MapPin, Moon, Sun, Locate, Search, Heart, MoreHorizontal, LogOut, User, LayoutList } from 'lucide-react'
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
+import { Moon, Sun, Locate, Search, Heart, MoreHorizontal, LogOut, User, LayoutList } from 'lucide-react'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
 import { Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
-import { hintateksti, cn } from '@/lib/utils'
+import { hintateksti } from '@/lib/utils'
 import Karuselli from './Karuselli'
-import HoursTable from './HoursTable'
 import type { Liikuntapaikka } from '@/lib/types'
-import { formatGroupedHours, getOpenStatus } from '@/lib/aukiolo'
+import { getOpenStatus } from '@/lib/aukiolo'
 import { isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
 import { nearestKaupunki, haversineKm, formatDistance } from '@/lib/geo'
-import { isSafeUrl } from '@/lib/urlUtils'
 import { useGPS } from '@/hooks/useGPS'
 import { pinUrl, clusterPinUrl } from '@/lib/sportPins'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 import { deriveKaupungit } from '@/lib/cityFilter'
 import DiagonaalKortti from './DiagonaalKortti'
+import PaikkaSheet from './PaikkaSheet'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const HANDLE_H = 44 // visible sheet tab height when closed
@@ -81,12 +80,80 @@ function MapAutoZoom({ target, onComplete }: { target: { lat: number; lng: numbe
   onCompleteRef.current = onComplete
   useEffect(() => {
     if (!map || !target) return
-    map.panTo(target)
-    map.setZoom(16)
-    const timer = setTimeout(() => onCompleteRef.current(), 400)
-    return () => clearTimeout(timer)
+    const m = map
+    const tgt = target
+    const fromCenter = m.getCenter()
+    const fromZoom = m.getZoom() ?? 14
+    if (!fromCenter) return
+    const fromLat = fromCenter.lat()
+    const fromLng = fromCenter.lng()
+    const toZoom = Math.max(fromZoom, 16)
+    const duration = 700
+    // easeInOutCubic — snappy start, smooth landing
+    const ease = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
+    let start: number | null = null
+    let raf: number
+    function step(ts: number) {
+      if (!start) start = ts
+      const t = Math.min((ts - start) / duration, 1)
+      const e = ease(t)
+      m.moveCamera({
+        center: { lat: fromLat + (tgt.lat - fromLat) * e, lng: fromLng + (tgt.lng - fromLng) * e },
+        zoom: fromZoom + (toZoom - fromZoom) * e,
+      })
+      if (t < 1) raf = requestAnimationFrame(step)
+      else onCompleteRef.current()
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
   }, [map, target])
   return null
+}
+
+function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude: number } }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [clipPath, setClipPath] = useState('')
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const compute = () => {
+      const h = el.offsetHeight - 11
+      setClipPath(
+        `M 10,0 L 120,0 Q 130,0 130,10 L 130,${h - 10} Q 130,${h} 120,${h} L 75,${h} L 65,${h + 11} L 55,${h} L 10,${h} Q 0,${h} 0,${h - 10} L 0,10 Q 0,0 10,0 Z`
+      )
+    }
+    const obs = new ResizeObserver(compute)
+    obs.observe(el)
+    compute()
+    return () => obs.disconnect()
+  }, [])
+
+  const hinta = p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)
+
+  return (
+    <div
+      ref={ref}
+      className="glass px-2.5 py-2 flex flex-col gap-1 cursor-pointer"
+      style={{
+        width: 130,
+        paddingBottom: 11,
+        clipPath: clipPath ? `path('${clipPath}')` : undefined,
+        borderRadius: clipPath ? 0 : 10,
+      }}
+    >
+      <span
+        className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white truncate"
+        style={{ backgroundColor: lajiKonfig[p.laji]?.color ?? '#6b7280' }}
+      >
+        {lajiKonfig[p.laji]?.label ?? p.laji}
+      </span>
+      <span className="font-bold text-sm text-[#111111] truncate leading-tight">{p.nimi}</span>
+      {hinta && (
+        <span className="text-[10px] text-[rgba(17,17,17,0.55)] truncate">{hinta}</span>
+      )}
+    </div>
+  )
 }
 
 function getTimeBasedFallback(): string {
@@ -108,6 +175,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [fullW, setFullW]           = useState(390)
   const [isDark, setIsDark]         = useState(false)
   const [zoomLevel, setZoomLevel]   = useState(14)
+  const [mapCenter, setMapCenter]   = useState<{ lat: number; lng: number }>(TAMPERE)
   const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
   const [suosikitIds, setSuosikitIds]       = useState<Set<number>>(new Set())
   const [kotikaupunki, setKotikaupunki]     = useState<string>('')
@@ -125,6 +193,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const inFlight = useRef<Set<number>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingValittuRef = useRef<Liikuntapaikka | null>(null)
+  const zoomRef = useRef(14)
   const { coords }                  = useGPS({ autoRequest: true })
   const searchParams = useSearchParams()
   const focusId = searchParams.get('id')
@@ -349,6 +418,19 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     )
   }, [coords, paikat])
 
+  // At zoom >= 16 show a callout card only for the venue nearest to map center,
+  // provided it's within 500 m. Outside that radius everything shows as a pin.
+  const nearestCardId = useMemo<number | null>(() => {
+    if (zoomLevel < 16) return null
+    let minDist = Infinity
+    let nearestId: number | null = null
+    for (const p of paikatKartalla) {
+      const d = haversineKm(mapCenter.lat, mapCenter.lng, p.latitude, p.longitude)
+      if (d < minDist) { minDist = d; nearestId = p.id }
+    }
+    return minDist <= 0.5 ? nearestId : null
+  }, [zoomLevel, mapCenter, paikatKartalla])
+
   const searchSuodatettu = useMemo(() =>
     paikat.filter(p => {
       const matchesLaji     = searchLaji === 'Kaikki' || p.laji.toLowerCase() === searchLaji.toLowerCase()
@@ -366,7 +448,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const isFilterActive = searchLaji !== 'Kaikki' || searchHinta !== null || searchAukinyt || searchKaupunki !== 'Kaikki'
 
   return (
-    <>
+    <LayoutGroup>
       {/* Night mode overlays — behind map */}
       <div
         className="fixed inset-0 pointer-events-none"
@@ -399,8 +481,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           keyboardShortcuts={false}
           onClick={() => { setValittu(null); setExpandedCluster(null) }}
           onCameraChanged={ev => {
-            setZoomLevel(ev.detail.zoom)
+            const newZoom = ev.detail.zoom
+            if ((zoomRef.current < 16) !== (newZoom < 16)) setZoomLevel(newZoom)
+            zoomRef.current = newZoom
             const center = ev.detail.center
+            setMapCenter(center)
             if (debounceRef.current) clearTimeout(debounceRef.current)
             debounceRef.current = setTimeout(() => {
               const nearest = nearestKaupunki(center.lat, center.lng)
@@ -413,31 +498,35 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               const p = item.paikka
               return (
                 <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1}>
-                  <div style={{ position: 'relative' }}>
-                    <AnimatePresence mode="wait" initial={false}>
-                      {zoomLevel < 16 && (
-                        <motion.div key="pin" exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-                          onClick={() => setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })}>
-                          <img src={pinUrl(p.laji)} width={28} height={38} alt="" className="gmap-pin" />
-                        </motion.div>
-                      )}
-                      {zoomLevel >= 16 && valittu?.id !== p.id && (
-                        <motion.div key="card" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-                          className="glass rounded-xl px-2.5 py-2 flex flex-col gap-1 cursor-pointer"
-                          style={{ minWidth: 100, maxWidth: 140 }}
-                          onClick={e => {
-                            e.stopPropagation()
-                            pendingValittuRef.current = p
+                  {/* 0×0 anchor — AdvancedMarker pins its bottom-center here, so neither pin
+                      nor card can shift the anchor point when transitioning between them */}
+                  <div style={{ position: 'relative', width: 0, height: 0 }}>
+                    <AnimatePresence initial={false}>
+                      {(zoomLevel < 16 || nearestCardId !== p.id) && valittu?.id !== p.id && (
+                        <motion.div key="pin"
+                          style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)' }}
+                          exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                          onClick={() => {
                             setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })
                             setSearchOpen(false)
                           }}>
-                          <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white truncate" style={{ backgroundColor: lajiKonfig[p.laji]?.color ?? '#6b7280' }}>
-                            {lajiKonfig[p.laji]?.label ?? p.laji}
-                          </span>
-                          <span className="font-bold text-sm text-[#111111] truncate leading-tight">{p.nimi}</span>
-                          {(p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)) && (
-                            <span className="text-[10px] text-[rgba(17,17,17,0.55)] truncate">{p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)}</span>
-                          )}
+                          <img src={pinUrl(p.laji)} width={28} height={38} alt="" className="gmap-pin" />
+                        </motion.div>
+                      )}
+                      {zoomLevel >= 16 && nearestCardId === p.id && valittu?.id !== p.id && (
+                        <motion.div key="card"
+                          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                          style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)', overflow: 'visible' }}>
+                          <motion.div
+                            layoutId={`vc-${p.id}`}
+                            onClick={e => {
+                              e.stopPropagation()
+                              pendingValittuRef.current = p
+                              setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })
+                              setSearchOpen(false)
+                            }}>
+                            <CalloutCard p={p} />
+                          </motion.div>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -934,7 +1023,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         }}
       />
 
-      {/* ── Expanded venue card — fixed center overlay ─────────────────── */}
+      {/* ── Venue sheet — grows from callout card via layoutId ─────────── */}
       {valittu && (
         <div
           style={{ position: 'fixed', inset: 0, zIndex: 65 }}
@@ -943,116 +1032,16 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       )}
       <AnimatePresence>
         {valittu && (
-          <motion.div
-            key={valittu.id}
-            initial={{ opacity: 0, scale: 0.55 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.55 }}
-            transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
-            onClick={e => e.stopPropagation()}
-            className="glass rounded-2xl"
-            style={{
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              x: '-50%',
-              y: '-50%',
-              width: 'min(340px, calc(100vw - 32px))',
-              zIndex: 66,
-              boxShadow: '0 12px 48px rgba(0,0,0,0.2)',
-              maxHeight: 'calc(100vh - 120px)',
-              overflowY: 'auto',
-            } as React.CSSProperties}
-          >
-            <div className="p-4 flex flex-col gap-3">
-              {/* Header: laji badge + suosikki + sulku */}
-              <div className="flex items-center justify-between gap-2">
-                <span
-                  className="inline-flex text-[10px] font-bold px-2 py-1 rounded-full text-white"
-                  style={{ backgroundColor: lajiKonfig[valittu.laji]?.color ?? '#6b7280' }}
-                >
-                  {lajiKonfig[valittu.laji]?.label ?? valittu.laji}
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <motion.button
-                    whileTap={{ scale: 0.85, transition: { duration: 0.12 } }}
-                    onClick={() => toggleSuosikki(valittu.id)}
-                    className="glass-btn w-7 h-7 rounded-full flex items-center justify-center"
-                    aria-label={suosikitIds.has(valittu.id) ? 'Poista suosikeista' : 'Lisää suosikkeihin'}
-                  >
-                    <Heart className={cn('w-3.5 h-3.5', suosikitIds.has(valittu.id) ? 'fill-[#111111] text-[#111111]' : 'text-[rgba(17,17,17,0.35)]')} />
-                  </motion.button>
-                  <button
-                    onClick={() => setValittu(null)}
-                    className="glass-btn w-7 h-7 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
-                    aria-label="Sulje"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Nimi */}
-              <p className="font-bold text-base text-[#111111] leading-snug">{valittu.nimi}</p>
-
-              {/* Osoite */}
-              {(valittu.osoite || valittu.kaupunki) && (
-                <p className="text-sm text-[rgba(17,17,17,0.45)] flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 shrink-0" />
-                  {[valittu.osoite, valittu.kaupunki].filter(Boolean).join(', ')}
-                </p>
-              )}
-
-              {/* Aukiolo + etäisyys */}
-              <div className="flex items-center justify-between gap-2">
-                {(() => {
-                  const status = getOpenStatus(valittu.aukioloajat)
-                  if (status.status === 'no-data') return <span />
-                  return (
-                    <span className="text-sm">
-                      {status.status === 'open'
-                        ? <span className="text-green-700 font-bold">● Auki nyt{status.hours ? ` · ${status.hours}` : ''}</span>
-                        : <span className="text-[rgba(17,17,17,0.45)]">Suljettu{status.hours ? ` · ${status.hours}` : ''}</span>
-                      }
-                    </span>
-                  )
-                })()}
-                {distancesMap[valittu.id] != null && (
-                  <span className="text-sm text-[rgba(17,17,17,0.45)] shrink-0 tabular-nums">
-                    {formatDistance(distancesMap[valittu.id])}
-                  </span>
-                )}
-              </div>
-
-              {/* Hinta */}
-              <div className="pt-1 border-t border-[rgba(0,0,0,0.07)]">
-                <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">Hinta</p>
-                {(() => {
-                  const priceStr = hintateksti(valittu.hinta_min, valittu.hinta_max)
-                  const display = valittu.hinta_kuvaus || priceStr
-                  return display
-                    ? <p className="font-serif text-xl font-bold text-[#111111] tabular-nums">{display}</p>
-                    : <p className="text-sm text-[rgba(17,17,17,0.4)]">Lisätään pian</p>
-                })()}
-              </div>
-
-              {/* Kuvaus */}
-              {valittu.kuvaus && (
-                <p className="text-sm text-[rgba(17,17,17,0.6)] line-clamp-2 leading-relaxed">{valittu.kuvaus}</p>
-              )}
-
-              {/* CTA */}
-              <Link
-                href={`/paikat/${valittu.id}`}
-                className="w-full text-center bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-3 rounded-full [transition:background-color_150ms_var(--ease-out)]"
-              >
-                Näytä kaikki tiedot →
-              </Link>
-            </div>
-          </motion.div>
+          <PaikkaSheet
+            paikka={valittu}
+            suosikki={suosikitIds.has(valittu.id)}
+            distanceKm={distancesMap[valittu.id]}
+            onClose={() => setValittu(null)}
+            onToggleSuosikki={toggleSuosikki}
+          />
         )}
       </AnimatePresence>
 
-    </>
+    </LayoutGroup>
   )
 }
