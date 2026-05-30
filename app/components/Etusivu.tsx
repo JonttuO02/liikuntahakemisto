@@ -7,8 +7,6 @@ import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import { Moon, Sun, Locate, Search, Heart, MoreHorizontal, LogOut, User, LayoutList } from 'lucide-react'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
-import { Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
 import Karuselli from './Karuselli'
@@ -27,11 +25,6 @@ import PaikkaSheet from './PaikkaSheet'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const HANDLE_H = 44 // visible sheet tab height when closed
-
-const SPORT_ICONS: Record<string, LucideIcon> = {
-  padel: Zap, kuntosali: Dumbbell, jooga: Leaf,
-  uinti: Waves, tennis: Target, liikuntahalli: Building2, liikunta: Activity,
-}
 
 const HINTA_FILTTERI: { label: string; max: number | null }[] = [
   { label: 'Kaikki hinnat', max: null },

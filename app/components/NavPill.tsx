@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Heart, User, LogOut, MoreHorizontal, X } from 'lucide-react'
+import { Heart, User, LogOut, MoreHorizontal, X } from 'lucide-react'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 
@@ -54,10 +54,6 @@ export default function NavPill() {
                 transition={{ duration: 0.12, delay: 0.06 }}
                 className="flex items-center gap-1 pl-2 whitespace-nowrap"
               >
-                <Link href="/?nakyma=lista" onClick={() => setOpen(false)} className={BTN}>
-                  <Search className="w-3.5 h-3.5" />
-                  Haku
-                </Link>
                 <Link href="/profiili" onClick={() => setOpen(false)} className={BTN}>
                   <User className="w-3.5 h-3.5" />
                   Profiili
