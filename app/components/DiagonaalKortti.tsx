@@ -35,9 +35,10 @@ interface DiagonaalKorttiProps {
   paikka: Liikuntapaikka
   distanceStr?: string
   onShowMap?: (paikka: Liikuntapaikka) => void
+  onCardClick?: () => void
 }
 
-export default function DiagonaalKortti({ paikka, distanceStr, onShowMap }: DiagonaalKorttiProps) {
+export default function DiagonaalKortti({ paikka, distanceStr, onShowMap, onCardClick }: DiagonaalKorttiProps) {
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
   const openStatus   = getOpenStatus(paikka.aukioloajat)
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
@@ -54,7 +55,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, onShowMap }: Diag
       whileTap={{ scale: 0.98, transition: { duration: 0.12, ease: 'easeOut' } }}
     >
       <div className="absolute inset-0 rounded-2xl overflow-hidden">
-      <Link href={`/paikat/${paikka.id}`} className="absolute inset-0 block">
+      <Link href={`/paikat/${paikka.id}`} className="absolute inset-0 block" onClick={() => onCardClick?.()}>
 
         {/* LEFT: info panel */}
         <div
