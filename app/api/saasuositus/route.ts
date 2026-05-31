@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { SUOMI_KAUPUNGIT } from '@/lib/constants'
+import { lajiKonfig } from '@/lib/lajit'
 import { buildReissuKonteksti } from '@/lib/buildReissuKonteksti'
 import { buildKiinnostuksetKonteksti } from '@/lib/buildKiinnostuksetKonteksti'
 
@@ -101,12 +102,11 @@ export async function POST(request: Request) {
         .slice(0, 80)
         .trim()
     }
-    // Sanitize kiinnostukset — same allowlist and limits as suosikit array (T-22-03)
+    // Sanitize kiinnostukset — validate against known lajiKonfig keys (T-22-03, IN-01)
     kiinnostukset = Array.isArray(body.kiinnostukset)
       ? body.kiinnostukset
           .slice(0, 10)
-          .filter((s: unknown): s is string => typeof s === 'string')
-          .map((s: string) => s.replace(/[^\w\sÄäÖöÅå\-,.'()&]/g, '').slice(0, 80))
+          .filter((s: unknown): s is string => typeof s === 'string' && s in lajiKonfig)
       : []
   } catch {}
 
