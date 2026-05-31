@@ -2,17 +2,17 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Heart } from 'lucide-react'
+import { Bookmark, BookmarkCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 
-interface HeartButtonProps {
+interface BookmarkButtonProps {
   paikkaId: number
 }
 
-export default function HeartButton({ paikkaId }: HeartButtonProps) {
-  const [isSuosikki, setIsSuosikki]       = useState(false)
+export default function BookmarkButton({ paikkaId }: BookmarkButtonProps) {
+  const [isTodo, setIsTodo]            = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const currentUser = useRef<{ id: string } | null>(null)
 
@@ -22,9 +22,9 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
       currentUser.current = user
       if (user) {
         const { data } = await supabase.from('suosikit').select('id').eq('user_id', user.id).eq('paikka_id', paikkaId).maybeSingle()
-        setIsSuosikki(!!data)
+        setIsTodo(!!data)
       } else {
-        setIsSuosikki(false)
+        setIsTodo(false)
       }
     })
   }, [paikkaId])
@@ -37,9 +37,9 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
     }
 
     const supabase = createBrowserSupabase()
-    const wasSaved = isSuosikki
+    const wasSaved = isTodo
     // Optimistic update
-    setIsSuosikki(!wasSaved)
+    setIsTodo(!wasSaved)
 
     if (wasSaved) {
       const { error } = await supabase
@@ -48,16 +48,16 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
         .eq('user_id', user.id)
         .eq('paikka_id', paikkaId)
       if (error) {
-        console.error('[HeartButton] delete error:', error)
-        setIsSuosikki(wasSaved)
+        console.error('[BookmarkButton] delete error:', error)
+        setIsTodo(wasSaved)
       }
     } else {
       const { error } = await supabase
         .from('suosikit')
         .insert({ user_id: user.id, paikka_id: paikkaId })
       if (error) {
-        console.error('[HeartButton] insert error:', error)
-        setIsSuosikki(wasSaved)
+        console.error('[BookmarkButton] insert error:', error)
+        setIsTodo(wasSaved)
       }
     }
   }
@@ -68,9 +68,12 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
         whileTap={{ scale: 0.85, transition: { duration: 0.12, ease: 'easeOut' } }}
         onClick={toggle}
         className="glass-btn w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-        aria-label={isSuosikki ? 'Poista suosikeista' : 'Lisää suosikkeihin'}
+        aria-label={isTodo ? 'Poista TO DO -listalta' : 'Lisää TO DO -listalle'}
       >
-        <Heart className={cn('w-5 h-5', isSuosikki ? 'fill-[#111111] text-[#111111]' : 'text-[rgba(17,17,17,0.35)]')} />
+        {isTodo
+          ? <BookmarkCheck className={cn('w-5 h-5 fill-[#111111] text-[#111111]')} />
+          : <Bookmark className={cn('w-5 h-5 text-[rgba(17,17,17,0.35)]')} />
+        }
       </motion.button>
       <AuthModal
         open={authModalOpen}
@@ -82,7 +85,7 @@ export default function HeartButton({ paikkaId }: HeartButtonProps) {
           const { data: { user } } = await supabase.auth.getUser()
           if (user) {
             const { error } = await supabase.from('suosikit').insert({ user_id: user.id, paikka_id: paikkaId })
-            if (!error) setIsSuosikki(true)
+            if (!error) setIsTodo(true)
           }
         }}
       />
