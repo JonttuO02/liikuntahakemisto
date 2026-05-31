@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { Home, List, Heart } from 'lucide-react'
+import { Home, List, Bookmark } from 'lucide-react'
 
 const ACTIVE   = 'text-[#111111]'
 const INACTIVE = 'text-[rgba(17,17,17,0.4)]'
@@ -40,8 +40,8 @@ export default function BottomNav() {
           href="/suosikit"
           className={`flex flex-col items-center justify-center gap-1 [transition:color_150ms_var(--ease-out)] ${isSuosikit ? ACTIVE : INACTIVE}`}
         >
-          <Heart className="w-5 h-5" strokeWidth={isSuosikit ? 2.2 : 1.8} fill={isSuosikit ? 'currentColor' : 'none'} />
-          <span className="text-[10px] font-semibold">Suosikit</span>
+          <Bookmark className="w-5 h-5" strokeWidth={isSuosikit ? 2.2 : 1.8} fill={isSuosikit ? 'currentColor' : 'none'} />
+          <span className="text-[10px] font-semibold">TO DO</span>
         </Link>
 
       </div>
