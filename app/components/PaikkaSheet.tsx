@@ -89,6 +89,7 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
               <motion.button
                 whileTap={{ scale: 0.85, transition: { duration: 0.12 } }}
                 onClick={() => onToggleTodo(paikka.id)}
+                aria-label={todo ? 'Poista TO DO -listalta' : 'Lisää TO DO -listalle'}
                 className="glass-btn w-8 h-8 rounded-full flex items-center justify-center"
               >
                 {todo

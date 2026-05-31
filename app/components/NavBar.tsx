@@ -86,14 +86,16 @@ export default function NavBar({ userEmail }: NavBarProps) {
                         <Search className="w-3.5 h-3.5" />
                         Haku
                       </Link>
-                      <Link
-                        href="/suosikit"
-                        onClick={() => setOpen(false)}
-                        className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
-                      >
-                        <Bookmark className="w-3.5 h-3.5" />
-                        TO DO
-                      </Link>
+                      {clientEmail && (
+                        <Link
+                          href="/suosikit"
+                          onClick={() => setOpen(false)}
+                          className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+                        >
+                          <Bookmark className="w-3.5 h-3.5" />
+                          TO DO
+                        </Link>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>

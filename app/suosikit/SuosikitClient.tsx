@@ -60,7 +60,7 @@ export default function SuosikitClient() {
 
   async function removeTodo(paikkaId: number) {
     if (!userId) return
-    const previous = paikat
+    const removed = paikat.find(p => p.id === paikkaId)
     setPaikat(prev => prev.filter(p => p.id !== paikkaId))
 
     const supabase = createBrowserSupabase()
@@ -72,7 +72,7 @@ export default function SuosikitClient() {
 
     if (error) {
       console.error('[SuosikitClient] delete error:', error)
-      setPaikat(previous)
+      if (removed) setPaikat(prev => prev.find(p => p.id === paikkaId) ? prev : [...prev, removed])
     }
   }
 
