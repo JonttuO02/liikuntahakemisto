@@ -70,7 +70,7 @@ Full archive: `.planning/milestones/v1.3-ROADMAP.md`
 
 - [ ] **Phase 19: Filtteri, lista & paikka-UX** — Kertakäynti-filtteri, paikka kuva listakortissa, AI-widget tila, pin-nappi listakortissa, image_url Supabaseen
 - [x] **Phase 20: Navigaatio-korjaukset** — Back-scroll, "Näytä kartalla" paikan koordinaatit, bottomsheet-avausanimaatio, toolbar-cleanup (2/2 plans) — 2026-05-30
-- [ ] **Phase 21: TO DO -lista** — Suosikit → TO DO, sydän → kirjanmerkki, /suosikit toimiva TO DO -lista (2 plans)
+- [x] **Phase 21: TO DO -lista** — Suosikit → TO DO, sydän → kirjanmerkki, /suosikit toimiva TO DO -lista (2/2 plans)
 - [ ] **Phase 22: Profiili & AI-kiinnostukset** — Kiinnostuksen kohteet monivalintana profiiliin, käytetään AI-suosituksissa
 
 ## Phase Details
@@ -114,8 +114,8 @@ Plans:
   3. A logged-out user visiting /suosikit is prompted to log in
 **Plans**: 2 plans
 Plans:
-- [ ] 21-01-PLAN.md — BookmarkButton rename, PaikkaSheet+Etusivu atomic props rename, paikat/[id] import update
-- [ ] 21-02-PLAN.md — SuosikitClient DiagonaalKortti replacement, NavPill/NavBar/BottomNav/PaikkaKortti icon+label update
+- [x] 21-01-PLAN.md — BookmarkButton rename, PaikkaSheet+Etusivu atomic props rename, paikat/[id] import update
+- [x] 21-02-PLAN.md — SuosikitClient DiagonaalKortti replacement, NavPill/NavBar/BottomNav/PaikkaKortti icon+label update
 **UI hint**: yes
 
 ### Phase 22: Profiili & AI-kiinnostukset
@@ -155,5 +155,5 @@ Plans:
 | 18. Kartan pinnit & korttianimaatio | v1.3 | 3/3 | ✅ Complete | 2026-05-30 |
 | 19. Filtteri, lista & paikka-UX | v1.4 | 0/? | Not started | - |
 | 20. Navigaatio-korjaukset | v1.4 | 2/2 | ✅ Complete | 2026-05-30 |
-| 21. TO DO -lista | v1.4 | 0/2 | Not started | - |
+| 21. TO DO -lista | v1.4 | 2/2 | ✅ Complete | 2026-05-31 |
 | 22. Profiili & AI-kiinnostukset | v1.4 | 0/? | Not started | - |
