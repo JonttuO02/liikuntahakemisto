@@ -144,6 +144,34 @@ export default function ProfiiliClient() {
         </button>
         {saved && <p className="text-sm text-green-700">Kotikaupunki tallennettu</p>}
       </div>
+      <div className="glass rounded-2xl p-4 flex flex-col gap-3 mt-4">
+        <label className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">
+          Kiinnostuksen kohteet
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(lajiKonfig).map(([key, konfig]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => toggleKiinnostus(key)}
+              className={
+                kiinnostukset.includes(key)
+                  ? 'bg-[#111111] text-white font-bold text-[10px] rounded-full px-3 py-1.5 [transition:background-color_150ms_var(--ease-out)]'
+                  : 'border border-[rgba(0,0,0,0.12)] text-[#111111] font-bold text-[10px] rounded-full px-3 py-1.5 bg-white [transition:background-color_150ms_var(--ease-out)]'
+              }
+            >
+              {konfig.label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={handleSaveKiinnostukset}
+          className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-5 py-2 rounded-full self-start [transition:background-color_150ms_var(--ease-out)]"
+        >
+          Tallenna
+        </button>
+        {savedKiinnostukset && <p className="text-sm text-green-700">Kiinnostukset tallennettu</p>}
+      </div>
       <Link
         href="/"
         className="mt-8 inline-block text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)] underline underline-offset-2"
