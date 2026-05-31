@@ -42,21 +42,19 @@
 
 ## Traceability
 
-*(Täytetään roadmap-vaiheessa)*
-
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| MAP-11 | TBD | Pending |
-| MAP-12 | TBD | Pending |
-| MAP-13 | TBD | Pending |
-| MAP-14 | TBD | Pending |
-| MAP-15 | TBD | Pending |
-| UI-22 | TBD | Pending |
-| UI-23 | TBD | Pending |
-| TODO-03 | TBD | Pending |
-| TODO-04 | TBD | Pending |
-| TODO-05 | TBD | Pending |
-| TODO-06 | TBD | Pending |
-| TODO-07 | TBD | Pending |
-| FILTER-02 | TBD | Pending |
-| FILTER-03 | TBD | Pending |
+| MAP-11 | Phase 23 | Pending |
+| MAP-12 | Phase 23 | Pending |
+| MAP-13 | Phase 23 | Pending |
+| UI-22 | Phase 23 | Pending |
+| UI-23 | Phase 23 | Pending |
+| MAP-14 | Phase 24 | Pending |
+| MAP-15 | Phase 24 | Pending |
+| TODO-03 | Phase 25 | Pending |
+| TODO-04 | Phase 25 | Pending |
+| TODO-05 | Phase 25 | Pending |
+| TODO-06 | Phase 25 | Pending |
+| TODO-07 | Phase 25 | Pending |
+| FILTER-02 | Phase 26 | Pending |
+| FILTER-03 | Phase 26 | Pending |
