@@ -100,8 +100,8 @@ Full archive: `.planning/milestones/v1.4-ROADMAP.md`
   5. Bottom sheet -logon väri- ja tekstiefekti on uudistettu
 **Plans**: 4 plans
 Plans:
-- [ ] 23-01-PLAN.md -- Inter -> Outfit font migration (UI-22)
-- [ ] 23-02-PLAN.md -- AktiiviLogo redesign: blue sweep auto-loop, 32px (UI-23)
+- [x] 23-01-PLAN.md -- Inter -> Outfit font migration (UI-22)
+- [x] 23-02-PLAN.md -- AktiiviLogo redesign: blue sweep auto-loop, 32px (UI-23)
 - [ ] 23-03-PLAN.md -- SportPin component + spinOrbit animation (MAP-11, MAP-12)
 - [ ] 23-04-PLAN.md -- Etusivu integration: wire SportPin, cluster inline HTML (MAP-11, MAP-12, MAP-13)
 **UI hint**: yes
