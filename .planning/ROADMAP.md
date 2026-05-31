@@ -81,7 +81,7 @@ Full archive: `.planning/milestones/v1.4-ROADMAP.md`
 
 **Milestone Goal:** Parannetaan sovelluksen visuaalista ilmettä ja käyttäjäkokemusta animaatioilla, uudistetuilla ikoneilla ja väreillä sekä sulaveammilla interaktioilla.
 
-- [ ] **Phase 23: Visuaalinen perusta** — Sininen liukuväri karttapinneille, kiilto-animaatio, fonttivaihto Outfit:iin, bottom sheet -logo uudistus
+- [x] **Phase 23: Visuaalinen perusta** — Sininen liukuväri karttapinneille, kiilto-animaatio, fonttivaihto Outfit:iin, bottom sheet -logo uudistus
 - [ ] **Phase 24: Callout-kortti & ikonit** — Callout-kortti suuremmaksi ja pyörittää tietoja; laji-ikonit värillisinä kaikissa komponenteissa
 - [ ] **Phase 25: TO DO overlay** — TO DO -lista etusivun päälle animoituna overlayina; arvosteluehdotus poiston yhteydessä
 - [ ] **Phase 26: Filtterit** — Yksinkertaistettu filtteri (vain paikkakunta + laji); aktiiviset valinnat karuselli-animaatiolla
@@ -103,7 +103,7 @@ Plans:
 - [x] 23-01-PLAN.md -- Inter -> Outfit font migration (UI-22)
 - [x] 23-02-PLAN.md -- AktiiviLogo redesign: blue sweep auto-loop, 32px (UI-23)
 - [x] 23-03-PLAN.md -- SportPin component + spinOrbit animation (MAP-11, MAP-12)
-- [ ] 23-04-PLAN.md -- Etusivu integration: wire SportPin, cluster inline HTML (MAP-11, MAP-12, MAP-13)
+- [x] 23-04-PLAN.md -- Etusivu integration: wire SportPin, cluster inline HTML (MAP-11, MAP-12, MAP-13)
 **UI hint**: yes
 
 ### Phase 24: Callout-kortti & ikonit
