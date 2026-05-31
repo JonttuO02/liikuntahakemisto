@@ -291,6 +291,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       const raw = sessionStorage.getItem('etusivu-scroll-state')
       if (!raw) return
       sessionStorage.removeItem('etusivu-scroll-state')
+      if (focusId) return  // "Näytä kartalla" route — clear key but don't reopen search list
       const s = JSON.parse(raw)
       if (typeof s !== 'object' || s === null) return
       if (typeof s.searchHaku === 'string') setSearchHaku(s.searchHaku)
@@ -400,9 +401,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suosikitSizeAndIds, weatherKaupunki, kotikaupunki])
 
-  // Auto-open sheet on homepage load unless /?id=X is present (NAV-03)
+  // Auto-open sheet on homepage load unless /?id=X is present (NAV-03).
+  // setTimeout ensures the initial 'closed' render is committed before transitioning.
   useEffect(() => {
-    if (!focusId) setSheetPhase('open')
+    if (focusId) return
+    const t = setTimeout(() => setSheetPhase('open'), 50)
+    return () => clearTimeout(t)
   // Run once on mount only — focusId from useSearchParams is stable at initial render
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -655,7 +659,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               </div>
             </AdvancedMarker>
           )}
-          <MapPanController coords={coords} />
+          <MapPanController coords={focusId ? null : coords} />
           {sheetPhase !== 'open' && <RecenterButton coords={coords} />}
           <MapAutoZoom
             target={autoZoomTarget}
@@ -843,7 +847,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         onAnimationComplete={() => { if (sheetPhase === 'sliding') setSheetPhase('closed') }}
         onDragEnd={(_, info) => {
           if (info.velocity.y > 300 || info.offset.y > 80) setSheetPhase('sliding')
-          else if (info.velocity.y < -300 || info.offset.y < -80) setSheetPhase('open')
+          else if (info.velocity.y < -300 || info.offset.y < -80) { setSheetPhase('open'); setSearchOpen(false) }
         }}
         className="glass"
         style={{ position: 'fixed', bottom: 0, height: contentH, zIndex: 60, overflow: 'hidden' }}
@@ -852,7 +856,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         <div
           className="flex justify-center pt-3 pb-2"
           style={{ position: 'relative', zIndex: 1, cursor: sheetPhase === 'open' ? 'grab' : 'pointer' }}
-          onClick={() => { if (sheetPhase !== 'open') setSheetPhase('open') }}
+          onClick={() => { if (sheetPhase !== 'open') { setSheetPhase('open'); setSearchOpen(false) } }}
         >
           <div className="w-10 h-1 bg-[rgba(0,0,0,0.12)] rounded-full" />
         </div>
