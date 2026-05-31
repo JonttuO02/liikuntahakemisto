@@ -126,7 +126,12 @@ Plans:
   1. A logged-in user can select multiple sport interests (from lib/lajit.ts) on their /profiili page and the selections persist across sessions
   2. The AI weather recommendation prompt includes the user's sport interests when they are set
   3. A user with no interests set receives the same AI recommendation as before (no regression in output quality)
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 22-01-PLAN.md — Migration (kiinnostukset column) + lib/buildKiinnostuksetKonteksti.ts
+- [ ] 22-02-PLAN.md — ProfiiliClient.tsx: interest pills UI, state, handleSaveKiinnostukset
+- [ ] 22-03-PLAN.md — Etusivu.tsx + route.ts: data flow and AI prompt extension
+- [ ] 22-04-PLAN.md — [BLOCKING] supabase db push + end-to-end human verification
 **UI hint**: yes
 
 ---
