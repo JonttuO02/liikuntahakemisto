@@ -131,7 +131,20 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ### Active (v1.5)
 
-*(Määritetään requirements-vaiheessa)*
+- [ ] MAP-11: Karttapinnit sininen sporttinen liukuväri; valkoinen ympyrä säilyy
+- [ ] MAP-12: Pinneille kiilto-animaatio (CSS kehäanimaatio, transform/opacity only)
+- [ ] MAP-13: Zoom-out klusterointi: pinnit ryhmittyvät klusteriksi + lukumäärä, sama sininen teema
+- [ ] MAP-14: Callout-kortti suurempi; tieto vaihtuu laji ↔ nimi intervalleilla
+- [ ] MAP-15: Laji-ikonit tyylikkäämmiksi ja värillisiksi
+- [ ] UI-22: Fontti Inter → Outfit (next/font/google, --font-sans säilyy)
+- [ ] UI-23: Bottom sheet -logo uudistetaan: väriefekti + tekstiefekti
+- [ ] TODO-03: TO DO overlay etusivun päälle (ei erillinen sivu)
+- [ ] TODO-04: TO DO -painike toolbarin alapuolelle; muuttuu X:ksi kun lista auki
+- [ ] TODO-05: Avaamisanimaatio: nappi "sylkee" listan ulos
+- [ ] TODO-06: TO DO -lista visuaalisesti erottuva hakulistasta
+- [ ] TODO-07: Poiston yhteydessä pop-up: "Kävikö paikassa?" → arvosteluehdotus
+- [ ] FILTER-02: Filtterit karsitaan: vain paikkakunta + laji; sessionStorage _v: 2
+- [ ] FILTER-03: Filtteripainike näyttää aktiiviset valinnat karuselli-animaatiolla
 
 ### Future (deferred from v1.1)
 
