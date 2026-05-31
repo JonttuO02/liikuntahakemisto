@@ -18,6 +18,8 @@ export default function ProfiiliClient() {
   const [saved, setSaved] = useState(false)
   const [kiinnostukset, setKiinnostukset] = useState<string[]>([])
   const [savedKiinnostukset, setSavedKiinnostukset] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveKiinnostuksetError, setSaveKiinnostuksetError] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
@@ -60,7 +62,10 @@ export default function ProfiiliClient() {
       )
     if (!error) {
       setSaved(true)
+      setSaveError(null)
       setTimeout(() => setSaved(false), 2500)
+    } else {
+      setSaveError('Tallennus epäonnistui. Yritä uudelleen.')
     }
   }
 
@@ -79,7 +84,10 @@ export default function ProfiiliClient() {
       )
     if (!error) {
       setSavedKiinnostukset(true)
+      setSaveKiinnostuksetError(null)
       setTimeout(() => setSavedKiinnostukset(false), 2500)
+    } else {
+      setSaveKiinnostuksetError('Tallennus epäonnistui. Yritä uudelleen.')
     }
   }
 
@@ -143,6 +151,7 @@ export default function ProfiiliClient() {
           Tallenna
         </button>
         {saved && <p className="text-sm text-green-700">Kotikaupunki tallennettu</p>}
+        {saveError && <p className="text-sm text-red-600">{saveError}</p>}
       </div>
       <div className="glass rounded-2xl p-4 flex flex-col gap-3 mt-4">
         <label className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">
@@ -171,6 +180,7 @@ export default function ProfiiliClient() {
           Tallenna
         </button>
         {savedKiinnostukset && <p className="text-sm text-green-700">Kiinnostukset tallennettu</p>}
+        {saveKiinnostuksetError && <p className="text-sm text-red-600">{saveKiinnostuksetError}</p>}
       </div>
       <Link
         href="/"

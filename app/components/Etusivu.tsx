@@ -172,6 +172,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [kotikaupunki, setKotikaupunki]     = useState<string>('')
   const [kiinnostukset, setKiinnostukset]   = useState<string[]>([])
   const [supabaseUser, setSupabaseUser]     = useState<{ id: string; email?: string } | null>(null)
+  const [isAuthReady, setIsAuthReady]       = useState(false)
   const [authModalOpen, setAuthModalOpen]   = useState(false)
   const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null)
   const [weatherKaupunki, setWeatherKaupunki] = useState<string>('Tampere')
@@ -362,6 +363,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         setKotikaupunki('')
         setKiinnostukset([])
       }
+      setIsAuthReady(true)
     })
   }, [])
 
@@ -384,10 +386,18 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     [todoIds]
   )
 
+  const kiinnostuksetKey = useMemo(
+    () => [...kiinnostukset].sort().join(','),
+    [kiinnostukset]
+  )
+
   useEffect(() => {
+    if (!isAuthReady) return
     const key = 'saasuositus-' + new Date().toISOString().slice(0, 10)
       + '-' + weatherKaupunki
       + (todoIds.size > 0 ? '-' + suosikitSizeAndIds : '')
+      + (kotikaupunki ? '-hk:' + kotikaupunki : '')
+      + (kiinnostuksetKey ? '-ki:' + kiinnostuksetKey : '')
     try {
       const cached = sessionStorage.getItem(key)
       if (cached) { setAiTeksti(cached); return }
@@ -410,10 +420,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       })
       .catch(() => setAiTeksti(getTimeBasedFallback()))
   // paikat is intentionally excluded — it's a stable server-fetched prop and its reference
-  // changing on router.refresh() would cause spurious AI calls; suosikitSizeAndIds (a stable string) already covers
-  // the meaningful dependency without creating a new reference on every render
+  // changing on router.refresh() would cause spurious AI calls; suosikitSizeAndIds and kiinnostuksetKey
+  // (stable strings) cover the meaningful dependencies without creating new references on every render
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [suosikitSizeAndIds, weatherKaupunki, kotikaupunki])
+  }, [suosikitSizeAndIds, weatherKaupunki, kotikaupunki, kiinnostuksetKey, isAuthReady])
 
   // Auto-open sheet on homepage load unless /?id=X is present (NAV-03)
   // or unless we're restoring a search session (suppressAutoOpenRef set by scroll restore).
