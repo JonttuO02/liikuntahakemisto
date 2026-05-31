@@ -1,52 +1,63 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect } from 'react'
 import { animate } from 'framer-motion'
 
-const GRADIENTS = [
-  { name: 'Fire',     start: '#FF7B00', end: '#E63946' },
-  { name: 'Ocean',    start: '#00B4D8', end: '#0077B6' },
-  { name: 'Neon',     start: '#C9F400', end: '#00D68F' },
-  { name: 'Sunset',   start: '#FF6CA8', end: '#BE2ED6' },
-  { name: 'Electric', start: '#7B2FFF', end: '#0055FF' },
-]
-
-interface AktiiviLogoProps {
-  gradientIndex: number // 0–4, selects from GRADIENTS array
-}
-
-export default function AktiiviLogo({ gradientIndex }: AktiiviLogoProps) {
-  const currIndex = Math.abs(gradientIndex) % 5
-  const prevIndexRef = useRef<number>(currIndex)
-  const [prevIndex, setPrevIndex] = useState<number>(currIndex)
+export default function AktiiviLogo() {
   const rectRef = useRef<SVGRectElement>(null)
 
   useEffect(() => {
-    if (currIndex === prevIndex) return
-
     const rect = rectRef.current
     if (!rect) return
 
-    // Reset rect width to 0 immediately (no animation)
-    rect.setAttribute('width', '0')
+    let cancelled = false
+    let currentControls: ReturnType<typeof animate> | null = null
 
-    // Animate rect width 0 → 1672 to reveal the new gradient
-    // animate(element, keyframes, options) — Framer Motion imperative API
-    const controls = animate(rect, { width: 1672 }, { duration: 0.55, ease: 'easeInOut' })
+    function wait(ms: number): Promise<void> {
+      return new Promise((resolve) => {
+        const id = setTimeout(() => {
+          if (!cancelled) resolve()
+        }, ms)
+        // Store timeout id for potential cancellation — cleared by cancelled flag
+        void id
+      })
+    }
 
-    // On completion: update prevIndex (swaps grad-prev colors) and reset clip rect
-    controls.then(() => {
-      prevIndexRef.current = currIndex
-      setPrevIndex(currIndex)
-      rect.setAttribute('width', '0')
-    })
+    async function runLoop() {
+      while (!cancelled) {
+        // Step (a): reset rect width to 0 — letters hidden
+        rect!.setAttribute('width', '0')
 
-    return () => controls.cancel()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currIndex])
+        // Step (b): sweep reveal 0 → 1672 over 0.6s
+        if (cancelled) break
+        currentControls = animate(rect!, { width: 1672 }, { duration: 0.6, ease: 'easeInOut' })
+        await currentControls
 
-  const prev = GRADIENTS[prevIndex]
-  const curr = GRADIENTS[currIndex]
+        if (cancelled) break
+
+        // Step (c): letters visible for 1s
+        await wait(1000)
+
+        if (cancelled) break
+
+        // Step (d): collapse 1672 → 0 over 0.4s
+        currentControls = animate(rect!, { width: 0 }, { duration: 0.4, ease: 'easeInOut' })
+        await currentControls
+
+        if (cancelled) break
+
+        // Step (e): pause 3s before repeat
+        await wait(3000)
+      }
+    }
+
+    runLoop()
+
+    return () => {
+      cancelled = true
+      if (currentControls) currentControls.cancel()
+    }
+  }, [])
 
   // Letter paths (A, K, T, I, I, V, I) — strokeWidth 33
   const letterPaths = [
@@ -65,45 +76,32 @@ export default function AktiiviLogo({ gradientIndex }: AktiiviLogoProps) {
       viewBox="100 200 1480 580"
       role="img"
       aria-label="AKTIIVI"
-      style={{ height: 56, width: 'auto' }}
+      style={{ height: 32, width: 'auto' }}
       preserveAspectRatio="xMidYMid meet"
     >
       <title>AKTIIVI</title>
 
       <defs>
-        {/* Previous gradient — always full width, shown below */}
+        {/* Blue gradient — sporty sky-to-ocean sweep */}
         <linearGradient
-          id="grad-prev"
+          id="grad-blue"
           gradientUnits="userSpaceOnUse"
           x1="155"
           y1="430"
           x2="1517"
           y2="430"
         >
-          <stop offset="0%" stopColor={prev.start} />
-          <stop offset="100%" stopColor={prev.end} />
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#0284c7" />
         </linearGradient>
 
-        {/* Current gradient — revealed by sweep clip animation */}
-        <linearGradient
-          id="grad-curr"
-          gradientUnits="userSpaceOnUse"
-          x1="155"
-          y1="430"
-          x2="1517"
-          y2="430"
-        >
-          <stop offset="0%" stopColor={curr.start} />
-          <stop offset="100%" stopColor={curr.end} />
-        </linearGradient>
-
-        {/* Sweep clip — rect width animated 0→1672 on gradient change */}
+        {/* Sweep clip — rect width animated 0→1672 to reveal letters */}
         <clipPath id="sweep-clip">
           <rect
             ref={rectRef}
             x="0"
             y="0"
-            width={currIndex === prevIndex ? 1672 : 0}
+            width="0"
             height="940"
           />
         </clipPath>
@@ -127,27 +125,14 @@ export default function AktiiviLogo({ gradientIndex }: AktiiviLogoProps) {
         strokeLinejoin="round"
       />
 
-      {/* Letter paths — Layer 1 (below): prev gradient, full width */}
-      {letterPaths.map((d, i) => (
-        <path
-          key={`prev-${i}`}
-          d={d}
-          fill="none"
-          stroke="url(#grad-prev)"
-          strokeWidth={33}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      ))}
-
-      {/* Letter paths — Layer 2 (above): curr gradient, clipped by sweep */}
+      {/* Letter paths — blue gradient, revealed by sweep clip */}
       <g clipPath="url(#sweep-clip)">
         {letterPaths.map((d, i) => (
           <path
-            key={`curr-${i}`}
+            key={i}
             d={d}
             fill="none"
-            stroke="url(#grad-curr)"
+            stroke="url(#grad-blue)"
             strokeWidth={33}
             strokeLinecap="round"
             strokeLinejoin="round"
