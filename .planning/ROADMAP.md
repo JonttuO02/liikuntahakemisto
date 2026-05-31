@@ -169,7 +169,7 @@ Plans:
 | 20. Navigaatio-korjaukset | v1.4 | 2/2 | ✅ Complete | 2026-05-30 |
 | 21. TO DO -lista | v1.4 | 2/2 | ✅ Complete | 2026-05-31 |
 | 22. Profiili & AI-kiinnostukset | v1.4 | 4/4 | ✅ Complete | 2026-05-31 |
-| 23. Visuaalinen perusta | v1.5 | 0/4 | Not started | - |
+| 23. Visuaalinen perusta | v1.5 | 0/4 | 🗂 Planned | - |
 | 24. Callout-kortti & ikonit | v1.5 | 0/TBD | Not started | - |
 | 25. TO DO overlay | v1.5 | 0/TBD | Not started | - |
 | 26. Filtterit | v1.5 | 0/TBD | Not started | - |

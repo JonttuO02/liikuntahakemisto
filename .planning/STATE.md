@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Visuaalinen elävöitys & UX-hienosäätö
 status: planning
-stopped_at: Phase 23 context gathered
-last_updated: "2026-05-31T21:24:23.674Z"
-last_activity: 2026-05-31 — Roadmap created for v1.5 (Phases 23–26)
+stopped_at: Phase 23 planned — 4 plans ready
+last_updated: "2026-06-01T00:00:00.000Z"
+last_activity: 2026-06-01 — Phase 23 planned (4 plans, 3 waves)
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
+  total_plans: 4
   completed_plans: 0
   percent: 0
 ---
@@ -19,9 +19,9 @@ progress:
 ## Current Position
 
 Phase: 23 of 26 (Visuaalinen perusta)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-05-31 — Roadmap created for v1.5 (Phases 23–26)
+Plan: 4 plans ready (waves 1–3)
+Status: Ready to execute
+Last activity: 2026-06-01 — Phase 23 planned (4 plans, 3 waves)
 
 Progress: [__________] 0%
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 23 | Visuaalinen perusta | Not started |
+| 23 | Visuaalinen perusta | Planned (4 plans) |
 | 24 | Callout-kortti & ikonit | Not started |
 | 25 | TO DO overlay | Not started |
 | 26 | Filtterit | Not started |
@@ -64,12 +64,12 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 
 ### Blockers/Concerns
 
-- Phase 23: Verify CSS-only vs HTML element pin migration at planning time — decision affects colorful icon colorization path in Phase 24
+- Phase 23: Inline HTML element pins chosen (not CSS-only); SportPin.tsx uses currentColor on icon container — Phase 24 can colorize icons via CSS per sport
 - Phase 24: nearCandidates computation changes nearestCardId semantics — must not regress layoutId→PaikkaSheet expand animation; test Safari 15 clip-path fallback
 - Phase 25: Three existing href=/suosikit references in codebase — only the Etusivu toolbar reference changes; audit all three before shipping
 
 ## Session Continuity
 
-Last session: 2026-05-31T21:24:23.664Z
-Stopped at: Phase 23 context gathered
-Resume file: .planning/phases/23-visuaalinen-perusta/23-CONTEXT.md
+Last session: 2026-06-01T00:00:00.000Z
+Stopped at: Phase 23 planned — 4 plans ready to execute
+Resume file: .planning/phases/23-visuaalinen-perusta/
