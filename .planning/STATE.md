@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: UX-parannukset & Profiili
-status: in_progress
-stopped_at: Phase 21 complete (2026-05-31)
-last_updated: "2026-05-31T09:30:29.630Z"
-last_activity: 2026-05-31 — Phase 21 executed (TODO-01, TODO-02)
+status: planning
+stopped_at: Phase 22 context gathered
+last_updated: "2026-05-31T09:47:56.657Z"
+last_activity: 2026-05-31 — Phase 21 UAT complete (9/9 passed)
 progress:
   total_phases: 4
   completed_phases: 3
@@ -72,6 +72,6 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 
 ## Session Continuity
 
-Last session: 2026-05-31T09:30:29.623Z
-Stopped at: context exhaustion at 75% (2026-05-31)
-Resume file: None
+Last session: 2026-05-31T09:47:56.647Z
+Stopped at: Phase 22 context gathered
+Resume file: .planning/phases/22-profiili-ai-kiinnostukset/22-CONTEXT.md
