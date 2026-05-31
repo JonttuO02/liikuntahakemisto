@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Visuaalinen elävöitys & UX-hienosäätö
-status: ready_to_plan
-stopped_at: "Phase 23 — ready to plan"
-last_updated: "2026-05-31T12:30:00.000Z"
-last_activity: 2026-05-31 — Roadmap created (Phases 23–26)
+status: planning
+stopped_at: Phase 23 context gathered
+last_updated: "2026-05-31T21:24:23.674Z"
+last_activity: 2026-05-31 — Roadmap created for v1.5 (Phases 23–26)
 progress:
   total_phases: 4
   completed_phases: 0
@@ -70,6 +70,6 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 
 ## Session Continuity
 
-Last session: 2026-05-31T12:30:00.000Z
-Stopped at: Roadmap created — ready to plan Phase 23
-Resume file: None
+Last session: 2026-05-31T21:24:23.664Z
+Stopped at: Phase 23 context gathered
+Resume file: .planning/phases/23-visuaalinen-perusta/23-CONTEXT.md
