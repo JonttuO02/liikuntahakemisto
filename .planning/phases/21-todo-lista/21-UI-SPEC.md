@@ -159,6 +159,8 @@ Source: CONTEXT.md D-03 through D-14, RESEARCH.md Complete File Impact List.
 
 ## Layout: SuosikitClient — TO DO List View
 
+Primary focal point: `h1` page heading.
+
 ```
 min-h-screen bg-white
 └── px-4 py-8 max-w-2xl mx-auto
@@ -195,7 +197,7 @@ min-h-screen bg-white flex flex-col items-center justify-center px-4 pb-16
 ├── p: text-sm text-[rgba(17,17,17,0.45)] text-center mb-8 max-w-xs
 │   "Selaa hakemistoa ja lisää kirjanmerkillä."
 └── Link href="/" bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm
-    px-6 py-2.5 rounded-full
+    px-6 py-3 rounded-full
     "Selaa hakemistoa"
 ```
 
@@ -214,7 +216,7 @@ min-h-screen bg-white flex flex-col items-center justify-center px-4 pb-16
 ├── p: text-sm text-[rgba(17,17,17,0.45)] text-center mb-8 max-w-xs
 │   "Tallenna liikuntapaikkoja TO DO -listalle ja löydä ne helposti uudelleen."
 ├── button (opens AuthModal): bg-[#111111] hover:bg-[#333333] text-white font-bold
-│   text-sm px-6 py-2.5 rounded-full
+│   text-sm px-6 py-3 rounded-full
 │   "Kirjaudu sisään"
 └── Link href="/" mt-4 text-sm text-[rgba(17,17,17,0.45)] underline underline-offset-2
     "Takaisin hakemistoon"
@@ -258,7 +260,7 @@ Source: CONTEXT.md D-09; RESEARCH.md Pattern 1, Pitfall 4.
 ## API Payload Key Decision
 
 `/api/saasuositus` route receives `body.suosikit` (internal key). This key is NOT changed.
-`Etusivu.tsx` internal variable `suosikkiNimet` → `todoNimet` (code-level rename only).
+`Etusivu.tsx` internal variable `suosakkiNimet` → `todoNimet` (code-level rename only).
 The JSON key sent over the wire stays `suosikit`.
 
 Rationale: Internal API with no external consumers. Renaming provides no user-visible benefit and requires two-file atomic update with no gain.
