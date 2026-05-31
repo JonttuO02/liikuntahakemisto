@@ -2,9 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: UX-parannukset & Profiili
-status: executing
-last_updated: "2026-05-30T14:00:00.000Z"
-last_activity: 2026-05-30 — Phase 20 executed (2/2 plans complete)
+status: completed
+stopped_at: Phase 21 context gathered (2026-05-31)
+last_updated: "2026-05-31T00:00:00.000Z"
+last_activity: 2026-05-31 — Phase 21 context gathered (TODO-01, TODO-02)
 progress:
   total_phases: 4
   completed_phases: 2
@@ -72,6 +73,6 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 
 ## Session Continuity
 
-Last session: 2026-05-30
-Stopped at: Phase 20 complete — ready for /gsd:verify-work 20 or /gsd:discuss-phase 21
-Resume file: .planning/phases/20-navigaatio-korjaukset/20-02-SUMMARY.md
+Last session: 2026-05-31T04:18:23.875Z
+Stopped at: context exhaustion at 76% (2026-05-31)
+Resume file: None
