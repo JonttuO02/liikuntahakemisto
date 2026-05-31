@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: UX-parannukset & Profiili
 status: in_progress
-stopped_at: Phase 21 executed (2026-05-31)
-last_updated: "2026-05-31T00:00:00.000Z"
-last_activity: 2026-05-31 — Phase 21 executed (21-01, 21-02 complete)
+stopped_at: Phase 21 complete (2026-05-31)
+last_updated: "2026-05-31T09:30:29.630Z"
+last_activity: 2026-05-31 — Phase 21 executed (TODO-01, TODO-02)
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
   completed_plans: 7
   percent: 75
@@ -18,10 +18,9 @@ progress:
 
 ## Current Position
 
-Phase: 21 of 22 (TO DO -lista) — executed, pending verification
-Plan: 2/2 complete (Wave 1)
-Status: Phase 21 executed — ready for verify-work
-Last activity: 2026-05-31 — Phase 21 executed (TODO-01, TODO-02)
+Phase: 22 of 22 (Profiili & AI-kiinnostukset) — not started
+Status: Phase 21 complete — ready to plan Phase 22
+Last activity: 2026-05-31 — Phase 21 UAT complete (9/9 passed)
 
 Progress: [█████░░░░░] 50%
 
@@ -38,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 |-------|------|--------|
 | 19. Filtteri, lista & paikka-UX | Kertakäynti-filtteri, kuva listakorttiin, pin-nappi, image_url | Done |
 | 20. Navigaatio-korjaukset | Back-scroll, kartalle-kohdistus, bottomsheet-avaus, toolbar | Done |
-| 21. TO DO -lista | Suosikit → TO DO, sydän → kirjanmerkki, /suosikit-sivu | Executed (2/2 plans) |
+| 21. TO DO -lista | Suosikit → TO DO, sydän → kirjanmerkki, /suosikit-sivu | Done |
 | 22. Profiili & AI-kiinnostukset | Kiinnostuksen kohteet, AI-promptiin | Not started |
 
 ## Active Decisions
@@ -73,6 +72,6 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 
 ## Session Continuity
 
-Last session: 2026-05-31T04:18:23.875Z
-Stopped at: context exhaustion at 76% (2026-05-31)
+Last session: 2026-05-31T09:30:29.623Z
+Stopped at: context exhaustion at 75% (2026-05-31)
 Resume file: None
