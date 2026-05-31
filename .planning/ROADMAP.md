@@ -64,75 +64,17 @@ Full archive: `.planning/milestones/v1.3-ROADMAP.md`
 
 ---
 
-### ✅ v1.4 UX-parannukset & Profiili (Phases 19–22) — SHIPPED 2026-05-31
-
-**Milestone Goal:** Korjataan navigaation käyttäytyminen ja visuaaliset epäjohdonmukaisuudet; uudistetaan suosikit TO DO -listaksi; lisätään kiinnostuksen kohteet profiiliin AI-personointia varten.
+<details>
+<summary>✅ v1.4 UX-parannukset & Profiili (Phases 19–22) — SHIPPED 2026-05-31</summary>
 
 - [x] **Phase 19: Filtteri, lista & paikka-UX** — Kertakäynti-filtteri, paikka kuva listakortissa, AI-widget tila, pin-nappi listakortissa, image_url Supabaseen (3/3 plans) — 2026-05-30
 - [x] **Phase 20: Navigaatio-korjaukset** — Back-scroll, "Näytä kartalla" paikan koordinaatit, bottomsheet-avausanimaatio, toolbar-cleanup (2/2 plans) — 2026-05-30
-- [x] **Phase 21: TO DO -lista** — Suosikit → TO DO, sydän → kirjanmerkki, /suosikit toimiva TO DO -lista (2/2 plans)
+- [x] **Phase 21: TO DO -lista** — Suosikit → TO DO, sydän → kirjanmerkki, /suosikit toimiva TO DO -lista (2/2 plans) — 2026-05-31
 - [x] **Phase 22: Profiili & AI-kiinnostukset** — Kiinnostuksen kohteet monivalintana profiiliin, käytetään AI-suosituksissa (4/4 plans) — 2026-05-31
 
-## Phase Details
+Full archive: `.planning/milestones/v1.4-ROADMAP.md`
 
-### Phase 19: Filtteri, lista & paikka-UX
-**Goal**: Users see venue photos in list cards, can filter by drop-in availability, and can jump to a venue on the map directly from the list
-**Depends on**: Phase 18 (v1.3 complete)
-**Requirements**: FILTER-01, UI-19, UI-20, UI-21, DATA-08
-**Success Criteria** (what must be TRUE):
-  1. The list card right-side shows a venue photo when image_url is set in Supabase; a sport-colored or grey placeholder appears when image_url is null
-  2. A "Kertakäynti OK" filter button exists and limits the list to venues where drop-in visits are possible; price filters are removed
-  3. Tapping the pin icon button on a list card closes the list, centers the map on that venue's coordinates, and opens the venue callout card
-  4. The bottom sheet AI widget occupies more visible space at the top; ad/sponsor cards are visually smaller than before
-  5. The image_url column exists in the paikat table in Supabase and an admin can populate it manually
-**Plans**: TBD
-**UI hint**: yes
-
-### Phase 20: Navigaatio-korjaukset
-**Goal**: Navigation between the map, list, and venue profiles is consistent and predictable — back returns to the right scroll position, map centering uses venue coordinates, and the bottom sheet animates open gracefully on load
-**Depends on**: Phase 19
-**Requirements**: NAV-01, NAV-02, NAV-03, NAV-04, NAV-05
-**Success Criteria** (what must be TRUE):
-  1. Pressing "Takaisin hakemistoon" from a venue profile page returns the user to the list at their previous scroll position, not the top
-  2. Tapping "Näytä kartalla" centers the map on the venue's own coordinates without triggering GPS re-center; the bottom sheet stays closed
-  3. The homepage loads with the bottom sheet closed, then the sheet animates open automatically and immediately without user interaction
-  4. The toolbar on /suosikit and /profiili pages contains no search button and matches the homepage toolbar layout
-  5. The "Takaisin" button on the TO DO page navigates to a valid destination (not the removed /?nakyma=lista route)
-**Plans**: 2 plans
-Plans:
-- [x] 20-01-PLAN.md — Remove NavPill Haku link (NAV-04) and fix SuosikitClient back-links (NAV-05)
-- [x] 20-02-PLAN.md — Bottom sheet auto-open animation (NAV-03) and scroll+state restore on back-nav (NAV-01); confirm NAV-02 no-op
-**UI hint**: yes
-
-### Phase 21: TO DO -lista
-**Goal**: The favorites system is fully replaced by a TO DO list — bookmark icon system-wide, and the /suosikit page functions as a "places I want to visit" list
-**Depends on**: Phase 20
-**Requirements**: TODO-01, TODO-02
-**Success Criteria** (what must be TRUE):
-  1. The heart icon is replaced by a bookmark icon in HeartButton and on all pages where it appears; all UI labels read "TO DO" or equivalent Finnish text
-  2. A logged-in user can view their saved venues on the /suosikit page as a TO DO list
-  3. A logged-out user visiting /suosikit is prompted to log in
-**Plans**: 2 plans
-Plans:
-- [x] 21-01-PLAN.md — BookmarkButton rename, PaikkaSheet+Etusivu atomic props rename, paikat/[id] import update
-- [x] 21-02-PLAN.md — SuosikitClient DiagonaalKortti replacement, NavPill/NavBar/BottomNav/PaikkaKortti icon+label update
-**UI hint**: yes
-
-### Phase 22: Profiili & AI-kiinnostukset
-**Goal**: Users can declare sport interests on their profile and receive AI recommendations that reflect those interests
-**Depends on**: Phase 21
-**Requirements**: PROFILE-01, PROFILE-02
-**Success Criteria** (what must be TRUE):
-  1. A logged-in user can select multiple sport interests (from lib/lajit.ts) on their /profiili page and the selections persist across sessions
-  2. The AI weather recommendation prompt includes the user's sport interests when they are set
-  3. A user with no interests set receives the same AI recommendation as before (no regression in output quality)
-**Plans**: 4 plans
-Plans:
-- [x] 22-01-PLAN.md — Migration (kiinnostukset column) + lib/buildKiinnostuksetKonteksti.ts
-- [x] 22-02-PLAN.md — ProfiiliClient.tsx: interest pills UI, state, handleSaveKiinnostukset
-- [x] 22-03-PLAN.md — Etusivu.tsx + route.ts: data flow and AI prompt extension
-- [x] 22-04-PLAN.md — [BLOCKING] supabase db push + end-to-end human verification
-**UI hint**: yes
+</details>
 
 ---
 

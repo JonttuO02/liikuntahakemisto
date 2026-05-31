@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.4
-milestone_name: UX-parannukset & Profiili
-status: complete
-stopped_at: Phase 22 complete — all 4 plans executed
-last_updated: "2026-05-31T12:00:00.000Z"
+milestone_name: milestone
+status: completed
+stopped_at: context exhaustion at 75% (2026-05-31)
+last_updated: "2026-05-31T11:23:38.960Z"
 last_activity: 2026-05-31 — Phase 22 complete (kiinnostukset feature shipped)
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  total_phases: 13
+  completed_phases: 10
+  total_plans: 37
+  completed_plans: 32
+  percent: 77
 ---
 
 # Project State
@@ -73,6 +73,6 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 
 ## Session Continuity
 
-Last session: 2026-05-31T12:00:00.000Z
-Stopped at: Phase 22 complete — all 4 plans executed
-Resume file: None — v1.4 milestone complete
+Last session: 2026-05-31T11:23:38.954Z
+Stopped at: context exhaustion at 75% (2026-05-31)
+Resume file: None
