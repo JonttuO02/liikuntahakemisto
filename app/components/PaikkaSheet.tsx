@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { X, MapPin, Phone, ExternalLink, Clock, CircleDollarSign, Info, Heart } from 'lucide-react'
+import { X, MapPin, Phone, ExternalLink, Clock, CircleDollarSign, Info, Bookmark, BookmarkCheck } from 'lucide-react'
 import Link from 'next/link'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti, cn } from '@/lib/utils'
@@ -16,13 +16,13 @@ import { formatDistance } from '@/lib/geo'
 
 interface Props {
   paikka: Liikuntapaikka
-  suosikki: boolean
+  todo: boolean
   distanceKm?: number
   onClose: () => void
-  onToggleSuosikki: (id: number) => void
+  onToggleTodo: (id: number) => void
 }
 
-export default function PaikkaSheet({ paikka, suosikki, distanceKm, onClose, onToggleSuosikki }: Props) {
+export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggleTodo }: Props) {
   const [reviews, setReviews] = useState<ReviewRow[] | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -88,10 +88,13 @@ export default function PaikkaSheet({ paikka, suosikki, distanceKm, onClose, onT
             <div className="flex items-center gap-1.5">
               <motion.button
                 whileTap={{ scale: 0.85, transition: { duration: 0.12 } }}
-                onClick={() => onToggleSuosikki(paikka.id)}
+                onClick={() => onToggleTodo(paikka.id)}
                 className="glass-btn w-8 h-8 rounded-full flex items-center justify-center"
               >
-                <Heart className={cn('w-4 h-4', suosikki ? 'fill-[#111111] text-[#111111]' : 'text-[rgba(17,17,17,0.35)]')} />
+                {todo
+                  ? <BookmarkCheck className={cn('w-4 h-4 fill-[#111111] text-[#111111]')} />
+                  : <Bookmark className={cn('w-4 h-4 text-[rgba(17,17,17,0.35)]')} />
+                }
               </motion.button>
               <button
                 onClick={onClose}

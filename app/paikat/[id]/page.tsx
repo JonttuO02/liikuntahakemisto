@@ -8,7 +8,7 @@ import { hintateksti } from '@/lib/utils'
 import { isSafeUrl } from '@/lib/urlUtils'
 import { formatGroupedHours } from '@/lib/aukiolo'
 import HoursTable from '@/app/components/HoursTable'
-import HeartButton from '@/app/components/HeartButton'
+import BookmarkButton from '@/app/components/BookmarkButton'
 import NavPill from '@/app/components/NavPill'
 import ReviewSection from '@/app/components/ReviewSection'
 import { computeAvgRating } from '@/lib/reviewUtils'
@@ -66,7 +66,7 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
               <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#111111] leading-tight tracking-tight flex-1">
                 {paikka.nimi}
               </h1>
-              <HeartButton paikkaId={paikka.id} />
+              <BookmarkButton paikkaId={paikka.id} />
             </div>
             {osoiteRivi && (
               <p className="mt-2 text-[rgba(17,17,17,0.45)] text-sm flex items-center gap-1.5">
