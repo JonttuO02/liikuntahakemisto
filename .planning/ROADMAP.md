@@ -129,8 +129,8 @@ Plans:
 **Plans**: 4 plans
 Plans:
 - [x] 22-01-PLAN.md — Migration (kiinnostukset column) + lib/buildKiinnostuksetKonteksti.ts
-- [ ] 22-02-PLAN.md — ProfiiliClient.tsx: interest pills UI, state, handleSaveKiinnostukset
-- [ ] 22-03-PLAN.md — Etusivu.tsx + route.ts: data flow and AI prompt extension
+- [x] 22-02-PLAN.md — ProfiiliClient.tsx: interest pills UI, state, handleSaveKiinnostukset
+- [x] 22-03-PLAN.md — Etusivu.tsx + route.ts: data flow and AI prompt extension
 - [ ] 22-04-PLAN.md — [BLOCKING] supabase db push + end-to-end human verification
 **UI hint**: yes
 
@@ -161,4 +161,4 @@ Plans:
 | 19. Filtteri, lista & paikka-UX | v1.4 | 0/? | Not started | - |
 | 20. Navigaatio-korjaukset | v1.4 | 2/2 | ✅ Complete | 2026-05-30 |
 | 21. TO DO -lista | v1.4 | 2/2 | ✅ Complete | 2026-05-31 |
-| 22. Profiili & AI-kiinnostukset | v1.4 | 1/4 | In Progress|  |
+| 22. Profiili & AI-kiinnostukset | v1.4 | 3/4 | In Progress|  |
