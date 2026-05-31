@@ -1,873 +1,489 @@
-# Architecture Patterns: v1.1 Feature Integration
+# Architecture: v1.5 Feature Integration
 
-**Project:** Liikuntahakemisto v1.1  
-**Base:** Next.js 14 App Router + Supabase + @vis.gl/react-google-maps  
-**Researched:** 2026-05-21  
-**Confidence:** HIGH (verified against official Supabase docs, @vis.gl docs, Next.js docs)
-
----
-
-## Existing Architecture Snapshot
-
-The v1.0 codebase has a clear server/client split:
-
-- `app/page.tsx` — async Server Component, fetches `liikuntapaikat` with anon key, passes data down as props
-- `app/components/Etusivu.tsx` — large `'use client'` component, owns all map + AI widget state
-- `app/components/LiikuntapaikatLista.tsx` — `'use client'`, owns list/filter state
-- `lib/supabase.ts` — exports `supabase` (anon, client+server) and `supabaseAdmin` (service role, server-only)
-- `app/components/MapProvider.tsx` — thin `'use client'` wrapper for `APIProvider`, in `layout.tsx`
-- `hooks/useGPS.ts` — `'use client'` hook, auto-requests on mount, returns `{ status, coords, requestLocation }`
-- `lib/sportPins.ts` — generates SVG data-URLs for map pins (existing `Marker`, not `AdvancedMarker`)
-
-**Critical constraint:** the current map uses the legacy `Marker` component (deprecated as of Google Maps API v3.56). All v1.1 map features (clustering, accuracy ring, "Näytä kartalla" focus) require migrating to `AdvancedMarker`. This migration is a prerequisite for MAP-04, MAP-05, MAP-06, MAP-07.
+**Project:** AKTIIVI / Liikuntahakemisto
+**Milestone:** v1.5 Visuaalinen elavöitys & UX-hienosäätö
+**Researched:** 2026-05-31
+**Confidence:** HIGH — based on direct codebase inspection + verified library patterns
 
 ---
 
-## Feature 1: Supabase Auth (AUTH-01, AUTH-02, AUTH-03)
+## 1. Blue Gradient SVG Pins
 
-**Pattern:** `@supabase/ssr` middleware + server-side session, client-side `onAuthStateChange`.
+### Existing files affected
 
-### Package change
+- `lib/sportPins.ts` — sole author of the SVG data-URI pins; `buildPinSvg()`, `pinUrl()`, `clusterPinUrl()`
+- `app/globals.css` — `.gmap-pin` CSS class (bounce animation, hover scale)
+- `app/components/Etusivu.tsx` — renders `<img src={pinUrl(p.laji)} className="gmap-pin" />` inside `AdvancedMarker`
 
-```bash
-npm install @supabase/ssr
+### New files needed
+
+None — all changes stay in `lib/sportPins.ts` and `app/globals.css`. Optionally a new `app/components/SportPin.tsx` if upgrading to JSX (see below).
+
+### Integration approach
+
+The pins are rendered as `<img>` tags whose `src` is a `data:image/svg+xml` URI. The SVG is assembled as a string in `buildPinSvg()`. Gradients in SVG require a `<defs><linearGradient>` block.
+
+Because the SVG is delivered as a data URI, it is parsed as a separate SVG document by the browser — not embedded in the page DOM. This means CSS classes on the `<img>` element do NOT apply inside the SVG content. The gradient definition must live inside the SVG string itself.
+
+The id collision concern (multiple pins referencing the same `#pin-grad`) does not apply: each `<img>` renders its own isolated SVG document from the data URI; id references are scoped per document. This is standard SVG-in-data-URI behavior (HIGH confidence).
+
+**Concrete change in `buildPinSvg()` in `lib/sportPins.ts`:**
+
+Replace the flat `fill="${PIN_FILL}"` pin body path with a `<defs>` block declaring a `linearGradient` from light blue to deep blue, then use `fill="url(#pin-grad)"` on the teardrop path. The white circle interior and the icon remain unchanged.
+
+**Shine (kiilto) animation in `app/globals.css`:**
+
+The `.gmap-pin` class already applies CSS animations to the `<img>` element. Add a second `@keyframes pinShine` that pulses `filter: brightness(1.0) → brightness(1.3) → brightness(1.0)` on a 3–4 s repeat-infinite cycle. This attaches to `.gmap-pin` as a second animation alongside the existing `pinBounce` entry animation. No React or TypeScript changes.
+
+**Upgrading to JSX component (optional, recommended for Framer Motion animation):**
+
+If the goal is to apply Framer Motion `whileHover`, `animate`, or stagger to individual pins, the `<img>` approach is limiting — Framer Motion cannot animate inside a data URI SVG. The upgrade path is:
+
+1. Create `app/components/SportPin.tsx` — a React component that renders the pin SVG as inline JSX (teardrop path, circle, icon), wrapped in a Framer `motion.div`
+2. In `Etusivu.tsx`, replace `<img src={pinUrl(p.laji)} className="gmap-pin" />` with `<SportPin laji={p.laji} />`
+3. Keep `lib/sportPins.ts` for `clusterPinUrl()` only (cluster pin stays as `<img>`)
+
+The existing `.gmap-pin` CSS class becomes redundant for the JSX pin and can be removed from that element.
+
+### Build order position: Phase A (standalone, no deps on other features)
+
+---
+
+## 2. AdvancedMarker Clustering
+
+### Existing files affected
+
+- `app/components/Etusivu.tsx` — the `mapItems` memo (lines ~467–484) and the JSX loop rendering `AdvancedMarker` items
+
+### New files needed
+
+None required; optionally `hooks/useMarkerClusterer.ts` if extracted for testability.
+
+### Integration approach
+
+`@googlemaps/markerclusterer` v2.6.2 is already installed in `package.json`. No new package install needed.
+
+**The current system is already doing coordinate-based clustering.** The `mapItems` memo in `Etusivu.tsx` groups venues at matching rounded lat/lng (4 decimal places) into clusters before render. The existing cluster UI (badge count, expandedCluster popup) is custom and working. This is the "same-address clustering" built in Phase 18 — it handles the specific use case of multiple venues at the same building.
+
+**Option A — Retain manual clustering (recommended for v1.5).** The existing approach handles the same-address scenario that was the explicit design requirement (Phase 18). @googlemaps/markerclusterer adds zoom-aware geographic clustering, which was previously listed in PROJECT.md's "Out of Scope" section (Klusterointi). Introducing it creates new UI questions: what does a cluster of 5 venues from different addresses look like? How does click-to-expand work? This is a significant UX redesign, not a "visual polish" task.
+
+**Option B — Replace manual clustering with @googlemaps/markerclusterer.** The `MarkerClusterer` class accepts `AdvancedMarkerElement` handles (the underlying DOM elements from `@vis.gl/react-google-maps`'s `AdvancedMarker`). The integration pattern requires `useAdvancedMarkerRef` per marker. A documented footgun: the `setMarkerRef` callback must be memoized with `useCallback`, otherwise it triggers infinite re-render loops (confirmed in GitHub discussions #404). The `expandedCluster` state would need to be reworked since MarkerClusterer manages cluster click events through its `renderer` option rather than through React state.
+
+**Recommendation: Skip @googlemaps/markerclusterer for v1.5.** The existing clustering is functional. If zoom-aware geographic clustering is wanted in a future milestone, allocate a dedicated phase — it is not a "visual polish" addition.
+
+### Build order position: Phase D (optional, skip if keeping manual clustering)
+
+---
+
+## 3. Pin Entry and Hover Animations
+
+### Existing files affected
+
+- `app/globals.css` — `@keyframes pinBounce`, `.gmap-pin`, `.gmap-pin:hover`
+- `app/components/Etusivu.tsx` — the `<motion.div key="pin">` wrapper around `<img className="gmap-pin">`
+
+### New files needed
+
+`app/components/SportPin.tsx` if upgrading to JSX (shared with Feature 1).
+
+### Integration approach
+
+The existing entry bounce (`pinBounce` keyframe) and hover scale already work. The `<motion.div>` wrapper in `Etusivu.tsx` (line ~584) handles `exit={{ opacity: 0 }}` for when the pin transitions to a callout card — this is already Framer Motion.
+
+For additional animation on the pin itself:
+
+**CSS-only approach:** Add `@keyframes pinShine` to `globals.css`, reference on `.gmap-pin` as a second animation. Works immediately, no component changes.
+
+**Framer Motion approach:** Only available if the `<img>` is replaced with `<SportPin>` (JSX component). Then the `SportPin` component can use `whileHover={{ scale: 1.15 }}` (replacing the CSS `:hover { transform: scale(1.15) }`) and `initial/animate` for entry. The existing `motion.div` wrapper around the pin already provides `exit` — the pin itself getting its own `motion.div` is nested but not conflicting since they animate different properties.
+
+**No layoutId on the pin.** The callout card uses `layoutId="vc-${p.id}"` (shared with `PaikkaSheet`). The pin must NOT get a `layoutId` — the visual transition is pin → card → PaikkaSheet, and the `layoutId` is only on the card element.
+
+### Build order position: Phase A (same as gradient — same files)
+
+---
+
+## 4. Callout Card Cycling
+
+### Existing files affected
+
+- `app/components/Etusivu.tsx` — `nearestCardId` (useMemo, ~lines 502–511), `CalloutCard` component (inline, lines ~104–148), the `AnimatePresence` wrapping the card transition
+
+### New files needed
+
+`app/components/CalloutCard.tsx` — optional extraction (recommended to isolate hover-pause logic).
+
+### Integration approach
+
+Currently `nearestCardId` is a `useMemo` computing a single `number | null`. Cycling requires tracking multiple candidates and an animated index.
+
+**State changes in `Etusivu.tsx`:**
+
+- Replace `nearestCardId: number | null` with two pieces of state: `nearCandidates: number[]` (sorted by distance to map center, filtered to ≤ 500 m radius) and `cycleIdx: number`
+- `nearCandidates` is derived by the same computation as current `nearestCardId` but keeps all venues within 500 m (not just the nearest one), sorted by distance
+- `cycleIdx` is the displayed index; only relevant when `zoomLevel >= 16` and `nearCandidates.length > 0`
+- The currently displayed card id is `nearCandidates[cycleIdx % nearCandidates.length] ?? null`
+
+**Interval management:**
+
 ```
+const cycleTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+const cyclingPausedRef = useRef(false)   // set true on hover, false on leave
 
-`@supabase/ssr` replaces the deprecated `@supabase/auth-helpers-nextjs`. The existing `@supabase/supabase-js` (already installed) stays — `@supabase/ssr` wraps it with cookie-aware clients for the App Router's three environments: browser, Server Component, and middleware.
-
-### New files
-
-| File | Type | Purpose |
-|------|------|---------|
-| `lib/supabase-server.ts` | Server util | `createServerClient` for Server Components and Route Handlers |
-| `lib/supabase-middleware.ts` | Middleware util | `createServerClient` configured for middleware cookie write |
-| `middleware.ts` (project root) | Next.js middleware | Session refresh on every request before Server Components run |
-| `app/auth/callback/route.ts` | Route Handler | OAuth PKCE code exchange, redirects to `/` after |
-| `app/auth/login/page.tsx` | Server Component | Login page shell (thin, renders AuthModal) |
-| `app/components/AuthModal.tsx` | Client Component | Email + Google OAuth sign-in UI, calls `signInWithOAuth` |
-| `app/components/AuthProvider.tsx` | Client Component | React context providing `{ user, supabase }` to all client components |
-| `hooks/useAuth.ts` | Client hook | Reads `{ user, supabase }` from AuthProvider context |
-
-### Middleware pattern (HIGH confidence — official Supabase docs)
-
-```typescript
-// middleware.ts
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return request.cookies.getAll() },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
+// Effect: start/stop interval when nearCandidates changes
+useEffect(() => {
+  if (nearCandidates.length <= 1) return   // nothing to cycle
+  cycleTimerRef.current = setInterval(() => {
+    if (!cyclingPausedRef.current) {
+      setCycleIdx(i => i + 1)              // modulo applied at read site
     }
-  )
-  // MUST call getUser() — this is what actually refreshes the session token
-  await supabase.auth.getUser()
-  return supabaseResponse
-}
-
-export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
-}
-```
-
-**Why middleware is required:** Server Components can read cookies but cannot write them. The middleware is the only place in the request lifecycle where the auth token can be refreshed and the updated cookie written to the response before it reaches the browser or any Server Component.
-
-### Server Component client
-
-```typescript
-// lib/supabase-server.ts
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-
-export function createSupabaseServer() {
-  const cookieStore = cookies()
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          // Errors here are safe to ignore when middleware is running
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {}
-        },
-      },
-    }
-  )
-}
-```
-
-Always use `supabase.auth.getUser()` (not `getSession()`) in Server Components — `getUser()` validates the JWT signature cryptographically against Supabase's published public keys; `getSession()` only reads the cookie without validation.
-
-### Client Component auth (AuthProvider)
-
-```typescript
-// app/components/AuthProvider.tsx
-'use client'
-import { createBrowserClient } from '@supabase/ssr'
-import { useEffect, useState, createContext, useContext } from 'react'
-import { useRouter } from 'next/navigation'
-import type { User } from '@supabase/supabase-js'
-
-// Create ONCE at module level — never inside a component render
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
-export const AuthContext = createContext<{ user: User | null; supabase: typeof supabase }>({
-  user: null, supabase,
-})
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const router = useRouter()
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null)
-      router.refresh()  // triggers Server Components to re-fetch with new session
-    })
-    return () => subscription.unsubscribe()
-  }, [])
-
-  return <AuthContext.Provider value={{ user, supabase }}>{children}</AuthContext.Provider>
-}
-```
-
-**Important:** Do NOT create multiple `createBrowserClient` instances across different components. A single instance at module scope is correct. Multiple instances open duplicate realtime connections.
-
-Add `<AuthProvider>` to `app/layout.tsx` wrapping `<main>`.
-
-### OAuth callback route
-
-```typescript
-// app/auth/callback/route.ts
-import { NextResponse } from 'next/server'
-import { createSupabaseServer } from '@/lib/supabase-server'
-
-export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
-  const code = searchParams.get('code')
-  if (code) {
-    const supabase = createSupabaseServer()
-    await supabase.auth.exchangeCodeForSession(code)
+  }, 3000)
+  return () => {
+    if (cycleTimerRef.current) clearInterval(cycleTimerRef.current)
   }
-  return NextResponse.redirect(origin)
+}, [nearCandidates])
+```
+
+This pattern is identical to `Karuselli.tsx`'s `timerRef` + `resetTimer` approach. Copy it exactly to avoid the memory leak footgun.
+
+**Hover pause:** Pass `onMouseEnter={() => { cyclingPausedRef.current = true }}` and `onMouseLeave={() => { cyclingPausedRef.current = false }}` to `CalloutCard`. Using a `useRef` flag (not state) means the pause/resume does not trigger a re-render.
+
+**AnimatePresence:** The existing `AnimatePresence initial={false}` wrapper around the card handles enter/exit when the displayed card id changes. `cycleIdx` changing will cause `nearestCardId` to change → card exits with `opacity: 0` → new card enters. This is already the right behavior. The `key` on the card motion element must be `"card"` (already is) so AnimatePresence tracks it as the same element type.
+
+**layoutId coordination:** The callout card uses `layoutId="vc-${p.id}"` where `p.id` is the currently displayed venue. When cycling, this id changes. `PaikkaSheet` also uses `layoutId="vc-${paikka.id}"`. As long as the cycling card's `p.id` matches what the user taps (setting `valittu`), the expand animation will work correctly.
+
+### Build order position: Phase B (after Phase A — should display upgraded pin/card visuals)
+
+---
+
+## 5. Sport Icon Overhaul in lib/lajit.ts
+
+### Existing files affected
+
+- `lib/lajit.ts` — `LajiKonfig` interface and `lajiKonfig` record
+- `lib/sportPins.ts` — `SPORT_ICONS_SVG` record (separate set of SVG path strings for data-URI pins)
+- `app/components/DiagonaalKortti.tsx` — local `SPORT_ICONS` record mapping sport keys to Lucide components
+- `app/components/Etusivu.tsx` — `CalloutCard` uses `lajiKonfig[p.laji]` for badge color and label only (no icons currently)
+- `app/components/PaikkaSheet.tsx` — uses `lajiKonfig[p.laji]` for badge color and label only
+
+### Current architecture gap
+
+Three separate icon/color definitions exist out of sync:
+
+| Source | What it holds | Consumers |
+|--------|---------------|-----------|
+| `lib/lajit.ts` | colors, labels | CalloutCard, PaikkaSheet, DiagonaalKortti badge, Etusivu cluster popup |
+| `lib/sportPins.ts` | SVG path strings (lucide paths as raw strings) | Pin data-URI generation |
+| `app/components/DiagonaalKortti.tsx` | Lucide React components | Card icon, fallback background icon |
+
+`jääkiekko` has a pin icon in `sportPins.ts` but NO lucide component in `DiagonaalKortti.tsx` (falls back to `Activity`). `kiipeily` similarly. The overhaul should consolidate.
+
+### Recommended consolidation
+
+Add an `Icon` field to `LajiKonfig` in `lib/lajit.ts`:
+
+```typescript
+import type { LucideIcon } from 'lucide-react'
+
+export interface LajiKonfig {
+  label: string
+  badgeTw: string
+  accentBg: string
+  color: string
+  Icon: LucideIcon   // add this
 }
 ```
 
-**Google Cloud Console:** Add `https://yourdomain.com/auth/callback` to Authorized Redirect URIs.  
-**Supabase Dashboard:** Auth → URL Configuration → add the same callback URL to Redirect URLs.
+Assign a lucide icon to each sport in `lajiKonfig`. Then `DiagonaalKortti.tsx` removes its local `SPORT_ICONS` map and uses `lajiKonfig[paikka.laji]?.Icon ?? Activity`.
 
-### Impact on existing `lib/supabase.ts`
+`lib/sportPins.ts` cannot use the lucide React components — those are JSX and `sportPins.ts` generates SVG strings, not React elements. Its `SPORT_ICONS_SVG` stays as-is. If upgrading pins to the JSX `SportPin.tsx` component (Feature 1), `SportPin.tsx` could import `Icon` from `lajiKonfig` directly and render it as JSX inside the SVG using `<foreignObject>` — but this is complex and may not render in all SVG contexts. Safer: `SportPin.tsx` maintains its own SVG path strings (same as current `SPORT_ICONS_SVG`).
 
-The existing `supabase` export (anon browser client) continues to work for read-only public data in Server Components — it is used in `app/page.tsx` for listing venues and does not need auth context. It does NOT refresh session cookies; that is the middleware's job.
+**Client-side import concern:** Adding `LucideIcon` import to `lib/lajit.ts` makes the module import lucide-react. Lucide is a client-only library. Verify: `lib/lajit.ts` is currently imported in `app/page.tsx` (Server Component) — search reveals it imports `LAJIT_FILTTERI` for the filter list passed to client children. If `LajiKonfig` with `LucideIcon` is imported in the server context, Next.js may warn or error.
 
-For auth-gated pages (suosikit), replace the anon client with `createSupabaseServer()` from `lib/supabase-server.ts`.
+**Safe approach:** Split `lib/lajit.ts` into two exports:
+- `lib/lajit.ts` — keeps `LajiKonfig` (with `Icon`), `lajiKonfig`, `LAJIT_FILTTERI`, `getInfoWindowStyle` but marks the Icon field as optional with a type import
+- `lib/lajiKonfigServer.ts` — a server-safe subset with only colors/labels/keys for use in `app/page.tsx`
 
----
+Alternatively: `app/page.tsx` only imports `LAJIT_FILTTERI` (a plain string array) — not `lajiKonfig`. So the import is already client-component-only in practice. Adding `LucideIcon` is safe. Verify by checking the actual import in `app/page.tsx`.
 
-## Feature 2: Favorites Table (AUTH-02)
-
-### Schema migration
-
-```sql
--- supabase/migrations/YYYYMMDDHHMMSS_add_suosikit.sql
-
-CREATE TABLE suosikit (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  paikka_id   integer NOT NULL REFERENCES liikuntapaikat(id) ON DELETE CASCADE,
-  created_at  timestamptz DEFAULT now(),
-  UNIQUE (user_id, paikka_id)  -- prevent duplicate favorites
-);
-
-ALTER TABLE suosikit ENABLE ROW LEVEL SECURITY;
-
--- Index on user_id — every favorites query filters by this column
-CREATE INDEX suosikit_user_id_idx ON suosikit(user_id);
-
--- RLS: users see and manage only their own favorites
--- (SELECT auth.uid()) caches the call per statement for performance
-CREATE POLICY "suosikit_select" ON suosikit
-  FOR SELECT TO authenticated
-  USING ((SELECT auth.uid()) = user_id);
-
-CREATE POLICY "suosikit_insert" ON suosikit
-  FOR INSERT TO authenticated
-  WITH CHECK ((SELECT auth.uid()) = user_id);
-
-CREATE POLICY "suosikit_delete" ON suosikit
-  FOR DELETE TO authenticated
-  USING ((SELECT auth.uid()) = user_id);
--- No UPDATE policy needed — favorites are insert/delete only (toggle)
-```
-
-**Design notes:**
-- `(SELECT auth.uid())` wrapping — Postgres optimizer caches this per statement, not per row. This matters at scale.
-- Both FK columns have `ON DELETE CASCADE` — deleting a user or a venue cleans up favorites automatically.
-- No UPDATE policy — the toggle pattern (add/remove) does not need UPDATE.
-- Anon users cannot access this table — policies are `TO authenticated` only, so unauthenticated attempts silently return no rows.
-
-### Data flow
-
-```
-hooks/useSuosikit.ts (client)
-  → useAuth() → gets supabase client + user
-  → supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
-  → local Set<number> of favorited paikka_ids
-  → toggle(id): optimistic update → insert or delete → rollback on error
-```
-
-Favorites are NOT fetched server-side on the public listing page. They are user-specific client state, loaded after hydration and auth check. This avoids blocking the SSR render for anonymous users (the majority).
-
-### Modified files
-- `app/suosikit/page.tsx` — replace placeholder with auth-gated page; fetch `suosikit` joined with `liikuntapaikat`
-- `app/components/PaikkaKortti.tsx` — add heart toggle button (visible only when `user !== null`)
-- `hooks/useSuosikit.ts` — new hook: fetch user's favorites, optimistic toggle
+### Build order position: Phase C (icons consumed by DiagonaalKortti and CalloutCard — do before visual work on those)
 
 ---
 
-## Feature 3: Map Clustering (MAP-06)
+## 6. TO DO Overlay
 
-**Package:** `@googlemaps/markerclusterer` is already in `package.json` (v2.6.2). No new installs needed.
+### Existing files affected
 
-**Prerequisite:** Migrate fullscreen map's `Marker` to `AdvancedMarker`. The `@googlemaps/markerclusterer` v2 expects `AdvancedMarkerElement` objects; passing legacy `Marker` elements causes silent failures.
+- `app/components/Etusivu.tsx` — toolbar "TO DO" link (line ~806, `<Link href="/suosikit">`); owns `todoIds` state and `toggleTodo()` logic
+- `app/suosikit/page.tsx` and `app/suosikit/SuosikitClient.tsx` — the full-page TO DO route (stays intact for direct URL access)
+- `app/components/NavPill.tsx` — has its own `<Link href="/suosikit">` (used on `/suosikit` and `/profiili` pages — stays unchanged)
 
-### Clustering pattern (HIGH confidence — visgl official example + Discussion #325)
+### New files needed
 
-The clusterer is created imperatively (not declaratively) because `MarkerClusterer` does not have a React wrapper — it is a vanilla JS class. The React integration uses `useRef` + `useEffect` to manage its lifecycle, and a `setMarkerRef` callback to register/unregister each `AdvancedMarker` as it mounts/unmounts.
+- `app/components/TodoOverlay.tsx` — new client component
+
+### Integration approach
+
+The overlay replaces navigation to `/suosikit` from Etusivu's top-right toolbar only. The `/suosikit` page remains reachable directly and via NavPill on other pages.
+
+**State in Etusivu.tsx:**
+
+Add `todoOverlayOpen: boolean` state. In the `rightOpen` toolbar expansion (line ~784–835), change the "TO DO" entry from:
+
+```tsx
+<Link href="/suosikit" ...>TO DO</Link>
+```
+
+to:
+
+```tsx
+<button onClick={() => { setTodoOverlayOpen(true); closeOverlays() }} ...>TO DO</button>
+```
+
+**TodoOverlay props:**
 
 ```typescript
-// Extract into app/components/ClusteredMarkers.tsx (new)
-'use client'
-import { AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
-import { MarkerClusterer } from '@googlemaps/markerclusterer'
-import { useEffect, useRef, useState, useCallback } from 'react'
+interface TodoOverlayProps {
+  open: boolean
+  onClose: () => void
+  todoIds: Set<number>
+  paikat: Liikuntapaikka[]
+  onToggleTodo: (id: number) => void
+  supabaseUser: { id: string; email?: string } | null
+}
+```
 
-export function ClusteredMarkers({ paikat, onSelect }: {
-  paikat: Array<Liikuntapaikka & { latitude: number; longitude: number }>
-  onSelect: (p: Liikuntapaikka) => void
-}) {
-  const map = useMap()
-  const [markers, setMarkers] = useState<Record<number, google.maps.marker.AdvancedMarkerElement>>({})
-  const clustererRef = useRef<MarkerClusterer | null>(null)
+All of these already exist in `Etusivu.tsx` state — no new data fetching needed. The overlay reads `todoIds` to display the TO DO list, and calls `onToggleTodo` to remove items.
 
-  useEffect(() => {
-    if (!map) return
-    if (!clustererRef.current) {
-      clustererRef.current = new MarkerClusterer({ map })
-    }
-  }, [map])
+**z-index layering:** Current Etusivu z-index stack:
+- 48: night overlay
+- 50: Map
+- 56: tap-to-close overlay
+- 60: bottom sheet
+- 61: search results
+- 63: backdrops
+- 64: toolbars
+- 65: venue sheet backdrop
+- 66: PaikkaSheet
 
-  useEffect(() => {
-    clustererRef.current?.clearMarkers()
-    clustererRef.current?.addMarkers(Object.values(markers))
-  }, [markers])
+TodoOverlay should use `z-[70]` with its own backdrop at `z-[69]`. This ensures it sits above PaikkaSheet and toolbars.
 
-  const setMarkerRef = useCallback(
-    (marker: google.maps.marker.AdvancedMarkerElement | null, id: number) => {
-      setMarkers(prev => {
-        if (marker && prev[id] === marker) return prev
-        if (!marker && !prev[id]) return prev
-        const next = { ...prev }
-        if (marker) next[id] = marker
-        else delete next[id]
-        return next
-      })
-    },
-    []
-  )
+**Animation:** Bottom-up slide (`y: '100%' → 0`) via Framer Motion `AnimatePresence`, consistent with the bottom sheet convention. Full height (`100dvh`) or `90dvh`.
 
+**Removal → review prompt:** After removing a venue from the overlay, show an inline prompt within the overlay: "Kävitkö siellä? Jätä arvostelu" with a link to `/paikat/${id}#reviews`. Use local `removedPaikka: Liikuntapaikka | null` state inside `TodoOverlay`. Show the prompt for ~4 s, then clear it.
+
+**Unauthenticated state:** If `supabaseUser` is null and user taps "TO DO" in toolbar, the overlay shows a login prompt rather than the list — same as the existing `/suosikit` page's unauthenticated state, but inline.
+
+### Build order position: Phase E (after Phase C — uses icons; touches Etusivu heavily; do before filter changes)
+
+---
+
+## 7. Filter Carousel Animation
+
+### Existing files affected
+
+- `app/components/Etusivu.tsx` — filter pill row (~lines 1036–1073): city select, sport select, Kertakäynti OK button, Auki nyt button; also `searchKertakaynti` and `searchAukinyt` state
+
+### New files needed
+
+- `app/components/LajiPillRow.tsx` — animated sport selector
+
+### Integration approach
+
+**Filter reduction:** Remove Kertakäynti OK and Auki nyt pills from the visible UI. Do NOT remove the underlying state vars (`searchKertakaynti`, `searchAukinyt`) — `etusivu-scroll-state` in sessionStorage may contain these keys from saved sessions, and the restore logic must still handle them without error. Simply stop rendering the buttons.
+
+**Sport selector upgrade:** Replace the `<select>` with a horizontally scrollable pill row. The animation is the "magic underline" / "active pill background" pattern: a single `motion.div` with a shared `layoutId="sport-active-bg"` renders as the background of whichever pill is currently selected and animates between pills on change.
+
+```tsx
+// LajiPillRow.tsx
+import { motion, LayoutGroup } from 'framer-motion'
+
+interface Props {
+  value: string
+  onChange: (v: string) => void
+  options: string[]
+}
+
+export default function LajiPillRow({ value, onChange, options }: Props) {
   return (
-    <>
-      {paikat.map(p => {
-        const color = (lajiKonfig as Record<string, { color: string }>)[p.laji]?.color ?? '#6b7280'
-        return (
-          <AdvancedMarker
-            key={p.id}
-            position={{ lat: p.latitude, lng: p.longitude }}
-            ref={marker => setMarkerRef(marker, p.id)}
-            onClick={() => onSelect(p)}
+    <LayoutGroup>
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        {options.map(opt => (
+          <button
+            key={opt}
+            onClick={() => onChange(opt)}
+            className="relative flex-shrink-0 h-8 px-3 rounded-full text-xs font-bold"
+            style={{ color: value === opt ? '#111111' : 'rgba(17,17,17,0.45)' }}
           >
-            <div dangerouslySetInnerHTML={{ __html: pinSvgString(color, p.laji) }} />
-          </AdvancedMarker>
-        )
-      })}
-    </>
-  )
-}
-```
-
-`pinSvgString()` is a new variant of the existing `pinUrl()` in `lib/sportPins.ts` that returns raw SVG markup instead of a data URL, since `AdvancedMarker` accepts DOM children rather than `icon` URLs.
-
-### Zoom-dependent info cards
-
-Listen to `onCameraChanged` on the `<Map>` component to track current zoom. At `zoom >= 15`, render a small info card as children of the `AdvancedMarker` instead of just the pin. MarkerClusterer automatically disbands clusters at high zoom; individual markers appear and can show richer content.
-
-```typescript
-// In Etusivu.tsx:
-const [zoom, setZoom] = useState(14)
-// On Map: onCameraChanged={(ev) => setZoom(ev.detail.zoom)}
-
-// In ClusteredMarkers AdvancedMarker children:
-{zoom >= 15 ? <VenueInfoCard paikka={p} /> : <PinSvg color={color} laji={p.laji} />}
-```
-
-`VenueInfoCard` is a small, self-contained card: venue name, sport badge, price. Tapping it opens the bottom sheet (calls `onSelect`).
-
-### Modified files
-- `app/components/Etusivu.tsx` — remove fullscreen map's `Marker` imports, add `ClusteredMarkers`, add zoom state, add `onCameraChanged`
-- `app/components/ClusteredMarkers.tsx` — new component
-- `lib/sportPins.ts` — add `pinSvgString()` returning raw SVG (alongside existing `pinUrl()`)
-
----
-
-## Feature 4: Re-center Button (MAP-04)
-
-`useMap()` returns the raw `google.maps.Map` instance. Call `map.panTo()` from a button inside the `<Map>` element tree. The existing `MapPanController` already uses this exact pattern — the re-center button is a minor addition to the same approach.
-
-```typescript
-// app/components/MapReCenterButton.tsx (new, extracted)
-'use client'
-import { useMap } from '@vis.gl/react-google-maps'
-import { Crosshair } from 'lucide-react'
-
-export function MapReCenterButton({ coords }: { coords: { lat: number; lng: number } | null }) {
-  const map = useMap()
-  if (!coords) return null
-  return (
-    <button
-      onClick={() => { map?.panTo(coords); map?.setZoom(15) }}
-      className="absolute bottom-20 right-4 z-10 w-10 h-10 glass-btn rounded-full flex items-center justify-center"
-      aria-label="Palaa omaan sijaintiisi"
-    >
-      <Crosshair className="w-4 h-4" />
-    </button>
-  )
-}
-```
-
-Place `<MapReCenterButton coords={coords} />` inside the fullscreen `<Map>` element in `Etusivu.tsx`. It must be inside `<Map>` (or at least inside `<APIProvider>`) for `useMap()` to find the map instance.
-
-### Modified files
-- `app/components/Etusivu.tsx` — add `<MapReCenterButton>` inside fullscreen map
-- `app/components/MapReCenterButton.tsx` — new component
-
----
-
-## Feature 5: GPS Accuracy Ring (MAP-05)
-
-**Problem:** The current `userLocationPinUrl()` in `sportPins.ts` renders a baked SVG data-URL passed to a legacy `Marker`. A static SVG cannot scale with zoom level — the accuracy ring must grow/shrink as the user zooms in and out.
-
-**Solution:** Migrate the user location marker to `AdvancedMarker` with an HTML `div` child. The accuracy ring is an absolutely-positioned circle whose pixel radius is calculated from `GeolocationCoordinates.accuracy` (meters) mapped to screen pixels at the current zoom level.
-
-```typescript
-// app/components/UserLocationMarker.tsx (new)
-'use client'
-import { AdvancedMarker } from '@vis.gl/react-google-maps'
-
-// Convert accuracy in meters to screen pixels at a given zoom + latitude
-function metersToPixels(meters: number, lat: number, zoom: number): number {
-  const earthCircumference = 40075016
-  const metersPerPx = (earthCircumference * Math.cos((lat * Math.PI) / 180)) /
-    (256 * Math.pow(2, zoom))
-  return meters / metersPerPx
-}
-
-export function UserLocationMarker({
-  coords,
-  accuracy,
-  zoom,
-}: {
-  coords: { lat: number; lng: number }
-  accuracy: number  // meters
-  zoom: number      // current map zoom level
-}) {
-  const ringPx = metersToPixels(accuracy, coords.lat, zoom)
-
-  return (
-    <AdvancedMarker position={coords} zIndex={20} clickable={false}>
-      <div style={{ position: 'relative', width: 0, height: 0 }}>
-        {/* Accuracy ring — scales with zoom */}
-        <div style={{
-          position: 'absolute',
-          width: ringPx * 2, height: ringPx * 2,
-          left: -ringPx, top: -ringPx,
-          borderRadius: '50%',
-          background: 'rgba(66,133,244,0.12)',
-          border: '1.5px solid rgba(66,133,244,0.35)',
-          pointerEvents: 'none',
-          transition: 'width 0.2s, height 0.2s, left 0.2s, top 0.2s',
-        }} />
-        {/* Blue dot */}
-        <div style={{
-          position: 'absolute', width: 18, height: 18,
-          left: -9, top: -9, borderRadius: '50%',
-          background: '#4285F4', border: '2.5px solid white',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-        }} />
+            {value === opt && (
+              <motion.span
+                layoutId="sport-active-bg"
+                className="absolute inset-0 rounded-full bg-[#111111]"
+                transition={{ type: 'spring', damping: 30, stiffness: 350 }}
+              />
+            )}
+            <span className="relative" style={{ color: value === opt ? 'white' : undefined }}>
+              {opt}
+            </span>
+          </button>
+        ))}
       </div>
-    </AdvancedMarker>
+    </LayoutGroup>
   )
 }
 ```
 
-**`useGPS` change required:** The hook currently does not expose `accuracy`. Add it:
+**In Etusivu.tsx:** Replace the sport `<select>` with `<LajiPillRow value={searchLaji} onChange={setSearchLaji} options={LAJIT_FILTTERI} />`. The city select can remain as `<select>` — the pill carousel is specifically for sport where there are exactly 9 options (manageable in a row).
 
-```typescript
-// hooks/useGPS.ts additions
-export interface GPSState {
-  status: GPSStatus
-  coords: { lat: number; lng: number } | null
-  accuracy: number | null  // NEW — from GeolocationCoordinates.accuracy
-  requestLocation: () => void
-}
-// In success callback:
-setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
-setAccuracy(pos.coords.accuracy)  // NEW state
-```
+**Scrollbar hiding:** Add `.no-scrollbar { scrollbar-width: none; }` / `::-webkit-scrollbar { display: none }` to `globals.css` for the pill row container.
 
-### Modified files
-- `hooks/useGPS.ts` — expose `accuracy: number | null`
-- `app/components/UserLocationMarker.tsx` — new component
-- `app/components/Etusivu.tsx` — replace `Marker` + `userLocationPinUrl()` with `<UserLocationMarker>`, pass `zoom` state (already being tracked for clustering)
+**State shape:** No change to `searchLaji` type (still `string`). No change to filter logic in `searchSuodatettu` memo.
+
+### Build order position: Phase F (last — only touches search overlay UI; minimal risk; safe to do after all other changes to Etusivu)
 
 ---
 
-## Feature 6: "Näytä kartalla" — Focus Venue on Map (MAP-07)
+## 8. Logo API
 
-**URL design:** `/?nakyma=kartta&id=<paikka_id>` — consistent with existing `?nakyma=kartta` scheme. Integer IDs (not UUIDs) since `liikuntapaikat.id` is a serial integer.
+### Existing files affected
 
-### Data flow
+- `app/components/Etusivu.tsx` — `CalloutCard` component (inline, lines ~104–148)
+- `lib/types.ts` — `Liikuntapaikka` type
 
-```
-/paikat/[id] profile page
-  → <Link href={`/?nakyma=kartta&id=${paikka.id}`}>Näytä kartalla</Link>
+### New files needed
 
-app/page.tsx (Server Component)
-  → reads searchParams.id
-  → passes focusId={Number(searchParams.id)} to <Etusivu>
+- `scripts/seed-logos.ts` — manual data entry script (same pattern as `scripts/seed-hinnat.ts`)
+- Optionally `app/api/logo/route.ts` if logos are fetched dynamically from a third-party API
 
-Etusivu.tsx
-  → useEffect when kartaAuki + map ready:
-      setKartaAuki(true)
-      map.panTo({ lat: target.latitude, lng: target.longitude })
-      map.setZoom(16)
-      setValittu(target)  // opens bottom sheet
-```
+### Integration approach
 
-```typescript
-// app/page.tsx — extend searchParams type
-searchParams: { nakyma?: string; id?: string }
+This is a spike. Two viable approaches:
 
-// Pass to Etusivu:
-<Etusivu paikat={data} focusId={searchParams.id ? Number(searchParams.id) : undefined} />
+**Approach A — Store `logo_url` in Supabase (recommended).** Same pattern as `image_url` added in v1.4. Add `logo_url: string | null` to the `liikuntapaikat` table and to `lib/types.ts`. CalloutCard renders a small `<img src={p.logo_url} />` (24–32 px) if present. No new API route. Data entry via `scripts/seed-logos.ts`. Caching is free (Supabase CDN or the venue's CDN for the URL). Consistent with existing data ops pattern.
 
-// Etusivu.tsx — new prop + effect
-const { focusId } = props  // number | undefined
+**Approach B — Clearbit/Logo API per-domain on demand.** A Route Handler `app/api/logo/route.ts` accepts `?domain=example.fi`, fetches from Clearbit or similar, returns URL or null. CalloutCard calls this on mount. This adds a fetch-per-card on every map view, complicates CalloutCard (becomes async/Effect-driven), and introduces a third-party API dependency. Not recommended for a polish milestone.
 
-useEffect(() => {
-  if (!focusId || !kartaAuki) return
-  const target = paikat.find(p => p.id === focusId)
-  if (!target?.latitude || !target?.longitude) return
-  map?.panTo({ lat: target.latitude, lng: target.longitude })
-  map?.setZoom(16)
-  setValittu(target)
-}, [focusId, kartaAuki, map])
-
-// Separate effect: open map when focusId is present on mount
-useEffect(() => {
-  if (focusId) setKartaAuki(true)
-}, [focusId])
-```
-
-**Note on routing:** The profile-page link causes a full navigation to `/?nakyma=kartta&id=X`. The server re-renders `app/page.tsx` with the new searchParams — this is correct and intentional, as the server needs to pass `focusId` to `Etusivu`. Do not attempt `window.history.pushState` here; it would update the URL client-side without giving the Server Component access to the new param.
-
-### Modified files
-- `app/paikat/[id]/page.tsx` — change "Näytä kartalla" from external Google Maps link to `/?nakyma=kartta&id=${paikka.id}`
-- `app/page.tsx` — add `id` to `searchParams` type, pass `focusId` prop to Etusivu
-- `app/components/Etusivu.tsx` — accept `focusId?: number`, add two focus effects
-
----
-
-## Feature 7: Kaupunki Field + City Filter (DATA-07, AI-04)
-
-**Schema status:** `kaupunki` column already exists in `liikuntapaikat` (present in `page.tsx` SELECT and `lib/types.ts`). No migration needed.
-
-### City filter in LiikuntapaikatLista
+**Type change in `lib/types.ts`:**
 
 ```typescript
-// LiikuntapaikatLista.tsx additions
-const kaupungit = useMemo(() =>
-  ['Kaikki', ...Array.from(new Set(paikat.map(p => p.kaupunki).filter(Boolean))).sort()],
-  [paikat]
-)
-const [aktiivKaupunki, setAktiivKaupunki] = useState('Kaikki')
-
-// Add to suodatettu filter:
-const matchesKaupunki = aktiivKaupunki === 'Kaikki' || p.kaupunki === aktiivKaupunki
-```
-
-Render as a dropdown `<select>` (UI-08 wants the laji filter as dropdown too; same pattern). A native `<select>` on mobile opens the OS picker — appropriate for city selection.
-
-### AI widget city integration (AI-04)
-
-The `/api/saasuositus` route hardcodes Tampere coordinates and "Tampere" in the Claude prompt. For multi-city, accept an optional `?kaupunki=Helsinki` query param.
-
-```typescript
-// api/saasuositus/route.ts additions
-const KAUPUNKI_COORDS: Record<string, [number, number]> = {
-  Tampere:  [61.4978, 23.7610],
-  Helsinki: [60.1699, 24.9384],
-  Turku:    [60.4518, 22.2666],
-}
-
-export async function GET(request: Request) {
-  const kaupunki = new URL(request.url).searchParams.get('kaupunki') ?? 'Tampere'
-  const [lat, lng] = KAUPUNKI_COORDS[kaupunki] ?? KAUPUNKI_COORDS['Tampere']
-  // Use lat/lng for Open-Meteo fetch and kaupunki name in Claude prompt
+export type Liikuntapaikka = {
+  // ... existing fields ...
+  logo_url?: string | null   // add this
 }
 ```
 
-The client (`Etusivu.tsx`) passes the active kaupunki filter:
+**CalloutCard change:** The `CalloutCard` component (currently inline in Etusivu.tsx) receives the `Liikuntapaikka` data. Add a logo `<img>` at the top of the card, right-aligned, if `p.logo_url` is truthy. Use `onError` to hide the img on broken URLs (same pattern as `DiagonaalKortti.tsx` image handling).
 
-```typescript
-fetch(`/api/saasuositus?kaupunki=${encodeURIComponent(aktiivKaupunki)}`)
-```
+**Database migration:** Add `logo_url text` column to `liikuntapaikat` table in Supabase. No RLS change needed — the column is public data.
 
-The sessionStorage cache key should include the city:
-
-```typescript
-const key = `saasuositus-${new Date().toISOString().slice(0, 10)}-${aktiivKaupunki}`
-```
-
-### Modified files
-- `app/components/LiikuntapaikatLista.tsx` — add kaupunki filter state + dropdown UI
-- `app/components/Etusivu.tsx` — pass active city to AI widget fetch, update sessionStorage key
-- `app/api/saasuositus/route.ts` — accept `kaupunki` param, parameterize coords + Claude prompt
+### Build order position: Phase G (fully isolated; additive only; can be last or concurrent spike)
 
 ---
 
-## Feature 8: PWA (PWA-01, PWA-02)
+## Build Order Recommendation
 
-**Package:** Use `@serwist/next` — the actively maintained successor to both `next-pwa` (unmaintained) and `@ducanh2912/next-pwa` (deprecated in favor of serwist), created by the same author. HIGH confidence.
+```
+Phase A: Pin gradient + shine animation
+  lib/sportPins.ts     — gradient in buildPinSvg()
+  app/globals.css      — @keyframes pinShine
+  app/components/SportPin.tsx   — optional JSX upgrade
 
-```bash
-npm install @serwist/next serwist
+Phase B: Callout card cycling
+  app/components/Etusivu.tsx    — nearCandidates, cycleIdx, interval, hover pause
+  app/components/CalloutCard.tsx — optional extraction
+
+Phase C: Sport icon overhaul
+  lib/lajit.ts                  — add Icon: LucideIcon to LajiKonfig
+  app/components/DiagonaalKortti.tsx — remove local SPORT_ICONS, use lajiKonfig
+
+Phase D: Clustering (skip if keeping manual — recommended)
+  app/components/Etusivu.tsx    — useAdvancedMarkerRef, MarkerClusterer effect
+  hooks/useMarkerClusterer.ts   — optional extraction
+
+Phase E: TO DO overlay
+  app/components/TodoOverlay.tsx — new component
+  app/components/Etusivu.tsx    — todoOverlayOpen state, button swap in toolbar
+
+Phase F: Filter carousel
+  app/components/LajiPillRow.tsx — new animated pill row
+  app/components/Etusivu.tsx    — replace sport select, remove kertakaynti/aukinyt pills
+
+Phase G: Logo API spike
+  lib/types.ts         — add logo_url
+  app/components/Etusivu.tsx (CalloutCard)  — render logo
+  scripts/seed-logos.ts — new data entry script
 ```
 
-### next.config.mjs
-
-```javascript
-import withSerwist from '@serwist/next'
-
-const withPWA = withSerwist({
-  swSrc: 'app/sw.ts',
-  swDest: 'public/sw.js',
-  disable: process.env.NODE_ENV === 'development',
-})
-
-export default withPWA({})
-```
-
-### Service worker caching strategy (`app/sw.ts`)
-
-```typescript
-import { defaultCache } from '@serwist/next/worker'
-import { installSerwist } from 'serwist'
-
-installSerwist({
-  precacheEntries: self.__SW_MANIFEST,
-  skipWaiting: true,
-  clientsClaim: true,
-  runtimeCaching: [
-    // Navigation (pages): NetworkFirst — fresh content wins, falls back offline
-    {
-      matcher: ({ request }) => request.mode === 'navigate',
-      handler: 'NetworkFirst',
-      options: { cacheName: 'pages', networkTimeoutSeconds: 3 },
-    },
-    // Static assets (JS/CSS/fonts): CacheFirst — content-hashed filenames guarantee freshness
-    {
-      matcher: ({ request }) => ['style', 'script', 'font'].includes(request.destination),
-      handler: 'CacheFirst',
-      options: { cacheName: 'static-assets', expiration: { maxAgeSeconds: 30 * 24 * 60 * 60 } },
-    },
-    // Supabase API: NetworkFirst — stale venue data is acceptable offline
-    {
-      matcher: ({ url }) => url.hostname.endsWith('.supabase.co'),
-      handler: 'NetworkFirst',
-      options: { cacheName: 'supabase', networkTimeoutSeconds: 5 },
-    },
-    // Open-Meteo weather: StaleWhileRevalidate — slightly stale weather is fine
-    {
-      matcher: ({ url }) => url.hostname === 'api.open-meteo.com',
-      handler: 'StaleWhileRevalidate',
-      options: { cacheName: 'weather', expiration: { maxEntries: 5, maxAgeSeconds: 1800 } },
-    },
-    // Google Maps tiles: CacheFirst — tiles rarely change
-    {
-      matcher: ({ url }) => url.hostname.includes('maps.googleapis.com') ||
-                             url.hostname.includes('maps.gstatic.com'),
-      handler: 'CacheFirst',
-      options: { cacheName: 'maps', expiration: { maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 } },
-    },
-  ],
-})
-```
-
-**Do NOT cache:** `/api/saasuositus` (Claude API — costs money, personalized), `/api/admin/*` (admin routes).
-
-### Web App Manifest
-
-Next.js 14 App Router has built-in manifest support. Create `app/manifest.ts`:
-
-```typescript
-import type { MetadataRoute } from 'next'
-export default function manifest(): MetadataRoute.Manifest {
-  return {
-    name: 'Liikuntahakemisto',
-    short_name: 'ACTA',
-    description: 'Löydä liikuntapaikat läheltäsi',
-    start_url: '/',
-    display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#111111',
-    icons: [
-      { src: '/acta-symbol.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
-      { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-    ],
-  }
-}
-```
-
-SVG source (`acta-symbol.svg`, `acta-symbol-white.svg`) already exists in `app/`. PNG icons (192×192, 512×512) need to be generated from the SVG — a one-time asset task.
-
-**Offline fallback:** Create `app/~offline/page.tsx` — rendered when user is offline and the requested page is not cached.
-
-### Modified files
-- `next.config.mjs` — wrap with `withSerwist`
-- `app/manifest.ts` — new (Next.js built-in, replaces any manual `public/manifest.json`)
-- `app/sw.ts` — new service worker entry point
-- `app/~offline/page.tsx` — new offline fallback page
-- `public/icon-192.png`, `public/icon-512.png` — new generated assets
+**Why this order:**
+- A before B: callout card should display with upgraded pin visuals
+- C before E: icons in `lajit.ts` are consumed by `DiagonaalKortti` which is used inside `TodoOverlay`
+- E before F: both modify Etusivu heavily; sequential reduces merge conflict risk; E establishes a stable state shape
+- D is optional and isolated — if pursued, requires A (pins must be JSX for ref attachment)
+- G is fully isolated — can run in parallel with any phase or be the last spike
 
 ---
 
-## Feature 9: GDPR Page (LEGAL-01)
+## Component Map: New vs Modified
 
-Static Server Component, no data fetching, no client JS.
-
-```
-app/tietosuoja/page.tsx  — new page
-```
-
-**Required content:** what data is collected (GPS — browser-only, not sent to server; sessionStorage for AI cache; Supabase auth session cookie if user signs in), third parties (Google Maps JS API, Open-Meteo, Anthropic/Claude), no persistent tracking without auth, cookie policy (session cookie only, set by Supabase Auth), contact email, how to request data deletion.
-
-Link from `NavBar.tsx` dropdown menu and from the auth sign-up UI.
-
-### Modified files
-- `app/tietosuoja/page.tsx` — new
-- `app/components/NavBar.tsx` — add tietosuoja link in hamburger dropdown
-
----
-
-## Feature 10: "Sponsoroitu" Badge (ADS-02)
-
-`featured` boolean already exists in the schema (ADS-01), is already selected in `page.tsx`, and is already in `Liikuntapaikka` type. This is a pure UI addition.
-
-**List view:** In `PaikkaKortti.tsx`, if `paikka.featured === true`, render a small "Sponsoroitu" pill — e.g., a star icon + text in a gold/amber color, placed in the card's name row.
-
-**Map view:** In `Etusivu.tsx` (or `ClusteredMarkers.tsx`), featured venues get a gold star overlay on their map pin. Add a `featured` param to `pinSvgString()` in `sportPins.ts`:
-
-```typescript
-// lib/sportPins.ts
-export function pinSvgString(color: string, laji: string, featured = false): string {
-  const starOverlay = featured
-    ? `<text x="22" y="6" font-size="10" fill="#FBBF24" font-family="sans-serif">★</text>`
-    : ''
-  // ... rest of existing SVG template + starOverlay
-}
-```
-
-No new data fetching, no schema changes.
-
-### Modified files
-- `app/components/PaikkaKortti.tsx` — add featured badge
-- `lib/sportPins.ts` — add `featured` param to `pinSvgString()`
-- `app/components/Etusivu.tsx` / `ClusteredMarkers.tsx` — pass `featured` to pin renderer
+| File | Status | Phase |
+|------|--------|-------|
+| `lib/sportPins.ts` | Modified | A |
+| `app/globals.css` | Modified | A |
+| `app/components/SportPin.tsx` | New (optional) | A |
+| `app/components/Etusivu.tsx` | Modified (multiple times) | B, D, E, F, G |
+| `app/components/CalloutCard.tsx` | New (optional extraction) | B |
+| `lib/lajit.ts` | Modified | C |
+| `app/components/DiagonaalKortti.tsx` | Modified | C |
+| `hooks/useMarkerClusterer.ts` | New (optional) | D |
+| `app/components/TodoOverlay.tsx` | New | E |
+| `app/components/LajiPillRow.tsx` | New | F |
+| `lib/types.ts` | Modified | G |
+| `scripts/seed-logos.ts` | New | G |
 
 ---
 
-## Component Boundary Map
+## Critical Integration Constraints
 
-```
-layout.tsx (Server)
-  └── MapProvider (Client) — APIProvider wraps entire tree [unchanged]
-      └── AuthProvider (Client) — NEW, provides { user, supabase } context
-          └── NavBar (Client) — add tietosuoja link; auth-aware UI [modified]
-          └── <main>
-              └── page.tsx (Server, async) — fetches paikat, reads searchParams.nakyma + searchParams.id
-                  └── Etusivu (Client) — receives paikat + focusId [modified]
-                      ├── ClusteredMarkers (Client) — NEW, extracted from Etusivu
-                      ├── UserLocationMarker (Client) — NEW
-                      ├── MapReCenterButton (Client) — NEW
-                      └── bottom sheet (inline in Etusivu) — unchanged
-                  OR
-                  └── LiikuntapaikatLista (Client) — add kaupunki filter [modified]
-                      └── PaikkaKortti (Client) — add heart + sponsored badge [modified]
+### Etusivu.tsx is the blast radius
 
-          └── app/suosikit/page.tsx (Server, auth-gated via createSupabaseServer)
-              └── SuosikitLista (Client) — NEW
-          └── app/auth/login/page.tsx (Server, thin shell)
-              └── AuthModal (Client) — NEW
-          └── app/tietosuoja/page.tsx (Server, static) — NEW
-          └── app/auth/callback/route.ts (Route Handler) — NEW
-          └── app/api/saasuositus/route.ts (Route Handler) — add kaupunki param [modified]
+Five of eight features directly modify `Etusivu.tsx` (currently 1150 lines). Phases B, E, and F each add new state and JSX to this file. Execute them sequentially and ensure each phase leaves the file in a compilable state before the next begins.
 
-middleware.ts (runs before every request) — NEW, refreshes session token
-```
+### layoutId collision avoidance
 
----
+`PaikkaSheet` uses `layoutId="vc-${paikka.id}"` (line 51 of PaikkaSheet.tsx). `CalloutCard` in Etusivu uses the same `layoutId` on the card's `motion.div` (lines ~599–605) — this shared id enables the expand-from-card animation. Any new `motion.div` added inside `AdvancedMarker` (e.g., for `SportPin`) must NOT use the `vc-` prefix. The `LajiPillRow` uses `layoutId="sport-active-bg"` — keep this scoped inside a `LayoutGroup` to avoid colliding with existing `LayoutGroup` in Etusivu.
 
-## Schema Migrations Required
+### z-index stack for TodoOverlay
 
-| File | Change | Dependency |
-|------|--------|------------|
-| `YYYYMMDDHHMMSS_add_suosikit.sql` | Create `suosikit` table, RLS policies, `user_id` index | AUTH-02 blocked until this runs |
-| (none) | `kaupunki` column already exists | — |
-| (none) | `featured` column already exists | — |
+Etusivu's existing layers:
+- 48: night overlay
+- 50: Map
+- 56: tap-to-close
+- 60: bottom sheet
+- 61: search results
+- 63: backdrops
+- 64: toolbars
+- 65: venue sheet backdrop
+- 66: PaikkaSheet
 
-The `liikuntapaikat` table does NOT need schema changes for any v1.1 feature. Only the new `suosikit` table is required.
+TodoOverlay: backdrop at `z-[69]`, overlay panel at `z-[70]`.
 
----
+### sessionStorage backward compatibility
 
-## Build Order (Risk-Minimizing)
+`etusivu-scroll-state` persists `searchKertakaynti` and `searchAukinyt`. Phase F removes these filter controls from the UI but must NOT remove the state variables. The restore logic reads these keys from sessionStorage and sets the state — if the keys are present (from a pre-Phase-F session) but the UI controls are hidden, the state is set but has no visual effect. This is correct and safe.
 
-Features are ordered by dependency and change risk.
+### CSS animation on `.gmap-pin` — no Framer Motion conflict
 
-### Group 1 — Pure UI, zero dependencies (build first)
+The `.gmap-pin` class applies CSS `animation: pinBounce ...`. The `motion.div key="pin"` wrapper in Etusivu applies Framer Motion `exit={{ opacity: 0 }}`. These operate on different CSS properties and elements (the wrapper vs the `<img>`) — they do not conflict. A `pinShine` animation added to `.gmap-pin` also does not conflict.
 
-1. **ADS-02** Sponsoroitu badge — `featured` in data already, pure CSS addition. ~30 min.
-2. **LEGAL-01** GDPR page — static content, no deps. ~1 hour.
-3. **DATA-07** Kaupunki filter — column exists, add dropdown in LiikuntapaikatLista. ~2 hours.
-4. **AI-04** Kaupunki in AI widget — small route change + sessionStorage key update. ~1 hour.
+### Icon import in lib/lajit.ts — verify server safety
 
-### Group 2 — Map infrastructure (prerequisite for all other map features)
-
-5. **Marker → AdvancedMarker migration** — Migrate fullscreen map's `Marker` to `AdvancedMarker`. Must be done before clustering, accuracy ring, and focus. Test carefully; it touches the core interaction. ~3-4 hours.
-6. **MAP-04** Re-center button — trivial after AdvancedMarker migration (`useMap` + `panTo`). ~1 hour.
-
-### Group 3 — Map features (after Group 2)
-
-7. **MAP-05** GPS accuracy ring — requires AdvancedMarker + `accuracy` from `useGPS`. ~2-3 hours.
-8. **MAP-07** "Näytä kartalla" URL focus — requires programmatic `setKartaAuki` + `panTo` + `setValittu`. ~2 hours.
-9. **MAP-06** Clustering — highest-complexity map feature, build when map is otherwise stable. ~4-6 hours.
-
-### Group 4 — Auth infrastructure (before favorites)
-
-10. **AUTH-01** Supabase Auth — install `@supabase/ssr`, write middleware, AuthProvider, login page, OAuth callback. ~4-6 hours.
-11. **AUTH-02** Suosikit — run migration, write RLS, `useSuosikit` hook, heart button in PaikkaKortti, suosikit page. Blocked on AUTH-01. ~4-5 hours.
-12. **AUTH-03** Personalized AI — extend `/api/saasuositus` to accept user's favorite lajit and bias the Claude prompt. Blocked on AUTH-02. ~2 hours.
-
-### Group 5 — PWA (build last, wraps stable feature set)
-
-13. **PWA-02** Web App Manifest — `app/manifest.ts`, generate PNG icons. ~1 hour. Can move earlier if desired.
-14. **PWA-01** Service worker — install serwist, configure caching, offline fallback. Best done last when all API routes and caching requirements are known. ~3-4 hours.
-
-**Total:** approximately 30-35 hours of implementation.
-
----
-
-## Anti-Patterns to Avoid
-
-### 1. Multiple `createBrowserClient` instances
-**What:** Creating a new Supabase browser client inside each component that needs auth.  
-**Why bad:** Each instance opens a separate realtime WebSocket connection and registers a duplicate `onAuthStateChange` listener.  
-**Instead:** Create once at module level in `AuthProvider.tsx`, export via React context.
-
-### 2. `getSession()` for auth validation in Server Components
-**What:** Using `supabase.auth.getSession()` to check whether a user is logged in server-side.  
-**Why bad:** `getSession()` reads the session from the cookie without validating the JWT signature. A forged cookie would pass.  
-**Instead:** Always use `supabase.auth.getUser()` in Server Components — it validates the JWT against Supabase's public keys on every call.
-
-### 3. Clustering with legacy `Marker`
-**What:** Adding legacy `Marker` instances to `MarkerClusterer`.  
-**Why bad:** `@googlemaps/markerclusterer` v2 performs an `Object.is()` check expecting `AdvancedMarkerElement` objects. Legacy Markers silently fail.  
-**Instead:** Migrate to `AdvancedMarker` before adding clustering (Group 2 in build order).
-
-### 4. Blocking SSR on auth state
-**What:** Calling `createSupabaseServer().auth.getUser()` in `app/page.tsx` before rendering the venue list.  
-**Why bad:** Adds a network round-trip to every anonymous page load (the majority). The public listing requires no auth.  
-**Instead:** Fetch `liikuntapaikat` anonymously (existing pattern). Auth-specific UI (heart buttons, personalized AI) loads client-side after hydration.
-
-### 5. Caching `/api/saasuositus` in the service worker
-**What:** Adding a SW caching rule for the AI route.  
-**Why bad:** Claude API calls cost money, the response is time- and weather-sensitive, and a cached response from one user could be served to another.  
-**Instead:** The existing `sessionStorage` cache per calendar day (AI-03) is the right caching layer. Do not add SW caching for this route.
-
-### 6. Using `window.history.pushState` for the "Näytä kartalla" navigation
-**What:** Setting `?nakyma=kartta&id=X` via pushState from the profile page.  
-**Why bad:** `window.history.pushState` updates the browser URL client-side but does not trigger a server render. The Server Component (`app/page.tsx`) never sees the new `id` param and cannot pass `focusId` to Etusivu.  
-**Instead:** Use `<Link href="/?nakyma=kartta&id=X">` — full navigation, server renders with correct `searchParams`.
-
-### 7. Hardcoding accuracy ring size in the SVG data URL
-**What:** Adding the accuracy ring as a fixed-size element in `userLocationPinUrl()`.  
-**Why bad:** The ring must resize as the user zooms the map; a baked-in SVG cannot do this.  
-**Instead:** Use `AdvancedMarker` with an HTML child whose dimensions are computed from `metersToPixels()` on every zoom change.
-
----
-
-## Confidence Assessment
-
-| Area | Confidence | Source |
-|------|------------|--------|
-| Supabase Auth (`@supabase/ssr`, middleware, callback) | HIGH | Official Supabase server-side Next.js guide |
-| RLS policy design for suosikit | HIGH | Official Supabase RLS docs |
-| `@googlemaps/markerclusterer` + `AdvancedMarker` | HIGH | visgl official example + Discussion #325 |
-| `useMap` + `panTo` for re-center | HIGH | visgl Discussion #250, official API reference |
-| `AdvancedMarker` HTML child for accuracy ring | HIGH | Google Maps Platform docs (AdvancedMarkerElement custom HTML) |
-| `@serwist/next` for PWA | HIGH | Active maintenance confirmed; recommended over next-pwa and @ducanh2912/next-pwa |
-| Service worker caching strategy (specific timeouts) | MEDIUM | Serwist docs + community; tune after production traffic observed |
-| City-to-coords lookup for AI widget | HIGH | Static table, no external dep |
-| "Näytä kartalla" URL param routing | HIGH | Standard Next.js App Router `searchParams` pattern |
+`app/page.tsx` imports `LAJIT_FILTTERI` from `lib/lajit.ts`. This is a server component. If `lib/lajit.ts` imports lucide-react (for `LucideIcon`), verify that the import does not cause a server-side error. Mitigation: use `import type { LucideIcon }` (type-only import, erased at compile time) for the interface field — the actual lucide component values are only assigned in the object literal, which is also fine since Next.js bundles server/client correctly. If any issue arises, move `lajiKonfig` to a `lib/lajiKonfig.client.ts` file with `'use client'` directive.
 
 ---
 
 ## Sources
 
-- [Setting up Server-Side Auth for Next.js — Supabase Docs](https://supabase.com/docs/guides/auth/server-side/nextjs)
-- [Creating a Supabase client for SSR — Supabase Docs](https://supabase.com/docs/guides/auth/server-side/creating-a-client)
-- [Row Level Security — Supabase Docs](https://supabase.com/docs/guides/database/postgres/row-level-security)
-- [Login with Google OAuth — Supabase Docs](https://supabase.com/docs/guides/auth/social-login/auth-google)
-- [Marker Clustering example — visgl React Google Maps](https://visgl.github.io/react-google-maps/examples/marker-clustering)
-- [AdvancedMarker Component API — visgl](https://visgl.github.io/react-google-maps/docs/api-reference/components/advanced-marker)
-- [Using cluster with AdvancedMarker + InfoWindow — visgl Discussion #325](https://github.com/visgl/react-google-maps/discussions/325)
-- [panTo with useMap — visgl Discussion #250](https://github.com/visgl/react-google-maps/discussions/250)
-- [Building a PWA with Serwist — Medium](https://javascript.plainenglish.io/building-a-progressive-web-app-pwa-in-next-js-with-serwist-next-pwa-successor-94e05cb418d7)
-- [PWA Guides — Next.js Docs](https://nextjs.org/docs/app/guides/progressive-web-apps)
-- [useSearchParams — Next.js Docs](https://nextjs.org/docs/app/api-reference/functions/use-search-params)
-- [AdvancedMarkerElement custom HTML — Google Maps Platform](https://developers.google.com/maps/documentation/javascript/advanced-markers/graphic-markers)
+- Direct codebase inspection: `Etusivu.tsx` (1150 lines), `sportPins.ts`, `lajit.ts`, `PaikkaSheet.tsx`, `AktiiviLogo.tsx`, `Karuselli.tsx`, `DiagonaalKortti.tsx`, `SuosikitClient.tsx`, `globals.css`, `types.ts`, `package.json`
+- `@googlemaps/markerclusterer` v2.6.2 already in `package.json` (no new install needed)
+- `@vis.gl/react-google-maps` v1.8.3 clustering ref pattern — GitHub discussions #325 (pattern), #404 (infinite loop footgun with unmemoized setMarkerRef)
+- SVG linearGradient in data-URI: isolated SVG document scope per image element, id collision is not a concern (HIGH confidence — standard SVG spec behavior)
+- Karuselli.tsx `timerRef` + `resetTimer` pattern — direct codebase inspection, used as reference for callout card cycling interval management

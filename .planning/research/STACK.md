@@ -1,421 +1,361 @@
-# Technology Stack
+# Technology Stack — v1.5 Visuaalinen elävöitys & UX-hienosäätö
 
-**Project:** Liikuntahakemisto
-**Researched:** 2026-05-21
-**Scope of this update:** v1.1 additions ONLY. Existing stack (Next.js 14, @supabase/supabase-js ^2.105.4, @vis.gl/react-google-maps ^1.8.3, @googlemaps/markerclusterer ^2.6.2, Tailwind v3, Framer Motion, @anthropic-ai/sdk) is validated from v1.0 and unchanged.
-
----
-
-## v1.0 Stack (Validated — Do Not Re-Research)
-
-| Technology | Version | Status |
-|------------|---------|--------|
-| Next.js | 14.2.35 | Keep |
-| React | 18.x | Keep |
-| TypeScript | ^5 strict | Keep |
-| Tailwind CSS | ^3.4.1 (v3) | Keep |
-| Framer Motion | ^12.38.0 | Keep |
-| @supabase/supabase-js | ^2.105.4 | Keep |
-| @vis.gl/react-google-maps | ^1.8.3 | Keep |
-| @googlemaps/markerclusterer | ^2.6.2 | Keep — already installed |
-| @anthropic-ai/sdk | ^0.97.1 | Keep |
-| @base-ui/react | ^1.4.1 | Keep |
+**Project:** AKTIIVI (liikuntahakemisto)
+**Researched:** 2026-05-31
+**Scope of this update:** v1.5 additions ONLY. Existing stack (Next.js 14.2.35, @vis.gl/react-google-maps ^1.8.3, @googlemaps/markerclusterer ^2.6.2, framer-motion ^12.38.0, Tailwind v3, TypeScript strict, Supabase, @anthropic-ai/sdk, Serwist) is validated from prior milestones and unchanged.
 
 ---
 
-## v1.1 Dependency Delta
+## Feature 1: AdvancedMarker Zoom-Out Clustering
 
-### New Packages (install these)
+### Situation
 
-```bash
-npm install @supabase/ssr @serwist/next serwist
-```
+The current clustering in `Etusivu.tsx` is a same-address manual cluster (`Record<string, T[]>`): it groups pins at identical coordinates but does NOT cluster by geographic proximity at zoom-out. v1.5 wants zoom-based geographic clustering (cluster icon + count when zoomed out).
 
-| Package | Version | Feature Group | Why |
-|---------|---------|---------------|-----|
-| `@supabase/ssr` | `^0.10.3` | Auth + Favorites | Cookie-based session management required for App Router auth |
-| `@serwist/next` | `^9.0.0` | PWA | Next.js plugin that generates service worker with Workbox precaching |
-| `serwist` | `^9.0.0` | PWA | Serwist runtime (peer dependency of @serwist/next) |
+### Recommended Approach
 
-### No New Packages (already covered)
+**Use `@googlemaps/markerclusterer@2.6.2` (already installed) + its custom renderer.**
 
-| Feature | Why No New Package |
-|---------|-------------------|
-| Map clustering | `@googlemaps/markerclusterer` ^2.6.2 already installed |
-| GPS accuracy ring | `@vis.gl/react-google-maps` `<Circle>` component already available |
-| City expansion | SQL schema migration + existing Supabase client |
-| Google OAuth | Supabase Dashboard configuration, no npm package |
-| Web App Manifest | Next.js App Router `app/manifest.ts` built-in convention |
+The vis.gl team ships two official clustering examples:
+1. `marker-clustering` — uses `@googlemaps/markerclusterer` directly with `AdvancedMarkerElement`. The clusterer takes a Map instance and an array of `AdvancedMarkerElement` DOM refs, handles all zoom-based grouping automatically.
+2. `custom-marker-clustering` — uses `supercluster` directly, rendering cluster bubbles as custom `<AdvancedMarker>` React components. Full control over cluster SVG appearance at cost of manual algorithm management.
 
----
+**For AKTIIVI, use approach 1** (MarkerClusterer with AdvancedMarker refs) because:
+- `@googlemaps/markerclusterer` is already in `package.json` at v2.6.2.
+- In v2.x, the library's `Marker` type union covers both legacy Marker and `AdvancedMarkerElement`, so it works natively with `@vis.gl/react-google-maps` AdvancedMarker components.
+- Custom `renderer` option allows the cluster icon to be the same blue-gradient SVG pin from Feature 2.
+- Zero new dependencies.
 
-## Feature 1: Supabase Auth (email + Google OAuth) + Favorites in DB
+**Do NOT use `@react-google-maps/api`'s MarkerClusterer** — that is the abandoned `@react-google-maps/api` ecosystem, fully incompatible with `@vis.gl/react-google-maps`.
 
-### Why `@supabase/ssr` Is Required
-
-The existing `@supabase/supabase-js` shared client works for anonymous reads. Auth in Next.js App Router requires cookie-based session management — Server Components cannot write cookies, so sessions must be refreshed through middleware. `@supabase/ssr` provides `createServerClient` and `createBrowserClient` with this cookie plumbing built in.
-
-**Confirmed current version:** 0.10.3, published May 2026 (active maintenance confirmed).
-**Compatibility:** Works with existing `@supabase/supabase-js` >=2.0.0 — satisfied by current ^2.105.4.
-
-**Do NOT use:** `@supabase/auth-helpers-nextjs` — deprecated, replaced by `@supabase/ssr`. Do NOT use `next-auth` — Supabase Auth handles Google OAuth natively without it.
-
-### Three Files to Add (no extra packages)
-
-**`lib/supabase/server.ts`** — for Server Components, Route Handlers, Server Actions:
-```ts
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-
-export function createClient() {
-  const cookieStore = cookies()
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options))
-          } catch {}
-        },
-      },
-    }
-  )
-}
-```
-
-**`lib/supabase/client.ts`** — for Client Components:
-```ts
-import { createBrowserClient } from '@supabase/ssr'
-
-export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-}
-```
-
-**`middleware.ts`** (project root) — refreshes expired tokens on every request:
-```ts
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
-
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return request.cookies.getAll() },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options))
-        },
-      },
-    }
-  )
-  // Always call getUser() — this refreshes the session token
-  await supabase.auth.getUser()
-  return supabaseResponse
-}
-
-export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
-}
-```
-
-### Google OAuth Configuration (no npm package)
-
-1. Supabase Dashboard → Authentication → Providers → Google: enter Google Client ID + Secret
-2. Google Cloud Console → OAuth 2.0 Client → Authorized Redirect URIs: `https://<project>.supabase.co/auth/v1/callback`
-3. Supabase Dashboard → Authentication → URL Configuration → Redirect URLs: add production domain
-
-### Supabase Schema for Favorites (SQL migration)
-
-```sql
-CREATE TABLE suosikit (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  paikka_id bigint REFERENCES paikat(id) ON DELETE CASCADE NOT NULL,
-  created_at timestamptz DEFAULT now(),
-  UNIQUE(user_id, paikka_id)
-);
-
-ALTER TABLE suosikit ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can read own favorites"
-  ON suosikit FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own favorites"
-  ON suosikit FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own favorites"
-  ON suosikit FOR DELETE USING (auth.uid() = user_id);
-```
-
-The service role key is NOT needed for favorites. The anon key + RLS is sufficient because authenticated users have `auth.uid()` in request context.
-
-**Confidence: HIGH** — verified against Supabase SSR docs and official Next.js auth guide.
-
----
-
-## Feature 2: Map Clustering + Zoom-Dependent Info Cards
-
-### No New Package — `@googlemaps/markerclusterer` Already Installed
-
-`@googlemaps/markerclusterer` ^2.6.2 is already in `package.json`. This is exactly what the official `@vis.gl/react-google-maps` marker-clustering example uses.
-
-**Confidence: HIGH** — verified against vis.gl official examples at https://visgl.github.io/react-google-maps/examples/marker-clustering
-
-### Architecture for Zoom-Dependent Behavior
-
-The `@googlemaps/markerclusterer` handles cluster pins at lower zoom automatically. The zoom-dependent switch from clusters to individual info cards is a React state pattern, not a library feature:
-
-```
-zoom < 14 (approximate):  MarkerClusterer manages grouped cluster pins
-zoom >= 14:               MarkerClusterer dissolves; render individual
-                          AdvancedMarker components with info card overlay
-```
-
-Read the current zoom using `useMap()` from `@vis.gl/react-google-maps` and listen for `zoom_changed` events. Conditionally render based on the zoom value.
-
-**Do NOT add:** `supercluster` or `use-supercluster` — redundant with the already-installed `@googlemaps/markerclusterer`. The custom clustering example at vis.gl uses supercluster for fully custom cluster rendering, but this project's requirement (standard cluster pins → info cards at high zoom) is well-covered by the existing package.
-
----
-
-## Feature 3: GPS Accuracy Ring
-
-### No New Package — `<Circle>` Component Already Available
-
-`@vis.gl/react-google-maps` exports a `<Circle>` geometry component. No additional installation needed:
+### Integration Pattern
 
 ```tsx
-import { Circle } from '@vis.gl/react-google-maps'
+// Collect AdvancedMarker DOM refs via imperative AdvancedMarker API
+// Feed them to a MarkerClusterer instance managed in a useEffect
+import { MarkerClusterer } from '@googlemaps/markerclusterer'
+import { AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 
-<Circle
-  center={{ lat: userLat, lng: userLng }}
-  radius={accuracy}          // meters, from GeolocationCoordinates.accuracy
-  strokeColor="#4F46E5"      // indigo-600
-  strokeOpacity={0.4}
-  strokeWeight={1}
-  fillColor="#4F46E5"
-  fillOpacity={0.08}
-/>
+const map = useMap()
+const clustererRef = useRef<MarkerClusterer | null>(null)
+
+useEffect(() => {
+  if (!map) return
+  clustererRef.current = new MarkerClusterer({
+    map,
+    renderer: { render: ({ count, position }) => buildClusterMarker(count, position) },
+  })
+  return () => clustererRef.current?.setMap(null)
+}, [map])
 ```
 
-The `accuracy` value comes from `GeolocationCoordinates.accuracy` already captured by the existing `useGeolocation` hook.
+### supercluster (optional, for fully custom rendering path)
 
-**Confidence: HIGH** — verified against vis.gl geometry examples documentation.
+If custom-rendering path is chosen instead of MarkerClusterer:
+
+| Package | Version | Notes |
+|---------|---------|-------|
+| supercluster | 8.0.1 | Mapbox geospatial clustering. Bundles its own TS types since v7+. |
+| @types/supercluster | 7.1.3 | DefinitelyTyped supplement (last published 3yr ago but still accurate for v8 API surface) |
+
+**Recommendation:** Start with the `MarkerClusterer` approach — no new package. Add `supercluster` only if the default clustering algorithm (grid-based) proves inadequate for Finnish city density.
+
+### Confidence: HIGH
+Official vis.gl examples demonstrate both patterns. `@googlemaps/markerclusterer` is already installed at the correct version and confirmed to support `AdvancedMarkerElement`.
 
 ---
 
-## Feature 4: PWA (Service Worker + Offline Support + Web App Manifest)
+## Feature 2: Blue Gradient SVG Pins (Redesign of sportPins.ts)
 
-### Recommended: `@serwist/next`
+### Situation
 
-| Package | Version | Status |
-|---------|---------|--------|
-| `@serwist/next` | `^9.0.0` | INSTALL |
-| `serwist` | `^9.0.0` | INSTALL (peer dep) |
+Current pins: `PIN_FILL = '#c0392b'` (red), white circle, grey Lucide icon paths. v1.5 wants a blue gradient + sporty feel.
 
-**Confirmed current version:** `@serwist/next` 9.5.7, published ~May 2026 (active maintenance confirmed).
+### Recommended Approach
 
-**Why Serwist over alternatives:**
+**Pure SVG — no new library.** Modify `lib/sportPins.ts` only.
 
-| Option | Status | Verdict |
-|--------|--------|---------|
-| `shadowwalker/next-pwa` | Abandoned since mid-2024 | Do NOT use |
-| `@ducanh2912/next-pwa` | Author migrated to Serwist; stale | Do NOT use |
-| Manual `public/sw.js` | Official Next.js guide approach | Viable for manifest-only PWA; no asset precaching |
-| `@serwist/next` | Actively maintained, Next.js 14+15 supported | USE THIS |
+Replace the flat `fill="#c0392b"` with a `<linearGradient>` in the SVG `<defs>`:
 
-**Compatibility constraint:** `@serwist/next` requires webpack (not Turbopack). This is fine — Next.js 14 defaults to webpack. Do NOT use `next dev --turbo` when working on PWA features.
-
-**The Web App Manifest does not need Serwist** — it uses Next.js App Router's built-in `app/manifest.ts` convention. Serwist is only needed for the service worker / offline caching.
-
-### Configuration
-
-**Install:**
-```bash
-npm install @serwist/next serwist
+```svg
+<defs>
+  <linearGradient id="pg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#2563eb"/>   <!-- blue-600 -->
+    <stop offset="100%" stop-color="#0ea5e9"/>  <!-- sky-500 -->
+  </linearGradient>
+</defs>
+<path d="M14 0C6.268 0 0 6.268..." fill="url(#pg)"/>
 ```
 
-**`next.config.js`** — wrap existing config:
-```js
-const { withSerwistInit } = require('@serwist/next')
+The SVG is embedded as a `data:image/svg+xml` URL string in an `<img>` tag inside AdvancedMarker. SVG `linearGradient` renders correctly in all target browsers (mobile Chrome, Safari) when delivered via data URI. Each marker gets its own self-contained SVG document, so `id="pg"` reuse across multiple simultaneous markers is safe — no ID collision.
 
-const withSerwist = withSerwistInit({
-  swSrc: 'app/sw.ts',
-  swDest: 'public/sw.js',
-  disable: process.env.NODE_ENV === 'development', // avoid stale cache in dev
-})
+White inner circle and Lucide icon strokes stay unchanged — they read well on blue background.
 
-module.exports = withSerwist({
-  // existing next config options
-})
-```
+### Confidence: HIGH
+SVG linearGradient in data URIs is a standard browser feature with broad support. No library change required.
 
-**`app/sw.ts`** — service worker source file:
-```ts
-import { defaultCache } from '@serwist/next/worker'
-import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist'
-import { Serwist } from 'serwist'
+---
 
-declare global {
-  interface WorkerGlobalScope extends SerwistGlobalConfig {
-    __SW_MANIFEST: (PrecacheEntry | string)[] | undefined
-  }
+## Feature 3: CSS/SVG Shine/Glow Animation on Selected Pin
+
+### Situation
+
+A "ring pulse" around the selected/active pin edge. Must not degrade scroll/pan performance on mobile.
+
+### Recommended Approach
+
+**Pure CSS `@keyframes` on the AdvancedMarker wrapper div — no new library.**
+
+`@vis.gl/react-google-maps` `<AdvancedMarker>` renders a wrapper `<div>`. Add a `className` prop to that div. Define the animation in `globals.css`:
+
+```css
+@keyframes pin-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.55); }
+  70%  { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
 }
-declare const self: ServiceWorkerGlobalScope
-
-const serwist = new Serwist({
-  precacheEntries: self.__SW_MANIFEST,
-  skipWaiting: true,
-  clientsClaim: true,
-  navigationPreload: true,
-  runtimeCaching: defaultCache,
-})
-
-serwist.addEventListeners()
-```
-
-**`app/manifest.ts`** — Web App Manifest (zero extra packages, built into Next.js):
-```ts
-import type { MetadataRoute } from 'next'
-
-export default function manifest(): MetadataRoute.Manifest {
-  return {
-    name: 'Liikuntahakemisto',
-    short_name: 'Liikunta',
-    description: 'Löydä liikuntapaikka läheltäsi',
-    start_url: '/',
-    display: 'standalone',
-    background_color: '#EEF2FF',   // indigo-50
-    theme_color: '#4F46E5',        // indigo-600
-    icons: [
-      { src: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-      { src: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
-      { src: '/icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-    ],
-  }
+.pin-pulse {
+  animation: pin-pulse 1.6s ease-out infinite;
+  border-radius: 50%;
 }
 ```
 
-**Required image assets** (create, not installed):
-- `public/icon-192x192.png`
-- `public/icon-512x512.png`
+Apply class only to the selected marker (`valittu?.id === p.id`).
 
-Use https://realfavicongenerator.net to generate these from a source SVG.
+**Do not use SVG `<animate>` for the ring** — the pin is rendered as `<img src={pinUrl(...)}>` inside AdvancedMarker; there is no accessible SVG DOM to attach SMIL animations to. CSS on the wrapper div is the only correct attachment point.
 
-### "Add to Home Screen" Prompt
+**Do not use Framer Motion for this** — CLAUDE.md animation principles prohibit `spring` physics for non-gesture animations, and a continuous ring pulse is decorative, not gesture-driven. Pure CSS `box-shadow` animation is GPU-composited and will not affect map pan performance.
 
-Handled entirely in a Client Component — no library needed:
-- Android/Chrome: listen for `beforeinstallprompt` event, capture and defer it, show a custom button
-- iOS/Safari: detect via `navigator.userAgent` and show manual instructions (Safari does not support `beforeinstallprompt`)
-- Check `window.matchMedia('(display-mode: standalone)')` to hide prompt when already installed
-
-**Push notifications are OUT OF SCOPE for v1.1** (PWA-01, PWA-02 only require offline support + manifest). The `web-push` package and VAPID keys are not needed now.
-
-**Confidence: HIGH** — verified against Next.js official PWA guide (last updated 2026-05-19) and Serwist npm (v9.5.7 active).
+### Confidence: HIGH
+Standard CSS animation pattern; AdvancedMarker wrapper div is confirmed accessible via the `className` prop.
 
 ---
 
-## Feature 5: City Expansion (Helsinki + Turku)
+## Feature 4: Font Replacement — Inter → Geist
 
-### No New Package
+### Situation
 
-Schema migration + existing Supabase client + extended data sync script:
+Current: `next/font/google` with Inter, CSS variable `--font-sans`. CLAUDE.md typography rules apply to usage (4 sizes, 2 weights), not to the specific typeface. v1.5 wants a more contemporary, sporty feel.
 
-**SQL migration:**
-```sql
-ALTER TABLE paikat ADD COLUMN IF NOT EXISTS kaupunki text DEFAULT 'Tampere';
-CREATE INDEX IF NOT EXISTS paikat_kaupunki_idx ON paikat(kaupunki);
+### Recommended Font: Geist
+
+**Geist** by Vercel/Andrés Briganti (released 2023, on Google Fonts since 2024, open source SIL OFL).
+
+| Criterion | Inter | Geist | Why Geist Wins |
+|-----------|-------|-------|----------------|
+| Variable font (100-900) | Yes | Yes | Same flexibility |
+| Available via next/font/google | Yes | Yes | Zero-friction swap |
+| Finnish characters (ä, ö) | Yes | Yes (latin subset) | Confirmed |
+| Visual personality | Neutral UI workhorse | Geometric, clean, slightly edgier | Better for sports brand |
+| Open source license | SIL OFL | SIL OFL | Identical |
+| Drop-in for Next.js 14 | — | Trivial | One import rename |
+
+**Why Geist over other Inter alternatives:**
+- **DM Sans** — friendly but rounded, reads as consumer app, not sports
+- **Satoshi** — not on Google Fonts (requires Fontsource package, adds a dependency)
+- **General Sans** — not on Google Fonts
+- **Figtree** — friendly/rounded, similar to DM Sans
+
+Geist is the only font that is simultaneously: on Google Fonts, variable weight (100-900), geometric/sporty character, and a trivial drop-in for Inter in Next.js 14.
+
+### Migration (1 file change)
+
+```tsx
+// app/layout.tsx
+// Before:
+import { Inter } from 'next/font/google'
+const sans = Inter({ variable: '--font-sans', subsets: ['latin'] })
+
+// After:
+import { Geist } from 'next/font/google'
+const sans = Geist({ variable: '--font-sans', subsets: ['latin'] })
 ```
 
-Query by city with existing `@supabase/supabase-js`:
-```ts
-const { data } = await supabase
-  .from('paikat')
-  .select('*')
-  .eq('kaupunki', selectedCity)
+`tailwind.config.ts`, `globals.css`, and all components using `font-sans` are unchanged. The CSS variable name `--font-sans` is preserved.
+
+CLAUDE.md typography constraints (4 sizes, 2 weights: 400 + 700) still apply unchanged.
+
+### Confidence: HIGH
+Geist is on Google Fonts with latin subset, documented for Next.js 14 via `next/font/google`, Finnish character support confirmed.
+
+---
+
+## Feature 5: Logo API for Company Logos in CalloutCard
+
+### Situation
+
+Sports venue chains (Elixia, GoGo, Liikuntakeskus) may have company logos fetchable by domain. v1.5 spike: show a small logo in the callout/detail card.
+
+### Clearbit Status
+
+**Clearbit Logo API (logo.clearbit.com) is permanently dead.** Shut down December 8, 2025. Do not implement against it.
+
+### Logo API Comparison
+
+| Provider | Free Tier | Attribution | API Key | Finnish Coverage | Verdict |
+|----------|-----------|-------------|---------|------------------|---------|
+| **Brandfetch Logo API** | 500K req/month | NOT required | YES (clientId in URL) | Good (index of 15M+ brands) | Recommended |
+| **Logo.dev** | 500K req/month | Required on free | YES (token param) | Good | Alternative |
+| **Google Favicon API** | Unlimited (undocumented) | Not required | NO | Any domain | Fallback only |
+| **geticon.dev** | Unlimited | Not required | NO | Any domain (favicons) | Last resort fallback |
+
+### Recommendation: Brandfetch Logo API (free tier) with dual fallback
+
+**Use Brandfetch Logo API** for the spike:
+- 500K req/month free, no attribution requirement on free tier
+- Returns proper brand logos (SVG or PNG), not just favicons
+- CDN URL pattern: `https://cdn.brandfetch.io/{domain}/w/40/h/40` — safe to use in client `<img>` tags directly, no backend proxy needed
+- Finnish chains known to have entries: Elixia, GoGo, Liikuntakeskus, Pajulahti
+
+**ToS:** Brandfetch grants a non-exclusive license to display brand assets for display purposes. Assets remain third-party property. 30-day HTTP cache is permitted. Do not store logos in Supabase Storage — browser HTTP cache is sufficient.
+
+**Mandatory fallback chain:**
+
+```tsx
+function VenueLogo({ domain }: { domain: string | null }) {
+  const [src, setSrc] = useState(
+    domain ? `https://cdn.brandfetch.io/${domain}/w/40/h/40` : null
+  )
+  if (!src) return null
+  return (
+    <img
+      src={src}
+      onError={() => {
+        // Step 2: try Google Favicon
+        if (src.includes('brandfetch')) {
+          setSrc(`https://www.google.com/s2/favicons?domain=${domain}&sz=64`)
+        } else {
+          setSrc(null) // Step 3: hide
+        }
+      }}
+      width={40} height={40} alt=""
+    />
+  )
+}
 ```
 
-The existing `/api/admin/sync-paikat` script is extended with a `?city=Helsinki` parameter — no new API integration.
+**Data prerequisite:** The `paikat` Supabase table needs a `website_domain` column (extract from `website_url`, or add manually). If `website_url` is NULL for most records, logo coverage will be low. Verify data quality before committing layout space to logos in the card design.
 
-**Confidence: HIGH** — no external dependency, pure SQL + existing client.
+### No new package required.
+
+### Confidence: MEDIUM
+Brandfetch free tier terms and URL pattern confirmed. Finnish company-specific coverage in Brandfetch index is unverified — this is a spike/experiment, not a guarantee.
 
 ---
 
-## Complete Installation Summary
+## Feature 6: TO DO Overlay Animation (Button → List → X Dismiss)
 
-```bash
-# v1.1 new packages only
-npm install @supabase/ssr @serwist/next serwist
+### Situation
 
-# No packages to remove
-# No packages to upgrade (existing versions are current)
+A TO DO overlay triggered from a button in the toolbar. Not a separate page — an overlay on the map. Button transforms/transitions to an X when open. Smooth open/close animation.
+
+### Recommended Approach
+
+**Framer Motion `AnimatePresence` — no new library.**
+
+The existing codebase already uses `AnimatePresence` and `layoutId` (PaikkaSheet uses `layoutId` for in-place expansion, confirmed in v1.3 Key Decisions).
+
+Two patterns; use Pattern B for this case:
+
+**Pattern A: layoutId morphing (button physically morphs into overlay)**
+- Works when button and overlay share a `<LayoutGroup>` ancestor
+- Risk: cross-hierarchy layoutId morphs can stutter on low-end Android (the toolbar button and overlay are in different DOM subtrees)
+- CLAUDE.md warns: "No `layout` animations unless absolutely required — they cause reflow jank"
+
+**Pattern B: AnimatePresence crossfade + icon swap (recommended)**
+```tsx
+// Toolbar button area
+<AnimatePresence mode="wait">
+  {isOpen
+    ? <motion.button key="close" onClick={() => setOpen(false)}
+        initial={{ opacity: 0, rotate: -90 }}
+        animate={{ opacity: 1, rotate: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}>
+        <X size={20} />
+      </motion.button>
+    : <motion.button key="open" onClick={() => setOpen(true)}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}>
+        <Bookmark size={20} />
+      </motion.button>
+  }
+</AnimatePresence>
+
+// Overlay (sibling to map, z-index above it)
+<AnimatePresence>
+  {isOpen && (
+    <motion.div
+      key="todo-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}>
+      {/* TO DO list items */}
+    </motion.div>
+  )}
+</AnimatePresence>
 ```
 
----
+**CLAUDE.md compliance:**
+- Icon swap duration: `0.18s ease-out` (hover transition rule)
+- Overlay fade: `0.2s ease-out` (view transition rule)
+- No spring physics
+- `AnimatePresence` children have stable `key` props
+- No `height: auto` animation — use opacity only
 
-## What NOT to Add
+### No new library needed.
 
-| Library | Why Avoid |
-|---------|-----------|
-| `@supabase/auth-helpers-nextjs` | Deprecated — superseded by `@supabase/ssr` |
-| `next-auth` | Redundant — Supabase Auth handles Google OAuth natively |
-| `shadowwalker/next-pwa` | Abandoned mid-2024, breaks Next.js 13+ |
-| `@ducanh2912/next-pwa` | Author deprecated in favour of Serwist; stale |
-| `supercluster` | Redundant — `@googlemaps/markerclusterer` already installed |
-| `use-supercluster` | Redundant — same reason |
-| `react-google-maps/api` | Wrong library — project uses `@vis.gl/react-google-maps` |
-| `@googlemaps/js-api-loader` | Redundant — `APIProvider` from `@vis.gl/react-google-maps` handles this |
-| `workbox-*` packages | Not needed directly — Serwist wraps Workbox |
-| `web-push` | Out of scope for v1.1 PWA (no push notifications needed) |
-| `swr` / `@tanstack/react-query` | Premature — no client-side data fetching need identified for v1.1 |
+### Confidence: HIGH
+Framer Motion AnimatePresence and icon crossfade are already used in the codebase. This is a documented and tested pattern.
 
 ---
 
-## Environment Variables — v1.1 Additions
+## New Dependencies Summary
 
-No new env vars required. Auth reuses existing:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+| Package | Action | Version | Justification |
+|---------|--------|---------|---------------|
+| `supercluster` | OPTIONAL add | `^8.0.1` | Only if custom cluster rendering chosen over MarkerClusterer |
+| `@types/supercluster` | OPTIONAL add (devDep) | `^7.1.3` | Pair with supercluster |
+| Geist font | No install needed | via `next/font/google` | CDN delivery, no npm package |
 
-The service role key is NOT needed for the favorites feature (anon key + RLS is sufficient for authenticated reads/writes on the `suosikit` table).
+**Packages explicitly NOT to add:**
+- `use-supercluster` — unnecessary React wrapper; direct `supercluster` is simpler and has 0 extra abstraction cost
+- `@react-google-maps/marker-clusterer` — wrong ecosystem (incompatible with `@vis.gl/react-google-maps`)
+- `@react-google-maps/api` — abandoned, wrong ecosystem
+- Any Lottie or CSS-in-JS animation library — Framer Motion covers everything
+- Any Logo.dev SDK, Brandfetch SDK — plain `<img>` CDN URL is sufficient, no JS SDK needed
+- `next-google-fonts` or any font package — `next/font/google` is the correct approach
 
 ---
 
-## Confidence Assessment
+## Integration Constraints
 
-| Area | Confidence | Source |
-|------|------------|--------|
-| `@supabase/ssr` setup | HIGH | Official Supabase SSR docs + npm (v0.10.3 confirmed) |
-| `@serwist/next` setup | HIGH | Next.js official PWA guide + Serwist npm (v9.5.7 confirmed) |
-| `@googlemaps/markerclusterer` clustering | HIGH | vis.gl official marker-clustering example |
-| GPS accuracy `<Circle>` | HIGH | vis.gl geometry examples |
-| Supabase RLS for favorites | HIGH | Official Supabase RLS docs |
-| Google OAuth via Supabase | HIGH | Official Supabase auth-google docs |
-| City expansion (SQL only) | HIGH | No new dependency; standard Supabase pattern |
+| Constraint | Impact on v1.5 |
+|------------|----------------|
+| Tailwind v3 (not v4) | CSS pulse animation goes in `globals.css` as `@keyframes`, not as a Tailwind `animate-*` utility |
+| AdvancedMarker already migrated | MarkerClusterer integration is straightforward; no legacy Marker migration blocker |
+| `lib/sportPins.ts` self-contained | SVG gradient change is isolated in one file; no component changes needed |
+| Emil Kowalski animation rules (CLAUDE.md) | Pin pulse MUST be CSS (not Framer Motion). Overlay fade ≤ 0.2s. No spring physics. |
+| Font variable `--font-sans` must stay | Geist uses same variable name; zero downstream changes to Tailwind or components |
+| Brandfetch logo spike | Needs `website_domain` data in Supabase `paikat` table — verify coverage before building card layout |
+| Clearbit is dead | Do not reference logo.clearbit.com anywhere in new code |
 
 ---
 
 ## Sources
 
-- [@supabase/ssr npm](https://www.npmjs.com/package/@supabase/ssr) — v0.10.3 confirmed current (May 2026)
-- [Supabase SSR — Creating a client for Next.js](https://supabase.com/docs/guides/auth/server-side/creating-a-client)
-- [Supabase — Server-Side Auth for Next.js](https://supabase.com/docs/guides/auth/server-side/nextjs)
-- [Supabase — Login with Google](https://supabase.com/docs/guides/auth/social-login/auth-google)
-- [Supabase — Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
-- [vis.gl react-google-maps — Marker Clustering example](https://visgl.github.io/react-google-maps/examples/marker-clustering)
-- [vis.gl react-google-maps — Custom Marker Clustering](https://visgl.github.io/react-google-maps/examples/custom-marker-clustering)
-- [vis.gl react-google-maps — Geometry (Circle) example](https://visgl.github.io/react-google-maps/examples/geometry)
-- [Next.js official PWA guide](https://nextjs.org/docs/app/guides/progressive-web-apps) — last updated 2026-05-19
-- [@serwist/next npm](https://www.npmjs.com/package/@serwist/next) — v9.5.7 confirmed active (May 2026)
-- [Serwist Next.js getting started](https://serwist.pages.dev/docs/next/getting-started)
-- [shadowwalker/next-pwa abandoned issue #508](https://github.com/shadowwalker/next-pwa/issues/508)
+- [@googlemaps/markerclusterer npm](https://www.npmjs.com/package/@googlemaps/markerclusterer) — v2.6.2 confirmed
+- [vis.gl Marker Clustering example](https://visgl.github.io/react-google-maps/examples/marker-clustering) — AdvancedMarker + MarkerClusterer
+- [vis.gl Custom Marker Clustering example](https://visgl.github.io/react-google-maps/examples/custom-marker-clustering) — supercluster path
+- [vis.gl Discussion #325 — clustering with AdvancedMarker + InfoWindow](https://github.com/visgl/react-google-maps/discussions/325)
+- [supercluster npm](https://www.npmjs.com/package/supercluster) — v8.0.1 confirmed
+- [Clearbit Logo API Dead 2026 — context.dev](https://www.context.dev/blog/clearbit-logo-api-dead-2026-migration-guide) — sunset Dec 8 2025 confirmed
+- [HubSpot announcement — Clearbit Logo API sunset](https://developers.hubspot.com/changelog/upcoming-sunset-of-clearbits-free-logo-api)
+- [Logo.dev pricing](https://www.logo.dev/pricing) — 500K free, attribution required on free tier
+- [Brandfetch Logo API](https://brandfetch.com/developers/logo-api) — 500K free, no attribution required
+- [Brandfetch ToS](https://brandfetch.com/terms) — non-exclusive license, 30-day cache permitted
+- [Google Favicon API (hidden)](https://www.google.com/s2/favicons) — no key, no documented rate limit
+- [Geist on Google Fonts](https://fonts.google.com/specimen/Geist) — latin subset, variable 100-900
+- [Geist in Next.js 14 guide](https://peerlist.io/blog/engineering/how-to-use-vercel-geist-font-in-nextjs)
+- [Framer Motion AnimatePresence](https://www.framer.com/motion/animate-presence/)

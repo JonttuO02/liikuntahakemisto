@@ -1,252 +1,558 @@
-# Feature Landscape — v1.1 Käyttäjät, Kartta & Laatu
+# Feature Landscape: v1.5 Visual & UX Improvements
 
-**Domain:** Finnish sports venue directory (anonymous-first, GPS-centric, mobile web)
-**Researched:** 2026-05-21
-**Milestone context:** Adding auth, map improvements, UI polish, multi-city expansion, PWA, GDPR, and sponsorship to v1.0 MVP.
-
----
-
-## Table Stakes
-
-Features users expect in this category of app. Missing = product feels incomplete or broken.
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| AUTH-01: Email + Google OAuth | Auth without Google OAuth feels incomplete in 2025. Google is the dominant social login in Finnish consumer apps. | Medium | Supabase Auth handles both natively. Social provider redirect URI must be configured in Supabase dashboard. |
-| AUTH-02: Favorites persist across devices | Without sync, favorites are just a local bookmark list — no advantage over browser bookmarks. | Medium | Requires `suosikit` table in Supabase with user_id FK. Supabase anonymous-user-to-permanent upgrade preserves UID, so pre-auth favorites could carry over, but skip anonymous accounts (see Anti-Features). |
-| MAP-04: Re-center button | Any GPS-enabled map without a re-center button is broken UX. Users pan away and cannot return. | Low | Single button, fixed position on map canvas. Calls `map.panTo(coords)`. Already have `useGPS` hook and `MapPanController` — this is just a UI button wired to existing logic. |
-| MAP-05: GPS accuracy ring | Blue dot without accuracy ring looks broken when GPS is coarse (desktop/WiFi). Ring sets honest expectation. | Low | Google Maps `Circle` class. `fillOpacity: 0.08`, `strokeOpacity: 0.3`, radius = `GeolocationCoordinates.accuracy` meters. The `.accuracy` property is defined as 95th-percentile confidence in meters. |
-| MAP-07: "Näytä kartalla" opens own map | Currently links to Google Maps external — jarring redirect out of the product. Users expect in-app map. | Medium | Route to `/?nakyma=kartta&lat=X&lng=Y&zoom=16` (venue coords, not user GPS — these are static). Map reads URL params on mount, pans + zooms to that venue. |
-| UI-05/06: Price hierarchy in card | "Kertakäynti OK" badge with no price is useless noise. Price is the #1 decision factor for drop-in users. | Low | Replace badge with actual price string if available; fall back to "vain jäsenyys" if `hinta_kuvaus` contains only membership text. Move price above the CTA row. |
-| UI-07: Remove "Varaa aika" from list card | Button adds visual weight and creates trust concerns (external link in list). Belongs on detail page only. | Low | Remove from `PaikkaKortti`. Keep on profile page as text link + URL. |
-| UI-08: Dropdown filter (single-select) | With 3 cities and growing laji counts, horizontal pill scroll becomes unusable on mobile. Dropdown is standard. | Low | Replaces pill tabs in `LiikuntapaikatLista`. Single-select — multi-select adds complexity with little value at current data volume. |
-| DATA-05/06/07: Multi-city (Helsinki + Turku) | Tampere-only limits audience severely. National scope requires multi-city. | High | Requires schema `kaupunki` column (already exists in type, verify DB column exists), UI city filter, and Google Places sync for 2 new cities. Helsinki has significantly more venues than Tampere — seed strategically with top 20-30 per sport per city. |
-| LEGAL-01: GDPR privacy page | Finnish Tietosuojalaki (1050/2018, in force 2019-01-01) + EU GDPR Art. 13/14 require privacy information when collecting personal data. Auth means personal data. **Mandatory before shipping AUTH.** | Low | Static page at `/tietosuoja`. Content requirements in detailed spec below. Must be linked from auth modal and footer. |
-| PWA-01/02: Installable + offline | Mobile users expect "add to home screen." Without manifest + service worker, Chrome shows no install prompt. Offline matters for gym areas with poor signal. | Medium | `@ducanh2912/next-pwa` is the maintained fork (original `next-pwa` abandoned). App Router offline fallback at `app/~offline/page.tsx`. |
+**Domain:** Finnish sports venue finder — mobile-first map app with bottom-sheet UI
+**Researched:** 2026-05-31
+**Milestone:** v1.5 Visuaalinen elävöitys & UX-hienosäätö
 
 ---
 
-## Differentiators
+## Feature Analysis
 
-Features that set this product apart. Not expected by default, but valued when present.
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| MAP-06: Zoom-dependent clustering → info cards | Google Maps does this; third-party venue apps rarely do. Creates "pro" feel. Venue count visible at city scale; individual cards at street scale. | Medium-High | `@googlemaps/markerclusterer` already in `package.json` (v2.6.2). Uses supercluster algorithm. Cluster click calls `getClusterExpansionZoom` and zooms to that level. At zoom ≥ 14 (current fullscreen default), individual markers show; below 14 clusters aggregate. |
-| AUTH-03: Personalized AI recommendation | Weather widget currently generic. With favorites, Claude Haiku can say "Sinulle sopisi tänään padel" instead of generic advice. | Medium | Send favorites list to `/api/saasuositus`. Must not block widget (already non-blocking). Cache key must include favorites hash alongside date — otherwise a cached generic response shows to a logged-in user. |
-| ADS-02: "Sponsoroitu" badge | Transparent advertising badge builds trust vs hiding it. `featured` flag already in schema and `Liikuntapaikka` type. | Low | Small "Sponsoroitu" label, visually distinct from sport badge (neutral gray, not indigo). Appears on list card and map bottom sheet. EU Digital Services Act (in force 2023) requires ad transparency — "Sponsoroitu" is compliant Finnish terminology. |
-| AI-04: City name next to temperature | Makes widget contextually relevant when multi-city: "Tampere · 14°" vs just "14°". Small detail that signals quality. | Low | Use bounding-box lookup table (Tampere / Helsinki / Turku) against Open-Meteo response coordinates. Avoid a reverse-geocode API call — adds latency and cost for a decorative feature. |
-| GPS accuracy ring (MAP-05) | Most Finnish sports apps don't show accuracy rings. Signals technical honesty and quality. | Low | Listed in table stakes above — also serves as a differentiator in practice. |
+Each feature is assessed across: complexity, expected interaction pattern, visual standard, codebase
+dependencies, and anti-patterns to avoid.
 
 ---
 
-## Anti-Features
+### Feature 1: Blue Sporty Gradient Pins
 
-Features to explicitly NOT build in v1.1.
+**Category:** Table Stakes (for the redesign goal)
+**Complexity:** Simple
 
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Anonymous user accounts (Supabase anonymous sign-in) | Edge cases multiply: data conflicts on upgrade, RLS complexity, session management across devices. App already works fully without auth. | Gate favorites behind explicit signup. Show value proposition: "Tallenna suosikit kaikkiin laitteisiin — kirjaudu sisään." |
-| Multi-select sport filter | Data volume (< 100 venues per city) doesn't justify UI complexity. Users filter to find one sport, not combinations. | Single-select dropdown. Add "Kaikki" as default option. |
-| Forced login gate | Core value is "find a venue without friction." Forcing login before browsing kills conversion. | Progressive auth: all browsing anonymous. Auth prompt appears only when user taps a favorites heart icon. |
-| Server-side auth redirect (middleware) | Next.js middleware-based auth redirect creates 302 loops, breaks App Router caching, makes the app feel like a dashboard product. | Client-side auth check in favorites components only. |
-| "Varaa aika" button on list cards | Already decided (UI-07). External booking URLs in list cards create trust concerns and visual noise. | Remove from `PaikkaKortti`. Keep on profile page as URL text link. |
-| PWA push notifications | ~80% of users deny notification permission. Adds backend complexity (push subscription management). | Not needed for a discovery app. Users return by habit or search. |
-| Multi-city GPS auto-switch | Auto-detecting city from GPS and silently reloading content is disorienting. | Explicit city selector. GPS is only for distance strings and map centering, not content switching. |
-| `beforeinstallprompt` on first page load | Showing install prompt immediately is hostile UX. Research shows deferred prompts convert better. | Capture event with `preventDefault()`, store in ref. Show custom button only after user performs a meaningful action (e.g., saves first favorite) or on second visit. |
-| Review / ratings system | Empty stars are worse than no stars. Reviews require moderation, volume, and accounts to be credible. | Use "Auki nyt" badge and "vain jäsenyys" flags as trust signals instead. |
+**What production apps do:**
+SVG data-URI pins rendered via `AdvancedMarkerElement` are the standard since legacy `google.maps.Marker`
+was officially deprecated in Maps JS API v3.56. The content element is an HTML element in the DOM,
+meaning CSS gradients, box-shadows, and filter drop-shadows all work directly. Blue gradient
+(`#0099FF to #0055CC`) is a well-established "energetic sport tech" visual language (Strava, Nike
+Run Club, AllTrails). White circle inside creates contrast for the sport icon.
+
+**Interaction pattern:**
+- Default state: gradient fill, white inner circle, sport icon in sport color (see Feature 5)
+- Tapped/selected: scale 1.0 to 1.15 (spring, damping 28), z-index bump — signals selection
+  without replacing the callout card UX already implemented with `layoutId`
+- No hover state needed on mobile (touch target)
+
+**Visual standard:**
+- Gradient direction: top-left to bottom-right (135deg) feels sporty and energetic
+- Recommended: `from #3b82f6 to #1d4ed8` (Tailwind blue-500 to blue-700) — matches existing
+  padel sport color in `lajiKonfig`, creating system coherence
+- White inner circle `r=10` on a `28x38` pin viewBox matches current geometry exactly
+- Shadow: `filter: drop-shadow(0 2px 4px rgba(29,78,216,0.35))` — blue-tinted shadow ties gradient
+
+**Codebase dependency:**
+`lib/sportPins.ts` — `buildPinSvg()` and `PIN_FILL` constant. For a pure color change, update
+`PIN_FILL` from `'#c0392b'` to a solid blue. For a true gradient in SVG, add a `<defs>` block
+with `<linearGradient>` and reference it as `fill="url(#pin-gradient)"` inside the SVG template.
+This requires the SVG to be inline (not a data-URI image src) for gradients that use `url()` refs
+— a gradient defined inside a data-URI SVG works if self-contained, which it is here.
+
+**Anti-patterns:**
+- Do NOT use a radial gradient trying to look "3D shiny" — reads as cheap on a small pin
+- Do NOT make the gradient animate (pulsing colors on every pin = chaos on a full map)
+- Do NOT change per-sport pin colors back — the v1.3 decision to use uniform color with sport icon
+  was deliberate for visual clarity
+
+---
+
+### Feature 2: Cluster Markers
+
+**Category:** Table Stakes (replacing the current same-address-only clustering)
+**Complexity:** Medium
+
+**What production apps do:**
+Two established approaches for `@vis.gl/react-google-maps`:
+1. `@googlemaps/markerclusterer` — wraps the underlying Marker objects directly; the library's
+   default algorithm already uses `supercluster` under the hood. Good for simple cases.
+2. `supercluster` library directly — compute clusters from GeoJSON on the client, render results
+   as `AdvancedMarker` components. More control, fully React-rendered, supports custom cluster
+   shapes. Recommended by vis.gl docs for custom styling needs.
+
+The project's existing same-address clustering uses `Record<string,T[]>` groups rendered manually
+(workaround for a TS 5.9.3 Map generic regression, noted in Key Decisions). True zoom-based
+clustering requires one of the two approaches above.
+
+**Interaction pattern:**
+- Zoom out (below level 12): markers cluster into bubble with count badge
+- Zoom in (above level 14): clusters split back into individual pins — smooth, no jump
+- Tap cluster: map zooms to cluster bounds (`fitBounds`) — standard Google Maps cluster behavior
+- Cluster bubble: same blue gradient as pins, white circle, count number in bold
+- Count format: 1-9 shows digit, 10-99 shows "10+", 100+ shows "99+" — current `clusterPinUrl`
+  already uses "9+" cutoff which is correct
+
+**Visual standard:**
+- Cluster diameter slightly larger than pin: 36px circle (pin is 28px wide)
+- Count text: `font-size: 11px`, bold, `#fff` on blue gradient background
+- Optional: cluster size scales with count (50+ items = slightly bigger bubble) — this is common
+  in Google Maps native but adds complexity; skip for v1.5
+
+**Codebase dependency:**
+`lib/sportPins.ts` has `clusterPinUrl()` already implemented and generating SVG clusters.
+`app/components/Etusivu.tsx` renders `AdvancedMarker` per item today. The clustering layer needs
+to wrap this with either `@googlemaps/markerclusterer` (imperative) or `supercluster` (declarative).
+The existing `expandedCluster` state and `setExpandedCluster` are already in `Etusivu.tsx` — this
+infrastructure was built for same-address expansion and can be adapted.
+
+**New dependency:** `@googlemaps/markerclusterer` (noted as already in package.json v2.6.2 from
+v1.1 research) OR `supercluster` + `@types/supercluster`. `supercluster` is ~7KB gzipped and is
+the vis.gl recommended custom approach for fully React-rendered clusters.
+
+**Anti-patterns:**
+- Do NOT cluster at high zoom levels (above 14) — individual venue discovery is the core UX
+- Do NOT use MarkerClusterer's default yellow circles — must match the blue pin theme
+- Do NOT let clusters appear over the open bottom sheet — `zIndex` management required
+
+---
+
+### Feature 3: Pin Shine / Glow Animation
+
+**Category:** Differentiator
+**Complexity:** Simple (after HTML element pin migration)
+
+**What production apps do:**
+Two standard patterns:
+1. **Pulsing ring** (location beacon style): `@keyframes ping` — a ring scales from 1.0 to 1.8
+   and fades to opacity 0, loops at ~2-3s interval. Tailwind ships `animate-ping` for this exact
+   effect.
+2. **Orbiting ring** (shine effect): a semi-arc SVG element or box-shadow rotates 360deg around the
+   pin. Less common, more distinctive, but implies "loading" to many users.
+
+For a sport app, the pulsing ring reads as "alive / open now" — better semantic fit. A sporadic
+pulse (not continuous loop) feels less annoying on a screen full of pins.
+
+**Interaction pattern:**
+- All pins pulse once on map load (staggered by index, 60ms apart) — signals the map is live
+- After initial entrance pulse, only "auki nyt" (open now) venues continue pulsing on a 3s interval
+- Closed or unknown venues: no pulse after initial entrance
+- Tapped pin: pulse stops, pin scales up (Feature 1 selected-state behavior takes over)
+
+**Visual standard:**
+- Ring color: `rgba(59,130,246,0.4)` (blue-500 at 40% opacity) — matches gradient pins
+- Ring size: starts at pin diameter (28px), expands to 50px, fades out
+- Duration: 0.8s ease-out — snappy, not floaty
+- Tailwind `animate-ping` class on an absolutely-positioned ring `div` injected into
+  `AdvancedMarker` content is the simplest implementation path
+
+**Critical prerequisite — HTML element pin migration:**
+The current `pinUrl()` function in `lib/sportPins.ts` returns a `data:image/svg+xml` string used
+as an `<img src>`. CSS `@keyframes` animations cannot target content inside a `src="data:..."` image
+element. To support glow animations, selected-state transforms, and per-sport colored icons, the pins
+need to become actual HTML elements rendered as `AdvancedMarker` content (via `content` prop or
+a React element child). This migration is a shared prerequisite for Features 1, 3, and 5.
+
+**Anti-patterns:**
+- Do NOT animate all pins continuously — 50+ pulsing rings simultaneously creates visual noise
+- Do NOT use `filter: drop-shadow` for the glow on 50+ elements (GPU cost)
+- Do NOT use a spinning/orbiting ring — it implies loading, not liveliness
+
+---
+
+### Feature 4: Callout Card — Larger with Cycling Text
+
+**Category:** Differentiator
+**Complexity:** Simple
+
+**What production apps do:**
+Text carousels in small UI components (toasts, map tooltips, status indicators) use `AnimatePresence`
+with `mode="wait"` and a `setInterval` to advance the content. Standard UX: 2.5-3s per item,
+smooth opacity crossfade only (no slide — slide inside a pinned callout is disorienting due to
+the clip-path boundary).
+
+**Interaction pattern:**
+- Default shows: sport label (e.g. "Kuntosali")
+- After 2.5s: fades to venue name (e.g. "Fressi Tampere")
+- After another 2.5s: fades back to sport label — loops indefinitely while callout is visible
+- When user taps the callout: opens PaikkaSheet, interval is cleared
+- Width: increase from current 130px to 160px — gives venue names room without crowding nearby pins
+- Height: add one more line slot for a distance/logo row — total approximately 72px tall vs current 52px
+
+**Visual standard:**
+- Crossfade only: `initial={{ opacity: 0 }}`, `animate={{ opacity: 1 }}`, `exit={{ opacity: 0 }}`,
+  `transition={{ duration: 0.25 }}` — matches Emil Kowalski view transition philosophy from CLAUDE.md
+- Use `<AnimatePresence mode="wait">` with the cycling content as a child keyed by cycle index
+- The existing dynamic clip-path in `CalloutCard` uses `ResizeObserver` and self-adjusts to the
+  new width automatically — no manual path calculation change needed
+
+**Codebase dependency:**
+`app/components/Etusivu.tsx` contains `CalloutCard` as an inner component. The `layoutId`
+animation from pin to `PaikkaSheet` continues to work because `CalloutCard` is the tap trigger,
+not the animation origin.
+
+**Anti-patterns:**
+- Do NOT animate with slide/translateY inside the callout — the clip-path cuts off overflow
+- Do NOT cycle through more than 2 items (sport and venue name) — 3+ means users wait too long
+  to see the venue name they actually care about
+- Do NOT loop after the card has been open for more than 10s without interaction — becomes
+  distracting background noise
+
+---
+
+### Feature 5: Better Sport Icons
+
+**Category:** Table Stakes (for the redesign goal)
+**Complexity:** Simple
+
+**What production apps do:**
+Sport-specific color per icon (not uniform gray stroke) is the dominant pattern in mature fitness
+apps (Strava segment types, Garmin activity types, Apple Fitness+ categories). The existing
+`lajiKonfig` in `lib/lajit.ts` already defines per-sport accent colors — the icons just do not
+use them yet.
+
+**Interaction pattern:**
+Icons appear in: pin circles (18x18 viewBox slot) and sport badge pills (on CalloutCard and list
+cards). Color change: icon stroke uses the sport's `lajiKonfig.color` instead of universal
+`#374151`. No interaction change — icons are passive decorators.
+
+**Visual standard:**
+- Icon stroke color: use `lajiKonfig[laji].color` for the icon stroke, white fill circle stays white
+- Keep `strokeWidth: 2.5`, `strokeLinecap: round`, `strokeLinejoin: round` — matches existing style
+  contract in `sportPins.ts`
+- Icon path quality: the current tennis icon (three concentric circles, reads as target) and padel
+  icon (lightning bolt, reads as power/electric) are misleading. Consider replacing:
+  - Tennis: a racket silhouette (circle head + handle) is universally understood
+  - Padel: a short-handled paddle with holes is distinctive and correct
+
+**Codebase dependency:**
+`lib/sportPins.ts` — `SPORT_ICONS_SVG` and the `g()` helper function hardcode `stroke="#374151"`.
+Either pass color as a parameter to `g()`, or switch to HTML element pins (Feature 3 migration)
+where the stroke color can be passed as a CSS variable at render time. The HTML element migration
+is the cleaner path.
+
+**Anti-patterns:**
+- Do NOT use filled (solid) icons in pins — they look muddy at 18x18px
+- Do NOT use different stroke widths per sport — creates visual inconsistency across the pin grid
+- Do NOT add sport colors as background fills to the pin itself — the gradient fill (Feature 1)
+  is the pin body color; icon color is the secondary accent only
+
+---
+
+### Feature 6: Font Upgrade
+
+**Category:** Differentiator
+**Complexity:** Simple
+
+**What production apps do:**
+Inter is universally legible but has no personality. Finnish sport apps (Firstbeat, Polar Flow,
+Suunto app) tend to use geometric grotesques with slightly warmer or wider letterforms than Inter.
+Two strong Google Fonts candidates evaluated:
+
+- **Plus Jakarta Sans** — Warmer, slightly wider, more energetic feel than Inter while remaining
+  professional. Variable font (weight range 200-800). Strong Finnish-language rendering (a-umlaut,
+  o-umlaut, a-ring all in Latin subset). Used in sport-adjacent SaaS products. Recommended.
+- **DM Sans** — Cleaner and more minimal than Plus Jakarta Sans. Less personality boost but still
+  warmer than Inter. Good fallback if Plus Jakarta Sans feels too expressive.
+- **Outfit** — More playful, good for headlines but too informal for the data-dense list view.
+  Not recommended.
+
+**Interaction pattern:**
+Font is passive — no interaction change. The CLAUDE.md typography rules (4 sizes, 2 weights only)
+remain unchanged. Variable font allows `font-weight: 700` and `font-weight: 400` — same as current
+Inter usage. No Tailwind config changes needed.
+
+**Visual standard:**
+- Replace `Inter` in `app/layout.tsx` `next/font/google` import with `Plus_Jakarta_Sans`
+- CSS variable name stays `--font-sans` — zero component changes needed
+- Subsets: `['latin']` covers all Finnish characters (a-umlaut, o-umlaut, a-ring are in Latin-1
+  Supplement, included in Google Fonts latin subset)
+- `display: 'swap'` — matches current pattern, prevents FOIT
+- The existing `font-serif` display heading pattern (profile page price, hero headings) stays
+  unchanged — Plus Jakarta Sans pairs cleanly with system serif
+
+**Codebase dependency:**
+`app/layout.tsx` — single file change. No component, Tailwind, or CSS changes.
+
+**Anti-patterns:**
+- Do NOT use a condensed all-caps "sports display" font for body text — illegible at small sizes
+  and reads as "gym poster" not "polished Finnish app"
+- Do NOT change the `font-serif` display heading pattern — deliberate design decision in CLAUDE.md
+- Do NOT load more than 400 and 700 weights — extra payload, violates the 2-weight rule
+
+---
+
+### Feature 7: Bottom Sheet Logo Redesign
+
+**Category:** Differentiator
+**Complexity:** Medium
+
+**What production apps do:**
+Animated logo wordmarks in bottom sheets and splash screens typically use:
+1. SVG `stroke-dashoffset` draw-on animation — letters draw themselves in
+2. Gradient sweep (already implemented via `AktiiviLogo.tsx`) — the current solution
+3. Subtle "breathing" gradient animation — gradient color stops shift slowly, adds liveness
+   without interaction trigger
+
+The current `AktiiviLogo.tsx` already implements a sophisticated sweep animation with 5 sport
+gradients cycling on each sheet open. The redesign opportunity is refinement, not replacement.
+
+**What to actually change:**
+- Make the logo visible at appropriate size in the closed pill state (currently 56px height
+  compressed into a 44px HANDLE_H tab — slightly cramped)
+- Add a subtle ambient glow behind the logo container when the sheet is open, connecting the
+  logo to the blue pin glow visual language introduced in Feature 3
+- Consider a very slow "breathing" gradient animation when the sheet is idle for 5+ seconds
+  (no user interaction): Framer Motion `animate` with `repeat: Infinity, repeatType: 'reverse',
+  duration: 3` on the gradient stop colors — perceptible movement but not distracting
+
+**Interaction pattern:**
+- Sheet closed (pill): logo visible at reduced scale, static (no animation)
+- Sheet opens: gradient sweep fires (existing behavior, preserve it)
+- Sheet idle for 5s: breathing gradient begins, very slow 3s cycle between two adjacent colors
+- User interacts with sheet: breathing pauses until next 5s idle period
+
+**Visual standard:**
+- Ambient glow when open: `box-shadow: 0 0 28px rgba(29,78,216,0.15)` behind the SVG container
+  — blue tint connects logo to the new blue pin theme
+- Do NOT redesign the letter paths — they represent significant prior effort and are recognizable
+
+**Codebase dependency:**
+`app/components/AktiiviLogo.tsx` — self-contained component. `app/components/Etusivu.tsx` controls
+`gradientIndex` prop and `sheetPhase` — the idle timer logic for the breathing animation needs to
+live in `Etusivu.tsx` alongside the existing sheet phase state machine.
+
+**Anti-patterns:**
+- Do NOT restart the gradient sweep animation on map interactions — it celebrates the sheet open
+  moment only
+- Do NOT add a spinning wordmark — reads as broken loading state, not intentional animation
+
+---
+
+### Feature 8: TO DO as Overlay (Not Page)
+
+**Category:** Table Stakes (required to hit the milestone goal)
+**Complexity:** Complex
+
+**What production apps do:**
+Overlay panels triggered by a floating action or toolbar button are the dominant mobile pattern:
+Notion page info drawer, Linear command palette, Apple Maps Favorites sheet. The panel slides up
+from the bottom (same animation language as the existing `PaikkaSheet`), has a backdrop, and
+dismisses on outside tap or swipe down.
+
+The key UX difference from the current `/suosikit` page: no navigation away from the map, list
+renders inside an overlay `div`, and the button lives in the toolbar area (not in NavBar).
+
+**Interaction pattern:**
+- Trigger: bookmark icon button below or integrated into the toolbar, with a count badge
+  (`todoIds.size > 0` shows a small blue dot) when items exist
+- Opening animation ("spit out"): panel slides up from `y+400` to `y=0` with spring overshoot
+  (`stiffness: 380, damping: 28` — approximately 5px overshoot at top), combined with list items
+  staggering in (`staggerChildren: 0.04`, each item `y: 20 to 0, opacity: 0 to 1`)
+- Close: swipe down gesture or X button — panel slides to `y+400`, backdrop fades
+  (`dragElastic: { top: 0, bottom: 0.15 }`, `onDragEnd` velocity threshold same as PaikkaSheet)
+- Backdrop: `rgba(0,0,0,0.35)` behind the overlay, tap-to-close
+- Height: 75vh maximum, scrollable list inside (same `overflow-y: auto` pattern as PaikkaSheet)
+- Empty state: "Ei vielä TO DO -paikkoja" identical to current page
+
+**Visual standard:**
+- Panel: `.glass` surface, `rounded-t-3xl`, drag handle at top — identical language to `PaikkaSheet`
+- List items: same `DiagonaalKortti` components as current `/suosikit` page — no new card design
+- Remove button: `BookmarkCheck` icon, `whileTap={{ scale: 0.85 }}` same as current page
+- Trigger button badge: small blue circle `w-2 h-2 bg-blue-500 rounded-full absolute -top-0.5 -right-0.5`
+
+**Codebase dependency:**
+`app/components/Etusivu.tsx` — `todoIds` Set already exists. The overlay needs access to `todoIds`
+and the full `paikat` array to filter and render the list — both available in `Etusivu.tsx`.
+The `/suosikit` page should remain as a fallback deep-link route for PWA users who have bookmarked it.
+New state: `todoOverlayOpen: boolean` in `Etusivu.tsx`.
+The `removeTodo` logic from `SuosikitClient.tsx` should be extracted to a shared hook
+`useTodoList(userId, supabase)` used by both `Etusivu.tsx` and `SuosikitClient.tsx`.
+
+**Anti-patterns:**
+- Do NOT remove the `/suosikit` page route — PWA users may have it bookmarked as a standalone page
+- Do NOT set the overlay `z-index` above `PaikkaSheet` (z-66) — the overlay should close when a
+  venue sheet opens, not sit on top of it
+- Do NOT animate item exit during active scroll — use `AnimatePresence` with `mode="popLayout"` to
+  avoid layout jump when an item is removed mid-scroll
+
+---
+
+### Feature 9: Remove from TO DO → "Did You Visit?" Prompt
+
+**Category:** Differentiator
+**Complexity:** Simple (dependent on Feature 8 overlay existing)
+
+**What production apps do:**
+"Congratulatory redirect" patterns after completing a saved item are used in productivity apps to
+capture feedback at peak relevance (Todoist, Things 3). The prompt is non-blocking, dismissable,
+and time-limited — a transient toast-like card, not a full-screen flow. The pattern only makes
+semantic sense inside the overlay (user is removing a to-visit venue) not on the separate page.
+
+**Interaction pattern:**
+1. User taps the remove button on a TO DO item inside the overlay
+2. Item disappears from list (optimistic delete, existing behavior)
+3. Immediately after: a small toast card appears at the bottom of the overlay panel
+   — "Kävisitkö [Nimi]? Jätä arvostelu" with a right-arrow link
+4. Tap "Jätä arvostelu": closes overlay, navigates to `/paikat/[id]` where the review form lives
+5. Tap X or wait: prompt auto-dismisses after 4s with a visible timeout bar
+6. Only shows for authenticated users (unauthenticated cannot write reviews, so prompt is meaningless)
+
+**Visual standard:**
+- Toast card: `.glass` surface, `rounded-xl`, entrance `y: 16 to 0, opacity: 0 to 1`, `duration: 0.2`
+- CTA link text: `text-blue-600 font-bold text-sm` — blue accent, visually distinct from the
+  glassmorphism dark color system used elsewhere
+- Progress bar for auto-dismiss: 4px tall, blue, `width: 100% to 0%` over 4s
+- Position: pinned to bottom of the overlay panel content area, above the scroll region
+
+**Codebase dependency:**
+`app/components/Etusivu.tsx` — add `pendingReviewPrompt: Liikuntapaikka | null` state.
+Auth check: `supabaseUser !== null` is already in `Etusivu.tsx` state.
+Navigation: `router.push('/paikat/' + id)` already used in other flows.
+
+**Anti-patterns:**
+- Do NOT show the prompt for unauthenticated users — the review form requires login
+- Do NOT block the overlay list while prompt is visible — user should continue scrolling
+- Do NOT chain the prompt to the delete Supabase call — show it after the optimistic UI update,
+  not after the network response (avoids perceived latency)
+
+---
+
+### Feature 10: Simplified Filters with Carousel Animation
+
+**Category:** Table Stakes (required for the simplified filter spec)
+**Complexity:** Medium
+
+**What production apps do:**
+Horizontal scroll chip rows for active filter selections are the dominant mobile pattern (Google
+Maps filter bar, Booking.com search refinements, Apple Maps category bar). The innovation here is
+an "active filters" row that appears below the search bar only when filters are non-default, showing
+each active selection as a dismissible chip.
+
+The existing filter system has four filter states: `searchKaupunki`, `searchLaji`, `searchAukinyt`,
+`searchKertakaynti`. The v1.5 spec simplifies to two: paikkakunta and laji only. "Auki nyt" and
+"Kertakäynti OK" are removed from the quick filter bar.
+
+**Interaction pattern:**
+- Filter bar: two controls — paikkakunta dropdown and laji dropdown (as today)
+- Remove `searchAukinyt` and `searchKertakaynti` from the quick filter bar entirely
+- Active filters row: appears below toolbar when either filter is non-default
+  - Each active chip: sport name or city name, with an X to clear that specific filter
+  - Chips animate in: `x: -16 to 0, opacity: 0 to 1`, `staggerChildren: 0.06`
+  - Chips animate out: `opacity: 1 to 0`, shrink via `scale: 1 to 0.8`
+  - Row appears/disappears: use opacity + y (`y: -8 to 0`) not `height: auto` animation (listed as
+    anti-pattern in CLAUDE.md — causes reflow jank)
+- The "carousel" in the spec refers to horizontal scroll of the chip row when multiple filters are
+  active simultaneously, not a 3D card carousel
+
+**Visual standard:**
+- Active chip: `bg-[#111111] text-white rounded-full px-3 py-1.5 text-[10px] font-bold`
+  — matches existing active filter pill style defined in CLAUDE.md
+- Clear-all option: small "Tyhjennä" text link at the end of the chip row
+- Chip entrance uses `AnimatePresence` with stable `key` per filter (e.g. `"laji-kuntosali"`)
+
+**Codebase dependency:**
+`app/components/Etusivu.tsx` — filter state is flat variables in component scope. The filter
+controls live inside the toolbar drawer (implemented in Phase 17). Full understanding of the
+toolbar component structure requires reading the complete `Etusivu.tsx` — only the first ~220
+lines were reviewed for this research.
+
+**Anti-patterns:**
+- Do NOT implement a true 3D `Karuselli`-style carousel for filter chips — overkill for 2 possible
+  active chips; the existing `Karuselli.tsx` component is for ad cards, different use case
+- Do NOT animate chips on every re-render — only on mount and unmount of individual chips via
+  `AnimatePresence` keyed entries
+- Do NOT add a confirmation before clearing a filter — clearing is not destructive
+
+---
+
+### Feature 11: Logo API — Company Logos in Callout Cards
+
+**Category:** Anti-Feature for v1.5 (spike/defer)
+**Complexity:** Complex (requires schema migration + external API + performance work)
+
+**What production apps do:**
+Logo APIs (Brandfetch, Logo.dev, formerly Clearbit) return SVG or PNG logos by company domain.
+Clearbit deprecated December 1, 2025. Logo.dev is the recommended drop-in replacement — same URL
+pattern: `https://img.logo.dev/{domain}?token={token}`. Brandfetch is higher quality (full SVG
+vector assets) but requires per-brand API calls with rate limits on free tiers.
+
+**Why this is an Anti-Feature for v1.5:**
+1. The `paikat` Supabase table has no `website` or `domain` column — schema migration required
+   before logos can be fetched for any venue
+2. Only roughly 30% of venues (gym chains: Fressi, Elixia, major padel centers) will have
+   recognizable logos; local standalone venues will consistently return 404 or generic favicons
+3. A per-venue logo HTTP request waterfall — 50+ callout-visible pins on a single map render
+   means 50+ logo fetches per render cycle; clear performance regression
+4. Logo.dev free tier: 1,000 requests per month — a single session with 50 visible pins consumes
+   50 requests; paid tier required before any real usage
+5. Callout card dimensions (current 130px width, proposed 160px) leave very little room for a
+   logo that is meaningful at small size
+
+**Recommendation:** Scope as a dedicated spike phase only. Do not build in v1.5.
+If implemented later:
+- Add `website_domain` (nullable text) column to `paikat` Supabase table
+- Pre-populate only for known gym chains (Fressi, Elixia, Liikuntakeskus Energia)
+- Lazy-load via `IntersectionObserver` only when the CalloutCard is in the viewport
+- Cache in `sessionStorage` keyed by domain to prevent repeat fetches in a session
+- Show sport icon as fallback on 404 (current behavior already) — no blank space
+
+---
+
+## Table Stakes vs Differentiators Summary
+
+| Feature | Category | Complexity | Phases Needed |
+|---------|----------|------------|---------------|
+| Blue gradient pins | Table Stakes | Simple | 1 |
+| Cluster markers | Table Stakes | Medium | 1-2 |
+| Pin glow animation | Differentiator | Simple | 1 (after HTML pin migration) |
+| Callout card cycling text | Differentiator | Simple | 1 |
+| Better sport icons (colorful) | Table Stakes | Simple | 1 (same PR as pins) |
+| Font upgrade | Differentiator | Simple | 1 |
+| Bottom sheet logo refinement | Differentiator | Medium | 1 |
+| TO DO overlay | Table Stakes | Complex | 1-2 |
+| Remove → review prompt | Differentiator | Simple | 1 (after overlay) |
+| Simplified filters + chips | Table Stakes | Medium | 1 |
+| Logo API | Anti-Feature (defer) | Complex | Spike only |
 
 ---
 
 ## Feature Dependencies
 
 ```
-LEGAL-01 (GDPR page) → AUTH-01 (must link privacy policy before collecting auth data)
-AUTH-01 (email + Google OAuth) → AUTH-02 (favorites require a logged-in user_id)
-AUTH-02 (favorites table) → AUTH-03 (personalized AI needs favorites list)
-DATA-07 (kaupunki field confirmed in DB) → DATA-05/06 (Helsinki/Turku import)
-DATA-07 (kaupunki in DB) → UI city filter dropdown
-MAP-04 (re-center button) → existing useGPS hook (already implemented — just a button)
-MAP-05 (accuracy ring) → existing useGPS hook (accuracy from GeolocationCoordinates API)
-MAP-06 (clustering) → @googlemaps/markerclusterer (already in package.json v2.6.2)
-MAP-07 ("Näytä kartalla") → URL routing confirmed: ?nakyma=kartta already in use
-PWA-02 (manifest + install prompt) → PWA-01 (service worker must be registered first)
-ADS-02 (Sponsoroitu badge) → ADS-01 (featured boolean in schema — already shipped v1.0)
-UI-08 (dropdown filter) → DATA-07 (needs city as a filterable dimension too)
+HTML element pin migration (from data-URI img src to React DOM element in AdvancedMarker)
+  -> Blue gradient pins (Feature 1)          CSS gradient on DOM element
+  -> Colorful sport icons (Feature 5)        stroke color as prop at render time
+  -> Pin glow animation (Feature 3)          CSS @keyframes on DOM element
+  -> Selected-state scale (Feature 2)        CSS transform on DOM element
+
+TO DO overlay (Feature 8)
+  -> Remove -> review prompt (Feature 9)     prompt lives inside overlay
+
+Feature 10 (filter simplification)           standalone, filter state only
+Feature 6 (font upgrade)                     standalone, layout.tsx only
+Feature 7 (logo animation refinement)        standalone, AktiiviLogo.tsx
+Feature 4 (callout cycling text)             standalone, CalloutCard in Etusivu.tsx
+Feature 11 (logo API)                        blocked by schema migration, defer indefinitely
 ```
 
 ---
 
-## Detailed Behavior Specifications
+## MVP Recommendation
 
-### MAP-06: Map Clustering
+**Phase 1 — Visual foundation (all simple/standalone):**
+Features 1 + 5 + 6 — gradient pins, colorful icons, font swap. One cohesive visual upgrade.
+The HTML element pin migration (prerequisite for Feature 3) should happen in this phase even if
+the glow animation (Feature 3) ships in Phase 2.
 
-**Zoom thresholds for Finnish city scale:**
-- Zoom < 12 (country/region): Large cluster circles, count label only
-- Zoom 12–13 (city view): Cluster circles, count + optional sport icon if homogeneous cluster
-- Zoom 14 (default fullscreen zoom): Transition zone — clusters begin breaking into individual markers
-- Zoom ≥ 15 (street view): Individual sport pins only, no clustering
+**Phase 2 — Map interactions (requires pin migration from Phase 1):**
+Features 2 + 3 + 4 — clustering, pin glow, callout cycling.
+Clustering requires `supercluster` or `@googlemaps/markerclusterer` — real integration work.
+Callout cycling and glow are simple after Phase 1's pin migration.
 
-**Cluster circle design:**
-- Radius: `Math.min(16 + Math.log2(count) * 6, 48)` px — scales with density
-- Background color: use dominant sport color of clustered venues; fall back to `#4F46E5` (indigo-600) for mixed clusters
-- White count number centered, `font-semibold`
-- Click: call `getClusterExpansionZoom(clusterId)` → fly to that zoom level, do not open a bottom sheet
+**Phase 3 — UX flows (independent of map work):**
+Features 7 + 8 + 9 + 10 — logo refinement, TO DO overlay, review prompt, filter chips.
+The overlay (Feature 8) is the most complex item and should be started first within this phase.
+Logo refinement and filter chips are independent and can run in parallel.
 
-**Individual marker → info card:**
-- Tap individual marker → existing bottom-sheet (`valittu` state) — no change to bottom sheet content needed
-- Bottom sheet "Näytä tiedot" link goes to profile page; no need for a "Näytä kartalla" link inside the bottom sheet (user is already on the map)
-
-**Implementation path:**
-Use `@googlemaps/markerclusterer` `MarkerClusterer` with `SuperClusterAlgorithm`. Render custom cluster markers via the `renderer` prop to get full visual control (colored circles). Individual markers become `AdvancedMarker` elements (required by `@googlemaps/markerclusterer` v2). The library is already installed — no new dependency needed.
-
-**Performance note:** With < 200 venues across 3 cities, supercluster rebuilds are fast. No virtualization needed.
-
-### AUTH-01/02: Auth UX Flow
-
-**Progressive disclosure (industry standard for anonymous-first apps):**
-1. User browses without any auth prompt
-2. User taps heart/favorites icon on a card
-3. Modal appears: "Tallenna suosikkisi — kirjaudu sisään tai luo tili"
-4. Options: Google OAuth (primary, large button) + Email magic link (secondary, smaller)
-5. After auth: modal closes, venue added to favorites, UI updates immediately
-6. NavBar shows user avatar or email initial; BottomNav gains "Suosikit" as active destination
-
-**Supabase Auth configuration:**
-- Enable Google OAuth in Supabase dashboard (requires Google Cloud Console OAuth 2.0 client)
-- Email: magic link (passwordless) — lower friction than password; matches Finnish consumer expectations
-- Site URL + redirect URLs must be configured: localhost:3000 + production domain
-- RLS on `suosikit` table: `auth.uid() = user_id` for all CRUD operations
-- Service role key for server-side operations (already established pattern)
-
-**Skip anonymous accounts:** Do not use `supabase.auth.signInAnonymously()`. The complexity of linking sessions and handling data conflicts on upgrade is not justified when the app already works fully without auth.
-
-### LEGAL-01: GDPR Privacy Page Minimum Content
-
-Under GDPR Art. 13 + Finnish Tietosuojalaki (1050/2018), these sections are required when collecting personal data via auth:
-
-**Required sections (Finnish language):**
-1. **Rekisterinpitäjä:** App name, operator name (Joona Orava), contact email
-2. **Henkilötietojen käsittelyn tarkoitus ja oikeusperuste:** Favorites feature (sopimuksen täytäntöönpano / contract performance). Specify each purpose separately.
-3. **Kerättävät henkilötiedot:** Email address, Google account name/email (OAuth), Supabase user ID, saved favorites list (venue IDs)
-4. **Tietojen säilyttämisaika:** Specific period required — "Tiedot poistetaan 24 kuukauden käyttämättömyyden jälkeen tai tilin poistohetkellä"
-5. **Tietojen vastaanottajat:** Supabase (EU data processor — specify region), Google (OAuth provider). Individual names not required; categories sufficient.
-6. **Siirrot EU/ETA-alueen ulkopuolelle:** Supabase stores data in EU (specify exact region in dashboard). Google OAuth may involve US data transfer — mention Standard Contractual Clauses basis.
-7. **Rekisteröidyn oikeudet:** Right to access (tarkistusoikeus), rectify (oikaiseminen), erase (poistaminen), restrict (rajoittaminen), portability (siirto-oikeus), object (vastustamisoikeus), lodge complaint with **Tietosuojavaltuutetun toimisto** (tietosuoja.fi)
-8. **Tietosuojavastaava:** Note "ei sovelleta" if not applicable (small app, no requirement)
-9. **Evästeet:** Only required if analytics/tracking cookies are added. Supabase Auth uses `localStorage` for tokens, not cookies — note this distinction.
-
-**Format:** Plain Finnish, easily readable. Static `/tietosuoja` page. Link from auth modal, NavBar footer, and registration confirmation email.
-
-### PWA-01/02: Service Worker + Install Prompt
-
-**Manifest fields required for Chrome installability:**
-```json
-{
-  "name": "Liikuntahakemisto",
-  "short_name": "Liikunta",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#EEF2FF",
-  "theme_color": "#4F46E5",
-  "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
-  ],
-  "description": "Löydä liikuntapaikat läheltäsi",
-  "screenshots": []
-}
-```
-
-**`@ducanh2912/next-pwa` setup for Next.js 14 App Router:**
-- Wrap `next.config.js` with `withPWA({ dest: 'public', cacheOnFrontEndNav: true, aggressiveFrontEndNavCaching: true, skipWaiting: true })`
-- Offline fallback page: `app/~offline/page.tsx` (App Router convention — note tilde, not underscore)
-- Caching strategy: `NetworkFirst` for `/api/*` routes; `CacheFirst` for static assets
-- Google Maps tiles are cross-origin — service worker cannot cache them. Cache the app shell only.
-
-**Install prompt UX:**
-- Capture `beforeinstallprompt` with `event.preventDefault()` immediately in a global effect
-- Store as `window.__installPrompt` or React ref
-- Show custom install banner (small, above BottomNav, dismissable) only after: user saves first favorite OR `localStorage.visitCount >= 2`
-- `beforeinstallprompt` fires only on Chromium. For iOS Safari: detect `navigator.standalone === false && /iPad|iPhone/.test(navigator.userAgent)` and show manual instructions drawer
-- After install: hide banner, set `localStorage.pwaInstalled = true`
-
-### ADS-02: Sponsoroitu Badge
-
-**Placement:**
-- `PaikkaKortti` (list): Small "Sponsoroitu" pill above the sport badge row. Use `bg-gray-100 text-gray-500` — explicitly NOT indigo, to be visually distinct from organic sport badges.
-- Map bottom sheet (`valittu` state in `Etusivu.tsx`): Same label below venue name, before address
-- Map cluster: No badge — clusters aggregate multiple venues, do not surface individual featured status
-
-**Rendering:** `{paikka.featured && <span className="...">Sponsoroitu</span>}` — `featured` already in `Liikuntapaikka` type and DB schema (ADS-01, v1.0).
-
-**EU Digital Services Act compliance:** Commercial content must be "clearly and unambiguously identifiable." "Sponsoroitu" is compliant Finnish terminology. Do not use "Suositellaan" (implies editorial endorsement) or "Nostettu" (ambiguous).
-
-### AI-04: City Name in Widget
-
-**City lookup approach (no API call):**
-```typescript
-function cityFromCoords(lat: number, lng: number): string {
-  if (lat > 60.0 && lat < 60.5 && lng > 24.5 && lng < 25.2) return 'Helsinki'
-  if (lat > 60.3 && lat < 60.7 && lng > 22.0 && lng < 22.5) return 'Turku'
-  if (lat > 61.3 && lat < 61.7 && lng > 23.5 && lng < 24.1) return 'Tampere'
-  return '' // do not guess for unknown cities
-}
-```
-Display as: `"Tampere · 14°"`. If city lookup returns empty string, show just the temperature (no change from current behavior).
-
----
-
-## MVP Recommendation for v1.1 Phase Ordering
-
-**Phase 1 — Unblocks everything:**
-1. LEGAL-01 (GDPR page) — 2-4 hours, static page, unblocks AUTH
-2. DATA-07 (verify `kaupunki` column in DB, add city filter UI) — unblocks data expansion
-3. AUTH-01 + AUTH-02 (auth modal, suosikit table, favorites UI) — core new capability
-
-**Phase 2 — Map improvements (self-contained, no auth dependency):**
-4. MAP-04 (re-center button) — 1 hour
-5. MAP-05 (accuracy ring) — 2 hours
-6. MAP-06 (clustering) — 1-2 days
-7. MAP-07 ("Näytä kartalla" deep link) — 2-3 hours
-
-**Phase 3 — UI polish + data:**
-8. UI-05/06/07/08 (card polish, dropdown filter)
-9. AI-04 (city name in widget)
-10. ADS-02 (Sponsoroitu badge)
-11. DATA-05/06 (Helsinki + Turku venue data import)
-
-**Phase 4 — Infrastructure (build last, test in prod):**
-12. PWA-01/02 — service worker interferes with dev mode; test in `next build && next start`
-13. AUTH-03 (personalized AI) — polish feature, needs real favorites data to validate
-
-**Never build in v1.1:** Anonymous accounts, multi-select filters, push notifications, forced login gate, immediate install prompt.
-
----
-
-## Complexity Reference
-
-| Label | Meaning |
-|-------|---------|
-| Low | < 1 day, no new dependencies |
-| Medium | 2-5 days, may add a dependency or require new DB columns |
-| High | > 1 week, architectural change or external system integration |
+**Defer:** Feature 11 (Logo API) — no timeline until schema migration is justified by data quality.
 
 ---
 
 ## Sources
 
-- [Marker Clustering — Maps JavaScript API | Google for Developers](https://developers.google.com/maps/documentation/javascript/marker-clustering)
-- [Custom Marker Clustering — React Google Maps (@vis.gl)](https://visgl.github.io/react-google-maps/examples/custom-marker-clustering)
-- [Anonymous Sign-Ins | Supabase Docs](https://supabase.com/docs/guides/auth/auth-anonymous)
-- [Supabase Auth now supports Anonymous Sign-ins](https://supabase.com/blog/anonymous-sign-ins)
-- [Making PWAs installable — MDN](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)
-- [Installation prompt | web.dev](https://web.dev/learn/pwa/installation-prompt)
-- [next-pwa (ducanh2912 fork) — offline fallbacks](https://ducanh-next-pwa.vercel.app/docs/next-pwa/offline-fallbacks)
-- [Art. 13 GDPR — Information to be provided where personal data are collected](https://gdpr-info.eu/art-13-gdpr/)
-- [EU:n tietosuoja-asetus — Tietosuojavaltuutetun toimisto](https://tietosuoja.fi/usein-kysyttya-gdpr)
-- [GDPR Guide to National Implementation: Finland | White & Case](https://www.whitecase.com/insight-our-thinking/gdpr-guide-national-implementation-finland)
-- [Rethinking Authentication UX — Smashing Magazine](https://www.smashingmagazine.com/2022/08/authentication-ux-design-guidelines/)
-- [GeolocationCoordinates: accuracy property — MDN](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates/accuracy)
-- [Cluster marker — Map UI Patterns](https://mapuipatterns.com/cluster-marker/)
-- [How to provide your own in-app install experience | web.dev](https://web.dev/articles/customize-install)
+- vis.gl react-google-maps marker clustering: https://visgl.github.io/react-google-maps/examples/marker-clustering
+- vis.gl custom marker clustering (supercluster): https://visgl.github.io/react-google-maps/examples/custom-marker-clustering
+- Google Maps AdvancedMarker graphics: https://developers.google.com/maps/documentation/javascript/advanced-markers/graphic-markers
+- Logo.dev (Clearbit replacement), Brandfetch: https://www.abstractapi.com/guides/company-enrichment/best-company-logo-apis
+- Framer Motion stagger: https://www.framer.com/motion/stagger/
+- Framer Motion AnimatePresence + transitions: https://www.framer.com/motion/transition/
+- Plus Jakarta Sans on Google Fonts: https://fonts.google.com/specimen/Plus+Jakarta+Sans
+- Map UI Patterns — callout: https://mapuipatterns.com/call-out/
+- Map UI Patterns — cluster marker: https://mapuipatterns.com/cluster-marker/
+- supercluster npm: referenced via @googlemaps/markerclusterer which uses it as default algorithm

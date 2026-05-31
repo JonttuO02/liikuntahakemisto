@@ -1,312 +1,274 @@
-# Domain Pitfalls — v1.1 Feature Addition
+# Domain Pitfalls — v1.5 Visual Polish & UX
 
-**Domain:** Adding auth, clustering, PWA, and multi-city to existing Next.js 14 + Supabase app
-**Researched:** 2026-05-21
-**Confidence:** HIGH (all critical pitfalls verified against official docs or confirmed GitHub issues)
-
----
-
-## Critical Pitfalls
-
-Mistakes that cause rewrites, data loss, or security breaches.
+**Domain:** Adding visual polish & UX improvements to a live Next.js 14 / @vis.gl/react-google-maps / Framer Motion app
+**Researched:** 2026-05-31
+**Scope:** Integration pitfalls specific to THIS codebase — not generic advice
 
 ---
 
-### PITFALL-01: Existing `supabase` singleton breaks with Auth (session leakage)
+## 1. CSS Keyframe Animations on AdvancedMarker DOM Content Cause Full Repaint on Every Frame
 
-**Phase:** Auth (AUTH-01, AUTH-02)
+**What goes wrong:**
+Adding CSS `animation` or `@keyframes` (e.g., a shimmer or pulse on pin icons) to elements inside `<AdvancedMarker>` content triggers repaints for every animating pin simultaneously. At 80+ markers, `gmap-pin` currently uses a one-shot `pinBounce` keyframe which is fine — it fires once, then stops. A looping animation (e.g., gradient shimmer, glint sweep) would repaint all visible pins at 60 fps.
 
-**What goes wrong:** `lib/supabase.ts` exports a module-level singleton `supabase` created once at import time. This is fine for read-only public data with the anon key. The moment Auth is added, the singleton stores one user's session in process memory. On Vercel (and any warm-lambda model), the same module instance is reused across concurrent requests — user A's session leaks into user B's request.
+**Why it happens in this system:**
+Each `<AdvancedMarker>` wraps a real DOM node inside Google Maps' overlay layer. That layer does not establish a separate GPU compositing layer for each child — it is a flat DOM overlay. Animating `background`, `background-position`, or `box-shadow` inside it forces the browser to repaint the entire map tile region, not just the element. The existing `pinBounce` works because it uses only `transform` + `opacity` (compositor-promoted properties) and runs once.
 
-**Why it happens:** `createClient()` in `@supabase/supabase-js` stores the session internally. A shared instance cannot distinguish per-request users in a serverless environment.
-
-**Consequences:** Authenticated users see each other's favorites. RLS policies are sent the wrong user's JWT. Hard to reproduce locally (single-user dev server), appears in production under load. This is a documented security advisory from the Supabase team.
-
-**Prevention:** Install `@supabase/ssr` (not `@supabase/auth-helpers-nextjs` — that package is deprecated). Create per-request server clients via `createServerClient()` inside Route Handlers and Server Components. The existing `supabase` singleton in `lib/supabase.ts` remains valid only for server-side anonymous reads (page.tsx data fetching with anon key). The `supabaseAdmin` export is also fine — it uses the service role key and intentionally bypasses RLS. Do not add auth to either of these shared instances.
-
-**Detection:** Log in as two users in different browser sessions simultaneously. Any cross-user data visible to either is the symptom.
-
----
-
-### PITFALL-02: Missing `middleware.ts` causes silent auth logout after ~1 hour
-
-**Phase:** Auth (AUTH-01)
-
-**What goes wrong:** Supabase Auth uses short-lived access tokens (default 1 hour) and a refresh token in a cookie. Next.js Server Components cannot write cookies. Without middleware, the expired access token is never refreshed server-side. `getUser()` returns null even though the refresh token is valid. Users appear logged out after one hour of inactivity, but the session is recoverable — the root cause is invisible to both user and developer.
-
-**Why it happens:** Server Components run in a read-only cookie context. Only middleware and Route Handlers can write `Set-Cookie` headers. The `@supabase/ssr` package provides a `createServerClient` that hooks into the middleware cookie API and refreshes the token transparently on every request.
-
-**Consequences:** Auth works for the first hour, then breaks silently. Favorites fail. Auth-gated features return 401. Extremely difficult to debug because `getSession()` (reads the unverified cookie) still returns a value while `getUser()` (hits the Supabase Auth server) returns null.
-
-**Prevention:** Add `middleware.ts` at the project root (same level as `app/`). The middleware must call `supabase.auth.getUser()` on every request to refresh tokens. This is not optional — it is load-bearing for any app with sessions lasting more than an hour. The middleware file does not exist in the current codebase.
-
-**Detection:** Log in, wait 61 minutes without page reload, attempt any favorites write. If it fails with a 401, middleware is missing or misconfigured.
-
----
-
-### PITFALL-03: Google OAuth redirect URI misconfiguration locks out production
-
-**Phase:** Auth (AUTH-01)
-
-**What goes wrong:** Google OAuth requires exact `Authorized redirect URIs` in Google Cloud Console AND the Supabase dashboard "Redirect URLs" allowlist. Three places must all agree: (1) Google Cloud Console authorized URIs, (2) Supabase Auth settings, (3) the `redirectTo` value passed at sign-in time. Any mismatch produces an opaque `redirect_uri_mismatch` error shown directly to the user — not in server logs.
-
-**Why it happens:** Supabase's `Site URL` defaults to `http://localhost:3000` (set at project creation). If not updated to the production URL, OAuth flows that omit `redirectTo` redirect back to localhost even in production. The inverse also happens: a hardcoded production `redirectTo` breaks local development.
-
-**Consequences:** Production Google OAuth is dead on arrival unless all three locations are pre-configured. The error message exposes the misconfigured redirect URI to the user.
+**Consequences:**
+Janky bottom sheet scroll and card list while the map is visible, especially on mid-range Android (4× CPU slowdown exposes this in under 30 seconds). The Google Maps tile renderer and the CSS animation fight for the same paint budget.
 
 **Prevention:**
-1. Set Supabase `Site URL` to the production domain before any OAuth testing on production.
-2. Add both `http://localhost:3000/**` and `https://yourdomain.fi/**` to Supabase "Redirect URLs" using the wildcard syntax (not exact paths).
-3. In Google Cloud Console, add both origins and the Supabase callback URI: `https://<project-ref>.supabase.co/auth/v1/callback`.
-4. Generate `redirectTo` dynamically from `request.headers.get('origin')` in the Server Action that initiates sign-in. Never hardcode the origin.
+- Any looping animation on pins MUST use only `transform` and/or `opacity` — never `background`, `box-shadow`, `border-color`, or `filter`.
+- Add `will-change: transform` to the animated element immediately before animation starts; remove it afterward (see Pitfall 12 for why static `will-change` is dangerous).
+- Add `translate3d(0,0,0)` on the animated element to force layer promotion for the duration of the animation.
+- Test with Chrome DevTools → Rendering → Paint flashing on a device-level CPU throttle (4×) before shipping.
 
-**Detection:** Test Google OAuth from both localhost and production environments independently — they are distinct failure modes.
+**Phase flag:** Any phase adding looping CSS animations to map pins.
 
 ---
 
-### PITFALL-04: RLS `INSERT` policy without `WITH CHECK` allows user_id spoofing on the suosikit table
+## 2. AdvancedMarker Key Instability Causes Marker Churn and z-index Conflicts
 
-**Phase:** Auth / Favorites (AUTH-02)
+**What goes wrong:**
+The existing cluster marker key is `'cluster-' + item.items.map(p => p.id).join('-')`. If `paikatKartalla` recomputes when `searchLaji` changes, the items array order may differ, producing a different key for the same coordinate cluster. This unmounts and remounts the `AdvancedMarker`. The remounted marker enters at default `zIndex={2}`, overriding the elevated `zIndex={20}` set for an expanded cluster. The "cluster popup" disappears mid-interaction.
 
-**What goes wrong:** An INSERT policy written as `USING (auth.uid() = user_id)` instead of `WITH CHECK (auth.uid() = user_id)` passes Supabase's policy editor validation but does not enforce the constraint at write time. A client can INSERT a row with any `user_id` UUID, inserting favorites into another user's list. The `USING` clause applies to row visibility (SELECT, UPDATE, DELETE) — `WITH CHECK` applies to rows being written (INSERT, UPDATE).
+**Why it happens in this system:**
+`mapItems` iterates `paikatKartalla` (filtered from the stable `paikat` server prop, but re-filtered on `searchLaji`). If one venue in a two-venue same-address cluster is filtered out, the remaining single-item group gets a new key vs. the old two-item key. Critically, `expandedCluster === item.items` uses reference equality — after remount, `item.items` is a new array, so the popup state never matches and the popup never reopens.
 
-**Why it happens:** Supabase's Table Editor generates incomplete policy templates. The UI does not warn when `WITH CHECK` is absent on INSERT policies. Many tutorial examples predate the current RLS best practice documentation.
-
-**Consequences:** Any authenticated user can pollute any other user's favorites. Data integrity is broken at the database level. Not detectable at the application layer without explicit adversarial testing.
+**Consequences:**
+User opens a cluster popup, changes the laji filter, cluster remounts with new key, old `expandedCluster` state holds stale reference — popup disappears silently with no animation or feedback.
 
 **Prevention:**
+- Key clusters by their coordinate bucket string (`Math.round(p.latitude * 10000) + ',' + Math.round(p.longitude * 10000)`), not by member IDs.
+- Store `expandedCluster` state by the coordinate bucket key (a string), not by array reference.
+- After any clustering change, verify the scenario: open a cluster popup → change laji filter → popup either stays consistent or closes cleanly with an exit animation.
 
-```sql
--- Correct favorites INSERT policy
-CREATE POLICY "Users can insert own favorites"
-ON suosikit FOR INSERT
-TO authenticated
-WITH CHECK ((select auth.uid()) = user_id);
-
--- Correct favorites SELECT policy
-CREATE POLICY "Users can read own favorites"
-ON suosikit FOR SELECT
-TO authenticated
-USING ((select auth.uid()) = user_id);
-
--- Correct favorites DELETE policy
-CREATE POLICY "Users can delete own favorites"
-ON suosikit FOR DELETE
-TO authenticated
-USING ((select auth.uid()) = user_id);
-```
-
-The `(select auth.uid())` subquery wrapper (rather than bare `auth.uid()`) is preferred — Postgres caches the subquery result instead of evaluating the function once per row, which matters for tables with many rows. Add a `CREATE INDEX ON suosikit(user_id)` — without it, RLS triggers a sequential scan on every authenticated favorites request.
-
-**Detection:** The SQL Editor in the Supabase dashboard bypasses RLS (runs as superuser). Never use the SQL editor to test RLS policies. Test exclusively through the client SDK with a real authenticated user session.
+**Phase flag:** Any phase touching marker clustering or adding visual changes to cluster pins.
 
 ---
 
-### PITFALL-05: `AdvancedMarker` requires `mapId` — existing `<Map>` components lack it
+## 3. @googlemaps/markerclusterer Library Conflicts with the Existing Custom Cluster System
 
-**Phase:** Map clustering (MAP-06)
+**What goes wrong:**
+`@googlemaps/markerclusterer` v2.6.2 is in `package.json` but is not used — the app implements same-address clustering manually in the `mapItems` useMemo. If a phase adds `MarkerClusterer` from this library on top of the existing `<AdvancedMarker>` rendering, every venue appears twice: once from the library's cluster renderer and once from the React-managed markers, because `mapItems` still produces markers for all venues.
 
-**What goes wrong:** The `@googlemaps/markerclusterer` library (used in all `@vis.gl/react-google-maps` clustering examples) requires `AdvancedMarkerElement` rather than the deprecated `Marker`. `AdvancedMarkerElement` requires a `mapId` prop on the `<Map>` component — without it, advanced markers silently fail to render or throw a console error and produce an empty map. Both `<Map>` instances in `Etusivu.tsx` (preview and fullscreen) use the legacy `<Marker>` without `mapId`.
+**Why it happens in this system:**
+The custom clustering in `mapItems` outputs `{ type: 'single' | 'cluster' }` items and renders all of them as `<AdvancedMarker>` elements in JSX. `MarkerClusterer` takes an array of `google.maps.marker.AdvancedMarkerElement` imperative instances — it does not know about React-managed markers already on the map. You cannot layer the two systems.
 
-**Why it happens:** The legacy `Marker` API works without `mapId`. The newer `AdvancedMarkerElement` requires Google's vector renderer, which is enabled via a Cloud-configured Map ID. The migration is not prominently documented in the clustering examples.
-
-**Consequences:** Switching to clustering without first adding `mapId` produces a map with no markers at all — both clusters and individual pins disappear with no visible error in the UI.
-
-**Prevention:** Create a Map ID in Google Cloud Console (Maps Platform > Map Styles). Pass `mapId` to both `<Map>` instances in `Etusivu.tsx`. Use `"DEMO_MAP_ID"` for local development (Google's testing value), and store the production Map ID as `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`. Add this migration before any clustering work begins.
-
-**Detection:** After adding `mapId`, verify both the preview map and the fullscreen map still render markers. Then migrate from `<Marker>` to `<AdvancedMarker>` and verify again before adding the clusterer.
-
----
-
-### PITFALL-06: Recreating the `MarkerClusterer` instance on every render causes severe performance regression
-
-**Phase:** Map clustering (MAP-06)
-
-**What goes wrong:** If the `MarkerClusterer` instance is created inside a React component body (or inside a `useEffect` with dependencies that change on filter updates), a new clusterer is instantiated on every filter change. Each instantiation discards the internal supercluster index and rebuilds the rtree for all zoom levels from scratch. With 50–200 markers post-city-expansion, this causes visible freezes (100–500ms) whenever the user changes the sport filter.
-
-**Why it happens:** The declarative React mental model conflicts with the imperative lifecycle of `MarkerClusterer`. React re-renders when props change; the clusterer needs to be stable across renders. This is specifically flagged in the vis.gl GitHub discussion tracker as the primary performance complaint.
-
-**Consequences:** The map becomes noticeably sluggish after city expansion. Filter changes — which update the markers array — trigger full re-clustering on every tap.
-
-**Prevention:** Store the clusterer instance in a `useRef`. Initialize it once in a `useEffect` with an empty dependency array. Update markers via `clusterer.current.addMarkers()` / `clusterer.current.clearMarkers()` when the filtered markers list changes, instead of recreating the clusterer. Alternatively, use the `supercluster` library directly with `useMemo` — this approach is more React-idiomatic and faster for datasets under 500 markers.
-
-**Detection:** Open the fullscreen map, change the sport filter 5 times rapidly. Profile with Chrome DevTools Performance tab and look for long tasks coinciding with filter changes.
-
----
-
-### PITFALL-07: Service worker intercepts Next.js RSC fetch requests, breaking client-side navigation
-
-**Phase:** PWA (PWA-01, PWA-02)
-
-**What goes wrong:** Next.js App Router uses RSC (React Server Component) payloads for client-side navigation — internal fetch requests identified by the `_rsc` query parameter and `RSC: 1` header. A broadly-configured service worker that intercepts all same-origin requests and returns cached responses will serve stale RSC payloads. Navigation shows old data, broken pages, or infinite loading spinners without any visible error.
-
-**Why it happens:** Generic Workbox `NetworkFirst` or `CacheFirst` strategies catch `/_next/` and `/` fetch requests without distinguishing RSC payload requests from normal HTML requests. The URL alone is insufficient to tell them apart — the `_rsc` query parameter is the differentiator.
-
-**Consequences:** After a deploy, users with the PWA installed navigate to routes that serve cached RSC payloads from the previous build. The AI widget may show a cached response from days ago. Favorites may show stale data. No error is shown — the app silently serves old content.
+**Consequences:**
+Double markers at every location, broken click handlers (both systems respond), potential memory leak if the `MarkerClusterer` object is not destroyed on unmount via `clusterer.setMap(null)`.
 
 **Prevention:**
-- Use Serwist (`@serwist/next`), not the unmaintained `next-pwa`. Serwist's Next.js integration is aware of Next.js's build output structure.
-- Exclude RSC fetch requests from service worker caching by inspecting the `_rsc` URL parameter in runtime caching matchers.
-- The `/api/saasuositus` route must use `NetworkFirst` with a short timeout — not `CacheFirst`. The AI response changes daily; `sessionStorage` already handles client-side caching and the service worker should not add a second layer.
-- Always disable the service worker in development (`disable: process.env.NODE_ENV === 'development'`) to prevent dev-cycle cache pollution. Serwist supports this flag natively.
+- If adding `MarkerClusterer`, completely replace `mapItems` and all `<AdvancedMarker>` JSX rendering. Do not layer on top.
+- The lower-risk alternative: extend `clusterPinUrl()` in `lib/sportPins.ts` to accept a gradient or richer SVG — zero library conflict, same visual improvement.
+- If the library is used, the cleanup effect MUST call `clusterer.clearMarkers(); clusterer.setMap(null)` on unmount.
 
-**Detection:** Build with `next build`, install the PWA, deploy a new version, then navigate the installed PWA without refreshing. If pages show pre-deploy content without a reload prompt, RSC caching is active.
-
----
-
-## Moderate Pitfalls
-
-Mistakes that require non-trivial fixes but do not cause rewrites.
+**Phase flag:** MAP clustering phases. Decide at phase start: library or extend custom. Never mix.
 
 ---
 
-### PITFALL-08: `getSession()` vs `getUser()` — trusting unverified JWT data for auth decisions
+## 4. Framer Motion `layoutId` Loses Snapshot When Source Unmounts Before Target Mounts
 
-**Phase:** Auth (AUTH-01, AUTH-02)
+**What goes wrong:**
+`layoutId="vc-{p.id}"` connects `CalloutCard` (inside `AdvancedMarker`) to `PaikkaSheet` (fixed overlay). When the user taps a callout card and the map simultaneously re-renders (zoom crosses the `< 16` threshold), `AnimatePresence` may unmount the callout card's `motion.div` before `PaikkaSheet` has mounted. Framer Motion loses the source element's position snapshot and the expand animation starts from `{x:0, y:0}` (top-left viewport) instead of the card's map location.
 
-**What goes wrong:** `supabase.auth.getSession()` returns session data parsed directly from the cookie — it does not verify the JWT with the Supabase Auth server. This data can be tampered with by modifying the cookie on the client. Using `getSession()` as the source of truth for "is this user logged in?" in Server Components is a documented security vulnerability.
+**Why it happens in this system:**
+`nearestCardId` re-evaluates on every `onCameraChanged` event (lines 500–511 in Etusivu.tsx). If the user taps while panning, `nearestCardId` can change between tap-start and React commit. The `key="card"` element exits via `AnimatePresence initial={false}`, and the entering `PaikkaSheet` finds no matching mounted `layoutId` to animate from.
 
-**Why it happens:** `getSession()` requires no network round-trip and is cheaper. Many tutorials use it for convenience. The difference between `getSession()` and `getUser()` is not obvious from the function names.
+The existing mitigation (the `zoomRef.current` vs `zoomLevel` state debounce at line 562–564) prevents unnecessary `nearestCardId` thrashing during zoom, but only at the threshold — a fast tap during normal pan can still trigger this.
 
-**Consequences:** A client can forge auth state by manipulating cookies, potentially bypassing auth-gated server-rendered UI. RLS still protects the database (the actual JWT is validated by Postgres on every query), but the Server Component may render incorrectly.
-
-**Prevention:** Always use `supabase.auth.getUser()` for auth decisions in Server Components and middleware. Only use `getSession()` when you need the raw access token string (e.g., passing it to a third-party service) or for client-side token refresh in browser contexts.
-
----
-
-### PITFALL-09: PWA install prompt (`beforeinstallprompt`) does not fire on iOS Safari
-
-**Phase:** PWA (PWA-02)
-
-**What goes wrong:** The `beforeinstallprompt` browser event — the standard mechanism for a custom "Add to Home Screen" button — is Chrome/Android-only. It does not exist on iOS Safari. If the install UX is implemented only via this event, iOS users see nothing.
-
-**Why it happens:** Many PWA tutorials document `beforeinstallprompt` as the standard install mechanism without prominently flagging the iOS Safari gap. iOS Safari has a different, manual install flow via the Share sheet.
-
-**Consequences:** "Lisää kotinäyttöön" (PWA-02) works on Android Chrome but is invisible on iOS. This is a significant reach problem in Finland where iOS market share is high.
-
-**Prevention:** Detect iOS Safari (`/iPad|iPhone|iPod/.test(navigator.userAgent)`) and show a manual instruction overlay: "Paina Jaa-painiketta ja valitse 'Lisää kotinäyttöön'". Suppress with a `sessionStorage` flag so it only shows once per session. Implement `beforeinstallprompt` for Android in parallel. Both code paths are necessary.
-
----
-
-### PITFALL-10: Adding `kaupunki` filter without a database index causes slow queries at scale
-
-**Phase:** City expansion (DATA-05, DATA-06, DATA-07)
-
-**What goes wrong:** Adding Helsinki and Turku triples the venue count (~60 rows → ~180 rows). The current `page.tsx` fetches all rows and passes them to `Etusivu.tsx` for client-side filtering — this pattern does not scale. Additionally, the `WHERE kaupunki = 'Helsinki'` filter in a future server-side query triggers a sequential scan without a database index.
-
-**Why it happens:** The existing query fetches all places in one request. This worked for 60 Tampere venues. With multi-city and server-side filtering added later, the missing index becomes measurable.
-
-**Consequences:** Initial data payload balloons with all cities loaded regardless of the selected city. Page load time grows linearly with venue count as cities are added.
+**Consequences:**
+Sheet slides in from top-left on fast taps during map pan. Intermittent — only reproduces on slow devices or while map is moving at tap time.
 
 **Prevention:**
-1. Add a `CREATE INDEX ON liikuntapaikat(kaupunki)` in the same migration that adds city data.
-2. For v1.1 (180 rows), client-side filtering remains acceptable. However, pass `kaupunki` as a `searchParam` to `page.tsx` and filter in the Supabase `.select()` call — this establishes the correct pattern for server-side filtering without requiring a component rewrite in v1.2.
+- Do not break the existing `zoomRef`/`zoomLevel` debounce pattern when adding new animated elements.
+- If expanding CalloutCard's animation in v1.5, add a ref to capture `getBoundingClientRect()` on tap and use it as the `initial` position if `layoutId` snapshot is unavailable.
+- The `pendingValittuRef` pattern (already in use for deferred setValittu after auto-zoom) is the correct mental model — extend it rather than adding new competing state paths.
+
+**Phase flag:** Any phase that adds new `layoutId` connections or changes zoom-threshold logic.
 
 ---
 
-### PITFALL-11: `lajit_lista` and `featured` are missing from the `page.tsx` select — TypeScript won't catch it
+## 5. Converting /suosikit to an Overlay Breaks Deep Links, PWA History, and Supabase Auth Redirects
 
-**Phase:** UI changes (UI-05, ADS-02)
+**What goes wrong:**
+If `/suosikit` is replaced by an in-page overlay toggled by a toolbar button, three things break:
+1. **Auth email confirmation:** Supabase `redirectTo` defaults to `window.location.origin`. A user who clicks the email confirmation link while the overlay is open (with `window.history.pushState('/suosikit', ...)`) lands on a 404 if the route no longer exists.
+2. **PWA back button:** If the overlay uses `router.push('/suosikit')` to add a history entry, the PWA installed to homescreen tracks this. `router.back()` navigates to the map but the bottom sheet state is lost. If a `pushState` approach is used instead, Serwist's precache strategy won't serve it correctly offline.
+3. **Existing links:** The current `Etusivu.tsx` toolbar has `href="/suosikit"` (line 805). `SuosikitClient.tsx` and `PaikkaSheet.tsx` also reference this route. Removing the route without updating all call sites produces broken links that Next.js silently lets through (no compile-time route checking).
 
-**What goes wrong:** `Liikuntapaikka` in `lib/types.ts` marks `hinta_kuvaus`, `lajit_lista`, and `featured` as optional (`?`). The `page.tsx` Supabase query explicitly names columns and currently does not include `lajit_lista`. When UI-05 ("vain jäsenyys" badge from `lajit_lista`) and ADS-02 ("Sponsoroitu" badge from `featured`) are implemented, the component reads a field that is `undefined` at runtime. TypeScript does not catch this because the field is marked optional — the type allows `undefined`.
+**Why it happens in this system:**
+`/suosikit/page.tsx` exists as a real Next.js route. Serwist precaches it (static shell, no dynamic data). Three separate files link to `/suosikit`. The auth subscription in `SuosikitClient.tsx` (the `subscribeToAuthUser` effect) is already duplicated in `Etusivu.tsx` — moving the UI to an overlay reuses the Etusivu subscription but the `/suosikit` route must remain valid.
 
-**Why it happens:** Explicit `select()` column lists in the Supabase client do not automatically fail if a column is omitted — the field is simply absent from the result. The optional `?` in the type was added as "forward compatibility" but it masks the omission bug.
+**Consequences:**
+Auth email confirmations fail for users who are on the overlay. PWA users get 404 on re-launch if last URL was `/suosikit`. Back-button exits the app.
 
-**Prevention:** When implementing any feature that reads a column, audit the `select()` string in both `page.tsx` and `paikat/[id]/page.tsx`. Add `featured` and `lajit_lista` to the `page.tsx` select call in the same PR that introduces UI-05 and ADS-02. Consider generating TypeScript types directly from the Supabase schema (`supabase gen types typescript`) to make omitted columns a compile-time error.
+**Prevention:**
+- Keep `/suosikit/page.tsx` as a real Next.js route. Either render the overlay content there as a full page, or have the page `redirect('/?overlay=todo')` and handle `?overlay=todo` in Etusivu's mount effect (the scroll-restore effect at line 299 is the right pattern to extend).
+- Do NOT delete `/suosikit/page.tsx` without a redirect.
+- Update Serwist precache config if the URL pattern changes.
+- Search for all `href="/suosikit"` and `router.push('/suosikit')` occurrences before shipping — there are at least 3 (Etusivu toolbar, SuosikitClient back link, NavPill if present).
 
----
-
-### PITFALL-12: `sync-paikat` admin route hardcodes `kaupunki: 'Tampere'` — will corrupt Helsinki and Turku rows
-
-**Phase:** City expansion (DATA-05, DATA-06)
-
-**What goes wrong:** In `app/api/admin/sync-paikat/route.ts` line 159, every upserted row has `kaupunki: 'Tampere'` hardcoded in the upsert mapper. When the route is extended for Helsinki and Turku with new `SPORT_QUERIES` entries, if the city string is not correctly threaded through from the query definition to the upsert payload, every sync run will re-tag Helsinki and Turku venues as `'Tampere'`. The upsert uses `place_id` as the conflict key — it updates existing rows including their `kaupunki` field.
-
-**Why it happens:** The single-city assumption was baked into the route when Tampere was the only city. The `place_id` upsert conflict key means incorrect city tags silently overwrite correct ones.
-
-**Prevention:** Extend the `SportQuery` interface with a `kaupunki: string` field. Thread the city string from the query definition through `fetchSportQuery` into the upsert payload mapper. Before running any production sync for Helsinki or Turku, run a dry-run that logs the city field of rows that would be upserted — verify city tagging before any write operation.
-
----
-
-### PITFALL-13: Zoom-dependent marker-to-card transition needs hysteresis to avoid oscillation
-
-**Phase:** Map clustering (MAP-06, MAP-07)
-
-**What goes wrong:** MAP-06 requires a "zoom-dependent view — clusters → info cards" transition. A naive implementation using `onZoomChanged` to toggle between cluster and card views oscillates at the threshold zoom level. Google Maps' zoom animation is continuous — as the map settles at the target zoom, the `onZoomChanged` event fires multiple times with values straddling the threshold. This causes the display mode to flip back and forth rapidly during zoom gestures.
-
-**Why it happens:** React state updates on every `onZoomChanged` event without considering the transition direction or the zoom settling behavior.
-
-**Prevention:** Implement a 1-level hysteresis band: transition from clusters to cards at zoom >= 15, transition from cards back to clusters at zoom <= 13. Store `displayMode` as state and only update it when the zoom crosses the appropriate boundary, not on every zoom change event. Debounce the `onZoomChanged` handler to 150ms to avoid firing during animation frames.
+**Phase flag:** Any phase converting /suosikit to an overlay or adding a dedicated TO DO panel button.
 
 ---
 
-## Minor Pitfalls
+## 6. Logo API Calls — CORS Block on Client, Rate Limit Exhaustion on Card List Render
+
+**What goes wrong:**
+Most logo APIs (Clearbit, Brandfetch, Logo.dev) block client-side requests from unknown referers via CORS. Even when CORS passes, free-tier rate limits (Clearbit: 1 req/sec; Logo.dev: ~100 req/day free tier) are exhausted immediately when the card list renders 50+ venues. Google's referrer policy strips the `Referer` header on cross-origin requests, causing Clearbit's domain-matched free endpoint to return 404s.
+
+**Why it happens in this system:**
+`searchSuodatettu.map()` in Etusivu.tsx renders up to 80+ `DiagonaalKortti` cards simultaneously. If each card fires a logo fetch in `useEffect`, all requests fire in the same render cycle. There is no debounce or rate-limiting in the current card rendering path.
+
+**Consequences:**
+80+ simultaneous 404s in the network tab on every page load. Rate limits exhausted within seconds. Broken `<img>` elements visible to users. On revisit the same day, every card shows a broken logo.
+
+**Prevention:**
+- All logo fetches MUST go through a Next.js Route Handler (`/api/logo?domain=X`) that calls the logo API server-side with proper `Authorization` headers, caches results in a `Map<string, Buffer|string>` in module scope (process lifetime = warm lambda), and returns a `data:` URI or a redirect to the CDN URL.
+- Always render the sport-color fallback (`laji.color` + Lucide icon) as the initial state. Replace only when the logo fetch succeeds — never show a broken `<img>`.
+- Rate-limit the route handler: if the same domain was requested in the last 60 seconds, return cached result without calling upstream.
+- For venues without a `website` field in Supabase, skip the API call entirely.
+- Cap the number of concurrent logo fetches per page load (e.g., `IntersectionObserver`-based lazy loading — only fetch logos for cards currently in the viewport).
+
+**Phase flag:** Logo API spike phase. Must be prototyped server-side before wiring to the card list.
 
 ---
 
-### PITFALL-14: AI widget city name (AI-04) is hardcoded to Tampere coordinates
+## 7. Font Swap Causes CLS in the Bottom Sheet and AI Widget
 
-**Phase:** AI widget (AI-04)
+**What goes wrong:**
+If a new display font is added (or Inter/Playfair Display is replaced) without using `next/font`, the browser loads the fallback system font first, then swaps when the web font arrives. The AI widget text (`text-sm`) and PaikkaSheet heading (`font-serif text-2xl font-bold`) re-layout after the swap because font metrics differ. The bottom sheet pill relies on `HANDLE_H = 44` as a constant — if sheet handle text changes font and gains height, the pill-to-sheet spring animation overshoots and lands at the wrong y position.
 
-**What goes wrong:** The `/api/saasuositus` Route Handler hardcodes `latitude=61.4978&longitude=23.7610` (Tampere) in the Open-Meteo URL and hardcodes "Tampere" in the Claude prompt. After city expansion, a Helsinki user sees a Tampere weather recommendation. AI-04 requires showing the city name next to the temperature — which means the API must receive the active city.
+**Why it happens in this system:**
+`app/layout.tsx` uses `next/font/google` in `variable` mode — both `--font-sans` and `--font-serif` are CSS custom properties. This is the correct pattern and eliminates FOUT. However, if a phase adds a font via `@import` in `globals.css` or a `<link>` tag in `layout.tsx`, it bypasses `next/font`'s size-adjust optimization and reintroduces CLS.
 
-**Prevention:** Add a `?kaupunki=` query parameter to the `/api/saasuositus` call. Maintain a `CITY_COORDS` lookup table in the route (Helsinki, Turku, Tampere coordinates). The client passes the currently-selected city. This keeps GPS coordinates out of the API call while supporting multi-city recommendations. Update the `sessionStorage` cache key to include the city: `saasuositus-{date}-{kaupunki}`.
+**Consequences:**
+AKTIIVI logo, AI widget text, and sheet headings jump visually on first load. Google PageSpeed Insights and Core Web Vitals flag the CLS regression.
 
----
+**Prevention:**
+- All font additions MUST use `next/font/google` in `app/layout.tsx`. No CSS `@import`, no `<link rel="stylesheet">` for fonts.
+- When changing `font-serif` (Playfair Display), update the `size-adjust` in the `next/font` config to match the new font's cap-height ratio.
+- Never add `style={{ fontFamily: '...' }}` referencing a font not loaded through `next/font`.
+- Verify Lighthouse CLS score (target < 0.1) before shipping any font change.
 
-### PITFALL-15: PWA manifest `start_url` must not include query parameters
-
-**Phase:** PWA (PWA-02)
-
-**What goes wrong:** If `start_url` in `manifest.json` is set to `/?nakyma=kartta` (to default to the map view), the PWA install check may fail on some browsers, or the app may open incorrectly after a URL routing change. The `start_url` must match the `scope` and should be stable across deploys.
-
-**Prevention:** Set `start_url: "/"` and `scope: "/"`. The map can be the default view via application-level logic (setting the initial state in `Etusivu.tsx`) without encoding it in the manifest URL. Also ensure icon sizes include both 192x192 and 512x512 with a `"maskable"` purpose entry for Android adaptive icons and a separate `apple-touch-icon` meta tag in `layout.tsx` for iOS.
-
----
-
-### PITFALL-16: `suosikit` page renders before auth gate is implemented
-
-**Phase:** Auth (AUTH-01, AUTH-02)
-
-**What goes wrong:** `app/suosikit/page.tsx` is currently a static placeholder. NavBar already links to `/suosikit`. When Auth is added, the page must gate on session: redirect to a login page if unauthenticated, show favorites if authenticated. If the auth gate is added after the favorites UI is built, unauthenticated users can reach the favorites UI shell and trigger Supabase calls that fail with 401.
-
-**Prevention:** Implement the auth gate — using `getUser()` in the Server Component to redirect to `/kirjaudu` if no session — as the first step in AUTH-02, before writing any favorites list UI. The redirect should be a hard server-side redirect (`redirect('/kirjaudu')` from `next/navigation`), not a client-side conditional render.
+**Phase flag:** Font redesign / bottom sheet logo area redesign phase.
 
 ---
 
-## Phase-Specific Warnings
+## 8. AktiiviLogo Gradient Animation Desynchronizes When `gradientIndex` Changes Faster Than the Wipe Duration
 
-| Phase Topic | Pitfall | Mitigation |
-|-------------|---------|------------|
-| AUTH-01: Install @supabase/ssr | PITFALL-01 (session leakage) | Create per-request server clients, do not extend existing singletons |
-| AUTH-01: Add middleware.ts | PITFALL-02 (silent logout) | middleware.ts must exist before any auth UI ships |
-| AUTH-01: Google OAuth | PITFALL-03 (redirect URI) | Configure Google Cloud + Supabase dashboard before first OAuth test |
-| AUTH-01: Session reads | PITFALL-08 (getSession vs getUser) | getUser() in all Server Components and middleware |
-| AUTH-02: suosikit table RLS | PITFALL-04 (missing WITH CHECK) | Use WITH CHECK + subquery form, test via SDK not SQL editor |
-| AUTH-02: suosikit page | PITFALL-16 (no auth gate) | Server-side redirect before any favorites UI |
-| MAP-06: Before clustering work | PITFALL-05 (missing mapId) | Add mapId env var and <Map> prop as a prerequisite step |
-| MAP-06: Clusterer setup | PITFALL-06 (instance recreation) | useRef for clusterer, or use supercluster + useMemo approach |
-| MAP-06: Zoom transitions | PITFALL-13 (threshold oscillation) | 1-level hysteresis band + debounce |
-| PWA-01: Service worker config | PITFALL-07 (RSC interception) | Use Serwist, exclude _rsc requests, disable SW in dev mode |
-| PWA-02: Install prompt | PITFALL-09 (iOS Safari gap) | iOS instruction overlay + beforeinstallprompt for Android |
-| PWA-02: Manifest | PITFALL-15 (start_url with params) | start_url: "/", no query params, include maskable icons |
-| DATA-05/06: City sync | PITFALL-12 (hardcoded Tampere) | Thread kaupunki through SportQuery before running new-city syncs |
-| DATA-07: City filter | PITFALL-10 (no DB index) | Add kaupunki index in same migration as city data |
-| UI-05/ADS-02: Badge logic | PITFALL-11 (missing select columns) | Add lajit_lista and featured to page.tsx select before implementing |
-| AI-04: City name in widget | PITFALL-14 (hardcoded coordinates) | Parameterize /api/saasuositus with kaupunki query param |
+**What goes wrong:**
+`AktiiviLogo.tsx` runs a Framer Motion imperative `animate(rect, { width: 1672 }, { duration: 0.55 })` on `currIndex` change. The `useEffect` cleanup calls `controls.cancel()`. If `gradientIndex` increments again before 550ms elapses, `cancel()` fires mid-animation, then the new animation starts from whatever `width` the `<rect>` had at cancellation — not from `0`. The `setPrevIndex(currIndex)` call inside `.then()` never runs for cancelled animations, so `prevIndex` desynchronizes from `currIndex`. The gradient wipe then reveals the wrong "previous" color layer.
+
+**Why it happens in this system:**
+The `Karuselli` interval (4000ms) is safe. The risk activates if any v1.5 feature auto-cycles the `gradientIndex` prop on a tighter interval, or if the parent re-renders rapidly due to a related state update (e.g., sheet open/close triggering a re-render of the parent that holds `gradientIndex` state).
+
+**Consequences:**
+SVG shows a partial wipe frozen at cancellation width, with wrong gradient on the "previous" layer. Silent visual corruption — no error thrown.
+
+**Prevention:**
+- Reset `rect.setAttribute('width', '0')` in the cleanup (`return () => { controls.cancel(); rectRef.current?.setAttribute('width', '0') }`), not only in `.then()`.
+- Ensure the minimum interval between `gradientIndex` changes is > 650ms (animation 550ms + React commit overhead).
+- Do not use `setInterval` intervals shorter than 800ms for cycling the logo gradient.
+- The `if (currIndex === prevIndex) return` guard (line 25 in AktiiviLogo.tsx) prevents unnecessary animation on same-index renders — do not remove it.
+
+**Phase flag:** Any phase adding auto-cycling of the logo gradient or "sport highlight" timers.
 
 ---
 
-## Sources
+## 9. Framer Motion AnimatePresence on the DiagonaalKortti Card List Blocks Interaction for 200ms+ on Every Filter Change
 
-- Supabase SSR Auth for Next.js: https://supabase.com/docs/guides/auth/server-side/nextjs
-- Supabase RLS performance and best practices: https://supabase.com/docs/guides/troubleshooting/rls-performance-and-best-practices-Z5Jjwv
-- Supabase Auth Next.js troubleshooting: https://supabase.com/docs/guides/troubleshooting/how-do-you-troubleshoot-nextjs---supabase-auth-issues-riMCZV
-- Supabase Redirect URLs: https://supabase.com/docs/guides/auth/redirect-urls
-- Google OAuth with Supabase: https://supabase.com/docs/guides/auth/social-login/auth-google
-- getSession() security discussion: https://github.com/orgs/supabase/discussions/23224
-- vis.gl clustering performance (big data is slow): https://github.com/visgl/react-google-maps/discussions/526
-- AdvancedMarker requires mapId: https://developers.google.com/maps/documentation/javascript/advanced-markers/start
-- Serwist for Next.js PWA: https://serwist.pages.dev/docs/next/getting-started
-- Next.js official PWA guide: https://nextjs.org/docs/app/guides/progressive-web-apps
-- vis.gl custom marker clustering example: https://visgl.github.io/react-google-maps/examples/custom-marker-clustering
+**What goes wrong:**
+The current `searchSuodatettu.map(p => <DiagonaalKortti key={p.id} .../>)` renders cards without `AnimatePresence`. If `AnimatePresence` is added to animate cards out on filter change, all exiting cards remain in the DOM until their `exit` animation completes. With 50 cards exiting simultaneously at `duration: 0.2`, the filter pills and search input are unresponsive for 200–400ms after every filter tap on a mid-range device.
+
+**Why it happens in this system:**
+Framer Motion keeps exiting elements mounted and pointer-event-blocking until the exit animation finishes. The search results `<div>` is `overflow-y-auto` and re-renders on every `searchHaku` keystroke. Wrapping a large list in `AnimatePresence` causes React to keep 50+ exiting DOM nodes alive per render cycle. At 4× CPU slowdown, this is a 300–500ms freeze per filter change.
+
+**Consequences:**
+Filter pills feel broken immediately after being tapped — the next tap is unregistered because the click target is obscured by an exiting (still-rendered) card at `z-index` overlapping the pills.
+
+**Prevention:**
+- For list items that re-sort/re-filter on user input, do NOT wrap the `map()` in `AnimatePresence`. Use `variants` on the container with `staggerChildren` for enter-only animations (cards animate in, but never animate out on filter change).
+- If exit animations are required for a specific phase, use `AnimatePresence mode="popLayout"` (available in Framer Motion v10+, this project uses v12). `popLayout` removes exiting elements from layout flow immediately while animating only `opacity`, eliminating the click-blocking problem.
+- Limit exit `duration` to 0.1 at most if `popLayout` is not used.
+- The existing pattern (no AnimatePresence on the card list, only `diagonaalKorttiVariants` for entry) is intentional — do not add exit animations without testing at 80+ cards with CPU throttle.
+
+**Phase flag:** Any phase adding enter/exit animations to the DiagonaalKortti card list.
+
+---
+
+## 10. Filter State Removal Breaks sessionStorage Scroll Restoration Mid-Session
+
+**What goes wrong:**
+`handleCardClick()` in Etusivu.tsx saves `{ searchHaku, searchLaji, searchKertakaynti, searchAukinyt, searchKaupunki, scrollTop, searchOpen }` as unversioned JSON in sessionStorage. The restore effect reads all keys back. If v1.5 removes a filter key (e.g., `searchAukinyt` is merged into another filter, or `searchKertakaynti` is renamed), the restore effect will attempt to set state for a key that no longer exists. TypeScript does not catch this at compile time because the stored value is parsed from JSON as `unknown` and checked with `typeof s.searchAukinyt === 'boolean'` — but the setter `setSearchAukinyt` may no longer exist.
+
+**Why it happens in this system:**
+The scroll state JSON is unversioned. Mobile users keep browser tabs open for days — a v1.5 deploy mid-session means the stored state uses v1.4 key names while the new code expects v1.5 key names. The `typeof` guards prevent crashes but silently leave filter state in an inconsistent "active but invisible" condition.
+
+**Consequences:**
+Filter is active (venues are filtered) but there's no visual indicator (pill not rendered). User sees fewer venues with no explanation. The only fix is a hard browser refresh.
+
+**Prevention:**
+- Add a version field: save `{ _v: 2, searchHaku, ... }`. In the restore effect, bail out if `s._v !== CURRENT_SCROLL_STATE_VERSION` (increment when any key is added/removed).
+- When removing a filter key, add it to a legacy key blocklist in the restore effect.
+- Update the `isFilterActive` expression (line 526 in Etusivu.tsx) to not reference removed keys — the TypeScript compiler will catch this if the state variable is deleted, but it will not catch references inside the sessionStorage restore JSON parsing block.
+
+**Phase flag:** Any phase that changes the filter key set.
+
+---
+
+## 11. `clip-path: path()` in CalloutCard Breaks on Safari 15 / iOS 15
+
+**What goes wrong:**
+`CalloutCard` uses `clip-path: path('M 10,0 ...')` computed by a `ResizeObserver`. The `path()` function inside `clip-path` is not supported on Safari < 16 (iOS 15, released Sep 2021, still in use on iPhone 6s/7 which cannot upgrade past iOS 15). On these browsers, the callout card renders as an unclipped rectangle — the speech-bubble pointing tail disappears and the card overlaps the pin awkwardly.
+
+**Why it happens in this system:**
+The existing code has a partial fallback: `borderRadius: clipPath ? 0 : 10` — but this only covers the "clip path not computed yet" case (before the `ResizeObserver` fires). It does NOT cover the "browser doesn't support `path()` at all" case. `clipPath` will be set to a non-empty string even on Safari 15, because the JS runs fine — it's only the CSS property that is ignored.
+
+**Consequences:**
+No crash, but visual regression on ~3–5% of iOS users (iOS 15 market share remains non-trivial, 2026). The card shape breaks specifically when the v1.5 "larger callout cards" requirement expands the card height.
+
+**Prevention:**
+- Add a `CSS.supports('clip-path', 'path("M0,0")')` check in the `useLayoutEffect`. If unsupported, set `clipPath` to `''` and rely on the `borderRadius: 10` fallback.
+- The existing conditional `borderRadius: clipPath ? 0 : 10` then handles both "not computed yet" AND "not supported" correctly with no additional code.
+- Do not replace `clip-path: path()` with a CSS `::after` triangle (border-trick) — the current clip approach is tighter against the pin anchor and the fallback rectangle is acceptable.
+
+**Phase flag:** Callout card redesign / expansion phase in v1.5.
+
+---
+
+## 12. Static `will-change: transform` on `.gmap-pin` Exhausts GPU Memory on Android
+
+**What goes wrong:**
+Adding `will-change: transform` globally to `.gmap-pin` in `globals.css` (a common "performance optimization" suggestion) promotes every pin to a separate GPU compositing layer. With 80+ pins visible, this exhausts the compositing layer budget on low-end Android devices (2–3 GB RAM). The entire Google Maps tile layer stutters because the compositor is managing too many layers.
+
+**Why it happens in this system:**
+`will-change: transform` must be added immediately before an animation starts and removed when it ends — not held permanently. Adding it statically to a CSS class applied to all 80+ markers simultaneously means all pins are promoted at all times, even when no animation is running.
+
+**Consequences:**
+Visible stutter when panning the map after the pin layer GPU memory exceeds the compositing budget. Chrome DevTools → Layers panel shows 80+ compositor layers. Removing `will-change` restores normal performance immediately.
+
+**Prevention:**
+- Do NOT add `will-change: transform` to `.gmap-pin` in `globals.css`.
+- If a hover or active animation requires GPU promotion, use a JavaScript approach: add `style.willChange = 'transform'` on `mouseenter`/`touchstart` and remove it on `mouseleave`/`touchend`.
+- The existing `pinBounce` keyframe (one-shot, `animation-fill-mode: both`) does not need `will-change` — browsers handle single-fire animations efficiently without explicit promotion hints.
+
+**Phase flag:** Any phase adding looping or hover animations to map pins.
+
+---
+
+## Phase-Specific Warning Summary
+
+| Phase Topic | Pitfall # | Mitigation |
+|---|---|---|
+| Marker gradient / shimmer / glint animation | 1, 12 | transform/opacity only; no static will-change in CSS |
+| Cluster library integration | 3 | Replace mapItems fully OR extend custom clusterPinUrl only — never mix |
+| CalloutCard expansion / redesign | 4, 11 | Keep zoomRef debounce; add CSS.supports fallback for Safari 15 |
+| TO DO overlay (replacing /suosikit page) | 5 | Keep /suosikit route; use ?overlay=todo param pattern |
+| Logo API spike | 6 | Server-side route handler with module-scope cache; sport-color fallback default |
+| Font redesign / logo area redesign | 7 | next/font only; no @import in CSS; verify Lighthouse CLS < 0.1 |
+| AktiiviLogo gradient cycling | 8 | Reset rect.width in cancel cleanup; min 800ms between index changes |
+| Filter key removal | 10 | Version the sessionStorage scroll state; update isFilterActive |
+| AnimatePresence on DiagonaalKortti list | 9 | mode="popLayout" or entry-only animations; test at 80+ cards with CPU throttle |
+| AdvancedMarker key changes | 2 | Key clusters by coordinate bucket string, not member IDs |
