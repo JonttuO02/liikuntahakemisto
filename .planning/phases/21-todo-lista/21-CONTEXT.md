@@ -29,7 +29,7 @@ Phase 21 korvaa suosikit-järjestelmän TO DO -listaksi: Heart-ikoni → Bookmar
 - **D-07:** SuosikitClient korvataan kokonaan uudella toteutuksella: listaus käyttää DiagonaalKortti-komponenttia (sama kuin Etusivun lista-näkymässä).
 - **D-08:** Listan rakenne per paikka: `flex flex-row items-start gap-2` — `[DiagonaalKortti flex-1]` + `[kirjanmerkki-poistonappi shrink-0]`. Poistonappi on kortin ulkopuolella, samalla rivillä, kortin oikealla puolella.
 - **D-09:** Poistonappi: kirjanmerkki-ikoni (täytetty = TO DO -listalla). Painaminen tekee optimistisen poiston: poistetaan kohde listasta välittömästi UI:ssa, sen jälkeen `supabase.delete()` taustalla. Jos delete epäonnistuu, paikka palautetaan listaan.
-- **D-10:** DiagonaalKortille **ei** välitetä `onShowMap`-propsia TO DO -sivulla — pin-nappi ei näy (TO DO -sivulla ei ole karttaa). `onShowMap` on optional prop, joten ohjaaminen on triviaalia.
+- **D-10:** DiagonaalKortille välitetään `onShowMap`-prop TO DO -sivulla — pin-nappi toimii ja navigoi `/?id=<paikka_id>`:hen (karttanäkymä kohdistuu paikkaan). Käytä `router.push('/?id=' + place.id)` (`useRouter` from `next/navigation`).
 - **D-11:** Tyhjiö-tila (ei TO DO -paikkoja): Bookmark-ikoni + otsikko "Ei vielä TO DO -paikkoja" + "Selaa hakemistoa" -nappi. Aiemman Heart-ikonin tilalle.
 - **D-12:** Kirjautumaton käyttäjä: Bookmark-ikoni + "TO DO -lista vaatii kirjautumisen" + "Kirjaudu sisään" -nappi.
 

@@ -442,17 +442,17 @@ import DiagonaalKortti from '@/app/components/DiagonaalKortti'
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`mt-2` on remove button alignment**
    - What we know: DiagonaalKortti has `h-32` fixed height. The remove button is `w-8 h-8`. With `items-start`, some top offset may be needed for visual centering.
    - What's unclear: Whether `mt-2` (8px) or `mt-3` (12px) looks better — depends on the diagonal card's top padding.
-   - Recommendation: Use `mt-2` as a starting point; the executor can adjust by visual inspection.
+   - RESOLVED: Use `mt-2` as a starting point; the executor can adjust by visual inspection if needed.
 
 2. **SuosikitClient stagger animation**
    - What we know: DiagonaalKortti exports `diagonaalKorttiVariants` for use with `motion.ul`/`motion.li`.
    - What's unclear: Whether the TO DO list should use stagger animation (consistent with Etusivu list) or plain rendering (simpler for a small personal list).
-   - Recommendation: Skip stagger for the TO DO page — it's a personal list, not a discovery list. Simple `flex flex-col gap-3` is sufficient.
+   - RESOLVED: Skip stagger for the TO DO page — it's a personal list, not a discovery list. Plain `flex flex-col gap-3` is sufficient.
 
 ---
 
