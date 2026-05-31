@@ -18,6 +18,7 @@ import { TAMPERE } from '@/lib/constants'
 import { nearestKaupunki, haversineKm, formatDistance } from '@/lib/geo'
 import { useGPS } from '@/hooks/useGPS'
 import SportPin from './SportPin'
+import AktiiviLogo from './AktiiviLogo'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 import { deriveKaupungit } from '@/lib/cityFilter'
@@ -903,7 +904,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           <div className="w-10 h-1 bg-[rgba(0,0,0,0.12)] rounded-full" />
         </div>
 
-        {/* Logo watermark — sits at sheet bottom, fades upward, behind content */}
+        {/* Logo watermark — redesigned AktiiviLogo with blue sweep auto-loop (UI-23) */}
         <div
           aria-hidden="true"
           style={{
@@ -913,23 +914,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             right: 0,
             pointerEvents: 'none',
             zIndex: 0,
-            opacity: 0.08,
+            opacity: 0.15,
             WebkitMaskImage: 'linear-gradient(to top, black 0%, black 40%, transparent 100%)',
             maskImage: 'linear-gradient(to top, black 0%, black 40%, transparent 100%)',
           }}
         >
-          <svg viewBox="120 200 1430 560" width="100%" height="auto" preserveAspectRatio="xMidYMid meet" focusable="false">
-            <path d="M215 332 C 320 248 545 235 836 235 C 1127 235 1352 248 1457 332" fill="none" stroke="#000000" strokeWidth="37" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M155 490 L531.4 703.5 Q601 743 665.2 695.2 L784.7 606.2 Q836 568 887.3 606.2 L1006.8 695.2 Q1071 743 1140.6 703.5 L1517 490" fill="none" stroke="#000000" strokeWidth="37" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M285 506 L370 356 L456 506" fill="none" stroke="#000000" strokeWidth="33" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M531 356 L531 506" fill="none" stroke="#000000" strokeWidth="33" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M663 356 L575 431 L663 506" fill="none" stroke="#000000" strokeWidth="33" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M711 356 L866 356 M788 356 L788 506" fill="none" stroke="#000000" strokeWidth="33" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M945 356 L945 506" fill="none" stroke="#000000" strokeWidth="33" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M1042 356 L1042 506" fill="none" stroke="#000000" strokeWidth="33" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M1124 356 L1201 506 L1277 356" fill="none" stroke="#000000" strokeWidth="33" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M1351 356 L1351 506" fill="none" stroke="#000000" strokeWidth="33" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          <AktiiviLogo />
         </div>
 
         {/* Sheet content — fades out during slide-down so text doesn't squish during narrowing */}
