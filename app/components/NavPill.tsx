@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, User, LogOut, MoreHorizontal, X } from 'lucide-react'
+import { Bookmark, User, LogOut, MoreHorizontal, X } from 'lucide-react'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 
@@ -68,8 +68,8 @@ export default function NavPill() {
                       Profiili
                     </Link>
                     <Link href="/suosikit" onClick={() => setOpen(false)} className={BTN}>
-                      <Heart className="w-3.5 h-3.5" />
-                      Suosikit
+                      <Bookmark className="w-3.5 h-3.5" />
+                      TO DO
                     </Link>
                   </>
                 )}

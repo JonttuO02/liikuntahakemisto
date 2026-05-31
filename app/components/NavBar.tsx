@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Menu, X, Search, Heart, User, LogOut } from 'lucide-react'
+import { Menu, X, Search, Bookmark, User, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ActaLogo from './ActaLogo'
 import AuthModal from './AuthModal'
@@ -91,8 +91,8 @@ export default function NavBar({ userEmail }: NavBarProps) {
                         onClick={() => setOpen(false)}
                         className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
                       >
-                        <Heart className="w-3.5 h-3.5" />
-                        Suosikit
+                        <Bookmark className="w-3.5 h-3.5" />
+                        TO DO
                       </Link>
                     </motion.div>
                   )}

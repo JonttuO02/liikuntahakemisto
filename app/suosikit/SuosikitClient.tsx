@@ -1,8 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Heart } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Bookmark, BookmarkCheck } from 'lucide-react'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
+import DiagonaalKortti from '@/app/components/DiagonaalKortti'
 import AuthModal from '@/app/components/AuthModal'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import type { Liikuntapaikka } from '@/lib/types'
@@ -11,22 +14,24 @@ type AuthState = 'loading' | 'unauthenticated' | 'authenticated'
 type SuosikkiRow = { liikuntapaikat: Liikuntapaikka | null }
 
 export default function SuosikitClient() {
+  const router = useRouter()
   const [authState, setAuthState] = useState<AuthState>('loading')
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [paikat, setPaikat] = useState<Liikuntapaikka[]>([])
   const [favLoading, setFavLoading] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     const supabase = createBrowserSupabase()
 
-    async function loadFavorites(userId: string) {
+    async function loadFavorites(uid: string) {
       if (cancelled) return
       setFavLoading(true)
       const { data, error } = await supabase
         .from('suosikit')
         .select('paikka_id, liikuntapaikat(*)')
-        .eq('user_id', userId)
+        .eq('user_id', uid)
       if (cancelled) return
       if (!error && data) {
         const rows = data as unknown as SuosikkiRow[]
@@ -41,15 +46,35 @@ export default function SuosikitClient() {
     const unsub = subscribeToAuthUser((user) => {
       if (user) {
         setAuthState('authenticated')
+        setUserId(user.id)
         loadFavorites(user.id)
       } else {
         setAuthState('unauthenticated')
+        setUserId(null)
         setPaikat([])
       }
     })
 
     return () => { cancelled = true; unsub() }
   }, [])
+
+  async function removeTodo(paikkaId: number) {
+    if (!userId) return
+    const previous = paikat
+    setPaikat(prev => prev.filter(p => p.id !== paikkaId))
+
+    const supabase = createBrowserSupabase()
+    const { error } = await supabase
+      .from('suosikit')
+      .delete()
+      .eq('user_id', userId)
+      .eq('paikka_id', paikkaId)
+
+    if (error) {
+      console.error('[SuosikitClient] delete error:', error)
+      setPaikat(previous)
+    }
+  }
 
   // Still loading session from cookies
   if (authState === 'loading') {
@@ -60,13 +85,13 @@ export default function SuosikitClient() {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 pb-16">
         <div className="glass w-16 h-16 rounded-2xl flex items-center justify-center mb-5">
-          <Heart className="w-7 h-7 text-[rgba(17,17,17,0.35)]" />
+          <Bookmark className="w-7 h-7 text-[rgba(17,17,17,0.35)]" />
         </div>
         <h1 className="font-serif text-2xl font-bold text-[#111111] mb-2 text-center">
-          Suosikit vaativat kirjautumisen
+          TO DO -lista vaatii kirjautumisen
         </h1>
         <p className="text-[rgba(17,17,17,0.45)] text-center mb-8 max-w-xs text-sm">
-          Tallenna liikuntapaikkoja suosikeiksi ja löydä ne helposti uudelleen.
+          Tallenna liikuntapaikkoja TO DO -listalle ja löydä ne helposti uudelleen.
         </p>
         <button
           onClick={() => setAuthModalOpen(true)}
@@ -88,7 +113,7 @@ export default function SuosikitClient() {
     )
   }
 
-  // Authenticated state — show favorites list
+  // Authenticated state — loading favorites
   if (favLoading) {
     return <div className="min-h-screen bg-white" />
   }
@@ -97,13 +122,13 @@ export default function SuosikitClient() {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4 pb-16">
         <div className="glass w-16 h-16 rounded-2xl flex items-center justify-center mb-5">
-          <Heart className="w-7 h-7 text-[rgba(17,17,17,0.35)]" />
+          <Bookmark className="w-7 h-7 text-[rgba(17,17,17,0.35)]" />
         </div>
         <h1 className="font-serif text-2xl font-bold text-[#111111] mb-2 text-center">
-          Ei vielä suosikkeja
+          Ei vielä TO DO -paikkoja
         </h1>
         <p className="text-[rgba(17,17,17,0.45)] text-center mb-8 max-w-xs text-sm">
-          Selaa hakemistoa ja lisää sydämellä.
+          Selaa hakemistoa ja lisää kirjanmerkillä.
         </p>
         <Link
           href="/"
@@ -118,20 +143,25 @@ export default function SuosikitClient() {
   return (
     <div className="min-h-screen bg-white px-4 py-8 max-w-2xl mx-auto">
       <h1 className="font-serif text-2xl font-bold text-[#111111] mb-6">
-        Suosikit
+        TO DO -lista
       </h1>
       <ul className="flex flex-col gap-3">
         {paikat.map(p => (
-          <li key={p.id} className="glass rounded-2xl p-4 flex flex-col gap-1">
-            <Link
-              href={`/paikat/${p.id}`}
-              className="font-bold text-sm text-[#111111] hover:underline"
+          <li key={p.id} className="flex flex-row items-start gap-2">
+            <div className="flex-1 min-w-0">
+              <DiagonaalKortti
+                paikka={p}
+                onShowMap={(place) => router.push('/?id=' + place.id)}
+              />
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.85, transition: { duration: 0.12, ease: 'easeOut' } }}
+              onClick={() => removeTodo(p.id)}
+              className="glass-btn w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-2"
+              aria-label="Poista TO DO -listalta"
             >
-              {p.nimi}
-            </Link>
-            {p.osoite && (
-              <p className="text-sm text-[rgba(17,17,17,0.45)]">{p.osoite}{p.kaupunki ? `, ${p.kaupunki}` : ''}</p>
-            )}
+              <BookmarkCheck className="w-4 h-4 fill-[#111111] text-[#111111]" />
+            </motion.button>
           </li>
         ))}
       </ul>
