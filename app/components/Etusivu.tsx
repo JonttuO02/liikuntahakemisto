@@ -17,7 +17,7 @@ import { isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
 import { nearestKaupunki, haversineKm, formatDistance } from '@/lib/geo'
 import { useGPS } from '@/hooks/useGPS'
-import { pinUrl, clusterPinUrl } from '@/lib/sportPins'
+import SportPin from './SportPin'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 import { deriveKaupungit } from '@/lib/cityFilter'
@@ -26,6 +26,9 @@ import PaikkaSheet from './PaikkaSheet'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const HANDLE_H = 44 // visible sheet tab height when closed
+
+const pinAnimDelay = (id: number | string): number =>
+  typeof id === 'string' ? (id.charCodeAt(0) % 10) / 10 : (id % 10) / 10
 
 interface SaaTiedot { temp: number; code: number }
 
@@ -588,7 +591,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                             setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })
                             setSearchOpen(false)
                           }}>
-                          <img src={pinUrl(p.laji)} width={28} height={38} alt="" className="gmap-pin" />
+                          <SportPin laji={p.laji} animDelay={pinAnimDelay(p.id)} />
                         </motion.div>
                       )}
                       {zoomLevel >= 16 && nearestCardId === p.id && valittu?.id !== p.id && (
@@ -621,14 +624,21 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               >
                 <div style={{ position: 'relative' }}>
                   <motion.div whileTap={{ scale: 0.95 }}>
-                    <img
-                      src={clusterPinUrl(item.items.length)}
-                      width={28}
-                      height={38}
-                      alt=""
-                      style={{ cursor: 'pointer', display: 'block' }}
+                    <div
+                      style={{ position: 'relative', width: 28, height: 38, cursor: 'pointer' }}
                       onClick={e => { e.stopPropagation(); setExpandedCluster(expandedCluster === item.items ? null : item.items); setSearchOpen(false) }}
-                    />
+                    >
+                      {/* Pin body — blue gradient teardrop */}
+                      <div style={{ position: 'absolute', inset: 0, borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%', background: 'linear-gradient(to bottom, #38bdf8 0%, #0284c7 100%)' }} />
+                      {/* White circle */}
+                      <div style={{ position: 'absolute', top: 4, left: 4, width: 20, height: 20, borderRadius: '50%', background: 'white' }} />
+                      {/* Count label */}
+                      <div style={{ position: 'absolute', top: 4, left: 0, width: 28, textAlign: 'center', fontSize: 9, fontWeight: 'bold', color: '#0284c7', lineHeight: '20px' }}>
+                        {item.items.length > 9 ? '9+' : String(item.items.length)}
+                      </div>
+                      {/* Glint dot */}
+                      <div className="pin-glint" />
+                    </div>
                   </motion.div>
                   <AnimatePresence>
                     {expandedCluster === item.items && (
