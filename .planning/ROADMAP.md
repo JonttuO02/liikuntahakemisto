@@ -112,7 +112,10 @@ Plans:
   1. The heart icon is replaced by a bookmark icon in HeartButton and on all pages where it appears; all UI labels read "TO DO" or equivalent Finnish text
   2. A logged-in user can view their saved venues on the /suosikit page as a TO DO list
   3. A logged-out user visiting /suosikit is prompted to log in
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 21-01-PLAN.md — BookmarkButton rename, PaikkaSheet+Etusivu atomic props rename, paikat/[id] import update
+- [ ] 21-02-PLAN.md — SuosikitClient DiagonaalKortti replacement, NavPill/NavBar/BottomNav/PaikkaKortti icon+label update
 **UI hint**: yes
 
 ### Phase 22: Profiili & AI-kiinnostukset
@@ -152,5 +155,5 @@ Plans:
 | 18. Kartan pinnit & korttianimaatio | v1.3 | 3/3 | ✅ Complete | 2026-05-30 |
 | 19. Filtteri, lista & paikka-UX | v1.4 | 0/? | Not started | - |
 | 20. Navigaatio-korjaukset | v1.4 | 2/2 | ✅ Complete | 2026-05-30 |
-| 21. TO DO -lista | v1.4 | 0/? | Not started | - |
+| 21. TO DO -lista | v1.4 | 0/2 | Not started | - |
 | 22. Profiili & AI-kiinnostukset | v1.4 | 0/? | Not started | - |
