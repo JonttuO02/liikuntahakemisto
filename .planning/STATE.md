@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Visuaalinen elävöitys & UX-hienosäätö
 status: executing
-stopped_at: Phase 23 executing — Wave 1 complete, Wave 2 in progress
+stopped_at: Phase 23 executing — Wave 3 in progress
 last_updated: "2026-06-01T00:00:00.000Z"
-last_activity: 2026-06-01 — Phase 23 Wave 1 complete (plans 01+02 done)
+last_activity: 2026-06-01 — Phase 23 Wave 2 complete (plan 03 done)
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
-  percent: 50
+  completed_plans: 3
+  percent: 75
 ---
 
 # Project State
