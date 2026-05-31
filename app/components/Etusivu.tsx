@@ -17,7 +17,7 @@ import { isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
 import { nearestKaupunki, haversineKm, formatDistance } from '@/lib/geo'
 import { useGPS } from '@/hooks/useGPS'
-import { pinUrl, clusterPinUrl } from '@/lib/sportPins'
+import SportPin from './SportPin'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 import { deriveKaupungit } from '@/lib/cityFilter'
@@ -26,6 +26,8 @@ import PaikkaSheet from './PaikkaSheet'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const HANDLE_H = 44 // visible sheet tab height when closed
+
+const pinAnimDelay = (id: string): number => (id.charCodeAt(0) % 10) / 10
 
 interface SaaTiedot { temp: number; code: number }
 
@@ -588,7 +590,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                             setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })
                             setSearchOpen(false)
                           }}>
-                          <img src={pinUrl(p.laji)} width={28} height={38} alt="" className="gmap-pin" />
+                          <SportPin laji={p.laji} animDelay={pinAnimDelay(p.id)} />
                         </motion.div>
                       )}
                       {zoomLevel >= 16 && nearestCardId === p.id && valittu?.id !== p.id && (
