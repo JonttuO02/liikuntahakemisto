@@ -4,15 +4,21 @@
 
 Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
 
-## Current Milestone: v1.4 UX-parannukset & Profiili
+## Current Milestone: v1.5 Visuaalinen elävöitys & UX-hienosäätö
 
-**Goal:** Korjataan navigaation käyttäytyminen ja visuaaliset epäjohdonmukaisuudet; uudistetaan suosikit TO DO -listaksi; lisätään kiinnostuksen kohteet profiiliin AI-personointia varten.
+**Goal:** Parannetaan sovelluksen visuaalista ilmettä ja käyttäjäkokemusta animaatioilla, uudistetuilla ikoneilla ja väreillä sekä sulaveammilla interaktioilla.
 
 **Target features:**
-- Navigaatio-korjaukset (back-nappi → lista+scroll, "Näytä kartalla" → paikan koordinaatit, bottomsheet kiinni→automaattinen avaus, toolbar-cleanup)
-- Filtteri & lista-UX (kertakäynti-filtteri, kartta-snapshot → paikka kuva, AI-widget enemmän tilaa, pin-nappi listakorttiin)
-- TO DO -lista (suosikit → TO DO, sydän → kirjanmerkki-ikoni)
-- Profiili & AI (kiinnostuksen kohteet monivalintana, käytetään AI-suosituksissa)
+- Karttapinnit sininen sporttinen liukuväri + kiilto-animaatio + klusterointi
+- Callout-kortit suuremmiksi; laji-ikonit tyylikkäämmiksi ja värillisiksi
+- Bottom sheet -logo uudelleensuunniteltu + fonttiuudistus
+- TO DO overlay (ei erillinen sivu) + oma painike + sulava animaatio + poisto → arvosteluprompt
+- Filtterit karsitaan: vain paikkakunta + laji; karuselli-animaatio aktiivisille valinnoille
+- Logo-API spike: yritysten logot callout-kortteihin
+
+## Shipped: v1.4 UX-parannukset & Profiili (2026-05-31)
+
+**Delivered:** Kertakäynti OK -filtteri (hintasuodattimet poistettu), paikka kuva listakorttiin (image_url), AI-widgetille enemmän tilaa, pin-ikoni-nappi listakorttiin karttakohdistukseen, navigaatiokorjaukset (back-scroll, "Näytä kartalla", toolbar-cleanup), suosikit → TO DO kirjanmerkki-ikonilla, kiinnostuksen kohteet profiiliin + AI-personointi.
 
 ## Shipped: v1.3 AKTIIVI — Redesign & Polish (2026-05-30)
 
@@ -106,22 +112,26 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ MAP-09: Sama-osoite-pinnit klusteriksi — Phase 18
 - ✓ MAP-10: Pinnikortti laajenee in-place animaatiolla — ei alareuna-kortti — Phase 18
 
-### Active (v1.4)
+### Validated (v1.4)
 
-- [ ] FILTER-01: Hintasuodattimet poistetaan; tilalle "Kertakäynti OK" -filtteri
-- [ ] UI-19: Listakortissa kartta-snapshot korvattu paikka kuvalla (image_url Supabasesta, placeholder fallback)
-- [ ] UI-20: Bottom sheetin mainos-kortit pienennetään; AI-widgetille enemmän tilaa yläosaan
-- [ ] UI-21: Listakorttiin pin-ikoni-nappi: sulkee listan ja kohdistaa kartan paikan koordinaatteihin
-- [ ] NAV-01: Paikan profiilisivun "Takaisin hakemistoon" palaa listaan entiseen scroll-kohtaan
-- [ ] NAV-02: "Näytä kartalla" kohdistaa paikan koordinaatteihin ilman GPS-recenteriä; bottomsheet pysyy kiinni
-- [ ] NAV-03: Etusivu latautuu bottomsheet kiinni; aukeaa automaattisesti animoituna heti
-- [ ] NAV-04: Suosikit- ja Profiili-sivujen toolbarista poistetaan haku-painike
-- [ ] NAV-05: Suosikit/TODO-sivun "Takaisin hakemistoon" korjataan oikeaan kohteeseen
-- [ ] TODO-01: Suosikit uudelleennimetty TO DO -listaksi; sydän → kirjanmerkki-ikoni
-- [ ] TODO-02: /suosikit-sivu näyttää TO DO -paikat käyttäjälle
-- [ ] PROFILE-01: Käyttäjä lisää profiiliin kiinnostuksen kohteet (lajit lib/lajit.ts, monivalinta)
-- [ ] PROFILE-02: AI-suositus käyttää kiinnostuksen kohteita personointiin
-- [ ] DATA-08: image_url-kenttä paikat-tauluun Supabasessa
+- ✓ FILTER-01: Hintasuodattimet poistettu; tilalle "Kertakäynti OK" -filtteri — Phase 19
+- ✓ UI-19: Listakortissa kartta-snapshot korvattu paikka kuvalla (image_url Supabasesta, placeholder fallback) — Phase 19
+- ✓ UI-20: Bottom sheetin mainos-kortit pienennetty; AI-widgetille enemmän tilaa yläosaan — Phase 19
+- ✓ UI-21: Listakorttiin pin-ikoni-nappi: sulkee listan ja kohdistaa kartan paikan koordinaatteihin — Phase 19
+- ✓ NAV-01: Paikan profiilisivun "Takaisin hakemistoon" palaa listaan entiseen scroll-kohtaan — Phase 20
+- ✓ NAV-02: "Näytä kartalla" kohdistaa paikan koordinaatteihin ilman GPS-recenteriä; bottomsheet pysyy kiinni — Phase 20
+- ✓ NAV-03: Etusivu latautuu bottomsheet kiinni; aukeaa automaattisesti animoituna heti — Phase 20
+- ✓ NAV-04: Suosikit- ja Profiili-sivujen toolbarista poistettu haku-painike — Phase 20
+- ✓ NAV-05: Suosikit/TODO-sivun "Takaisin hakemistoon" korjattu oikeaan kohteeseen — Phase 20
+- ✓ TODO-01: Suosikit uudelleennimetty TO DO -listaksi; sydän → kirjanmerkki-ikoni — Phase 21
+- ✓ TODO-02: /suosikit-sivu näyttää TO DO -paikat käyttäjälle — Phase 21
+- ✓ PROFILE-01: Käyttäjä lisää profiiliin kiinnostuksen kohteet (lajit lib/lajit.ts, monivalinta) — Phase 22
+- ✓ PROFILE-02: AI-suositus käyttää kiinnostuksen kohteita personointiin — Phase 22
+- ✓ DATA-08: image_url-kenttä paikat-tauluun Supabasessa — Phase 19
+
+### Active (v1.5)
+
+*(Määritetään requirements-vaiheessa)*
 
 ### Future (deferred from v1.1)
 
@@ -141,7 +151,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ## Context
 
-**Nykytila:** v1.3 toimitettu 2026-05-30. Kaikki 10 v1.3-vaatimusta toteutettu. App rebrändätty AKTIIVIKSI kaikissa metadateissa ja PWA-manifestissa. Karttakokemus uudistettu: yhtenäiset punaset SVG-ikonipinnit, sama-osoite-klusterointi, CalloutCard clip-path spike + PaikkaSheet layoutId-animaatio. Toolbar-UX yhdistetty. Sovellus toimii Tampereen, Helsingin ja Turun alueella. Käyttäjätilit, suosikit, profiilisivu, arvostelusysteemi ja personoitu AI-suosittelu live. PWA asennettavissa ja toimii offline-tilassa.
+**Nykytila:** v1.4 toimitettu 2026-05-31. Kaikki 14 v1.4-vaatimusta toteutettu. Kertakäynti OK -filtteri lisätty, listakortti käyttää nyt paikka-kuvaa (image_url), TO DO -lista korvaa suosikit kirjanmerkki-ikonilla, profiiliin kiinnostuksen kohteet + AI-personointi, navigaatiobukit korjattu. Karttakokemus: bottom sheet aukeaa automaattisesti, "Näytä kartalla" kohdistaa koordinaatteihin ilman GPS-recenteriä. Sovellus toimii Tampereen, Helsingin ja Turun alueella. Käyttäjätilit, TO DO -lista, profiilisivu, arvostelusysteemi ja personoitu AI-suosittelu live. PWA asennettavissa ja toimii offline-tilassa.
 
 **Data-arkkitehtuuri:** Google Places API hakee automaattisesti aukioloajat → upsertit Supabaseen. Kertakäyntihinnat manuaalisesti top 20 palvelulle. AI-widget: Claude Haiku + Open-Meteo, sessionStorage-cache per kalenteripäivä + per kaupunki. Supabase Auth käyttäjätaulut + suosikit (user_id → paikka_id). Sync-skripti tukee ?kaupunki= parametria Helsinki/Turku/Tampere-datalle.
 
@@ -209,4 +219,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-05-30 — v1.4 milestone started (UX-parannukset & Profiili)*
+*Last updated: 2026-05-31 — v1.5 milestone started (Visuaalinen elävöitys & UX-hienosäätö)*
