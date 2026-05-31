@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: UX-parannukset & Profiili
-status: planning
-stopped_at: Phase 22 context gathered
-last_updated: "2026-05-31T09:47:56.657Z"
-last_activity: 2026-05-31 — Phase 21 UAT complete (9/9 passed)
+status: planned
+stopped_at: Phase 22 planned (4 plans, 3 waves)
+last_updated: "2026-05-31T10:30:00.000Z"
+last_activity: 2026-05-31 — Phase 22 planned (4 plans)
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 7
+  total_plans: 11
   completed_plans: 7
   percent: 75
 ---
@@ -18,9 +18,9 @@ progress:
 
 ## Current Position
 
-Phase: 22 of 22 (Profiili & AI-kiinnostukset) — not started
-Status: Phase 21 complete — ready to plan Phase 22
-Last activity: 2026-05-31 — Phase 21 UAT complete (9/9 passed)
+Phase: 22 of 22 (Profiili & AI-kiinnostukset) — ready to execute
+Status: Phase 22 planned — 4 plans in 3 waves, ready for execution
+Last activity: 2026-05-31 — Phase 22 planned (4 plans)
 
 Progress: [█████░░░░░] 50%
 
