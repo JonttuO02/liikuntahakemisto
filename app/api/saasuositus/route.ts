@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { SUOMI_KAUPUNGIT } from '@/lib/constants'
 import { buildReissuKonteksti } from '@/lib/buildReissuKonteksti'
+import { buildKiinnostuksetKonteksti } from '@/lib/buildKiinnostuksetKonteksti'
 
 const client = new Anthropic()
 
@@ -83,6 +84,7 @@ export async function POST(request: Request) {
   let suosikit: string[] = []
   let kaupunki = 'Tampere'
   let kotikaupunki: string | undefined
+  let kiinnostukset: string[] = []
   try {
     const body = await request.json()
     suosikit = Array.isArray(body.suosikit)
@@ -99,6 +101,13 @@ export async function POST(request: Request) {
         .slice(0, 80)
         .trim()
     }
+    // Sanitize kiinnostukset — same allowlist and limits as suosikit array (T-22-03)
+    kiinnostukset = Array.isArray(body.kiinnostukset)
+      ? body.kiinnostukset
+          .slice(0, 10)
+          .filter((s: unknown): s is string => typeof s === 'string')
+          .map((s: string) => s.replace(/[^\w\sÄäÖöÅå\-,.'()&]/g, '').slice(0, 80))
+      : []
   } catch {}
 
   const city = lookupCity(kaupunki)
@@ -109,8 +118,9 @@ export async function POST(request: Request) {
     : ''
 
   const reissuKonteksti = buildReissuKonteksti(kotikaupunki, kaupunki)
+  const kiinnostuksetKonteksti = buildKiinnostuksetKonteksti(kiinnostukset)
 
-  const prompt = `Tänään on ${day} ${kaupunki}ssa. Lämpötila on ${temp}°C ja sää on ${weatherDesc}. Kirjoita YKSI lyhyt suomenkielinen lause joka suosittelee sopivaa liikuntapalvelua tai -lajia tähän säähän ${kaupunki}ssa. Mainitse "${kaupunki}" tai viittaa liikuntapaikan löytämiseen. Älä käytä emojeja.${suosikkiLista}${reissuKonteksti}`
+  const prompt = `Tänään on ${day} ${kaupunki}ssa. Lämpötila on ${temp}°C ja sää on ${weatherDesc}. Kirjoita YKSI lyhyt suomenkielinen lause joka suosittelee sopivaa liikuntapalvelua tai -lajia tähän säähän ${kaupunki}ssa. Mainitse "${kaupunki}" tai viittaa liikuntapaikan löytämiseen. Älä käytä emojeja.${suosikkiLista}${reissuKonteksti}${kiinnostuksetKonteksti}`
 
   try {
     const msg = await client.messages.create({
