@@ -2,34 +2,34 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: UX-parannukset & Profiili
-status: planned
-stopped_at: Phase 22 planned (4 plans, 3 waves)
-last_updated: "2026-05-31T10:30:00.000Z"
-last_activity: 2026-05-31 — Phase 22 planned (4 plans)
+status: complete
+stopped_at: Phase 22 complete — all 4 plans executed
+last_updated: "2026-05-31T12:00:00.000Z"
+last_activity: 2026-05-31 — Phase 22 complete (kiinnostukset feature shipped)
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 11
-  completed_plans: 7
-  percent: 75
+  completed_plans: 11
+  percent: 100
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 22 of 22 (Profiili & AI-kiinnostukset) — ready to execute
-Status: Phase 22 planned — 4 plans in 3 waves, ready for execution
-Last activity: 2026-05-31 — Phase 22 planned (4 plans)
+Phase: 22 of 22 (Profiili & AI-kiinnostukset) — COMPLETE
+Status: Phase 22 complete — kiinnostukset feature shipped, v1.4 milestone complete
+Last activity: 2026-05-31 — Phase 22 complete (kiinnostukset feature shipped)
 
-Progress: [█████░░░░░] 50%
+Progress: [██████████] 100%
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-30)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.4 — Phase 21: TO DO -lista
+**Current focus:** v1.4 complete — Phase 22: Profiili & AI-kiinnostukset
 
 ## Phase Progress
 
@@ -38,7 +38,7 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 | 19. Filtteri, lista & paikka-UX | Kertakäynti-filtteri, kuva listakorttiin, pin-nappi, image_url | Done |
 | 20. Navigaatio-korjaukset | Back-scroll, kartalle-kohdistus, bottomsheet-avaus, toolbar | Done |
 | 21. TO DO -lista | Suosikit → TO DO, sydän → kirjanmerkki, /suosikit-sivu | Done |
-| 22. Profiili & AI-kiinnostukset | Kiinnostuksen kohteet, AI-promptiin | Not started |
+| 22. Profiili & AI-kiinnostukset | Kiinnostuksen kohteet, AI-promptiin | Done |
 
 ## Active Decisions
 
@@ -54,6 +54,7 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 - v1.4: "Näytä kartalla" centers on venue coordinates, not user GPS; bottomsheet stays closed
 - v1.4: Bottom sheet starts closed on homepage load, animates open immediately (Phase 20 implemented)
 - v1.4: sessionStorage key 'etusivu-scroll-state' persists scroll+filter state for back-nav (Phase 20)
+- v1.4: kiinnostukset sent in AI POST body unconditionally (empty array is harmless); NOT added to useEffect deps (D-13 cache key is day-based only)
 
 ## Accumulated Context
 
@@ -72,6 +73,6 @@ See: .planning/PROJECT.md (updated 2026-05-30)
 
 ## Session Continuity
 
-Last session: 2026-05-31T09:47:56.647Z
-Stopped at: Phase 22 context gathered
-Resume file: .planning/phases/22-profiili-ai-kiinnostukset/22-CONTEXT.md
+Last session: 2026-05-31T12:00:00.000Z
+Stopped at: Phase 22 complete — all 4 plans executed
+Resume file: None — v1.4 milestone complete

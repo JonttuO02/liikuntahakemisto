@@ -6,7 +6,7 @@
 - ✅ **v1.1 Käyttäjät, Kartta & Laatu** — Phases 6–11 (shipped 2026-05-27)
 - ✅ **v1.2 UI-uudistus & Arvostelut** — Phases 12–15 (shipped 2026-05-28)
 - ✅ **v1.3 AKTIIVI — Redesign & Polish** — Phases 16–18 (shipped 2026-05-30)
-- 🚧 **v1.4 UX-parannukset & Profiili** — Phases 19–22 (in progress)
+- ✅ **v1.4 UX-parannukset & Profiili** — Phases 19–22 (shipped 2026-05-31)
 
 ---
 
@@ -64,14 +64,14 @@ Full archive: `.planning/milestones/v1.3-ROADMAP.md`
 
 ---
 
-### 🚧 v1.4 UX-parannukset & Profiili (Phases 19–22)
+### ✅ v1.4 UX-parannukset & Profiili (Phases 19–22) — SHIPPED 2026-05-31
 
 **Milestone Goal:** Korjataan navigaation käyttäytyminen ja visuaaliset epäjohdonmukaisuudet; uudistetaan suosikit TO DO -listaksi; lisätään kiinnostuksen kohteet profiiliin AI-personointia varten.
 
 - [ ] **Phase 19: Filtteri, lista & paikka-UX** — Kertakäynti-filtteri, paikka kuva listakortissa, AI-widget tila, pin-nappi listakortissa, image_url Supabaseen
 - [x] **Phase 20: Navigaatio-korjaukset** — Back-scroll, "Näytä kartalla" paikan koordinaatit, bottomsheet-avausanimaatio, toolbar-cleanup (2/2 plans) — 2026-05-30
 - [x] **Phase 21: TO DO -lista** — Suosikit → TO DO, sydän → kirjanmerkki, /suosikit toimiva TO DO -lista (2/2 plans)
-- [ ] **Phase 22: Profiili & AI-kiinnostukset** — Kiinnostuksen kohteet monivalintana profiiliin, käytetään AI-suosituksissa
+- [x] **Phase 22: Profiili & AI-kiinnostukset** — Kiinnostuksen kohteet monivalintana profiiliin, käytetään AI-suosituksissa (4/4 plans) — 2026-05-31
 
 ## Phase Details
 
@@ -131,7 +131,7 @@ Plans:
 - [x] 22-01-PLAN.md — Migration (kiinnostukset column) + lib/buildKiinnostuksetKonteksti.ts
 - [x] 22-02-PLAN.md — ProfiiliClient.tsx: interest pills UI, state, handleSaveKiinnostukset
 - [x] 22-03-PLAN.md — Etusivu.tsx + route.ts: data flow and AI prompt extension
-- [ ] 22-04-PLAN.md — [BLOCKING] supabase db push + end-to-end human verification
+- [x] 22-04-PLAN.md — [BLOCKING] supabase db push + end-to-end human verification
 **UI hint**: yes
 
 ---
@@ -161,4 +161,4 @@ Plans:
 | 19. Filtteri, lista & paikka-UX | v1.4 | 0/? | Not started | - |
 | 20. Navigaatio-korjaukset | v1.4 | 2/2 | ✅ Complete | 2026-05-30 |
 | 21. TO DO -lista | v1.4 | 2/2 | ✅ Complete | 2026-05-31 |
-| 22. Profiili & AI-kiinnostukset | v1.4 | 3/4 | In Progress|  |
+| 22. Profiili & AI-kiinnostukset | v1.4 | 4/4 | ✅ Complete | 2026-05-31 |
