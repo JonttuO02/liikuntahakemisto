@@ -170,6 +170,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
   const [todoIds, setTodoIds]               = useState<Set<number>>(new Set())
   const [kotikaupunki, setKotikaupunki]     = useState<string>('')
+  const [kiinnostukset, setKiinnostukset]   = useState<string[]>([])
   const [supabaseUser, setSupabaseUser]     = useState<{ id: string; email?: string } | null>(null)
   const [authModalOpen, setAuthModalOpen]   = useState(false)
   const [pendingFavoriteId, setPendingFavoriteId] = useState<number | null>(null)
@@ -352,12 +353,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       if (user) {
         const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
         if (data) setTodoIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
-        // Load kotikaupunki from profiles (PGRST116 = no row yet for new users, safe to ignore)
-        const { data: profileData } = await supabase.from('profiles').select('kotikaupunki').eq('user_id', user.id).single()
+        // Load kotikaupunki and kiinnostukset from profiles (PGRST116 = no row yet for new users, safe to ignore)
+        const { data: profileData } = await supabase.from('profiles').select('kotikaupunki, kiinnostukset').eq('user_id', user.id).single()
         setKotikaupunki(profileData?.kotikaupunki ?? '')
+        setKiinnostukset(profileData?.kiinnostukset ?? [])
       } else {
         setTodoIds(new Set())
         setKotikaupunki('')
+        setKiinnostukset([])
       }
     })
   }, [])
@@ -396,7 +399,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       .filter(Boolean) as string[]
 
     const fetchPromise = supabaseUser !== null
-      ? fetch('/api/saasuositus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ suosikit: todoNimet, kaupunki: weatherKaupunki, ...(kotikaupunki ? { kotikaupunki } : {}) }) })
+      ? fetch('/api/saasuositus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ suosikit: todoNimet, kaupunki: weatherKaupunki, ...(kotikaupunki ? { kotikaupunki } : {}), kiinnostukset }) })
       : fetch('/api/saasuositus?kaupunki=' + encodeURIComponent(weatherKaupunki))
 
     fetchPromise
