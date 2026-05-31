@@ -5,6 +5,7 @@ import { User } from 'lucide-react'
 import Link from 'next/link'
 import AuthModal from '@/app/components/AuthModal'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
+import { lajiKonfig } from '@/lib/lajit'
 
 type AuthState = 'loading' | 'unauthenticated' | 'authenticated'
 
@@ -15,6 +16,8 @@ export default function ProfiiliClient() {
   const [userId, setUserId] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string>('')
   const [saved, setSaved] = useState(false)
+  const [kiinnostukset, setKiinnostukset] = useState<string[]>([])
+  const [savedKiinnostukset, setSavedKiinnostukset] = useState(false)
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
@@ -22,11 +25,12 @@ export default function ProfiiliClient() {
     async function loadProfile(uid: string) {
       const { data } = await supabase
         .from('profiles')
-        .select('kotikaupunki')
+        .select('kotikaupunki, kiinnostukset')
         .eq('user_id', uid)
         .single()
-      // PGRST116 (no row) is expected for new users — treat as empty string
+      // PGRST116 (no row) is expected for new users — treat as empty string / empty array
       setKotikaupunki(data?.kotikaupunki ?? '')
+      setKiinnostukset(data?.kiinnostukset ?? [])
     }
 
     return subscribeToAuthUser((user) => {
@@ -39,6 +43,7 @@ export default function ProfiiliClient() {
         setAuthState('unauthenticated')
         setUserId(null)
         setKotikaupunki('')
+        setKiinnostukset([])
       }
     })
   }, [])
@@ -56,6 +61,25 @@ export default function ProfiiliClient() {
     if (!error) {
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
+    }
+  }
+
+  function toggleKiinnostus(key: string) {
+    setKiinnostukset(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+  }
+
+  async function handleSaveKiinnostukset() {
+    if (!userId) return
+    const supabase = createBrowserSupabase()
+    const { error } = await supabase
+      .from('profiles')
+      .upsert(
+        { user_id: userId, kiinnostukset, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+    if (!error) {
+      setSavedKiinnostukset(true)
+      setTimeout(() => setSavedKiinnostukset(false), 2500)
     }
   }
 
