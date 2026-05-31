@@ -3,7 +3,10 @@ phase: 19
 slug: filtteri-lista-paikka-ux
 uat_session: 1
 started: "2026-05-30"
-status: in_progress
+updated: "2026-05-31"
+status: complete
+passed: 7
+issues: 0
 ---
 
 # Phase 19 UAT — Filtteri, lista & paikka-UX
@@ -24,12 +27,16 @@ status: in_progress
 | T-04 | UI-20 | AI-widget: sää Row 1 + AI-teksti Row 2 | PASS | |
 | T-05 | UI-20 | Karuselli-kortit näyttävät pienemmiltä | PASS | |
 | T-06 | UI-21 | Pin-nappi näkyy listakorteissa | PASS | |
-| T-07 | UI-21 | Pin-nappi: sulkee listan ja zoomaa karttaan | FAIL | Sheet aukeaa automaattisesti — pitäisi vain zoomata + näyttää pieni callout-kortti, käyttäjä avaa sheetin itse |
+| T-07 | UI-21 | Pin-nappi: sulkee listan ja zoomaa karttaan | PASS | Re-tested 2026-05-31 after Phase 20 NAV-03 — behaviour correct |
 
 ## Issues Found
 
-(none yet)
+None — all 7 tests passed.
 
-## Gap Plans
+## Summary
 
-(none yet)
+| Result | Count |
+|--------|-------|
+| Passed | 7     |
+| Issues | 0     |
+| Skipped| 0     |
