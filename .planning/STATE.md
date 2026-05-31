@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Visuaalinen elävöitys & UX-hienosäätö
-status: verifying
-stopped_at: Phase 23 all plans complete — verifying
+status: complete
+stopped_at: Phase 23 complete — UI-23 gap fixed, all 5 success criteria verified
 last_updated: "2026-06-01T00:00:00.000Z"
-last_activity: 2026-06-01 — Phase 23 all 4 plans executed (3 waves complete)
+last_activity: 2026-06-01 — Phase 23 complete (4 plans + gap fix, all requirements met)
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
   completed_plans: 4
   percent: 100
@@ -30,13 +30,13 @@ Progress: [__________] 0%
 See: .planning/PROJECT.md (updated 2026-05-31)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.5 — Phase 23: Visuaalinen perusta
+**Current focus:** v1.5 — Phase 24: Callout-kortti & ikonit (next)
 
 ## Phase Progress
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 23 | Visuaalinen perusta | Planned (4 plans) |
+| 23 | Visuaalinen perusta | ✅ Complete |
 | 24 | Callout-kortti & ikonit | Not started |
 | 25 | TO DO overlay | Not started |
 | 26 | Filtterit | Not started |
