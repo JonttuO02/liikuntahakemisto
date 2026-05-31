@@ -42,6 +42,10 @@ function MapPanController({ coords }: { coords: { lat: number; lng: number } | n
   const map = useMap()
   useEffect(() => {
     if (!map || !coords) return
+    try {
+      if (sessionStorage.getItem('gps-pan-done')) return
+      sessionStorage.setItem('gps-pan-done', '1')
+    } catch {}
     map.panTo(coords)
   }, [map, coords])
   return null
@@ -183,6 +187,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const pendingValittuRef = useRef<Liikuntapaikka | null>(null)
   const zoomRef = useRef(14)
   const searchResultsRef = useRef<HTMLDivElement>(null)
+  const suppressAutoOpenRef = useRef(false)
+  const [sheetVisible, setSheetVisible] = useState(false)
   const { coords }                  = useGPS({ autoRequest: true })
   const searchParams = useSearchParams()
   const focusId = searchParams.get('id')
@@ -225,6 +231,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     setValittu(null)
     setSearchHaku('')
     setSearchFocused(focused)
+    setSheetVisible(true)
     if (sheetPhase === 'open') setSheetPhase('sliding')
     setSearchOpen(true)
   }
@@ -299,7 +306,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       if (typeof s.searchKertakaynti === 'boolean') setSearchKertakaynti(s.searchKertakaynti)
       if (typeof s.searchAukinyt === 'boolean') setSearchAukinyt(s.searchAukinyt)
       if (typeof s.searchKaupunki === 'string') setSearchKaupunki(s.searchKaupunki)
-      if (s.searchOpen === true) setSearchOpen(true)
+      if (s.searchOpen === true) {
+        suppressAutoOpenRef.current = true
+        setSheetVisible(true)
+        setSearchOpen(true)
+      }
       if (typeof s.scrollTop === 'number' && s.scrollTop > 0) {
         requestAnimationFrame(() => {
           if (searchResultsRef.current) {
@@ -401,11 +412,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suosikitSizeAndIds, weatherKaupunki, kotikaupunki])
 
-  // Auto-open sheet on homepage load unless /?id=X is present (NAV-03).
-  // setTimeout ensures the initial 'closed' render is committed before transitioning.
+  // Auto-open sheet on homepage load unless /?id=X is present (NAV-03)
+  // or unless we're restoring a search session (suppressAutoOpenRef set by scroll restore).
+  // Delay gives the map tiles time to render before the sheet slides up.
   useEffect(() => {
     if (focusId) return
-    const t = setTimeout(() => setSheetPhase('open'), 50)
+    if (suppressAutoOpenRef.current) return
+    const t = setTimeout(() => { setSheetVisible(true); setSheetPhase('open') }, 700)
     return () => clearTimeout(t)
   // Run once on mount only — focusId from useSearchParams is stable at initial render
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -416,6 +429,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     const id = Number(focusId)
     const target = paikat.find(p => p.id === id)
     if (!target || target.latitude == null || target.longitude == null) return
+    setSheetVisible(true)
     setAutoZoomTarget({ lat: target.latitude, lng: target.longitude })
     setSheetPhase('sliding')
   // setAutoZoomTarget and setSheetPhase are stable useState setters — omitted intentionally
@@ -841,13 +855,18 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={0.1}
-        initial={{ left: 0, right: 0, y: 0, borderRadius: '24px 24px 0px 0px' }}
-        animate={{ y: sheetAnimY, left: sheetAnimLeft, right: sheetAnimRight, borderRadius: sheetAnimRadius }}
+        initial={{ left: 0, right: 0, y: 800, borderRadius: '24px 24px 0px 0px' }}
+        animate={{
+          y:            sheetVisible ? sheetAnimY      : 800,
+          left:         sheetVisible ? sheetAnimLeft   : 0,
+          right:        sheetVisible ? sheetAnimRight  : 0,
+          borderRadius: sheetVisible ? sheetAnimRadius : '24px 24px 0px 0px',
+        }}
         transition={sheetTransition}
         onAnimationComplete={() => { if (sheetPhase === 'sliding') setSheetPhase('closed') }}
         onDragEnd={(_, info) => {
           if (info.velocity.y > 300 || info.offset.y > 80) setSheetPhase('sliding')
-          else if (info.velocity.y < -300 || info.offset.y < -80) { setSheetPhase('open'); setSearchOpen(false) }
+          else if (info.velocity.y < -300 || info.offset.y < -80) { setSheetVisible(true); setSheetPhase('open'); setSearchOpen(false) }
         }}
         className="glass"
         style={{ position: 'fixed', bottom: 0, height: contentH, zIndex: 60, overflow: 'hidden' }}
@@ -856,7 +875,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         <div
           className="flex justify-center pt-3 pb-2"
           style={{ position: 'relative', zIndex: 1, cursor: sheetPhase === 'open' ? 'grab' : 'pointer' }}
-          onClick={() => { if (sheetPhase !== 'open') { setSheetPhase('open'); setSearchOpen(false) } }}
+          onClick={() => { if (sheetPhase !== 'open') { setSheetVisible(true); setSheetPhase('open'); setSearchOpen(false) } }}
         >
           <div className="w-10 h-1 bg-[rgba(0,0,0,0.12)] rounded-full" />
         </div>
@@ -1051,6 +1070,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                       distanceStr={distancesMap[p.id] != null ? formatDistance(distancesMap[p.id]) : undefined}
                       onShowMap={(paikka) => {
                         setSearchOpen(false)
+                        if (sheetPhase === 'open') setSheetPhase('sliding')
                         if (paikka.latitude != null && paikka.longitude != null) {
                           setAutoZoomTarget({ lat: paikka.latitude, lng: paikka.longitude })
                         }
