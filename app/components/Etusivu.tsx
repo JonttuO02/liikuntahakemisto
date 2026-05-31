@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
-import { Moon, Sun, Locate, Search, Heart, MoreHorizontal, LogOut, User, LayoutList } from 'lucide-react'
+import { Moon, Sun, Locate, Search, Bookmark, MoreHorizontal, LogOut, User, LayoutList } from 'lucide-react'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
 import { Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
@@ -177,7 +177,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [zoomLevel, setZoomLevel]   = useState(14)
   const [mapCenter, setMapCenter]   = useState<{ lat: number; lng: number }>(TAMPERE)
   const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
-  const [suosikitIds, setSuosikitIds]       = useState<Set<number>>(new Set())
+  const [todoIds, setTodoIds]               = useState<Set<number>>(new Set())
   const [kotikaupunki, setKotikaupunki]     = useState<string>('')
   const [supabaseUser, setSupabaseUser]     = useState<{ id: string; email?: string } | null>(null)
   const [authModalOpen, setAuthModalOpen]   = useState(false)
@@ -240,7 +240,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     setSearchOpen(true)
   }
 
-  async function toggleSuosikki(id: number) {
+  async function toggleTodo(id: number) {
     if (inFlight.current.has(id)) return   // debounce concurrent taps
     inFlight.current.add(id)
     const user = supabaseUser
@@ -254,8 +254,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     const supabase = createBrowserSupabase()
 
     try {
-      const isCurrentlySaved = suosikitIds.has(id)
-      setSuosikitIds(prev => {
+      const isCurrentlySaved = todoIds.has(id)
+      setTodoIds(prev => {
         const next = new Set(prev)
         if (isCurrentlySaved) next.delete(id)
         else next.add(id)
@@ -265,14 +265,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       if (isCurrentlySaved) {
         const { error } = await supabase.from('suosikit').delete().eq('user_id', user.id).eq('paikka_id', id)
         if (error) {
-          console.error('[toggleSuosikki] delete error:', error)
-          setSuosikitIds(prev => { const next = new Set(prev); next.add(id); return next })
+          console.error('[toggleTodo] delete error:', error)
+          setTodoIds(prev => { const next = new Set(prev); next.add(id); return next })
         }
       } else {
         const { error } = await supabase.from('suosikit').insert({ user_id: user.id, paikka_id: id })
         if (error) {
-          console.error('[toggleSuosikki] insert error:', error)
-          setSuosikitIds(prev => { const next = new Set(prev); next.delete(id); return next })
+          console.error('[toggleTodo] insert error:', error)
+          setTodoIds(prev => { const next = new Set(prev); next.delete(id); return next })
         }
       }
     } finally {
@@ -300,12 +300,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       setSupabaseUser(user)
       if (user) {
         const { data } = await supabase.from('suosikit').select('paikka_id').eq('user_id', user.id)
-        if (data) setSuosikitIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
+        if (data) setTodoIds(new Set(data.map((s: { paikka_id: number }) => s.paikka_id)))
         // Load kotikaupunki from profiles (PGRST116 = no row yet for new users, safe to ignore)
         const { data: profileData } = await supabase.from('profiles').select('kotikaupunki').eq('user_id', user.id).single()
         setKotikaupunki(profileData?.kotikaupunki ?? '')
       } else {
-        setSuosikitIds(new Set())
+        setTodoIds(new Set())
         setKotikaupunki('')
       }
     })
@@ -326,26 +326,26 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   }, [])
 
   const suosikitSizeAndIds = useMemo(
-    () => Array.from(suosikitIds).sort((a, b) => a - b).join(','),
-    [suosikitIds]
+    () => Array.from(todoIds).sort((a, b) => a - b).join(','),
+    [todoIds]
   )
 
   useEffect(() => {
     const key = 'saasuositus-' + new Date().toISOString().slice(0, 10)
       + '-' + weatherKaupunki
-      + (suosikitIds.size > 0 ? '-' + suosikitSizeAndIds : '')
+      + (todoIds.size > 0 ? '-' + suosikitSizeAndIds : '')
     try {
       const cached = sessionStorage.getItem(key)
       if (cached) { setAiTeksti(cached); return }
     } catch {}
 
-    const suosikkiNimet = Array.from(suosikitIds)
+    const todoNimet = Array.from(todoIds)
       .slice(0, 10)
       .map(id => paikat.find(p => p.id === id)?.nimi)
       .filter(Boolean) as string[]
 
     const fetchPromise = supabaseUser !== null
-      ? fetch('/api/saasuositus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ suosikit: suosikkiNimet, kaupunki: weatherKaupunki, ...(kotikaupunki ? { kotikaupunki } : {}) }) })
+      ? fetch('/api/saasuositus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ suosikit: todoNimet, kaupunki: weatherKaupunki, ...(kotikaupunki ? { kotikaupunki } : {}) }) })
       : fetch('/api/saasuositus?kaupunki=' + encodeURIComponent(weatherKaupunki))
 
     fetchPromise
@@ -727,8 +727,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   onClick={closeOverlays}
                   className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                 >
-                  <Heart className="w-3.5 h-3.5" />
-                  Suosikit
+                  <Bookmark className="w-3.5 h-3.5" />
+                  TO DO
                 </Link>
                 {supabaseUser ? (
                   <button
@@ -736,7 +736,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                       // Optimistic clears before signOut — prevents a narrow window
                       // where supabaseUser is non-null but session is being torn down
                       setSupabaseUser(null)
-                      setSuosikitIds(new Set())
+                      setTodoIds(new Set())
                       closeOverlays()
                       createBrowserSupabase().auth.signOut().then(() => router.refresh())
                     }}
@@ -1018,7 +1018,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         onClose={() => setAuthModalOpen(false)}
         pendingPaikkaId={pendingFavoriteId}
         onSuccess={id => {
-          if (id) toggleSuosikki(id)
+          if (id) toggleTodo(id)
           setAuthModalOpen(false)
         }}
       />
@@ -1034,10 +1034,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         {valittu && (
           <PaikkaSheet
             paikka={valittu}
-            suosikki={suosikitIds.has(valittu.id)}
+            todo={todoIds.has(valittu.id)}
             distanceKm={distancesMap[valittu.id]}
             onClose={() => setValittu(null)}
-            onToggleSuosikki={toggleSuosikki}
+            onToggleTodo={toggleTodo}
           />
         )}
       </AnimatePresence>
