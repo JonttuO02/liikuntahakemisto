@@ -114,7 +114,9 @@ Plans:
   1. Callout-kortti on leveämpi (130 px → 160 px) kuin aiemmin
   2. Callout-kortti vaihtaa näytettävää tietoa automaattisesti lajin ja paikan nimen välillä (interval-animaatio)
   3. Laji-ikonit näkyvät värillisinä karttapinneissä, callout-korteissa ja listakorteissa (ei enää yhtenäinen harmaasävy)
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 24-01-PLAN.md — CalloutCard redesign: 160px, avatar, interval fade animation (MAP-14, MAP-15)
 **UI hint**: yes
 
 ### Phase 25: TO DO overlay
@@ -170,6 +172,6 @@ Plans:
 | 21. TO DO -lista | v1.4 | 2/2 | ✅ Complete | 2026-05-31 |
 | 22. Profiili & AI-kiinnostukset | v1.4 | 4/4 | ✅ Complete | 2026-05-31 |
 | 23. Visuaalinen perusta | v1.5 | 0/4 | 🗂 Planned | - |
-| 24. Callout-kortti & ikonit | v1.5 | 0/TBD | Not started | - |
+| 24. Callout-kortti & ikonit | v1.5 | 0/1 | 🗂 Planned | - |
 | 25. TO DO overlay | v1.5 | 0/TBD | Not started | - |
 | 26. Filtterit | v1.5 | 0/TBD | Not started | - |
