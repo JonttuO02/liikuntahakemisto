@@ -626,19 +626,19 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 <div style={{ position: 'relative' }}>
                   <motion.div whileTap={{ scale: 0.95 }}>
                     <div
-                      style={{ position: 'relative', width: 28, height: 38, cursor: 'pointer' }}
+                      style={{ position: 'relative', width: 34, height: 34, cursor: 'pointer' }}
                       onClick={e => { e.stopPropagation(); setExpandedCluster(expandedCluster === item.items ? null : item.items); setSearchOpen(false) }}
                     >
-                      {/* Pin body — blue gradient teardrop */}
-                      <div style={{ position: 'absolute', inset: 0, borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%', background: 'linear-gradient(to bottom, #38bdf8 0%, #0284c7 100%)' }} />
-                      {/* White circle */}
-                      <div style={{ position: 'absolute', top: 4, left: 4, width: 20, height: 20, borderRadius: '50%', background: 'white' }} />
+                      {/* Pin body — solid blue circle */}
+                      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#0284c7', boxShadow: '0 2px 8px rgba(2,132,199,0.35)' }} />
                       {/* Count label */}
-                      <div style={{ position: 'absolute', top: 4, left: 0, width: 28, textAlign: 'center', fontSize: 9, fontWeight: 'bold', color: '#0284c7', lineHeight: '20px' }}>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 'bold', color: 'white' }}>
                         {item.items.length > 9 ? '9+' : String(item.items.length)}
                       </div>
-                      {/* Glint dot */}
-                      <div className="pin-glint" />
+                      {/* Glint orbit */}
+                      <div className="pin-orbit-wrapper">
+                        <div className="pin-glint" />
+                      </div>
                     </div>
                   </motion.div>
                   <AnimatePresence>

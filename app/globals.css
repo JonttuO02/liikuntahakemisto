@@ -111,22 +111,29 @@
   transition: opacity 150ms ease;
 }
 @keyframes spinOrbit {
-  from { transform: rotate(0deg) translateY(-13px); }
-  to   { transform: rotate(360deg) translateY(-13px); }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
-.pin-glint {
+/* Zero-size wrapper sits at pin center and rotates — carries the glint dot in orbit */
+.pin-orbit-wrapper {
   position: absolute;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.9);
-  box-shadow: 0 0 3px rgba(56,189,248,0.8);
   top: 50%;
   left: 50%;
-  margin-top: -2px;
-  margin-left: -2px;
-  transform-origin: 0px 13px;
+  width: 0;
+  height: 0;
   animation: spinOrbit 4s linear infinite;
+  pointer-events: none;
+}
+/* Glint dot: offset upward by orbit radius so it circles the pin edge */
+.pin-glint {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 0 4px rgba(56,189,248,0.9);
+  top: -17px;
+  left: -2.5px;
   pointer-events: none;
 }
 

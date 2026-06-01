@@ -25,45 +25,34 @@ interface SportPinProps {
 
 export default function SportPin({ laji, animDelay }: SportPinProps) {
   return (
-    <div style={{ position: 'relative', width: 28, height: 38, cursor: 'pointer' }}>
-      {/* A: Pin body — teardrop shape via CSS border-radius + blue gradient */}
+    <div style={{ position: 'relative', width: 32, height: 32, cursor: 'pointer' }}>
+      {/* A: Pin body — white circle with blue border */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
-          background: 'linear-gradient(to bottom, #38bdf8 0%, #0284c7 100%)',
-        }}
-      />
-
-      {/* B: White circle — center of the pin */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 4,
-          left: 4,
-          width: 20,
-          height: 20,
           borderRadius: '50%',
           background: 'white',
+          border: '2.5px solid #0284c7',
+          boxShadow: '0 2px 8px rgba(2,132,199,0.28)',
         }}
       />
 
-      {/* C: Sport icon SVG — uses currentColor for Phase 24 override compatibility */}
+      {/* B: Sport icon SVG — uses currentColor for Phase 24 override compatibility */}
       <div
         style={{
           position: 'absolute',
-          top: 5,
-          left: 5,
-          width: 18,
-          height: 18,
-          color: '#374151',
+          top: 6,
+          left: 6,
+          width: 20,
+          height: 20,
+          color: '#0284c7',
         }}
       >
         <svg
           viewBox="0 0 24 24"
-          width="18"
-          height="18"
+          width="20"
+          height="20"
           // dangerouslySetInnerHTML is safe: SPORT_ICONS is a compile-time constant, not user input
           dangerouslySetInnerHTML={{
             __html: SPORT_ICONS[laji.toLowerCase()] ?? SPORT_ICONS['fallback'],
@@ -71,11 +60,13 @@ export default function SportPin({ laji, animDelay }: SportPinProps) {
         />
       </div>
 
-      {/* D: Glint dot — CSS orbit animation via .pin-glint class in globals.css */}
+      {/* C: Orbit wrapper — zero-size, centered, rotates to carry glint dot around edge */}
       <div
-        className="pin-glint"
+        className="pin-orbit-wrapper"
         style={{ animationDelay: `${(animDelay ?? 0) * 4}s` }}
-      />
+      >
+        <div className="pin-glint" />
+      </div>
     </div>
   )
 }
