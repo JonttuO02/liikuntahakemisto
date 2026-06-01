@@ -1,5 +1,7 @@
 'use client'
 
+import { useId } from 'react'
+
 // Icon paths sourced from lucide-react v1.16.0 (ISC license)
 // SVG path strings migrated from lib/sportPins.ts with stroke="#374151" replaced
 // by stroke="currentColor" for Phase 24 CSS color override compatibility (D-10).
@@ -23,47 +25,41 @@ interface SportPinProps {
   animDelay?: number // 0–1, used as animation-delay multiplier; default 0
 }
 
-export default function SportPin({ laji, animDelay }: SportPinProps) {
-  return (
-    <div style={{ position: 'relative', width: 32, height: 32, cursor: 'pointer' }}>
-      {/* A: Pin body — white circle with blue border */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: '50%',
-          background: 'white',
-          border: '2.5px solid #0284c7',
-          boxShadow: '0 2px 8px rgba(2,132,199,0.28)',
-        }}
-      />
+// Teardrop path — same geometry as original sportPins.ts (28×38 viewBox)
+const PIN_PATH = 'M14 0C6.268 0 0 6.268 0 14c0 5.25 2.875 9.83 7.125 12.3L14 38l6.875-11.7C25.125 23.83 28 19.25 28 14 28 6.268 21.732 0 14 0Z'
 
-      {/* B: Sport icon SVG — uses currentColor for Phase 24 override compatibility */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 6,
-          left: 6,
-          width: 20,
-          height: 20,
-          color: '#0284c7',
-        }}
-      >
-        <svg
-          viewBox="0 0 24 24"
-          width="20"
-          height="20"
-          // dangerouslySetInnerHTML is safe: SPORT_ICONS is a compile-time constant, not user input
+export default function SportPin({ laji, animDelay }: SportPinProps) {
+  // Unique gradient ID per instance — prevents cross-SVG url(#id) conflicts in HTML doc
+  const gradId = useId().replace(/:/g, '-')
+
+  return (
+    <div style={{ position: 'relative', width: 28, height: 38, cursor: 'pointer' }}>
+      <svg viewBox="0 0 28 38" width="28" height="38" style={{ display: 'block' }}>
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="#0284c7" />
+          </linearGradient>
+        </defs>
+        {/* Teardrop body — blue gradient */}
+        <path d={PIN_PATH} fill={`url(#${gradId})`} />
+        {/* White circle — cx=14 cy=14 r=10 matches original */}
+        <circle cx="14" cy="14" r="10" fill="white" />
+        {/* Icon — translate to (5,5), scale 24→18 (×0.75); currentColor = #0284c7 */}
+        {/* dangerouslySetInnerHTML is safe: SPORT_ICONS is a compile-time constant */}
+        <g
+          transform="translate(5,5) scale(0.75)"
+          style={{ color: '#0284c7' }}
           dangerouslySetInnerHTML={{
             __html: SPORT_ICONS[laji.toLowerCase()] ?? SPORT_ICONS['fallback'],
           }}
         />
-      </div>
+      </svg>
 
-      {/* C: Orbit wrapper — zero-size, centered, rotates to carry glint dot around edge */}
+      {/* Orbit wrapper — zero-size, at white circle center (14,14), rotates glint around edge */}
       <div
         className="pin-orbit-wrapper"
-        style={{ animationDelay: `${(animDelay ?? 0) * 4}s` }}
+        style={{ top: 14, left: 14, animationDelay: `${(animDelay ?? 0) * 4}s` }}
       >
         <div className="pin-glint" />
       </div>

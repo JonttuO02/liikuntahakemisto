@@ -114,17 +114,15 @@
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
-/* Zero-size wrapper sits at pin center and rotates — carries the glint dot in orbit */
+/* Zero-size wrapper: positioned via inline style at circle center, rotates to orbit glint */
 .pin-orbit-wrapper {
   position: absolute;
-  top: 50%;
-  left: 50%;
   width: 0;
   height: 0;
   animation: spinOrbit 4s linear infinite;
   pointer-events: none;
 }
-/* Glint dot: offset upward by orbit radius so it circles the pin edge */
+/* Glint dot: 12px above wrapper center → orbits just outside the r=10 white circle */
 .pin-glint {
   position: absolute;
   width: 5px;
@@ -132,7 +130,7 @@
   border-radius: 50%;
   background: rgba(255,255,255,0.95);
   box-shadow: 0 0 4px rgba(56,189,248,0.9);
-  top: -17px;
+  top: -12px;
   left: -2.5px;
   pointer-events: none;
 }

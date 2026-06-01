@@ -626,17 +626,17 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 <div style={{ position: 'relative' }}>
                   <motion.div whileTap={{ scale: 0.95 }}>
                     <div
-                      style={{ position: 'relative', width: 34, height: 34, cursor: 'pointer' }}
+                      style={{ position: 'relative', width: 28, height: 38, cursor: 'pointer' }}
                       onClick={e => { e.stopPropagation(); setExpandedCluster(expandedCluster === item.items ? null : item.items); setSearchOpen(false) }}
                     >
-                      {/* Pin body — solid blue circle */}
-                      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#0284c7', boxShadow: '0 2px 8px rgba(2,132,199,0.35)' }} />
-                      {/* Count label */}
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 'bold', color: 'white' }}>
-                        {item.items.length > 9 ? '9+' : String(item.items.length)}
-                      </div>
-                      {/* Glint orbit */}
-                      <div className="pin-orbit-wrapper">
+                      <svg viewBox="0 0 28 38" width="28" height="38" style={{ display: 'block' }}>
+                        <path d="M14 0C6.268 0 0 6.268 0 14c0 5.25 2.875 9.83 7.125 12.3L14 38l6.875-11.7C25.125 23.83 28 19.25 28 14 28 6.268 21.732 0 14 0Z" fill="#0284c7" />
+                        <circle cx="14" cy="14" r="10" fill="white" />
+                        <text x="14" y="18" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#0284c7" fontFamily="sans-serif">
+                          {item.items.length > 9 ? '9+' : String(item.items.length)}
+                        </text>
+                      </svg>
+                      <div className="pin-orbit-wrapper" style={{ top: 14, left: 14 }}>
                         <div className="pin-glint" />
                       </div>
                     </div>
