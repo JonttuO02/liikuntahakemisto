@@ -2,42 +2,42 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Visuaalinen elävöitys & UX-hienosäätö
-status: complete
-stopped_at: Phase 23 complete — UI-23 gap fixed, all 5 success criteria verified
-last_updated: "2026-06-01T00:00:00.000Z"
-last_activity: 2026-06-01 — Phase 23 complete (4 plans + gap fix, all requirements met)
+status: planning
+stopped_at: Phase 24 context gathered
+last_updated: "2026-06-01T18:35:17.068Z"
+last_activity: 2026-06-01 — Phase 23 complete; starting Phase 24 planning
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 4
   completed_plans: 4
-  percent: 100
+  percent: 25
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 23 of 26 (Visuaalinen perusta)
-Plan: 4 plans ready (waves 1–3)
-Status: Ready to execute
-Last activity: 2026-06-01 — Phase 23 planned (4 plans, 3 waves)
+Phase: 24 of 26 (Callout-kortti & ikonit)
+Plan: Not yet planned
+Status: Ready to plan
+Last activity: 2026-06-01 — Phase 23 complete; starting Phase 24 planning
 
-Progress: [__________] 0%
+Progress: [##________] 25%
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-31)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.5 — Phase 24: Callout-kortti & ikonit (next)
+**Current focus:** v1.5 — Phase 24: Callout-kortti & ikonit
 
 ## Phase Progress
 
 | Phase | Name | Status |
 |-------|------|--------|
 | 23 | Visuaalinen perusta | ✅ Complete |
-| 24 | Callout-kortti & ikonit | Not started |
+| 24 | Callout-kortti & ikonit | 🗂 Planning |
 | 25 | TO DO overlay | Not started |
 | 26 | Filtterit | Not started |
 
@@ -70,6 +70,6 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 
 ## Session Continuity
 
-Last session: 2026-06-01T00:00:00.000Z
-Stopped at: Phase 23 planned — 4 plans ready to execute
-Resume file: .planning/phases/23-visuaalinen-perusta/
+Last session: 2026-06-01T18:35:17.057Z
+Stopped at: Phase 24 context gathered
+Resume file: .planning/phases/24-callout-kortti-ikonit/24-CONTEXT.md
