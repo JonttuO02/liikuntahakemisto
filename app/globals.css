@@ -114,24 +114,24 @@
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
-/* Zero-size wrapper: positioned via inline style at circle center, rotates to orbit glint */
-.pin-orbit-wrapper {
+/* Arc sweep: ring in the blue zone outside white circle (r=10→14, center 14,14 in 28×38 div) */
+.pin-arc {
   position: absolute;
-  width: 0;
-  height: 0;
-  animation: spinOrbit 4s linear infinite;
-  pointer-events: none;
-}
-/* Glint dot: 12px above wrapper center → orbits just outside the r=10 white circle */
-.pin-glint {
-  position: absolute;
-  width: 5px;
-  height: 5px;
+  width: 28px;
+  height: 28px;
+  top: 0;
+  left: 0;
   border-radius: 50%;
-  background: rgba(255,255,255,0.95);
-  box-shadow: 0 0 4px rgba(56,189,248,0.9);
-  top: -12px;
-  left: -2.5px;
+  background: conic-gradient(
+    rgba(186, 230, 253, 0.35) 0deg,
+    rgba(56, 189, 248, 0.55) 90deg,
+    rgba(14, 40, 120, 0.95) 180deg,
+    rgba(56, 189, 248, 0.55) 270deg,
+    rgba(186, 230, 253, 0.35) 360deg
+  );
+  -webkit-mask: radial-gradient(circle at center, transparent 10px, black 11px, black 13px, transparent 14px);
+  mask: radial-gradient(circle at center, transparent 10px, black 11px, black 13px, transparent 14px);
+  animation: spinOrbit 3s linear infinite;
   pointer-events: none;
 }
 

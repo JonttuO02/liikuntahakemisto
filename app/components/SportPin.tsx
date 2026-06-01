@@ -56,13 +56,11 @@ export default function SportPin({ laji, animDelay }: SportPinProps) {
         />
       </svg>
 
-      {/* Orbit wrapper — zero-size, at white circle center (14,14), rotates glint around edge */}
+      {/* Arc sweep — conic-gradient ring that orbits the white circle edge */}
       <div
-        className="pin-orbit-wrapper"
-        style={{ top: 14, left: 14, animationDelay: `${(animDelay ?? 0) * 4}s` }}
-      >
-        <div className="pin-glint" />
-      </div>
+        className="pin-arc"
+        style={{ animationDelay: `${(animDelay ?? 0) * 4}s` }}
+      />
     </div>
   )
 }

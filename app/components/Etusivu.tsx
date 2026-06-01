@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
-import { Moon, Sun, Locate, Search, Bookmark, MoreHorizontal, LogOut, User, LayoutList } from 'lucide-react'
+import { Moon, Sun, Locate, Search, Bookmark, MoreHorizontal, LogOut, User, LayoutList, Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
 import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
@@ -18,6 +19,7 @@ import { TAMPERE } from '@/lib/constants'
 import { nearestKaupunki, haversineKm, formatDistance } from '@/lib/geo'
 import { useGPS } from '@/hooks/useGPS'
 import SportPin from './SportPin'
+import Supercluster from 'supercluster'
 import AktiiviLogo from './AktiiviLogo'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
@@ -105,9 +107,31 @@ function MapAutoZoom({ target, onComplete }: { target: { lat: number; lng: numbe
   return null
 }
 
+const CHAR_VARIANTS = {
+  initial: { x: 16, opacity: 0 },
+  enter:   { x: 0,  opacity: 1, transition: { duration: 0.15, ease: [0.25, 0.1, 0.25, 1] as [number,number,number,number] } },
+  exit:    { x: -16, opacity: 0, transition: { duration: 0.1,  ease: 'easeIn' as const } },
+}
+
+const TEXT_CONTAINER_VARIANTS = {
+  enter: { transition: { staggerChildren: 0.022 } },
+  exit:  { transition: { staggerChildren: 0.014 } },
+}
+
+const SPORT_ICONS: Record<string, LucideIcon> = {
+  padel:         Zap,
+  kuntosali:     Dumbbell,
+  jooga:         Leaf,
+  uinti:         Waves,
+  tennis:        Target,
+  liikuntahalli: Building2,
+  liikunta:      Activity,
+}
+
 function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude: number } }) {
   const ref = useRef<HTMLDivElement>(null)
   const [clipPath, setClipPath] = useState('')
+  const [showName, setShowName] = useState(true)
 
   useLayoutEffect(() => {
     const el = ref.current
@@ -115,7 +139,7 @@ function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude:
     const compute = () => {
       const h = el.offsetHeight - 11
       setClipPath(
-        `M 10,0 L 120,0 Q 130,0 130,10 L 130,${h - 10} Q 130,${h} 120,${h} L 75,${h} L 65,${h + 11} L 55,${h} L 10,${h} Q 0,${h} 0,${h - 10} L 0,10 Q 0,0 10,0 Z`
+        `M 10,0 L 150,0 Q 160,0 160,10 L 160,${h - 10} Q 160,${h} 150,${h} L 90,${h} L 80,${h + 11} L 70,${h} L 10,${h} Q 0,${h} 0,${h - 10} L 0,10 Q 0,0 10,0 Z`
       )
     }
     const obs = new ResizeObserver(compute)
@@ -124,29 +148,81 @@ function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude:
     return () => obs.disconnect()
   }, [])
 
-  const hinta = p.hinta_kuvaus || hintateksti(p.hinta_min, p.hinta_max)
+  useEffect(() => {
+    const id = setInterval(() => setShowName(v => !v), 2000)
+    return () => clearInterval(id)
+  }, [])
+
+  const sportColor = lajiKonfig[p.laji]?.color ?? '#6b7280'
+  const Icon = SPORT_ICONS[p.laji] ?? Activity
+
+  const chars = (text: string) =>
+    text.split(' ').flatMap((word, wi) => [
+      ...(wi > 0 ? [
+        <motion.span key={`sp-${wi}`} className="inline-block" variants={CHAR_VARIANTS}>{' '}</motion.span>,
+      ] : []),
+      <span key={`w-${wi}`} className="whitespace-nowrap">
+        {word.split('').map((char, ci) => (
+          <motion.span key={ci} className="inline-block" variants={CHAR_VARIANTS}>{char}</motion.span>
+        ))}
+      </span>,
+    ])
 
   return (
     <div
       ref={ref}
-      className="glass px-2.5 py-2 flex flex-col gap-1 cursor-pointer"
+      className="glass cursor-pointer"
       style={{
-        width: 130,
-        paddingBottom: 11,
+        width: 160,
+        height: 171,
+        paddingTop: 12,
+        paddingLeft: 12,
+        paddingRight: 12,
+        paddingBottom: 23,
         clipPath: clipPath ? `path('${clipPath}')` : undefined,
         borderRadius: clipPath ? 0 : 10,
       }}
     >
-      <span
-        className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white truncate"
-        style={{ backgroundColor: lajiKonfig[p.laji]?.color ?? '#6b7280' }}
-      >
-        {lajiKonfig[p.laji]?.label ?? p.laji}
-      </span>
-      <span className="font-bold text-sm text-[#111111] truncate leading-tight">{p.nimi}</span>
-      {hinta && (
-        <span className="text-[10px] text-[rgba(17,17,17,0.55)] truncate">{hinta}</span>
-      )}
+      <div className="flex flex-col gap-2">
+        <div
+          className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center"
+          style={{ backgroundColor: sportColor }}
+        >
+          <span className="text-base font-bold text-white">{p.nimi[0]?.toUpperCase() ?? '?'}</span>
+        </div>
+        <div className="w-full overflow-hidden">
+          <AnimatePresence mode="wait">
+            {showName ? (
+              <motion.div
+                key="name"
+                variants={TEXT_CONTAINER_VARIANTS}
+                initial="initial"
+                animate="enter"
+                exit="exit"
+                className="font-bold text-lg text-[#111111] leading-snug"
+              >
+                {chars(p.nimi)}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="sport"
+                variants={TEXT_CONTAINER_VARIANTS}
+                initial="initial"
+                animate="enter"
+                exit="exit"
+                className="flex flex-wrap items-center gap-1"
+              >
+                <motion.span variants={CHAR_VARIANTS} className="flex items-center">
+                  <Icon className="w-4 h-4" style={{ color: sportColor }} />
+                </motion.span>
+                <span className="flex items-center text-lg font-bold text-[#111111]">
+                  {chars(lajiKonfig[p.laji]?.label ?? p.laji)}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   )
 }
@@ -162,9 +238,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [saa, setSaa]               = useState<SaaTiedot | null>(null)
   const [aiTeksti, setAiTeksti]     = useState<string | null>(null)
   const [valittu, setValittu]       = useState<Liikuntapaikka | null>(null)
-  const [expandedCluster, setExpandedCluster] = useState<(Liikuntapaikka & { latitude: number; longitude: number })[] | null>(null)
+  const [expandedCluster, setExpandedCluster] = useState<{ id: number; items: (Liikuntapaikka & { latitude: number; longitude: number })[] } | null>(null)
+  const [bounds, setBounds] = useState<[number, number, number, number] | null>(null)
   // 'open' → 'sliding' (y to contentH) → onAnimationComplete → 'closed' (pill)
   const [sheetPhase, setSheetPhase] = useState<'open' | 'sliding' | 'closed'>('closed')
+  const [sheetReady, setSheetReady] = useState(false)
   const [rightOpen, setRightOpen]   = useState(false)
   const [fullH, setFullH]           = useState(700)
   const [fullW, setFullW]           = useState(390)
@@ -468,24 +546,27 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     [paikat, searchLaji, lajitKartalla]
   )
 
-  const mapItems = useMemo(() => {
-    const groups: Record<string, (Liikuntapaikka & { latitude: number; longitude: number })[]> = {}
-    for (const p of paikatKartalla) {
-      const key = Math.round(p.latitude * 10000) + ',' + Math.round(p.longitude * 10000)
-      if (!groups[key]) groups[key] = []
-      groups[key].push(p)
-    }
-    return Object.values(groups).map(items =>
-      items.length === 1
-        ? { type: 'single' as const, paikka: items[0] }
-        : {
-            type: 'cluster' as const,
-            lat: items.reduce((s, p) => s + p.latitude, 0) / items.length,
-            lng: items.reduce((s, p) => s + p.longitude, 0) / items.length,
-            items,
-          }
+  type VenuePoint = { paikka: Liikuntapaikka & { latitude: number; longitude: number } }
+
+  const sc = useMemo(() => {
+    const instance = new Supercluster<VenuePoint>({ radius: 60, maxZoom: 16, minPoints: 2 })
+    instance.load(
+      paikatKartalla.map(p => ({
+        type: 'Feature' as const,
+        geometry: { type: 'Point' as const, coordinates: [p.longitude, p.latitude] },
+        properties: { paikka: p },
+      }))
     )
+    return instance
   }, [paikatKartalla])
+
+  // Close popup when filter/data changes (sc changes → cluster IDs invalidated)
+  useEffect(() => { setExpandedCluster(null) }, [sc])
+
+  const mapItems = useMemo(
+    () => (bounds ? sc.getClusters(bounds, Math.round(zoomLevel)) : []),
+    [sc, bounds, zoomLevel]
+  )
 
   const anyOverlayOpen = rightOpen
 
@@ -564,10 +645,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           onClick={() => { setValittu(null); setExpandedCluster(null) }}
           onCameraChanged={ev => {
             const newZoom = ev.detail.zoom
-            if ((zoomRef.current < 16) !== (newZoom < 16)) setZoomLevel(newZoom)
-            zoomRef.current = newZoom
             const center = ev.detail.center
-            setMapCenter(center)
+            const b = ev.detail.bounds
+            // Update integer zoom (supercluster uses Math.round(zoom), nearestCard uses >= 16)
+            if (Math.round(newZoom) !== Math.round(zoomRef.current)) setZoomLevel(Math.round(newZoom))
+            zoomRef.current = newZoom
+            if (b) setBounds([b.west, b.south, b.east, b.north])
+            // mapCenter is only used at zoom ≥ 16 (nearestVenueInView); skip state update below that
+            if (newZoom >= 16) setMapCenter(center)
             if (debounceRef.current) clearTimeout(debounceRef.current)
             debounceRef.current = setTimeout(() => {
               const nearest = nearestKaupunki(center.lat, center.lng)
@@ -576,10 +661,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           }}
         >
           {mapItems.map(item => {
-            if (item.type === 'single') {
-              const p = item.paikka
+            const [lng, lat] = item.geometry.coordinates
+
+            if (!('cluster' in item.properties && item.properties.cluster)) {
+              const p = (item.properties as VenuePoint).paikka
               return (
-                <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : 1}>
+                <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : nearestCardId === p.id ? 5 : 1}>
                   {/* 0×0 anchor — AdvancedMarker pins its bottom-center here, so neither pin
                       nor card can shift the anchor point when transitioning between them */}
                   <div style={{ position: 'relative', width: 0, height: 0 }}>
@@ -616,33 +703,43 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 </AdvancedMarker>
               )
             }
+
             // cluster
+            const clusterId = item.id as number
+            const count = (item.properties as Supercluster.ClusterProperties).point_count
             return (
               <AdvancedMarker
-                key={'cluster-' + item.items.map(p => p.id).join('-')}
-                position={{ lat: item.lat, lng: item.lng }}
-                zIndex={expandedCluster === item.items ? 20 : 2}
+                key={`cluster-${clusterId}`}
+                position={{ lat, lng }}
+                zIndex={expandedCluster?.id === clusterId ? 20 : 2}
               >
                 <div style={{ position: 'relative' }}>
                   <motion.div whileTap={{ scale: 0.95 }}>
                     <div
                       style={{ position: 'relative', width: 28, height: 38, cursor: 'pointer' }}
-                      onClick={e => { e.stopPropagation(); setExpandedCluster(expandedCluster === item.items ? null : item.items); setSearchOpen(false) }}
+                      onClick={e => {
+                        e.stopPropagation()
+                        if (expandedCluster?.id === clusterId) {
+                          setExpandedCluster(null)
+                        } else {
+                          const leaves = sc.getLeaves(clusterId, Infinity).map(f => f.properties.paikka)
+                          setExpandedCluster({ id: clusterId, items: leaves })
+                        }
+                        setSearchOpen(false)
+                      }}
                     >
                       <svg viewBox="0 0 28 38" width="28" height="38" style={{ display: 'block' }}>
                         <path d="M14 0C6.268 0 0 6.268 0 14c0 5.25 2.875 9.83 7.125 12.3L14 38l6.875-11.7C25.125 23.83 28 19.25 28 14 28 6.268 21.732 0 14 0Z" fill="#1e40af" />
                         <circle cx="14" cy="14" r="10" fill="white" />
                         <text x="14" y="18" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#0284c7" fontFamily="sans-serif">
-                          {item.items.length > 9 ? '9+' : String(item.items.length)}
+                          {count > 99 ? '99+' : String(count)}
                         </text>
                       </svg>
-                      <div className="pin-orbit-wrapper" style={{ top: 14, left: 14 }}>
-                        <div className="pin-glint" />
-                      </div>
+                      <div className="pin-arc" />
                     </div>
                   </motion.div>
                   <AnimatePresence>
-                    {expandedCluster === item.items && (
+                    {expandedCluster?.id === clusterId && (
                       <motion.div
                         key="cluster-popup"
                         initial={{ opacity: 0, scale: 0.95, y: 4 }}
@@ -662,7 +759,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                         }}
                         onClick={e => e.stopPropagation()}
                       >
-                        {item.items.map(venue => (
+                        {expandedCluster.items.map(venue => (
                           <button
                             key={venue.id}
                             onClick={() => { setValittu(venue); setExpandedCluster(null); setSearchOpen(false) }}
@@ -887,7 +984,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           borderRadius: sheetVisible ? sheetAnimRadius : '24px 24px 0px 0px',
         }}
         transition={sheetTransition}
-        onAnimationComplete={() => { if (sheetPhase === 'sliding') setSheetPhase('closed') }}
+        onAnimationComplete={() => {
+          if (sheetPhase === 'sliding') setSheetPhase('closed')
+          if (sheetPhase === 'open') setSheetReady(true)
+        }}
+        onAnimationStart={() => { if (sheetPhase !== 'open') setSheetReady(false) }}
         onDragEnd={(_, info) => {
           if (info.velocity.y > 300 || info.offset.y > 80) setSheetPhase('sliding')
           else if (info.velocity.y < -300 || info.offset.y < -80) { setSheetVisible(true); setSheetPhase('open'); setSearchOpen(false) }
@@ -902,24 +1003,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           onClick={() => { if (sheetPhase !== 'open') { setSheetVisible(true); setSheetPhase('open'); setSearchOpen(false) } }}
         >
           <div className="w-10 h-1 bg-[rgba(0,0,0,0.12)] rounded-full" />
-        </div>
-
-        {/* Logo watermark — redesigned AktiiviLogo with blue sweep auto-loop (UI-23) */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            pointerEvents: 'none',
-            zIndex: 0,
-            opacity: 0.15,
-            WebkitMaskImage: 'linear-gradient(to top, black 0%, black 40%, transparent 100%)',
-            maskImage: 'linear-gradient(to top, black 0%, black 40%, transparent 100%)',
-          }}
-        >
-          <AktiiviLogo />
         </div>
 
         {/* Sheet content — fades out during slide-down so text doesn't squish during narrowing */}
@@ -975,6 +1058,39 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
           {/* Ad carousel */}
           <Karuselli isDark={isDark} />
+
+          {/* AktiiviLogo + side lines — lines mount only when sheet opens so initial always fires */}
+          <div
+            aria-hidden="true"
+            className="mt-auto flex items-center px-3 pb-2"
+            style={{ pointerEvents: 'none', gap: 10 }}
+          >
+            {/* Left line wrapper — anchored right, line grows toward left */}
+            <div className="flex-1" style={{ height: 2, position: 'relative', overflow: 'hidden' }}>
+              {sheetReady && (
+                <motion.div
+                  className="absolute top-0 bottom-0 right-0 bg-[rgba(17,17,17,0.3)]"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 0.55, ease: [0.25, 0.1, 0.25, 1] }}
+                />
+              )}
+            </div>
+            <div style={{ width: '26%' }}>
+              <AktiiviLogo />
+            </div>
+            {/* Right line wrapper — anchored left, line grows toward right */}
+            <div className="flex-1" style={{ height: 2, position: 'relative', overflow: 'hidden' }}>
+              {sheetReady && (
+                <motion.div
+                  className="absolute top-0 bottom-0 left-0 bg-[rgba(17,17,17,0.3)]"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 0.55, ease: [0.25, 0.1, 0.25, 1] }}
+                />
+              )}
+            </div>
+          </div>
         </motion.div>
       </motion.div>
 
