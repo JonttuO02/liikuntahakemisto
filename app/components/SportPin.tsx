@@ -37,8 +37,8 @@ export default function SportPin({ laji, animDelay }: SportPinProps) {
       <svg viewBox="0 0 28 38" width="28" height="38" style={{ display: 'block' }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#38bdf8" />
-            <stop offset="100%" stopColor="#0284c7" />
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="100%" stopColor="#1e40af" />
           </linearGradient>
         </defs>
         {/* Teardrop body — blue gradient */}
@@ -49,7 +49,7 @@ export default function SportPin({ laji, animDelay }: SportPinProps) {
         {/* dangerouslySetInnerHTML is safe: SPORT_ICONS is a compile-time constant */}
         <g
           transform="translate(5,5) scale(0.75)"
-          style={{ color: '#0284c7' }}
+          style={{ color: '#1e3a8a' }}
           dangerouslySetInnerHTML={{
             __html: SPORT_ICONS[laji.toLowerCase()] ?? SPORT_ICONS['fallback'],
           }}
