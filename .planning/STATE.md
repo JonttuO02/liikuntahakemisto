@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Visuaalinen elävöitys & UX-hienosäätö
-status: planning
-stopped_at: Phase 24 context gathered
-last_updated: "2026-06-01T18:35:17.068Z"
-last_activity: 2026-06-01 — Phase 23 complete; starting Phase 24 planning
+status: ready_to_execute
+stopped_at: Phase 24 planned
+last_updated: "2026-06-01T18:55:00.000Z"
+last_activity: 2026-06-01 — Phase 24 planned (1 plan, 1 wave)
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 4
+  total_plans: 5
   completed_plans: 4
   percent: 25
 ---
@@ -19,9 +19,9 @@ progress:
 ## Current Position
 
 Phase: 24 of 26 (Callout-kortti & ikonit)
-Plan: Not yet planned
-Status: Ready to plan
-Last activity: 2026-06-01 — Phase 23 complete; starting Phase 24 planning
+Plan: 1 plan ready (24-01-PLAN.md)
+Status: Ready to execute
+Last activity: 2026-06-01 — Phase 24 planned (1 plan, 1 wave)
 
 Progress: [##________] 25%
 
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 | Phase | Name | Status |
 |-------|------|--------|
 | 23 | Visuaalinen perusta | ✅ Complete |
-| 24 | Callout-kortti & ikonit | 🗂 Planning |
+| 24 | Callout-kortti & ikonit | 🗂 Planned (1 plan) |
 | 25 | TO DO overlay | Not started |
 | 26 | Filtterit | Not started |
 
@@ -70,6 +70,6 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 
 ## Session Continuity
 
-Last session: 2026-06-01T18:35:17.057Z
-Stopped at: Phase 24 context gathered
-Resume file: .planning/phases/24-callout-kortti-ikonit/24-CONTEXT.md
+Last session: 2026-06-01T18:55:00.000Z
+Stopped at: Phase 24 planned — ready to execute
+Resume file: .planning/phases/24-callout-kortti-ikonit/24-01-PLAN.md
