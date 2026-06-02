@@ -23,12 +23,13 @@ export const diagonaalKorttiVariants = {
 interface DiagonaalKorttiProps {
   paikka: Liikuntapaikka
   distanceStr?: string
+  isSaved?: boolean
   onShowMap?: (paikka: Liikuntapaikka) => void
   onCardClick?: () => void
   onToggleTodo?: (id: number) => void
 }
 
-export default function DiagonaalKortti({ paikka, distanceStr, onShowMap, onCardClick, onToggleTodo }: DiagonaalKorttiProps) {
+export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMap, onCardClick, onToggleTodo }: DiagonaalKorttiProps) {
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
   const openStatus   = getOpenStatus(paikka.aukioloajat)
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
@@ -133,7 +134,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, onShowMap, onCard
       {onToggleTodo && (
         <button
           onClick={e => { e.stopPropagation(); e.preventDefault(); onToggleTodo(paikka.id) }}
-          aria-label="Poista TO DO -listalta"
+          aria-label={isSaved ? 'Poista TO DO -listalta' : 'Lisää TO DO -listaan'}
           className="absolute bottom-3 right-3 z-20 w-7 h-7 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_ease]"
         >
           <Bookmark className="w-3.5 h-3.5" />

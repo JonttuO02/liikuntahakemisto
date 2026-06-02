@@ -912,6 +912,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   <DiagonaalKortti
                     key={p.id}
                     paikka={p}
+                    isSaved={true}
                     onShowMap={paikka => {
                       if (paikka.latitude != null && paikka.longitude != null) {
                         setAutoZoomTarget({ lat: paikka.latitude, lng: paikka.longitude })
