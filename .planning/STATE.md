@@ -3,13 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Visuaalinen elävöitys & UX-hienosäätö
 status: planning
-stopped_at: Phase 24 complete
-last_updated: "2026-06-02T00:00:00.000Z"
-last_activity: 2026-06-02 — Phase 24 complete (verified by user)
+last_updated: "2026-06-02T09:00:00.000Z"
+last_activity: 2026-06-02 — Phase 25 planned (2 plans, 2 waves)
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 6
+  total_plans: 7
   completed_plans: 5
   percent: 50
 ---
@@ -18,9 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 25 of 26 (TO DO overlay) — not started
-Status: Ready to plan phase 25
-Last activity: 2026-06-02 — Phase 24 verified and complete
+Phase: 25 of 26 (TO DO overlay) — Ready to execute
+Status: Ready to execute phase 25
+Last activity: 2026-06-02 — Phase 25 planned (2 plans, 2 waves)
 
 Progress: [#####_____] 50%
 
@@ -37,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 |-------|------|--------|
 | 23 | Visuaalinen perusta | ✅ Complete |
 | 24 | Callout-kortti & ikonit | ✅ Complete |
-| 25 | TO DO overlay | Not started |
+| 25 | TO DO overlay | 🗂 Planned (2 plans) |
 | 26 | Filtterit | Not started |
 
 ## Active Decisions
@@ -65,10 +64,9 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 
 ### Blockers/Concerns
 
-- Phase 25: Three existing href=/suosikit references in codebase — only the Etusivu toolbar reference changes; audit all three before shipping
+- Phase 25: href=/suosikit audit covered in 25-01 Plan Task 1 — only the nav-pill entry in Etusivu.tsx changes; /suosikit route untouched
 
 ## Session Continuity
 
-Last session: 2026-06-02T00:00:00.000Z
-Stopped at: Phase 24 complete — ready to plan phase 25
-Resume: /gsd:discuss-phase 25 tai /gsd:plan-phase 25
+Last session: 2026-06-02T09:00:00.000Z
+Resume: /gsd:execute-phase 25
