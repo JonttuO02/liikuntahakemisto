@@ -277,6 +277,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const inFlight = useRef<Set<number>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const rightOpenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const reviewResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingValittuRef = useRef<Liikuntapaikka | null>(null)
   const zoomRef = useRef(14)
   const searchResultsRef = useRef<HTMLDivElement>(null)
@@ -426,7 +427,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     } else {
       setInlineSubmitting(false)
       setInlineSubmitted(true)
-      setTimeout(() => {
+      reviewResetTimerRef.current = setTimeout(() => {
         setReviewPaikkaId(null)
         setInlineRating(0)
         setInlineTeksti('')
@@ -478,6 +479,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   useEffect(() => {
     return () => {
       if (rightOpenTimerRef.current) clearTimeout(rightOpenTimerRef.current)
+    }
+  }, [])
+
+  // Clear review reset timer on unmount to prevent stale state update after navigation
+  useEffect(() => {
+    return () => {
+      if (reviewResetTimerRef.current) clearTimeout(reviewResetTimerRef.current)
     }
   }, [])
 
