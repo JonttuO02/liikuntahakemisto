@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
-import { Moon, Sun, Locate, Search, Bookmark, MoreHorizontal, LogOut, User, LayoutList, Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
+import { Moon, Sun, Locate, Search, Bookmark, X, MoreHorizontal, LogOut, User, LayoutList, Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
@@ -24,7 +24,7 @@ import AktiiviLogo from './AktiiviLogo'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 import { deriveKaupungit } from '@/lib/cityFilter'
-import DiagonaalKortti from './DiagonaalKortti'
+import DiagonaalKortti, { diagonaalKorttiVariants } from './DiagonaalKortti'
 import PaikkaSheet from './PaikkaSheet'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
@@ -264,6 +264,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [searchAukinyt, setSearchAukinyt]     = useState(false)
   const [searchKertakaynti, setSearchKertakaynti] = useState(false)
   const [searchKaupunki, setSearchKaupunki]   = useState('Kaikki')
+  const [todoOpen, setTodoOpen]               = useState(false)
   const [searchFocused, setSearchFocused]     = useState(false)
   const inFlight = useRef<Set<number>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -308,6 +309,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
   function closeOverlays() {
     setRightOpen(false)
+    setTodoOpen(false)
   }
 
   function openSearch(focused: boolean) {
@@ -570,6 +572,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
   const anyOverlayOpen = rightOpen
 
+  const todoContainerVariants = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } }
+
+  const todoPaikat = paikat.filter(p => todoIds.has(p.id))
+
   const kaupungit = useMemo(() => deriveKaupungit(paikat), [paikat])
 
   const distancesMap = useMemo<Record<string, number>>(() => {
@@ -822,6 +828,49 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         <div className="fixed inset-0" style={{ zIndex: 63 }} onClick={closeOverlays} />
       )}
 
+      {/* ── TodoOverlay — partial-screen, right side, scale from top-right ── */}
+      <AnimatePresence>
+        {todoOpen && (
+          <motion.div
+            key="todo-overlay"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+            className="fixed right-0 bottom-0 glass rounded-l-2xl overflow-y-auto p-4"
+            style={{ transformOrigin: 'top right', top: 'max(60px, env(safe-area-inset-top) + 48px)', width: 'calc(100vw - 56px)', maxWidth: 420, zIndex: 62 }}
+          >
+            <p className="text-sm font-bold text-[#111111] uppercase tracking-widest mb-4">TO DO</p>
+            {todoPaikat.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 gap-3">
+                <Bookmark className="w-8 h-8 text-[rgba(17,17,17,0.2)]" />
+                <p className="text-sm font-bold text-[rgba(17,17,17,0.45)]">Lista on tyhjä</p>
+                <p className="text-sm text-[rgba(17,17,17,0.35)] text-center leading-normal">Lisää paikkoja kirjanmerkkipainikkeella</p>
+              </div>
+            ) : (
+              <motion.div
+                variants={todoContainerVariants}
+                initial="hidden"
+                animate="show"
+                className="flex flex-col gap-3"
+              >
+                {todoPaikat.map(p => (
+                  <DiagonaalKortti
+                    key={p.id}
+                    paikka={p}
+                    onShowMap={paikka => {
+                      if (paikka.latitude != null && paikka.longitude != null) {
+                        setAutoZoomTarget({ lat: paikka.latitude, lng: paikka.longitude })
+                      }
+                    }}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Top-left toolbar — search (always) + list toggle (only when search open) */}
       <div
         className="fixed"
@@ -908,14 +957,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   <User className="w-3.5 h-3.5" />
                   Profiili
                 </Link>
-                <Link
-                  href="/suosikit"
-                  onClick={closeOverlays}
+                <button
+                  onClick={() => { setTodoOpen(true); closeOverlays() }}
                   className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                 >
                   <Bookmark className="w-3.5 h-3.5" />
                   TO DO
-                </Link>
+                </button>
                 {supabaseUser ? (
                   <button
                     onClick={() => {
@@ -961,6 +1009,30 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           </button>
         </div>
       </div>
+
+      {/* ── TodoButton — fixed below nav-pill, right side ─────────────── */}
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setTodoOpen(o => !o)}
+        className="w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
+        style={{ position: 'fixed', right: 16, top: 'calc(max(12px, env(safe-area-inset-top)) + 48px)', zIndex: 64 }}
+        aria-label={todoOpen ? 'Sulje TO DO -lista' : 'Avaa TO DO -lista'}
+      >
+        <AnimatePresence mode="wait">
+          {todoOpen
+            ? (
+              <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+                <X className="w-4 h-4" />
+              </motion.span>
+            )
+            : (
+              <motion.span key="bm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+                <Bookmark className="w-4 h-4" />
+              </motion.span>
+            )
+          }
+        </AnimatePresence>
+      </motion.button>
 
       {/* ── Main bottom sheet ──────────────────────────────────────────── */}
       {/* Tab (HANDLE_H) stays visible at bottom when closed — no separate FAB */}
