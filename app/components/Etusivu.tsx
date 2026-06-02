@@ -272,8 +272,6 @@ function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect 
       ? selected[0]
       : selected[idx % selected.length]
 
-  const isActive = selected.length > 0
-
   function handleToggle() {
     if (!open && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
@@ -289,7 +287,7 @@ function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect 
         whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
         onClick={handleToggle}
         aria-label={label}
-        className={`h-8 min-w-[7rem] px-3 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)] flex items-center justify-between gap-1.5 overflow-hidden ${isActive ? 'bg-[#111111] text-white' : 'glass text-[rgba(17,17,17,0.45)]'}`}
+        className="h-8 min-w-[7rem] px-3 rounded-full text-xs font-bold glass text-[rgba(17,17,17,0.45)] flex items-center justify-between gap-1.5 overflow-hidden"
       >
         <AnimatePresence mode="wait">
           <motion.span
@@ -304,7 +302,7 @@ function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect 
           </motion.span>
         </AnimatePresence>
         {selected.length > 1 && (
-          <span className="text-[10px] font-bold bg-white/20 rounded-full px-1 flex-shrink-0">{selected.length}</span>
+          <span className="text-[10px] font-bold bg-[rgba(17,17,17,0.12)] rounded-full px-1 flex-shrink-0">{selected.length}</span>
         )}
       </motion.button>
       <AnimatePresence>
@@ -319,7 +317,10 @@ function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect 
             className="fixed z-[65] glass rounded-2xl overflow-hidden min-w-[9rem] divide-y divide-[rgba(0,0,0,0.06)]"
           >
             {allItems.map(item => {
-              const isSelected = selected.some(s => s.toLowerCase() === item.toLowerCase())
+              const key = item.toLowerCase()
+              const isSelected = selected.some(s => s.toLowerCase() === key)
+              const Icon = SPORT_ICONS[key]
+              const color = lajiKonfig[key]?.color
               return (
                 <button
                   key={item}
@@ -330,6 +331,7 @@ function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect 
                   className={`w-full text-left px-4 py-2.5 text-xs font-bold flex items-center gap-2.5 [transition:color_100ms] ${isSelected ? 'text-[#111111]' : 'text-[rgba(17,17,17,0.45)]'}`}
                 >
                   <span className={`w-3 h-3 rounded-full flex-shrink-0 ${isSelected ? 'bg-[#111111]' : 'border border-[rgba(0,0,0,0.15)]'}`} />
+                  {Icon && <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: color ?? 'currentColor' }} />}
                   {item}
                 </button>
               )
@@ -1408,6 +1410,43 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         )}
       </AnimatePresence>
 
+      {/* ── Filter pills — centered below search bar ── */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            key="filter-pills"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed flex justify-center gap-2 py-2"
+            style={{
+              top: 'calc(max(12px, env(safe-area-inset-top)) + 52px)',
+              left: 0,
+              right: 0,
+              zIndex: 62,
+            }}
+          >
+            {kaupungit.length > 2 && (
+              <FilterCarouselPill
+                label="Suodata kaupungin mukaan"
+                allItems={kaupunkiItems}
+                selected={searchKaupunki === 'Kaikki' ? [] : [searchKaupunki]}
+                singleSelect={true}
+                onToggle={(item) => setSearchKaupunki(item === searchKaupunki ? 'Kaikki' : item)}
+              />
+            )}
+            <FilterCarouselPill
+              label="Suodata lajin mukaan"
+              allItems={LAJIT_FILTTERI.filter(l => l !== 'Kaikki')}
+              selected={searchLaji}
+              singleSelect={false}
+              onToggle={(item) => setSearchLaji(prev => prev.includes(item) ? prev.filter(l => l !== item) : [...prev, item])}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Search results — transparent container, cards float over map ── */}
       <AnimatePresence>
         {searchOpen && (
@@ -1420,33 +1459,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             transition={{ duration: 0.2 }}
             className="fixed overflow-y-auto"
             style={{
-              top: 'calc(max(12px, env(safe-area-inset-top)) + 52px)',
+              top: 'calc(max(12px, env(safe-area-inset-top)) + 100px)',
               left: 0,
               right: 0,
-              maxHeight: `calc(100dvh - max(12px, env(safe-area-inset-top)) - 52px - ${HANDLE_H + 8}px)`,
+              maxHeight: `calc(100dvh - max(12px, env(safe-area-inset-top)) - 100px - ${HANDLE_H + 8}px)`,
               zIndex: 61,
             }}
           >
             <div className="px-4 pb-4 mx-auto" style={{ maxWidth: 480 }}>
-              {/* Compact filter pills */}
-              <div className="flex items-center gap-2 flex-wrap mb-3">
-                {kaupungit.length > 2 && (
-                  <FilterCarouselPill
-                    label="Suodata kaupungin mukaan"
-                    allItems={kaupunkiItems}
-                    selected={searchKaupunki === 'Kaikki' ? [] : [searchKaupunki]}
-                    singleSelect={true}
-                    onToggle={(item) => setSearchKaupunki(item === searchKaupunki ? 'Kaikki' : item)}
-                  />
-                )}
-                <FilterCarouselPill
-                  label="Suodata lajin mukaan"
-                  allItems={LAJIT_FILTTERI.filter(l => l !== 'Kaikki')}
-                  selected={searchLaji}
-                  singleSelect={false}
-                  onToggle={(item) => setSearchLaji(prev => prev.includes(item) ? prev.filter(l => l !== item) : [...prev, item])}
-                />
-              </div>
 
               {/* Card list — only in browse mode (LayoutList), not when typing (Search) */}
               {!searchFocused && (searchSuodatettu.length > 0 ? (
