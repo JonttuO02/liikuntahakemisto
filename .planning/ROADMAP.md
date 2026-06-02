@@ -146,7 +146,13 @@ Plans:
 **Plans**: 2 plans
 Plans:
 - [ ] 26-01-PLAN.md — Dead state removal + searchLaji string[] refactor + sessionStorage _v: 2 migration (FILTER-02)
+
+Wave 2 *(blocked on Wave 1 completion)*
 - [ ] 26-02-PLAN.md — FilterCarouselPill component + filter row replacement (FILTER-03)
+
+**Cross-cutting constraints:**
+- `app/components/Etusivu.tsx` is the sole blast-radius file — both plans modify it sequentially
+- `searchLaji: string[]` type contract: Wave 1 writes it, Wave 2 consumes it
 **UI hint**: yes
 
 ---

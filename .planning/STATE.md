@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Visuaalinen elävöitys & UX-hienosäätö
-status: executing
-last_updated: "2026-06-02T09:00:00.000Z"
-last_activity: 2026-06-02 — Phase 25 complete (2/2 plans, verified)
+status: completed
+last_updated: "2026-06-02T10:00:00.000Z"
+last_activity: 2026-06-02 — Phase 26 planned (2 plans, 2 waves)
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 7
+  completed_phases: 3
+  total_plans: 9
   completed_plans: 7
   percent: 75
 ---
@@ -17,9 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 25 of 26 (TO DO overlay) — Complete
-Status: Phase 25 complete — ready for Phase 26
-Last activity: 2026-06-02 — Phase 25 planned (2 plans, 2 waves)
+Phase: 26 of 26 (Filtterit) — Planned
+Status: Phase 26 planned — ready to execute
+Last activity: 2026-06-02 — Phase 26 planned (2 plans, 2 waves)
 
 Progress: [#####_____] 50%
 
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 | 23 | Visuaalinen perusta | ✅ Complete |
 | 24 | Callout-kortti & ikonit | ✅ Complete |
 | 25 | TO DO overlay | ✅ Complete |
-| 26 | Filtterit | Not started |
+| 26 | Filtterit | 🗂 Planned |
 
 ## Active Decisions
 
@@ -68,5 +68,5 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 
 ## Session Continuity
 
-Last session: 2026-06-02T09:00:00.000Z
-Resume: /gsd:discuss-phase 26
+Last session: 2026-06-02T10:00:00.000Z
+Resume: /gsd:execute-phase 26
