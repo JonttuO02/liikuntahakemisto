@@ -145,7 +145,7 @@ Plans:
   3. Filtteripainike pyörittää karuselli-animaatiolla aktiivisia valintoja kun filttereillä on arvoja
 **Plans**: 2 plans
 Plans:
-- [ ] 26-01-PLAN.md — Dead state removal + searchLaji string[] refactor + sessionStorage _v: 2 migration (FILTER-02)
+- [x] 26-01-PLAN.md — Dead state removal + searchLaji string[] refactor + sessionStorage _v: 2 migration (FILTER-02)
 
 Wave 2 *(blocked on Wave 1 completion)*
 - [ ] 26-02-PLAN.md — FilterCarouselPill component + filter row replacement (FILTER-03)
@@ -186,4 +186,4 @@ Wave 2 *(blocked on Wave 1 completion)*
 | 23. Visuaalinen perusta | v1.5 | 0/4 | 🗂 Planned | - |
 | 24. Callout-kortti & ikonit | v1.5 | 0/1 | 🗂 Planned | - |
 | 25. TO DO overlay | v1.5 | 0/2 | 🗂 Planned | - |
-| 26. Filtterit | v1.5 | 0/2 | 🗂 Planned | - |
+| 26. Filtterit | v1.5 | 1/2 | 🔄 Executing | - |

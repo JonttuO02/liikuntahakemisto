@@ -2,24 +2,24 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Visuaalinen elävöitys & UX-hienosäätö
-status: completed
-last_updated: "2026-06-02T10:00:00.000Z"
-last_activity: 2026-06-02 — Phase 26 planned (2 plans, 2 waves)
+status: executing
+last_updated: "2026-06-02T15:39:54.678Z"
+last_activity: 2026-06-02 — Phase 26 Plan 01 complete (filter state refactor + sessionStorage _v:2)
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 9
-  completed_plans: 7
-  percent: 75
+  completed_plans: 8
+  percent: 78
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 26 of 26 (Filtterit) — Planned
-Status: Phase 26 planned — ready to execute
-Last activity: 2026-06-02 — Phase 26 planned (2 plans, 2 waves)
+Phase: 26 of 26 (Filtterit) — Executing (Plan 01 done, Plan 02 pending)
+Status: Phase 26 executing — Plan 01 complete
+Last activity: 2026-06-02 — Phase 26 Plan 01 complete (filter state refactor + sessionStorage _v:2)
 
 Progress: [#####_____] 50%
 
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 | 23 | Visuaalinen perusta | ✅ Complete |
 | 24 | Callout-kortti & ikonit | ✅ Complete |
 | 25 | TO DO overlay | ✅ Complete |
-| 26 | Filtterit | 🗂 Planned |
+| 26 | Filtterit | 🔄 Executing (1/2 plans done) |
 
 ## Active Decisions
 
@@ -45,7 +45,7 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 - v1.5: Pin animations use transform/opacity ONLY — never box-shadow, background, filter
 - v1.5: @googlemaps/markerclusterer must NOT be activated — extend clusterPinUrl() visually only
 - v1.5: /suosikit page route must survive intact (PWA deep links, auth redirects, Serwist precache)
-- v1.5: sessionStorage key 'etusivu-scroll-state' gains _v: 2 field when FILTER-02 ships
+- v1.5: sessionStorage key 'etusivu-scroll-state' _v: 2 SHIPPED (Plan 26-01) — old sessions rejected
 - v1.5: Etusivu.tsx is the blast-radius file — Phases 24/25/26 must execute sequentially
 - v1.5: CalloutCard on neliö 160×160px, pystysuuntainen layout, kirjain kerrallaan slide-animaatio
 - (carried) Map focus URL: /?id=<paikka_id> — never ?nakyma=kartta (dead param)
@@ -68,5 +68,6 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 
 ## Session Continuity
 
-Last session: 2026-06-02T10:00:00.000Z
+Last session: 2026-06-02T10:20:00.000Z
+Stopped at: Plan 26-01 complete — Plan 26-02 (carousel pills) next
 Resume: /gsd:execute-phase 26

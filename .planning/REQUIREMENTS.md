@@ -25,7 +25,7 @@
 
 ### Filtterit
 
-- [ ] **FILTER-02**: Filtterit yksinkertaistetaan: vain paikkakunta + laji jätetään; kertakäynti OK ja auki nyt -filtterit poistetaan; sessionStorage _v: 2 päivitetään
+- [x] **FILTER-02**: Filtterit yksinkertaistetaan: vain paikkakunta + laji jätetään; kertakäynti OK ja auki nyt -filtterit poistetaan; sessionStorage _v: 2 päivitetään
 - [ ] **FILTER-03**: Filtteripainike näyttää aktiiviset valinnat karuselli-animaatiolla (pyörittää valintoja) kun filttereillä on aktiivisia arvoja
 
 ---
@@ -56,5 +56,5 @@
 | TODO-05 | Phase 25 | Pending |
 | TODO-06 | Phase 25 | Pending |
 | TODO-07 | Phase 25 | Pending |
-| FILTER-02 | Phase 26 | Pending |
+| FILTER-02 | Phase 26 | ✅ Complete (26-01) |
 | FILTER-03 | Phase 26 | Pending |
