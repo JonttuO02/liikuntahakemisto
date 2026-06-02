@@ -143,7 +143,10 @@ Plans:
   1. Filtterialue näyttää vain paikkakunta- ja lajisuodattimet ("Kertakäynti OK" ja "Auki nyt" -painikkeet poistettu näkyviltä)
   2. Olemassa olevat sessionStorage-tilat ovat yhteensopivia: _v: 2 -kenttä lisätty; vanha sessiodata ei palauta poistettuja filttereitä
   3. Filtteripainike pyörittää karuselli-animaatiolla aktiivisia valintoja kun filttereillä on arvoja
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 26-01-PLAN.md — Dead state removal + searchLaji string[] refactor + sessionStorage _v: 2 migration (FILTER-02)
+- [ ] 26-02-PLAN.md — FilterCarouselPill component + filter row replacement (FILTER-03)
 **UI hint**: yes
 
 ---
@@ -177,4 +180,4 @@ Plans:
 | 23. Visuaalinen perusta | v1.5 | 0/4 | 🗂 Planned | - |
 | 24. Callout-kortti & ikonit | v1.5 | 0/1 | 🗂 Planned | - |
 | 25. TO DO overlay | v1.5 | 0/2 | 🗂 Planned | - |
-| 26. Filtterit | v1.5 | 0/TBD | Not started | - |
+| 26. Filtterit | v1.5 | 0/2 | 🗂 Planned | - |
