@@ -391,10 +391,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     return true
   }
 
-  async function handleOverlayDelete(id: number) {
-    const completed = await toggleTodo(id)
-    if (completed && supabaseUser !== null) {
+  function handleOverlayDelete(id: number) {
+    if (supabaseUser !== null) {
       setPendingReviewPaikkaId(id)
+    } else {
+      toggleTodo(id)
     }
   }
 
@@ -428,11 +429,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     } else {
       setInlineSubmitting(false)
       setInlineSubmitted(true)
+      const idToRemove = reviewPaikkaId
       reviewResetTimerRef.current = setTimeout(() => {
         setReviewPaikkaId(null)
         setInlineRating(0)
         setInlineTeksti('')
         setInlineSubmitted(false)
+        if (idToRemove) toggleTodo(idToRemove)
       }, 1500)
     }
   }
@@ -914,106 +917,53 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 <p className="text-sm text-[rgba(17,17,17,0.35)] text-center leading-normal">Lisää paikkoja kirjanmerkkipainikkeella</p>
               </div>
             ) : (
-              <motion.div
-                variants={todoContainerVariants}
-                initial="hidden"
-                animate="show"
-                className="flex flex-col gap-3"
-              >
-                {todoPaikat.map(p => (
-                  <DiagonaalKortti
-                    key={p.id}
-                    paikka={p}
-                    isSaved={true}
-                    onShowMap={paikka => {
-                      if (paikka.latitude != null && paikka.longitude != null) {
-                        setAutoZoomTarget({ lat: paikka.latitude, lng: paikka.longitude })
-                      }
-                    }}
-                    onToggleTodo={handleOverlayDelete}
-                  />
-                ))}
-              </motion.div>
+              <div className="flex flex-col gap-3">
+                {todoPaikat.map(p => {
+                  const LAYOUT_T = { layout: { duration: 0.28, ease: [0.25, 0.1, 0.25, 1] as [number,number,number,number] } }
+                  if (pendingReviewPaikkaId === p.id) {
+                    return (
+                      <motion.div key={p.id} layout transition={LAYOUT_T} className="glass rounded-2xl p-4 flex items-center justify-between">
+                        <p className="text-sm font-bold text-[#111111]">Kävikö paikassa?</p>
+                        <div className="flex gap-2">
+                          <motion.button whileTap={{ scale: 0.95 }} onClick={() => { setReviewPaikkaId(p.id); setPendingReviewPaikkaId(null) }} className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-2 rounded-full [transition:background-color_150ms_ease]">Kyllä</motion.button>
+                          <motion.button whileTap={{ scale: 0.95 }} onClick={async () => { await toggleTodo(p.id); setPendingReviewPaikkaId(null) }} className="border border-[rgba(0,0,0,0.12)] text-[#111111] font-bold text-sm px-4 py-2 rounded-full">Ei</motion.button>
+                        </div>
+                      </motion.div>
+                    )
+                  }
+                  if (reviewPaikkaId === p.id) {
+                    return (
+                      <motion.div key={p.id} layout transition={LAYOUT_T} className="glass rounded-2xl flex flex-col gap-3 p-4">
+                        {inlineSubmitted ? (
+                          <p className="text-sm font-bold text-[#111111]">Arvostelu tallennettu</p>
+                        ) : (
+                          <>
+                            <div className="flex flex-col gap-1">
+                              <p className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">TÄHTIARVOSANA</p>
+                              <StarPicker value={inlineRating} onChange={setInlineRating} />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <p className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">KOMMENTTI</p>
+                              <textarea className="w-full text-sm text-[#111111] bg-transparent border border-[rgba(0,0,0,0.12)] rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-[rgba(0,0,0,0.25)]" rows={3} placeholder="Vapaaehtoinen kommentti" value={inlineTeksti} onChange={e => setInlineTeksti(e.target.value)} />
+                            </div>
+                            {inlineSubmitError && <p className="text-sm text-red-600">{inlineSubmitError}</p>}
+                            <div className="flex items-center gap-3">
+                              <button disabled={inlineRating === 0 || inlineSubmitting} onClick={handleInlineReviewSubmit} className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-2 rounded-full [transition:background-color_150ms_ease] disabled:opacity-40">{inlineSubmitting ? 'Tallennetaan…' : 'Jätä arvostelu'}</button>
+                              <button onClick={() => { toggleTodo(p.id); resetInlineReview() }} className="text-sm text-[rgba(17,17,17,0.45)] underline">Ohita</button>
+                            </div>
+                          </>
+                        )}
+                      </motion.div>
+                    )
+                  }
+                  return (
+                    <motion.div key={p.id} layout transition={LAYOUT_T}>
+                      <DiagonaalKortti paikka={p} isSaved={true} onShowMap={pk => { if (pk.latitude != null && pk.longitude != null) setAutoZoomTarget({ lat: pk.latitude, lng: pk.longitude }) }} onToggleTodo={handleOverlayDelete} />
+                    </motion.div>
+                  )
+                })}
+              </div>
             )}
-            <AnimatePresence>
-              {pendingReviewPaikkaId !== null && todoOpen && (
-                <motion.div
-                  key="kavikoPrompt"
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-                  className="glass rounded-2xl h-32 flex items-center justify-between px-4"
-                >
-                  <p className="text-sm font-bold text-[#111111]">Kävikö paikassa?</p>
-                  <div className="flex gap-2">
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => { setReviewPaikkaId(pendingReviewPaikkaId); setPendingReviewPaikkaId(null) }}
-                      className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-2 rounded-full [transition:background-color_150ms_ease]"
-                    >
-                      Kyllä
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setPendingReviewPaikkaId(null)}
-                      className="border border-[rgba(0,0,0,0.12)] text-[#111111] font-bold text-sm px-4 py-2 rounded-full"
-                    >
-                      Ei
-                    </motion.button>
-                  </div>
-                </motion.div>
-              )}
-              {reviewPaikkaId !== null && (
-                <motion.div
-                  key="inlineReview"
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-                  className="glass rounded-2xl flex flex-col gap-3 p-4"
-                >
-                  {inlineSubmitted ? (
-                    <p className="text-sm font-bold text-[#111111]">Arvostelu tallennettu</p>
-                  ) : (
-                    <>
-                      <div className="flex flex-col gap-1">
-                        <p className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">TÄHTIARVOSANA</p>
-                        <StarPicker value={inlineRating} onChange={setInlineRating} />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <p className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">KOMMENTTI</p>
-                        <textarea
-                          className="w-full text-sm text-[#111111] bg-transparent border border-[rgba(0,0,0,0.12)] rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-[rgba(0,0,0,0.25)]"
-                          rows={3}
-                          placeholder="Vapaaehtoinen kommentti"
-                          value={inlineTeksti}
-                          onChange={e => setInlineTeksti(e.target.value)}
-                        />
-                      </div>
-                      {inlineSubmitError && (
-                        <p className="text-sm text-red-600">{inlineSubmitError}</p>
-                      )}
-                      <div className="flex items-center gap-3">
-                        <button
-                          disabled={inlineRating === 0 || inlineSubmitting}
-                          onClick={handleInlineReviewSubmit}
-                          className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-2 rounded-full [transition:background-color_150ms_ease] disabled:opacity-40"
-                        >
-                          {inlineSubmitting ? 'Tallennetaan…' : 'Jätä arvostelu'}
-                        </button>
-                        <button
-                          onClick={resetInlineReview}
-                          className="text-sm text-[rgba(17,17,17,0.45)] underline"
-                        >
-                          Ohita
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
