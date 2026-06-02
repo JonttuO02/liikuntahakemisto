@@ -732,6 +732,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const todoPaikat = paikat.filter(p => todoIds.has(p.id))
 
   const kaupungit = useMemo(() => deriveKaupungit(paikat), [paikat])
+  const kaupunkiItems = kaupungit.filter(k => k !== 'Kaikki')
 
   const distancesMap = useMemo<Record<string, number>>(() => {
     if (!coords) return {}
@@ -1402,15 +1403,21 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               {/* Compact filter pills */}
               <div className="flex items-center gap-2 flex-wrap mb-3">
                 {kaupungit.length > 2 && (
-                  <select
-                    value={searchKaupunki}
-                    onChange={e => setSearchKaupunki(e.target.value)}
-                    aria-label="Suodata kaupungin mukaan"
-                    className="glass h-8 rounded-full px-3 text-xs font-bold text-[#111111] border-0 outline-none cursor-pointer"
-                  >
-                    {kaupungit.map(k => <option key={k} value={k}>{k}</option>)}
-                  </select>
+                  <FilterCarouselPill
+                    label="Suodata kaupungin mukaan"
+                    allItems={kaupunkiItems}
+                    selected={searchKaupunki === 'Kaikki' ? [] : [searchKaupunki]}
+                    singleSelect={true}
+                    onToggle={(item) => setSearchKaupunki(item === searchKaupunki ? 'Kaikki' : item)}
+                  />
                 )}
+                <FilterCarouselPill
+                  label="Suodata lajin mukaan"
+                  allItems={LAJIT_FILTTERI.filter(l => l !== 'Kaikki')}
+                  selected={searchLaji}
+                  singleSelect={false}
+                  onToggle={(item) => setSearchLaji(prev => prev.includes(item) ? prev.filter(l => l !== item) : [...prev, item])}
+                />
                 <span className="text-xs text-[rgba(17,17,17,0.4)] tabular-nums ml-auto">
                   {searchSuodatettu.length} paikkaa
                 </span>
