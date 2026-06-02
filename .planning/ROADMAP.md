@@ -84,7 +84,7 @@ Full archive: `.planning/milestones/v1.4-ROADMAP.md`
 - [x] **Phase 23: Visuaalinen perusta** — Sininen liukuväri karttapinneille, kiilto-animaatio, fonttivaihto Outfit:iin, bottom sheet -logo uudistus
 - [ ] **Phase 24: Callout-kortti & ikonit** — Callout-kortti suuremmaksi ja pyörittää tietoja; laji-ikonit värillisinä kaikissa komponenteissa
 - [x] **Phase 25: TO DO overlay** — TO DO -lista etusivun päälle animoituna overlayina; arvosteluehdotus poiston yhteydessä
-- [ ] **Phase 26: Filtterit** — Yksinkertaistettu filtteri (vain paikkakunta + laji); aktiiviset valinnat karuselli-animaatiolla
+- [x] **Phase 26: Filtterit** — Yksinkertaistettu filtteri (vain paikkakunta + laji); aktiiviset valinnat karuselli-animaatiolla (completed 2026-06-02)
 
 ## Phase Details
 
@@ -148,7 +148,7 @@ Plans:
 - [x] 26-01-PLAN.md — Dead state removal + searchLaji string[] refactor + sessionStorage _v: 2 migration (FILTER-02)
 
 Wave 2 *(blocked on Wave 1 completion)*
-- [ ] 26-02-PLAN.md — FilterCarouselPill component + filter row replacement (FILTER-03)
+- [x] 26-02-PLAN.md — FilterCarouselPill component + filter row replacement (FILTER-03)
 
 **Cross-cutting constraints:**
 - `app/components/Etusivu.tsx` is the sole blast-radius file — both plans modify it sequentially
@@ -186,4 +186,4 @@ Wave 2 *(blocked on Wave 1 completion)*
 | 23. Visuaalinen perusta | v1.5 | 0/4 | 🗂 Planned | - |
 | 24. Callout-kortti & ikonit | v1.5 | 0/1 | 🗂 Planned | - |
 | 25. TO DO overlay | v1.5 | 0/2 | 🗂 Planned | - |
-| 26. Filtterit | v1.5 | 1/2 | 🔄 Executing | - |
+| 26. Filtterit | v1.5 | 2/2 | Complete   | 2026-06-02 |
