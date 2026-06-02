@@ -26,6 +26,7 @@ import AuthModal from './AuthModal'
 import { deriveKaupungit } from '@/lib/cityFilter'
 import DiagonaalKortti, { diagonaalKorttiVariants } from './DiagonaalKortti'
 import PaikkaSheet from './PaikkaSheet'
+import StarPicker from './StarPicker'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const HANDLE_H = 44 // visible sheet tab height when closed
@@ -265,6 +266,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [searchKertakaynti, setSearchKertakaynti] = useState(false)
   const [searchKaupunki, setSearchKaupunki]   = useState('Kaikki')
   const [todoOpen, setTodoOpen]               = useState(false)
+  const [pendingReviewPaikkaId, setPendingReviewPaikkaId] = useState<number | null>(null)
+  const [reviewPaikkaId, setReviewPaikkaId]   = useState<number | null>(null)
+  const [inlineRating, setInlineRating]       = useState(0)
+  const [inlineTeksti, setInlineTeksti]       = useState('')
+  const [inlineSubmitting, setInlineSubmitting] = useState(false)
+  const [inlineSubmitError, setInlineSubmitError] = useState<string | null>(null)
+  const [inlineSubmitted, setInlineSubmitted] = useState(false)
   const [searchFocused, setSearchFocused]     = useState(false)
   const inFlight = useRef<Set<number>>(new Set())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -310,6 +318,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   function closeOverlays() {
     setRightOpen(false)
     setTodoOpen(false)
+    setPendingReviewPaikkaId(null)
+    setReviewPaikkaId(null)
   }
 
   function openSearch(focused: boolean) {
@@ -375,6 +385,52 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       }
     } finally {
       inFlight.current.delete(id)
+    }
+  }
+
+  async function handleOverlayDelete(id: number) {
+    await toggleTodo(id)
+    if (supabaseUser !== null) {
+      setPendingReviewPaikkaId(id)
+    }
+  }
+
+  function resetInlineReview() {
+    setReviewPaikkaId(null)
+    setInlineRating(0)
+    setInlineTeksti('')
+    setInlineSubmitError(null)
+    setInlineSubmitted(false)
+  }
+
+  async function handleInlineReviewSubmit() {
+    if (!supabaseUser || inlineRating === 0 || !reviewPaikkaId) return
+    setInlineSubmitting(true)
+    setInlineSubmitError(null)
+    const supabase = createBrowserSupabase()
+    const payload = {
+      user_id: supabaseUser.id,
+      paikka_id: reviewPaikkaId,
+      rating: inlineRating,
+      teksti: inlineTeksti.trim(),
+      is_anonymous: false,
+      reviewer_name: supabaseUser.email?.split('@')[0] ?? null,
+      visit_date: null,
+      crowd_rating: null,
+    }
+    const { error } = await supabase.from('reviews').upsert(payload, { onConflict: 'user_id,paikka_id' })
+    if (error) {
+      setInlineSubmitting(false)
+      setInlineSubmitError('Tallennus epäonnistui. Yritä uudelleen.')
+    } else {
+      setInlineSubmitting(false)
+      setInlineSubmitted(true)
+      setTimeout(() => {
+        setReviewPaikkaId(null)
+        setInlineRating(0)
+        setInlineTeksti('')
+        setInlineSubmitted(false)
+      }, 1500)
     }
   }
 
@@ -863,10 +919,90 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                         setAutoZoomTarget({ lat: paikka.latitude, lng: paikka.longitude })
                       }
                     }}
+                    onToggleTodo={handleOverlayDelete}
                   />
                 ))}
               </motion.div>
             )}
+            <AnimatePresence>
+              {pendingReviewPaikkaId !== null && todoOpen && (
+                <motion.div
+                  key="kavikoPrompt"
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+                  className="glass rounded-2xl h-32 flex items-center justify-between px-4"
+                >
+                  <p className="text-sm font-bold text-[#111111]">Kävikö paikassa?</p>
+                  <div className="flex gap-2">
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => { setReviewPaikkaId(pendingReviewPaikkaId); setPendingReviewPaikkaId(null) }}
+                      className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-2 rounded-full [transition:background-color_150ms_ease]"
+                    >
+                      Kyllä
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setPendingReviewPaikkaId(null)}
+                      className="border border-[rgba(0,0,0,0.12)] text-[#111111] font-bold text-sm px-4 py-2 rounded-full"
+                    >
+                      Ei
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+              {reviewPaikkaId !== null && (
+                <motion.div
+                  key="inlineReview"
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+                  className="glass rounded-2xl flex flex-col gap-3 p-4"
+                >
+                  {inlineSubmitted ? (
+                    <p className="text-sm font-bold text-[#111111]">Arvostelu tallennettu</p>
+                  ) : (
+                    <>
+                      <div className="flex flex-col gap-1">
+                        <p className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">TÄHTIARVOSANA</p>
+                        <StarPicker value={inlineRating} onChange={setInlineRating} />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <p className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">KOMMENTTI</p>
+                        <textarea
+                          className="w-full text-sm text-[#111111] bg-transparent border border-[rgba(0,0,0,0.12)] rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-[rgba(0,0,0,0.25)]"
+                          rows={3}
+                          placeholder="Vapaaehtoinen kommentti"
+                          value={inlineTeksti}
+                          onChange={e => setInlineTeksti(e.target.value)}
+                        />
+                      </div>
+                      {inlineSubmitError && (
+                        <p className="text-sm text-red-600">{inlineSubmitError}</p>
+                      )}
+                      <div className="flex items-center gap-3">
+                        <button
+                          disabled={inlineRating === 0 || inlineSubmitting}
+                          onClick={handleInlineReviewSubmit}
+                          className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-2 rounded-full [transition:background-color_150ms_ease] disabled:opacity-40"
+                        >
+                          {inlineSubmitting ? 'Tallennetaan…' : 'Jätä arvostelu'}
+                        </button>
+                        <button
+                          onClick={resetInlineReview}
+                          className="text-sm text-[rgba(17,17,17,0.45)] underline"
+                        >
+                          Ohita
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
