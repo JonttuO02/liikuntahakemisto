@@ -222,6 +222,97 @@ function getTimeBasedFallback(): string {
   return 'Iltaa · Löydä paras liikuntapaikka Tampereelta'
 }
 
+interface FilterCarouselPillProps {
+  label: string
+  allItems: string[]
+  selected: string[]
+  onToggle: (item: string) => void
+  singleSelect?: boolean
+}
+
+function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect }: FilterCarouselPillProps) {
+  const [idx, setIdx] = useState(0)
+  const [open, setOpen] = useState(false)
+
+  // Reset idx to 0 whenever selection identity changes
+  useEffect(() => {
+    setIdx(0)
+  }, [selected.join(',')])
+
+  // Carousel interval: pause when exactly 1 selected, cycle selected when 2+, cycle all when 0
+  useEffect(() => {
+    if (selected.length === 1) return
+    const items = selected.length > 1 ? selected : allItems
+    const id = setInterval(() => setIdx(i => (i + 1) % items.length), 2000)
+    return () => clearInterval(id)
+  }, [selected.length, allItems.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const displayItems = selected.length > 1 ? selected : allItems
+  const displayText = selected.length === 0
+    ? allItems[idx % allItems.length]
+    : selected.length === 1
+      ? selected[0]
+      : selected[idx % selected.length]
+
+  const isActive = selected.length > 0
+
+  return (
+    <div>
+      <motion.button
+        whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
+        onClick={() => setOpen(v => !v)}
+        aria-label={label}
+        className={`h-8 px-3 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)] flex items-center gap-1.5 ${isActive ? 'bg-[#111111] text-white' : 'glass text-[rgba(17,17,17,0.45)]'}`}
+      >
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={selected.length === 1 ? 'static' : idx}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="pointer-events-none"
+          >
+            {displayText}
+          </motion.span>
+        </AnimatePresence>
+        {selected.length > 1 && (
+          <span className="text-[10px] font-bold bg-white/20 rounded-full px-1">{selected.length}</span>
+        )}
+      </motion.button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+            className="flex flex-wrap gap-1.5 mt-2 mb-1"
+          >
+            {allItems.map(item => {
+              const isSelected = selected.includes(item)
+              return (
+                <button
+                  key={item}
+                  onClick={() => {
+                    onToggle(item)
+                    if (singleSelect) setOpen(false)
+                  }}
+                  className={isSelected
+                    ? 'bg-[#111111] text-white rounded-full px-3 py-1 text-xs font-bold'
+                    : 'glass rounded-full px-3 py-1 text-xs font-bold text-[rgba(17,17,17,0.45)]'}
+                >
+                  {item}
+                </button>
+              )
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [saa, setSaa]               = useState<SaaTiedot | null>(null)
   const [aiTeksti, setAiTeksti]     = useState<string | null>(null)
