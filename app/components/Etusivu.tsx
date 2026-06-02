@@ -316,8 +316,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     setRightOpen(false)
     setSearchOpen(false)
     setValittu(null)
-    if (sheetPhase === 'open') setSheetPhase('sliding')
-    setTodoOpen(true)
+    if (sheetPhase === 'open') {
+      setSheetPhase('sliding')
+      setTimeout(() => setTodoOpen(true), 260)
+    } else {
+      setTodoOpen(true)
+    }
   }
 
   function openSearch(focused: boolean) {
@@ -902,17 +906,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             className="fixed glass rounded-2xl overflow-y-auto p-4"
             style={{ transformOrigin: 'top right', top: 'max(60px, env(safe-area-inset-top) + 48px)', right: 12, bottom: 12, width: 'calc(100vw - 56px)', maxWidth: 420, zIndex: 62 }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-bold text-[#111111] uppercase tracking-widest">TO DO</p>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => { resetInlineReview(); setTodoOpen(false) }}
-                className="w-7 h-7 -mr-1 flex items-center justify-center text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms_ease]"
-                aria-label="Sulje TO DO -lista"
-              >
-                <X className="w-4 h-4" />
-              </motion.button>
-            </div>
+            <p className="text-sm font-bold text-[#111111] uppercase tracking-widest mb-4">TO DO</p>
             {todoPaikat.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 gap-3">
                 <Bookmark className="w-8 h-8 text-[rgba(17,17,17,0.2)]" />
@@ -1166,12 +1160,23 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       {/* ── TodoButton — fixed below nav-pill, right side ─────────────── */}
       <motion.button
         whileTap={{ scale: 0.95 }}
-        onClick={openTodoOverlay}
-        className="w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
-        style={{ position: 'fixed', right: 16, top: 'calc(max(12px, env(safe-area-inset-top)) + 48px)', zIndex: 64 }}
-        aria-label="Avaa TO DO -lista"
+        onClick={() => {
+          if (todoOpen) { resetInlineReview(); setTodoOpen(false) }
+          else openTodoOverlay()
+        }}
+        className={todoOpen
+          ? 'w-10 h-10 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_ease]'
+          : 'w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]'
+        }
+        style={{ position: 'fixed', right: 16, top: 'calc(max(12px, env(safe-area-inset-top)) + 48px)', zIndex: 66 }}
+        aria-label={todoOpen ? 'Sulje TO DO -lista' : 'Avaa TO DO -lista'}
       >
-        <Bookmark className="w-4 h-4" />
+        <AnimatePresence mode="wait">
+          {todoOpen
+            ? <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}><X className="w-4 h-4" /></motion.span>
+            : <motion.span key="bm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}><Bookmark className="w-4 h-4" /></motion.span>
+          }
+        </AnimatePresence>
       </motion.button>
 
       {/* ── Main bottom sheet ──────────────────────────────────────────── */}
