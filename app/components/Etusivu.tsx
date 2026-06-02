@@ -1149,7 +1149,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       {/* ── TodoButton — fixed below nav-pill, right side ─────────────── */}
       <motion.button
         whileTap={{ scale: 0.95 }}
-        onClick={() => setTodoOpen(o => !o)}
+        onClick={() => {
+          if (todoOpen) resetInlineReview()
+          setTodoOpen(o => !o)
+        }}
         className="w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
         style={{ position: 'fixed', right: 16, top: 'calc(max(12px, env(safe-area-inset-top)) + 48px)', zIndex: 64 }}
         aria-label={todoOpen ? 'Sulje TO DO -lista' : 'Avaa TO DO -lista'}
