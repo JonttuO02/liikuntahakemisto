@@ -4,11 +4,10 @@ import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
-import { Moon, Sun, Locate, Search, Bookmark, X, MoreHorizontal, LogOut, User, LayoutList, Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { Moon, Sun, Locate, Search, Bookmark, X, MoreHorizontal, LogOut, User, LayoutList, Activity } from 'lucide-react'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
-import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
+import { LAJIT_FILTTERI, lajiKonfig, SPORT_ICONS } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
 import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
@@ -117,16 +116,6 @@ const CHAR_VARIANTS = {
 const TEXT_CONTAINER_VARIANTS = {
   enter: { transition: { staggerChildren: 0.022 } },
   exit:  { transition: { staggerChildren: 0.014 } },
-}
-
-const SPORT_ICONS: Record<string, LucideIcon> = {
-  padel:         Zap,
-  kuntosali:     Dumbbell,
-  jooga:         Leaf,
-  uinti:         Waves,
-  tennis:        Target,
-  liikuntahalli: Building2,
-  liikunta:      Activity,
 }
 
 function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude: number } }) {

@@ -2,9 +2,8 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { MapPin, Bookmark, Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import { lajiKonfig } from '@/lib/lajit'
+import { MapPin, Bookmark, Activity } from 'lucide-react'
+import { lajiKonfig, SPORT_ICONS } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
 import { isMembershipOnly } from '@/lib/priceUtils'
@@ -19,16 +18,6 @@ export const diagonaalKorttiVariants = {
     y: 0,
     transition: { duration: 0.22, ease: EASE_OUT },
   },
-}
-
-const SPORT_ICONS: Record<string, LucideIcon> = {
-  padel:         Zap,
-  kuntosali:     Dumbbell,
-  jooga:         Leaf,
-  uinti:         Waves,
-  tennis:        Target,
-  liikuntahalli: Building2,
-  liikunta:      Activity,
 }
 
 interface DiagonaalKorttiProps {
