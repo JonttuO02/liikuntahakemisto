@@ -129,7 +129,10 @@ Plans:
   3. Overlay avautuu animaatiolla (nappi "sylkee" listan ulos) ja sulkeutuu animoituna
   4. TO DO -lista on visuaalisesti selvästi erottuva hakulistasta (otsikko, oma tyyli)
   5. Kun käyttäjä poistaa paikan listalta, pop-up kysyy "Kävikö paikassa?" ja tarjoaa arvostelulomakkeen
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 25-01-PLAN.md — TodoButton + TodoOverlay: fixed button, scale animation, card stagger, nav-pill link change (TODO-03, TODO-04, TODO-05, TODO-06)
+- [ ] 25-02-PLAN.md — KavikoPaikassaPrompt + InlineReviewExpanded: delete → review flow (TODO-07)
 **UI hint**: yes
 
 ### Phase 26: Filtterit
@@ -173,5 +176,5 @@ Plans:
 | 22. Profiili & AI-kiinnostukset | v1.4 | 4/4 | ✅ Complete | 2026-05-31 |
 | 23. Visuaalinen perusta | v1.5 | 0/4 | 🗂 Planned | - |
 | 24. Callout-kortti & ikonit | v1.5 | 0/1 | 🗂 Planned | - |
-| 25. TO DO overlay | v1.5 | 0/TBD | Not started | - |
+| 25. TO DO overlay | v1.5 | 0/2 | 🗂 Planned | - |
 | 26. Filtterit | v1.5 | 0/TBD | Not started | - |
