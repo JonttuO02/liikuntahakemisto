@@ -11,8 +11,6 @@ import { LAJIT_FILTTERI, lajiKonfig, SPORT_ICONS } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
 import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
-import { getOpenStatus } from '@/lib/aukiolo'
-import { isMembershipOnly } from '@/lib/priceUtils'
 import { isNightHour } from '@/lib/mapStyles'
 import { TAMPERE } from '@/lib/constants'
 import { nearestKaupunki, haversineKm, formatDistance } from '@/lib/geo'
@@ -250,9 +248,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [weatherKaupunki, setWeatherKaupunki] = useState<string>('Tampere')
   const [searchOpen, setSearchOpen]           = useState(false)
   const [searchHaku, setSearchHaku]           = useState('')
-  const [searchLaji, setSearchLaji]           = useState('Kaikki')
-  const [searchAukinyt, setSearchAukinyt]     = useState(false)
-  const [searchKertakaynti, setSearchKertakaynti] = useState(false)
+  const [searchLaji, setSearchLaji]           = useState<string[]>([])
   const [searchKaupunki, setSearchKaupunki]   = useState('Kaikki')
   const [todoOpen, setTodoOpen]               = useState(false)
   const [pendingReviewPaikkaId, setPendingReviewPaikkaId] = useState<number | null>(null)
@@ -338,11 +334,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     try {
       const scrollTop = searchResultsRef.current?.scrollTop ?? 0
       const state = {
+        _v: 2,
         scrollTop,
         searchHaku,
         searchLaji,
-        searchKertakaynti,
-        searchAukinyt,
         searchKaupunki,
         searchOpen: true,
       }
@@ -449,10 +444,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       if (focusId) return  // "Näytä kartalla" route — clear key but don't reopen search list
       const s = JSON.parse(raw)
       if (typeof s !== 'object' || s === null) return
+      // D-11: if version mismatch, discard entire state — prevents dead filters from old sessions
+      if (s._v !== 2) { sessionStorage.removeItem('etusivu-scroll-state'); return }
       if (typeof s.searchHaku === 'string') setSearchHaku(s.searchHaku)
-      if (typeof s.searchLaji === 'string') setSearchLaji(s.searchLaji)
-      if (typeof s.searchKertakaynti === 'boolean') setSearchKertakaynti(s.searchKertakaynti)
-      if (typeof s.searchAukinyt === 'boolean') setSearchAukinyt(s.searchAukinyt)
+      if (Array.isArray(s.searchLaji)) setSearchLaji(s.searchLaji)
       if (typeof s.searchKaupunki === 'string') setSearchKaupunki(s.searchKaupunki)
       if (s.searchOpen === true) {
         suppressAutoOpenRef.current = true
@@ -610,7 +605,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const paikatKartalla = useMemo(
     () => paikat.filter(
       (p): p is Liikuntapaikka & { latitude: number; longitude: number } =>
-        (searchLaji === 'Kaikki' || p.laji.toLowerCase() === searchLaji.toLowerCase()) &&
+        (searchLaji.length === 0 || searchLaji.includes(p.laji.toLowerCase())) &&
         p.latitude != null && p.longitude != null &&
         lajitKartalla.has(p.laji.toLowerCase())
     ),
@@ -672,18 +667,16 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
   const searchSuodatettu = useMemo(() =>
     paikat.filter(p => {
-      const matchesLaji        = searchLaji === 'Kaikki' || p.laji.toLowerCase() === searchLaji.toLowerCase()
-      const q                  = searchHaku.toLowerCase()
-      const matchesHaku        = !searchHaku || p.nimi.toLowerCase().includes(q) || p.kuvaus?.toLowerCase().includes(q) || p.osoite?.toLowerCase().includes(q)
-      const matchesKertakaynti = !searchKertakaynti || !isMembershipOnly(p)
-      const matchesAuki        = !searchAukinyt || getOpenStatus(p.aukioloajat).status !== 'closed'
-      const matchesKaupunki    = searchKaupunki === 'Kaikki' || p.kaupunki === searchKaupunki
-      return matchesLaji && matchesHaku && matchesKertakaynti && matchesAuki && matchesKaupunki
+      const matchesLaji     = searchLaji.length === 0 || searchLaji.includes(p.laji.toLowerCase())
+      const q               = searchHaku.toLowerCase()
+      const matchesHaku     = !searchHaku || p.nimi.toLowerCase().includes(q) || p.kuvaus?.toLowerCase().includes(q) || p.osoite?.toLowerCase().includes(q)
+      const matchesKaupunki = searchKaupunki === 'Kaikki' || p.kaupunki === searchKaupunki
+      return matchesLaji && matchesHaku && matchesKaupunki
     }),
-    [paikat, searchLaji, searchHaku, searchKertakaynti, searchAukinyt, searchKaupunki]
+    [paikat, searchLaji, searchHaku, searchKaupunki]
   )
 
-  const isFilterActive = searchLaji !== 'Kaikki' || searchKertakaynti || searchAukinyt || searchKaupunki !== 'Kaikki'
+  const isFilterActive = searchLaji.length > 0 || searchKaupunki !== 'Kaikki'
 
   return (
     <LayoutGroup>
@@ -1327,30 +1320,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                     {kaupungit.map(k => <option key={k} value={k}>{k}</option>)}
                   </select>
                 )}
-                <select
-                  value={searchLaji}
-                  onChange={e => setSearchLaji(e.target.value)}
-                  aria-label="Suodata lajin mukaan"
-                  className="glass h-8 rounded-full px-3 text-xs font-bold text-[#111111] border-0 outline-none cursor-pointer"
-                >
-                  {LAJIT_FILTTERI.map(l => <option key={l} value={l}>{l}</option>)}
-                </select>
-                <motion.button
-                  onClick={() => setSearchKertakaynti(v => !v)}
-                  whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
-                  className={`h-8 px-3 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)] ${searchKertakaynti ? 'bg-[#111111] text-white' : 'glass text-[rgba(17,17,17,0.45)] hover:text-[#111111]'}`}
-                  aria-label={searchKertakaynti ? 'Poista kertakäynti-suodatin' : 'Näytä vain kertakäynnin mahdollistavat paikat'}
-                >
-                  Kertakäynti OK
-                </motion.button>
-                <motion.button
-                  onClick={() => setSearchAukinyt(v => !v)}
-                  whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
-                  className={`h-8 px-3 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)]
-                    ${searchAukinyt ? 'bg-[#111111] text-white' : 'glass text-[rgba(17,17,17,0.6)] hover:text-[#111111]'}`}
-                >
-                  Auki nyt
-                </motion.button>
                 <span className="text-xs text-[rgba(17,17,17,0.4)] tabular-nums ml-auto">
                   {searchSuodatettu.length} paikkaa
                 </span>
@@ -1381,9 +1350,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   <motion.button
                     onClick={() => {
                       setSearchHaku('')
-                      setSearchLaji('Kaikki')
-                      setSearchKertakaynti(false)
-                      setSearchAukinyt(false)
+                      setSearchLaji([])
                       setSearchKaupunki('Kaikki')
                     }}
                     whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
