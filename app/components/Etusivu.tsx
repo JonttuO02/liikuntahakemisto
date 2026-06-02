@@ -233,13 +233,12 @@ interface FilterCarouselPillProps {
 function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect }: FilterCarouselPillProps) {
   const [idx, setIdx] = useState(0)
   const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  // Reset idx to 0 whenever selection identity changes
   useEffect(() => {
     setIdx(0)
   }, [selected.join(',')])
 
-  // Carousel interval: pause when exactly 1 selected, cycle selected when 2+, cycle all when 0
   useEffect(() => {
     if (selected.length === 1) return
     const items = selected.length > 1 ? selected : allItems
@@ -247,7 +246,21 @@ function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect 
     return () => clearInterval(id)
   }, [selected.length, allItems.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const displayItems = selected.length > 1 ? selected : allItems
+  useEffect(() => {
+    if (!open) return
+    function handleOutside(e: MouseEvent | TouchEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    document.addEventListener('touchstart', handleOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleOutside)
+      document.removeEventListener('touchstart', handleOutside)
+    }
+  }, [open])
+
   const displayText = selected.length === 0
     ? allItems[idx % allItems.length]
     : selected.length === 1
@@ -257,12 +270,12 @@ function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect 
   const isActive = selected.length > 0
 
   return (
-    <div>
+    <div ref={containerRef} className="relative">
       <motion.button
         whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
         onClick={() => setOpen(v => !v)}
         aria-label={label}
-        className={`h-8 px-3 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)] flex items-center gap-1.5 ${isActive ? 'bg-[#111111] text-white' : 'glass text-[rgba(17,17,17,0.45)]'}`}
+        className={`h-8 min-w-[7rem] px-3 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)] flex items-center justify-between gap-1.5 overflow-hidden ${isActive ? 'bg-[#111111] text-white' : 'glass text-[rgba(17,17,17,0.45)]'}`}
       >
         <AnimatePresence mode="wait">
           <motion.span
@@ -271,26 +284,26 @@ function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="pointer-events-none"
+            className="pointer-events-none whitespace-nowrap truncate"
           >
             {displayText}
           </motion.span>
         </AnimatePresence>
         {selected.length > 1 && (
-          <span className="text-[10px] font-bold bg-white/20 rounded-full px-1">{selected.length}</span>
+          <span className="text-[10px] font-bold bg-white/20 rounded-full px-1 flex-shrink-0">{selected.length}</span>
         )}
       </motion.button>
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
+            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="flex flex-wrap gap-1.5 mt-2 mb-1"
+            className="absolute top-full mt-1.5 left-0 z-10 glass rounded-2xl overflow-hidden min-w-[9rem]"
           >
             {allItems.map(item => {
-              const isSelected = selected.includes(item)
+              const isSelected = selected.some(s => s.toLowerCase() === item.toLowerCase())
               return (
                 <button
                   key={item}
@@ -298,10 +311,9 @@ function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect 
                     onToggle(item)
                     if (singleSelect) setOpen(false)
                   }}
-                  className={isSelected
-                    ? 'bg-[#111111] text-white rounded-full px-3 py-1 text-xs font-bold'
-                    : 'glass rounded-full px-3 py-1 text-xs font-bold text-[rgba(17,17,17,0.45)]'}
+                  className={`w-full text-left px-4 py-2.5 text-xs font-bold flex items-center gap-2.5 [transition:color_100ms] ${isSelected ? 'text-[#111111]' : 'text-[rgba(17,17,17,0.45)]'}`}
                 >
+                  <span className={`w-3 h-3 rounded-full flex-shrink-0 ${isSelected ? 'bg-[#111111]' : 'border border-[rgba(0,0,0,0.15)]'}`} />
                   {item}
                 </button>
               )
