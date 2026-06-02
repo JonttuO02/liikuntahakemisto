@@ -312,6 +312,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     setReviewPaikkaId(null)
   }
 
+  function openTodoOverlay() {
+    setRightOpen(false)
+    setSearchOpen(false)
+    setValittu(null)
+    if (sheetPhase === 'open') setSheetPhase('sliding')
+    setTodoOpen(true)
+  }
+
   function openSearch(focused: boolean) {
     closeOverlays()
     setValittu(null)
@@ -891,10 +899,20 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-            className="fixed right-0 bottom-0 glass rounded-l-2xl overflow-y-auto p-4"
-            style={{ transformOrigin: 'top right', top: 'max(60px, env(safe-area-inset-top) + 48px)', width: 'calc(100vw - 56px)', maxWidth: 420, zIndex: 62 }}
+            className="fixed glass rounded-2xl overflow-y-auto p-4"
+            style={{ transformOrigin: 'top right', top: 'max(60px, env(safe-area-inset-top) + 48px)', right: 12, bottom: 12, width: 'calc(100vw - 56px)', maxWidth: 420, zIndex: 62 }}
           >
-            <p className="text-sm font-bold text-[#111111] uppercase tracking-widest mb-4">TO DO</p>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-bold text-[#111111] uppercase tracking-widest">TO DO</p>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { resetInlineReview(); setTodoOpen(false) }}
+                className="w-7 h-7 -mr-1 flex items-center justify-center text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms_ease]"
+                aria-label="Sulje TO DO -lista"
+              >
+                <X className="w-4 h-4" />
+              </motion.button>
+            </div>
             {todoPaikat.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 gap-3">
                 <Bookmark className="w-8 h-8 text-[rgba(17,17,17,0.2)]" />
@@ -1093,7 +1111,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   Profiili
                 </Link>
                 <button
-                  onClick={() => { setTodoOpen(true); closeOverlays() }}
+                  onClick={openTodoOverlay}
                   className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                 >
                   <Bookmark className="w-3.5 h-3.5" />
@@ -1148,28 +1166,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       {/* ── TodoButton — fixed below nav-pill, right side ─────────────── */}
       <motion.button
         whileTap={{ scale: 0.95 }}
-        onClick={() => {
-          if (todoOpen) resetInlineReview()
-          setTodoOpen(o => !o)
-        }}
+        onClick={openTodoOverlay}
         className="w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
         style={{ position: 'fixed', right: 16, top: 'calc(max(12px, env(safe-area-inset-top)) + 48px)', zIndex: 64 }}
-        aria-label={todoOpen ? 'Sulje TO DO -lista' : 'Avaa TO DO -lista'}
+        aria-label="Avaa TO DO -lista"
       >
-        <AnimatePresence mode="wait">
-          {todoOpen
-            ? (
-              <motion.span key="x" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                <X className="w-4 h-4" />
-              </motion.span>
-            )
-            : (
-              <motion.span key="bm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
-                <Bookmark className="w-4 h-4" />
-              </motion.span>
-            )
-          }
-        </AnimatePresence>
+        <Bookmark className="w-4 h-4" />
       </motion.button>
 
       {/* ── Main bottom sheet ──────────────────────────────────────────── */}

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { MapPin, Bookmark, Activity } from 'lucide-react'
+import { MapPin, Check, Activity } from 'lucide-react'
 import { lajiKonfig, SPORT_ICONS } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
@@ -137,7 +137,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
           aria-label={isSaved ? 'Poista TO DO -listalta' : 'Lisää TO DO -listaan'}
           className="absolute bottom-3 right-3 z-20 w-7 h-7 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_ease]"
         >
-          <Bookmark className="w-3.5 h-3.5" />
+          <Check className="w-3.5 h-3.5" />
         </button>
       )}
       </div>
