@@ -233,7 +233,9 @@ interface FilterCarouselPillProps {
 function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect }: FilterCarouselPillProps) {
   const [idx, setIdx] = useState(0)
   const [open, setOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setIdx(0)
@@ -249,7 +251,10 @@ function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect 
   useEffect(() => {
     if (!open) return
     function handleOutside(e: MouseEvent | TouchEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        buttonRef.current && !buttonRef.current.contains(e.target as Node) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node)
+      ) {
         setOpen(false)
       }
     }
@@ -269,11 +274,20 @@ function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect 
 
   const isActive = selected.length > 0
 
+  function handleToggle() {
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setDropdownPos({ top: rect.bottom + 6, left: rect.left })
+    }
+    setOpen(v => !v)
+  }
+
   return (
-    <div ref={containerRef} className="relative">
+    <div>
       <motion.button
+        ref={buttonRef}
         whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
-        onClick={() => setOpen(v => !v)}
+        onClick={handleToggle}
         aria-label={label}
         className={`h-8 min-w-[7rem] px-3 rounded-full text-xs font-bold [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)] flex items-center justify-between gap-1.5 overflow-hidden ${isActive ? 'bg-[#111111] text-white' : 'glass text-[rgba(17,17,17,0.45)]'}`}
       >
@@ -294,13 +308,15 @@ function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect 
         )}
       </motion.button>
       <AnimatePresence>
-        {open && (
+        {open && dropdownPos && (
           <motion.div
+            ref={dropdownRef}
             initial={{ opacity: 0, y: -4, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-full mt-1.5 left-0 z-10 glass rounded-2xl overflow-hidden min-w-[9rem]"
+            style={{ top: dropdownPos.top, left: dropdownPos.left }}
+            className="fixed z-[65] glass rounded-2xl overflow-hidden min-w-[9rem] divide-y divide-[rgba(0,0,0,0.06)]"
           >
             {allItems.map(item => {
               const isSelected = selected.some(s => s.toLowerCase() === item.toLowerCase())
@@ -1430,9 +1446,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   singleSelect={false}
                   onToggle={(item) => setSearchLaji(prev => prev.includes(item) ? prev.filter(l => l !== item) : [...prev, item])}
                 />
-                <span className="text-xs text-[rgba(17,17,17,0.4)] tabular-nums ml-auto">
-                  {searchSuodatettu.length} paikkaa
-                </span>
               </div>
 
               {/* Card list — only in browse mode (LayoutList), not when typing (Search) */}
