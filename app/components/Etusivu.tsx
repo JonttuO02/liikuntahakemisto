@@ -696,7 +696,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const paikatKartalla = useMemo(
     () => paikat.filter(
       (p): p is Liikuntapaikka & { latitude: number; longitude: number } =>
-        (searchLaji.length === 0 || searchLaji.includes(p.laji.toLowerCase())) &&
+        (searchLaji.length === 0 || searchLaji.some(s => s.toLowerCase() === p.laji.toLowerCase())) &&
         p.latitude != null && p.longitude != null &&
         lajitKartalla.has(p.laji.toLowerCase())
     ),
@@ -759,7 +759,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
 
   const searchSuodatettu = useMemo(() =>
     paikat.filter(p => {
-      const matchesLaji     = searchLaji.length === 0 || searchLaji.includes(p.laji.toLowerCase())
+      const matchesLaji     = searchLaji.length === 0 || searchLaji.some(s => s.toLowerCase() === p.laji.toLowerCase())
       const q               = searchHaku.toLowerCase()
       const matchesHaku     = !searchHaku || p.nimi.toLowerCase().includes(q) || p.kuvaus?.toLowerCase().includes(q) || p.osoite?.toLowerCase().includes(q)
       const matchesKaupunki = searchKaupunki === 'Kaikki' || p.kaupunki === searchKaupunki
