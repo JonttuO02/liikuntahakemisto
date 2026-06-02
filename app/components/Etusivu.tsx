@@ -348,8 +348,8 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     } catch {}
   }
 
-  async function toggleTodo(id: number) {
-    if (inFlight.current.has(id)) return   // debounce concurrent taps
+  async function toggleTodo(id: number): Promise<boolean> {
+    if (inFlight.current.has(id)) return false   // debounce concurrent taps
     inFlight.current.add(id)
     const user = supabaseUser
 
@@ -357,7 +357,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       inFlight.current.delete(id)
       setPendingFavoriteId(id)
       setAuthModalOpen(true)
-      return
+      return false
     }
     const supabase = createBrowserSupabase()
 
@@ -386,11 +386,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     } finally {
       inFlight.current.delete(id)
     }
+    return true
   }
 
   async function handleOverlayDelete(id: number) {
-    await toggleTodo(id)
-    if (supabaseUser !== null) {
+    const completed = await toggleTodo(id)
+    if (completed && supabaseUser !== null) {
       setPendingReviewPaikkaId(id)
     }
   }
