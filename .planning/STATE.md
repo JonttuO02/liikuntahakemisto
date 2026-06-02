@@ -4,7 +4,7 @@ milestone: v1.5
 milestone_name: Visuaalinen elävöitys & UX-hienosäätö
 status: planning
 last_updated: "2026-06-02T09:00:00.000Z"
-last_activity: 2026-06-02 — Phase 25 plan 01 complete (Wave 1/2 done)
+last_activity: 2026-06-02 — Phase 25 all plans complete (2/2 waves done)
 progress:
   total_phases: 4
   completed_phases: 2

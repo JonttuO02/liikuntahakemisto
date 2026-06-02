@@ -132,7 +132,7 @@ Plans:
 **Plans**: 2 plans
 Plans:
 - [x] 25-01-PLAN.md — TodoButton + TodoOverlay: fixed button, scale animation, card stagger, nav-pill link change (TODO-03, TODO-04, TODO-05, TODO-06)
-- [ ] 25-02-PLAN.md — KavikoPaikassaPrompt + InlineReviewExpanded: delete → review flow (TODO-07)
+- [x] 25-02-PLAN.md — KavikoPaikassaPrompt + InlineReviewExpanded: delete → review flow (TODO-07)
 **UI hint**: yes
 
 ### Phase 26: Filtterit
