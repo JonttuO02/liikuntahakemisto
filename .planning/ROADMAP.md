@@ -83,7 +83,7 @@ Full archive: `.planning/milestones/v1.4-ROADMAP.md`
 
 - [x] **Phase 23: Visuaalinen perusta** — Sininen liukuväri karttapinneille, kiilto-animaatio, fonttivaihto Outfit:iin, bottom sheet -logo uudistus
 - [ ] **Phase 24: Callout-kortti & ikonit** — Callout-kortti suuremmaksi ja pyörittää tietoja; laji-ikonit värillisinä kaikissa komponenteissa
-- [ ] **Phase 25: TO DO overlay** — TO DO -lista etusivun päälle animoituna overlayina; arvosteluehdotus poiston yhteydessä
+- [x] **Phase 25: TO DO overlay** — TO DO -lista etusivun päälle animoituna overlayina; arvosteluehdotus poiston yhteydessä
 - [ ] **Phase 26: Filtterit** — Yksinkertaistettu filtteri (vain paikkakunta + laji); aktiiviset valinnat karuselli-animaatiolla
 
 ## Phase Details

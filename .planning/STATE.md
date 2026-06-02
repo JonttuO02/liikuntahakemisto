@@ -2,23 +2,23 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Visuaalinen elävöitys & UX-hienosäätö
-status: planning
+status: executing
 last_updated: "2026-06-02T09:00:00.000Z"
-last_activity: 2026-06-02 — Phase 25 all plans complete (2/2 waves done)
+last_activity: 2026-06-02 — Phase 25 complete (2/2 plans, verified)
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 7
-  completed_plans: 5
-  percent: 50
+  completed_plans: 7
+  percent: 75
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 25 of 26 (TO DO overlay) — Ready to execute
-Status: Ready to execute phase 25
+Phase: 25 of 26 (TO DO overlay) — Complete
+Status: Phase 25 complete — ready for Phase 26
 Last activity: 2026-06-02 — Phase 25 planned (2 plans, 2 waves)
 
 Progress: [#####_____] 50%
@@ -28,7 +28,7 @@ Progress: [#####_____] 50%
 See: .planning/PROJECT.md (updated 2026-05-31)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.5 — Phase 25: TO DO overlay
+**Current focus:** v1.5 — Phase 26: Filtterit
 
 ## Phase Progress
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 |-------|------|--------|
 | 23 | Visuaalinen perusta | ✅ Complete |
 | 24 | Callout-kortti & ikonit | ✅ Complete |
-| 25 | TO DO overlay | 🗂 Planned (2 plans) |
+| 25 | TO DO overlay | ✅ Complete |
 | 26 | Filtterit | Not started |
 
 ## Active Decisions
@@ -69,4 +69,4 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 ## Session Continuity
 
 Last session: 2026-06-02T09:00:00.000Z
-Resume: /gsd:execute-phase 25
+Resume: /gsd:discuss-phase 26
