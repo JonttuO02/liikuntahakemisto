@@ -2,10 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Visuaalinen elävöitys & UX-hienosäätö
-status: complete
-stopped_at: Phase 26 complete — all plans done
-last_updated: "2026-06-02T16:00:00.000Z"
-last_activity: "2026-06-02 — Phase 26 Plan 02 complete (carousel filter pills, FILTER-03)"
+status: archived
+last_updated: "2026-06-02T22:45:00.000Z"
+last_activity: 2026-06-02 — v1.5 milestone archived
 progress:
   total_phases: 4
   completed_phases: 4
@@ -18,18 +17,16 @@ progress:
 
 ## Current Position
 
-Phase: 26 of 26 (Filtterit) — Complete (all plans done)
-Status: v1.5 milestone complete — Phase 26 finished
-Last activity: 2026-06-02 — Phase 26 Plan 02 complete (carousel filter pills, FILTER-03)
+Milestone v1.5 archived. All 4 phases (23–26), 9 plans complete.
 
-Progress: [██████████] 100%
+**Next step:** `/gsd:new-milestone` to define v1.6.
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-31)
+See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.5 — Phase 26: Filtterit
+**Current focus:** Planning v1.6
 
 ## Phase Progress
 
@@ -40,35 +37,19 @@ See: .planning/PROJECT.md (updated 2026-05-31)
 | 25 | TO DO overlay | ✅ Complete |
 | 26 | Filtterit | ✅ Complete |
 
-## Active Decisions
+## Active Decisions (carried to v1.6)
 
-- v1.5: Font is Outfit (not Geist — requirements override research recommendation)
-- v1.5: Pin animations use transform/opacity ONLY — never box-shadow, background, filter
-- v1.5: @googlemaps/markerclusterer must NOT be activated — extend clusterPinUrl() visually only
-- v1.5: /suosikit page route must survive intact (PWA deep links, auth redirects, Serwist precache)
-- v1.5: sessionStorage key 'etusivu-scroll-state' _v: 2 SHIPPED (Plan 26-01) — old sessions rejected
-- v1.5: Etusivu.tsx is the blast-radius file — Phases 24/25/26 must execute sequentially
-- v1.5: CalloutCard on neliö 160×160px, pystysuuntainen layout, kirjain kerrallaan slide-animaatio
-- (carried) Map focus URL: /?id=<paikka_id> — never ?nakyma=kartta (dead param)
-- (carried) Supabase Auth uses per-request createServerClient — never module-scope singleton
-
-## Accumulated Context
-
-### Key Constraints
-
-- Supabase anon key = read-only (RLS); service role key for writes
+- URL routing: `/` and `/?nakyma=kartta` both render Etusivu — `?nakyma=kartta` is a dead parameter
+- GPS: client-side only, never URL params
+- AI widget: never SSR, use `/api/saasuositus` Route Handler
+- Supabase writes: service role key only; anon key is read-only after RLS
 - CSS animations on AdvancedMarker: transform/opacity ONLY — no box-shadow, background, filter
-- lib/lajit.ts icon field: use `import type` so app/page.tsx (Server Component) stays unaffected
-- deriveKaupungit always prepends 'Kaikki' sentinel — city filter threshold must be > 2
-- NavPill expanded menu: exactly Profiili, TO DO, Kirjaudu — no Haku link (NAV-04 done)
-- CalloutCard zIndex=5 (muut pinnit 1) — ei piilotu muiden alle
-
-### Blockers/Concerns
-
-- Phase 25: href=/suosikit audit covered in 25-01 Plan Task 1 — only the nav-pill entry in Etusivu.tsx changes; /suosikit route untouched
+- Map focus URL: `/?id=<paikka_id>` — never `?nakyma=kartta`
+- sessionStorage key 'etusivu-scroll-state' _v: 2 SHIPPED — old sessions rejected
+- SPORT_ICONS duplicated in CalloutCard (Etusivu.tsx) and SportPin.tsx — can be refactored to lib/lajit.ts
 
 ## Session Continuity
 
-Last session: 2026-06-02T16:00:00.000Z
-Stopped at: Phase 26 complete — v1.5 milestone done
-Resume: N/A — milestone complete
+Last session: 2026-06-02
+Stopped at: milestone archive complete
+Resume: Start /gsd:new-milestone for v1.6

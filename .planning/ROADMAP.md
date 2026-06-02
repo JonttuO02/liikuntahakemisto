@@ -7,7 +7,7 @@
 - ✅ **v1.2 UI-uudistus & Arvostelut** — Phases 12–15 (shipped 2026-05-28)
 - ✅ **v1.3 AKTIIVI — Redesign & Polish** — Phases 16–18 (shipped 2026-05-30)
 - ✅ **v1.4 UX-parannukset & Profiili** — Phases 19–22 (shipped 2026-05-31)
-- 🚧 **v1.5 Visuaalinen elävöitys & UX-hienosäätö** — Phases 23–26 (in progress)
+- ✅ **v1.5 Visuaalinen elävöitys & UX-hienosäätö** — Phases 23–26 (shipped 2026-06-02)
 
 ---
 
@@ -75,87 +75,17 @@ Full archive: `.planning/milestones/v1.4-ROADMAP.md`
 
 </details>
 
----
+<details>
+<summary>✅ v1.5 Visuaalinen elävöitys & UX-hienosäätö (Phases 23–26) — SHIPPED 2026-06-02</summary>
 
-### 🚧 v1.5 Visuaalinen elävöitys & UX-hienosäätö (In Progress)
+- [x] **Phase 23: Visuaalinen perusta** — Outfit-fontti, AktiiviLogo sweep-animaatio, SportPin sininen liukuväri + orbit-kiilto, klusteripinnit (4/4 plans) — 2026-06-01
+- [x] **Phase 24: Callout-kortti & ikonit** — CalloutCard 160px, pystysuuntainen layout, kirjain kerrallaan animaatio, laji-avatar (1/1 plan) — 2026-06-02
+- [x] **Phase 25: TO DO overlay** — Overlay etusivulle, scale-animaatio, stagger-lista, "Kävikö paikassa?" → inline arvostelu (2/2 plans) — 2026-06-02
+- [x] **Phase 26: Filtterit** — Dead state poistettu, searchLaji string[], FilterCarouselPill karuselli-animaatiolla (2/2 plans) — 2026-06-02
 
-**Milestone Goal:** Parannetaan sovelluksen visuaalista ilmettä ja käyttäjäkokemusta animaatioilla, uudistetuilla ikoneilla ja väreillä sekä sulaveammilla interaktioilla.
+Full archive: `.planning/milestones/v1.5-ROADMAP.md`
 
-- [x] **Phase 23: Visuaalinen perusta** — Sininen liukuväri karttapinneille, kiilto-animaatio, fonttivaihto Outfit:iin, bottom sheet -logo uudistus
-- [ ] **Phase 24: Callout-kortti & ikonit** — Callout-kortti suuremmaksi ja pyörittää tietoja; laji-ikonit värillisinä kaikissa komponenteissa
-- [x] **Phase 25: TO DO overlay** — TO DO -lista etusivun päälle animoituna overlayina; arvosteluehdotus poiston yhteydessä
-- [x] **Phase 26: Filtterit** — Yksinkertaistettu filtteri (vain paikkakunta + laji); aktiiviset valinnat karuselli-animaatiolla (completed 2026-06-02)
-
-## Phase Details
-
-### Phase 23: Visuaalinen perusta
-**Goal**: Karttapinnit näyttävät sporttiselta sinisellä liukuvärillä ja animaatiolla; sovelluksen fontti on Outfit ja bottom sheet -logo on uudistettu
-**Depends on**: Phase 22 (v1.4 complete)
-**Requirements**: MAP-11, MAP-12, MAP-13, UI-22, UI-23
-**Success Criteria** (what must be TRUE):
-  1. Karttapinnit näyttävät sinistä liukuvärigradienttia (ei enää punaista)
-  2. Valittu karttapinni näyttää CSS-animaation (kehä-pulssi transform/opacity only — ei box-shadow)
-  3. Klusteripinnin väri on sama sininen teema kuin yksittäiset pinnit
-  4. Koko sovelluksen fontti on vaihtunut Inter:stä Outfit:iin ilman layoutmuutoksia
-  5. Bottom sheet -logon väri- ja tekstiefekti on uudistettu
-**Plans**: 4 plans
-Plans:
-- [x] 23-01-PLAN.md -- Inter -> Outfit font migration (UI-22)
-- [x] 23-02-PLAN.md -- AktiiviLogo redesign: blue sweep auto-loop, 32px (UI-23)
-- [x] 23-03-PLAN.md -- SportPin component + spinOrbit animation (MAP-11, MAP-12)
-- [x] 23-04-PLAN.md -- Etusivu integration: wire SportPin, cluster inline HTML (MAP-11, MAP-12, MAP-13)
-**UI hint**: yes
-
-### Phase 24: Callout-kortti & ikonit
-**Goal**: Callout-kortit ovat suurempia ja pyörittävät lajinimen ja paikan nimen välillä; laji-ikonit ovat värillisiä kaikissa komponenteissa
-**Depends on**: Phase 23
-**Requirements**: MAP-14, MAP-15
-**Success Criteria** (what must be TRUE):
-  1. Callout-kortti on leveämpi (130 px → 160 px) kuin aiemmin
-  2. Callout-kortti vaihtaa näytettävää tietoa automaattisesti lajin ja paikan nimen välillä (interval-animaatio)
-  3. Laji-ikonit näkyvät värillisinä karttapinneissä, callout-korteissa ja listakorteissa (ei enää yhtenäinen harmaasävy)
-**Plans**: 1 plan
-Plans:
-- [ ] 24-01-PLAN.md — CalloutCard redesign: 160px, avatar, interval fade animation (MAP-14, MAP-15)
-**UI hint**: yes
-
-### Phase 25: TO DO overlay
-**Goal**: TO DO -lista avautuu etusivun päälle animoituna overlayina erillisen sivunavigaation sijaan; poistaminen ehdottaa arvostelua
-**Depends on**: Phase 24
-**Requirements**: TODO-03, TODO-04, TODO-05, TODO-06, TODO-07
-**Success Criteria** (what must be TRUE):
-  1. TO DO -painike toolbarin alla avaa overlaylistauksen etusivun päälle (ei navigoi /suosikit-sivulle); /suosikit-reitti säilyy toimivana
-  2. Painike muuttuu X-painikkeeksi kun overlay on auki; X sulkee sen
-  3. Overlay avautuu animaatiolla (nappi "sylkee" listan ulos) ja sulkeutuu animoituna
-  4. TO DO -lista on visuaalisesti selvästi erottuva hakulistasta (otsikko, oma tyyli)
-  5. Kun käyttäjä poistaa paikan listalta, pop-up kysyy "Kävikö paikassa?" ja tarjoaa arvostelulomakkeen
-**Plans**: 2 plans
-Plans:
-- [x] 25-01-PLAN.md — TodoButton + TodoOverlay: fixed button, scale animation, card stagger, nav-pill link change (TODO-03, TODO-04, TODO-05, TODO-06)
-- [x] 25-02-PLAN.md — KavikoPaikassaPrompt + InlineReviewExpanded: delete → review flow (TODO-07)
-**UI hint**: yes
-
-### Phase 26: Filtterit
-**Goal**: Filtteririvi näyttää vain paikkakunta- ja lajivalinnan; aktiiviset valinnat pyörivät karusellimaisesti filtteripainikkeessa
-**Depends on**: Phase 25
-**Requirements**: FILTER-02, FILTER-03
-**Success Criteria** (what must be TRUE):
-  1. Filtterialue näyttää vain paikkakunta- ja lajisuodattimet ("Kertakäynti OK" ja "Auki nyt" -painikkeet poistettu näkyviltä)
-  2. Olemassa olevat sessionStorage-tilat ovat yhteensopivia: _v: 2 -kenttä lisätty; vanha sessiodata ei palauta poistettuja filttereitä
-  3. Filtteripainike pyörittää karuselli-animaatiolla aktiivisia valintoja kun filttereillä on arvoja
-**Plans**: 2 plans
-Plans:
-- [x] 26-01-PLAN.md — Dead state removal + searchLaji string[] refactor + sessionStorage _v: 2 migration (FILTER-02)
-
-Wave 2 *(blocked on Wave 1 completion)*
-- [x] 26-02-PLAN.md — FilterCarouselPill component + filter row replacement (FILTER-03)
-
-**Cross-cutting constraints:**
-- `app/components/Etusivu.tsx` is the sole blast-radius file — both plans modify it sequentially
-- `searchLaji: string[]` type contract: Wave 1 writes it, Wave 2 consumes it
-**UI hint**: yes
-
----
+</details>
 
 ## Progress Table
 
@@ -183,7 +113,7 @@ Wave 2 *(blocked on Wave 1 completion)*
 | 20. Navigaatio-korjaukset | v1.4 | 2/2 | ✅ Complete | 2026-05-30 |
 | 21. TO DO -lista | v1.4 | 2/2 | ✅ Complete | 2026-05-31 |
 | 22. Profiili & AI-kiinnostukset | v1.4 | 4/4 | ✅ Complete | 2026-05-31 |
-| 23. Visuaalinen perusta | v1.5 | 0/4 | 🗂 Planned | - |
-| 24. Callout-kortti & ikonit | v1.5 | 0/1 | 🗂 Planned | - |
-| 25. TO DO overlay | v1.5 | 0/2 | 🗂 Planned | - |
-| 26. Filtterit | v1.5 | 2/2 | Complete   | 2026-06-02 |
+| 23. Visuaalinen perusta | v1.5 | 4/4 | ✅ Complete | 2026-06-01 |
+| 24. Callout-kortti & ikonit | v1.5 | 1/1 | ✅ Complete | 2026-06-02 |
+| 25. TO DO overlay | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
+| 26. Filtterit | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |

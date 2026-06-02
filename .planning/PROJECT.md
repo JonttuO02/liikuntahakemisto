@@ -4,17 +4,9 @@
 
 Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
 
-## Current Milestone: v1.5 Visuaalinen elävöitys & UX-hienosäätö
+## Shipped: v1.5 Visuaalinen elävöitys & UX-hienosäätö (2026-06-02)
 
-**Goal:** Parannetaan sovelluksen visuaalista ilmettä ja käyttäjäkokemusta animaatioilla, uudistetuilla ikoneilla ja väreillä sekä sulaveammilla interaktioilla.
-
-**Target features:**
-- Karttapinnit sininen sporttinen liukuväri + kiilto-animaatio + klusterointi
-- Callout-kortit suuremmiksi; laji-ikonit tyylikkäämmiksi ja värillisiksi
-- Bottom sheet -logo uudelleensuunniteltu + fonttiuudistus
-- TO DO overlay (ei erillinen sivu) + oma painike + sulava animaatio + poisto → arvosteluprompt
-- Filtterit karsitaan: vain paikkakunta + laji; karuselli-animaatio aktiivisille valinnoille
-- Logo-API spike: yritysten logot callout-kortteihin
+**Delivered:** Outfit-fontti, AktiiviLogo sininen sweep-animaatio, SportPin siniset karttapinnit + orbit-kiiltoanimaatio, CalloutCard 160px pystysuuntainen kirjainanimaatio, TO DO overlay etusivulle glassmorphism-panelilla + arvosteluprompt, FilterCarouselPill karuselli-animaatiolla.
 
 ## Shipped: v1.4 UX-parannukset & Profiili (2026-05-31)
 
@@ -129,22 +121,26 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ PROFILE-02: AI-suositus käyttää kiinnostuksen kohteita personointiin — Phase 22
 - ✓ DATA-08: image_url-kenttä paikat-tauluun Supabasessa — Phase 19
 
-### Active (v1.5)
+### Validated (v1.5)
 
-- [ ] MAP-11: Karttapinnit sininen sporttinen liukuväri; valkoinen ympyrä säilyy
-- [ ] MAP-12: Pinneille kiilto-animaatio (CSS kehäanimaatio, transform/opacity only)
-- [ ] MAP-13: Zoom-out klusterointi: pinnit ryhmittyvät klusteriksi + lukumäärä, sama sininen teema
-- [ ] MAP-14: Callout-kortti suurempi; tieto vaihtuu laji ↔ nimi intervalleilla
-- [ ] MAP-15: Laji-ikonit tyylikkäämmiksi ja värillisiksi
-- [ ] UI-22: Fontti Inter → Outfit (next/font/google, --font-sans säilyy)
-- [ ] UI-23: Bottom sheet -logo uudistetaan: väriefekti + tekstiefekti
-- [ ] TODO-03: TO DO overlay etusivun päälle (ei erillinen sivu)
-- [ ] TODO-04: TO DO -painike toolbarin alapuolelle; muuttuu X:ksi kun lista auki
-- [ ] TODO-05: Avaamisanimaatio: nappi "sylkee" listan ulos
-- [ ] TODO-06: TO DO -lista visuaalisesti erottuva hakulistasta
-- [ ] TODO-07: Poiston yhteydessä pop-up: "Kävikö paikassa?" → arvosteluehdotus
-- [ ] FILTER-02: Filtterit karsitaan: vain paikkakunta + laji; sessionStorage _v: 2
-- [ ] FILTER-03: Filtteripainike näyttää aktiiviset valinnat karuselli-animaatiolla
+- ✓ MAP-11: Karttapinnit sininen sporttinen liukuväri (#38bdf8→#0284c7); valkoinen ympyrä säilyy — v1.5
+- ✓ MAP-12: Pinneille @keyframes spinOrbit orbit-kiiltoanimaatio (transform/opacity only) — v1.5
+- ✓ MAP-13: Klusteripinnit samalla sinisellä teemalla inline HTML -rakenteella — v1.5
+- ✓ MAP-14: CalloutCard 160×160px; kirjain kerrallaan animaatio laji ↔ paikan nimi (2s interval) — v1.5
+- ✓ MAP-15: Laji-ikonit värillisinä karttapinneissä + callout-kortissa (DiagonaalKortti deferred) — v1.5
+- ✓ UI-22: Outfit-fontti via --font-sans CSS-muuttuja, nolla downstream-muutosta — v1.5
+- ✓ UI-23: AktiiviLogo sininen sweep auto-loop (0.6s reveal, 3s tauko), 32px — v1.5
+- ✓ TODO-03: TO DO overlay etusivun päälle, /suosikit-reitti säilyy — v1.5
+- ✓ TODO-04: TodoButton fixed toolbarin alla, Bookmark/X crossfade — v1.5
+- ✓ TODO-05: Scale-animaatio top-right origosta, stagger 0.06s korttilistaus — v1.5
+- ✓ TODO-06: "TO DO" header + glassmorphism panel, visuaalisesti erottuva — v1.5
+- ✓ TODO-07: "Kävikö paikassa?" → InlineReviewExpanded Supabase upsert — v1.5
+- ✓ FILTER-02: searchKertakaynti/searchAukinyt poistettu, searchLaji string[], sessionStorage _v:2 — v1.5
+- ✓ FILTER-03: FilterCarouselPill karuselli-animaatiolla aktiivisille valinnoille — v1.5
+
+### Active (v1.6)
+
+_(Ei vielä määritelty — aloita /gsd:new-milestone)_
 
 ### Future (deferred from v1.1)
 
@@ -164,7 +160,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ## Context
 
-**Nykytila:** v1.4 toimitettu 2026-05-31. Kaikki 14 v1.4-vaatimusta toteutettu. Kertakäynti OK -filtteri lisätty, listakortti käyttää nyt paikka-kuvaa (image_url), TO DO -lista korvaa suosikit kirjanmerkki-ikonilla, profiiliin kiinnostuksen kohteet + AI-personointi, navigaatiobukit korjattu. Karttakokemus: bottom sheet aukeaa automaattisesti, "Näytä kartalla" kohdistaa koordinaatteihin ilman GPS-recenteriä. Sovellus toimii Tampereen, Helsingin ja Turun alueella. Käyttäjätilit, TO DO -lista, profiilisivu, arvostelusysteemi ja personoitu AI-suosittelu live. PWA asennettavissa ja toimii offline-tilassa.
+**Nykytila:** v1.5 toimitettu 2026-06-02. Kaikki 14 v1.5-vaatimusta toteutettu (MAP-15 osittainen: DiagonaalKortti ei saanut laji-ikoni-päivitystä). Sovelluksen visuaalinen ilme uudistettu: siniset sporttipinnit orbit-kiiltoanimaatiolla, CalloutCard 160px pystysuuntainen kirjainanimaatio, AktiiviLogo sweep-animaatio, Outfit-fontti. TO DO -lista siirtyi erilliseltä sivulta etusivun overlay-paneeliin animoituna + arvosteluprompt poiston yhteydessä. Filtterit karsittu: vain kaupunki + laji, FilterCarouselPill karuselli-animaatiolla. Kaupungin valinta filttereistä kohdistaa kartan automaattisesti (zoom 11).
 
 **Data-arkkitehtuuri:** Google Places API hakee automaattisesti aukioloajat → upsertit Supabaseen. Kertakäyntihinnat manuaalisesti top 20 palvelulle. AI-widget: Claude Haiku + Open-Meteo, sessionStorage-cache per kalenteripäivä + per kaupunki. Supabase Auth käyttäjätaulut + suosikit (user_id → paikka_id). Sync-skripti tukee ?kaupunki= parametria Helsinki/Turku/Tampere-datalle.
 
@@ -232,4 +228,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-05-31 — v1.5 milestone started (Visuaalinen elävöitys & UX-hienosäätö)*
+*Last updated: 2026-06-02 — v1.5 milestone archived (Visuaalinen elävöitys & UX-hienosäätö)*

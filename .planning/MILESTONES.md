@@ -112,3 +112,50 @@
 - `.planning/milestones/v1.3-ROADMAP.md`
 - `.planning/milestones/v1.3-REQUIREMENTS.md`
 - `.planning/milestones/v1.3-phases/` (phase directories)
+
+---
+
+## v1.4 UX-parannukset & Profiili — 2026-05-31
+
+**Shipped:** 2026-05-31
+**Phases:** 4 (phases 19–22) | **Plans:** 11
+**Timeline:** 2026-05-30 → 2026-05-31 (1 day)
+
+### What Shipped
+
+1. **Filtteri & lista-UX** — Kertakäynti OK -filtteri (hintasuodattimet poistettu), DiagonaalKortti pin-nappi karttakohdistukseen, image_url paikan kuva listakorttiin, AI-widgetille enemmän tilaa
+2. **Navigaatiokorjaukset** — Back-scroll palauttaa listaan entiseen kohtaan, "Näytä kartalla" kohdistaa koordinaatteihin ilman GPS-recenteriä, bottom sheet aukeaa automaattisesti sivulatauksen jälkeen, toolbar-cleanup (Haku pois /suosikit + /profiili -sivuilta)
+3. **TO DO -lista** — Suosikit uudelleennimetty TO DO:ksi, sydän → kirjanmerkki-ikoni, /suosikit-sivu näyttää TO DO -paikat
+4. **Profiili & AI-kiinnostukset** — Kiinnostuksen kohteet profiiliin (lajit monivalintana), AI-suositus käyttää kiinnostuksia personointiin
+
+### Archives
+
+- `.planning/milestones/v1.4-ROADMAP.md`
+- `.planning/milestones/v1.4-REQUIREMENTS.md`
+
+---
+
+## v1.5 Visuaalinen elävöitys & UX-hienosäätö — 2026-06-02
+
+**Shipped:** 2026-06-02
+**Phases:** 4 (phases 23–26) | **Plans:** 9
+**Timeline:** 2026-05-31 → 2026-06-02 (2 days)
+**Commits:** 81 | feat/fix/refactor: 38
+
+### What Shipped
+
+1. **Outfit-fontti & logo** — Inter → Outfit via CSS-muuttujaabstraktio (nolla downstream-muutosta); AktiiviLogo redesign sinisellä sweep auto-loop animaatiolla, 32px korkeus
+2. **SportPin — siniset sporttipinnit** — Gradient (#38bdf8→#0284c7) liukuväri, @keyframes spinOrbit orbit-kiiltoanimaatio, lajikohtaiset SVG-ikonit; klusteripinnit samalla sinisellä teemalla
+3. **CalloutCard redesign** — 160×160px neliömäinen kupla, pystysuuntainen layout, kirjain kerrallaan slide animaatio (stagger 22ms), sport avatar + laji/nimi intervalivaihtelu
+4. **TO DO overlay** — glassmorphism panel etusivun päälle (ei navigointi /suosikittiin), scale-animaatio top-right origosta, stagger korttilistaus, "Kävikö paikassa?" → inline arvostelulomake poiston yhteydessä
+5. **FilterCarouselPill** — Kaupunki + laji karuselli-animaatiolla; ambient sykli kun ei valintoja; ulkopuolinen klikki sulkee dropdownin; case-insensitive vertailu
+
+### Known Deferred Items at Close
+
+- MAP-15 osittainen: laji-ikonit DiagonaalKortissa ei päivitetty (vain karttapinnit + callout-kortti)
+- Logo-API (yritysten logot) — siirretty kunnes website_domain-kenttä Supabasessa
+
+### Archives
+
+- `.planning/milestones/v1.5-ROADMAP.md`
+- `.planning/milestones/v1.5-REQUIREMENTS.md`
