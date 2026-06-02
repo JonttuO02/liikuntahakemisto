@@ -12,7 +12,7 @@ import { hintateksti } from '@/lib/utils'
 import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
 import { isNightHour } from '@/lib/mapStyles'
-import { TAMPERE } from '@/lib/constants'
+import { TAMPERE, SUOMI_KAUPUNGIT } from '@/lib/constants'
 import { nearestKaupunki, haversineKm, formatDistance } from '@/lib/geo'
 import { useGPS } from '@/hooks/useGPS'
 import SportPin from './SportPin'
@@ -95,6 +95,40 @@ function MapAutoZoom({ target, onComplete }: { target: { lat: number; lng: numbe
       m.moveCamera({
         center: { lat: fromLat + (tgt.lat - fromLat) * e, lng: fromLng + (tgt.lng - fromLng) * e },
         zoom: fromZoom + (toZoom - fromZoom) * e,
+      })
+      if (t < 1) raf = requestAnimationFrame(step)
+      else onCompleteRef.current()
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [map, target])
+  return null
+}
+
+function MapCityZoom({ target, onComplete }: { target: { lat: number; lng: number; zoom: number } | null; onComplete: () => void }) {
+  const map = useMap()
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
+  useEffect(() => {
+    if (!map || !target) return
+    const m = map
+    const tgt = target
+    const fromCenter = m.getCenter()
+    const fromZoom = m.getZoom() ?? 14
+    if (!fromCenter) return
+    const fromLat = fromCenter.lat()
+    const fromLng = fromCenter.lng()
+    const duration = 800
+    const ease = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
+    let start: number | null = null
+    let raf: number
+    function step(ts: number) {
+      if (!start) start = ts
+      const t = Math.min((ts - start) / duration, 1)
+      const e = ease(t)
+      m.moveCamera({
+        center: { lat: fromLat + (tgt.lat - fromLat) * e, lng: fromLng + (tgt.lng - fromLng) * e },
+        zoom: fromZoom + (tgt.zoom - fromZoom) * e,
       })
       if (t < 1) raf = requestAnimationFrame(step)
       else onCompleteRef.current()
@@ -360,6 +394,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [zoomLevel, setZoomLevel]   = useState(14)
   const [mapCenter, setMapCenter]   = useState<{ lat: number; lng: number }>(TAMPERE)
   const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
+  const [cityZoomTarget, setCityZoomTarget] = useState<{ lat: number; lng: number; zoom: number } | null>(null)
   const [todoIds, setTodoIds]               = useState<Set<number>>(new Set())
   const [kotikaupunki, setKotikaupunki]     = useState<string>('')
   const [kiinnostukset, setKiinnostukset]   = useState<string[]>([])
@@ -997,6 +1032,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               }
             }}
           />
+          <MapCityZoom target={cityZoomTarget} onComplete={() => setCityZoomTarget(null)} />
         </Map>
       </div>
 
@@ -1434,7 +1470,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 allItems={kaupunkiItems}
                 selected={searchKaupunki === 'Kaikki' ? [] : [searchKaupunki]}
                 singleSelect={true}
-                onToggle={(item) => setSearchKaupunki(item === searchKaupunki ? 'Kaikki' : item)}
+                onToggle={(item) => {
+                  const newCity = item === searchKaupunki ? 'Kaikki' : item
+                  setSearchKaupunki(newCity)
+                  if (newCity !== 'Kaikki') {
+                    const city = SUOMI_KAUPUNGIT.find(c => c.nimi === newCity)
+                    if (city) setCityZoomTarget({ lat: city.lat, lng: city.lng, zoom: 11 })
+                  }
+                }}
               />
             )}
             <FilterCarouselPill
