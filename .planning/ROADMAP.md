@@ -8,6 +8,7 @@
 - ✅ **v1.3 AKTIIVI — Redesign & Polish** — Phases 16–18 (shipped 2026-05-30)
 - ✅ **v1.4 UX-parannukset & Profiili** — Phases 19–22 (shipped 2026-05-31)
 - ✅ **v1.5 Visuaalinen elävöitys & UX-hienosäätö** — Phases 23–26 (shipped 2026-06-02)
+- 🚧 **v1.6 Kielituki, Ikonit & Sheet-redesign** — Phases 27–30 (in progress)
 
 ---
 
@@ -87,6 +88,69 @@ Full archive: `.planning/milestones/v1.5-ROADMAP.md`
 
 </details>
 
+---
+
+### 🚧 v1.6 Kielituki, Ikonit & Sheet-redesign (Phases 27–30)
+
+**Milestone Goal:** Englanninkielinen käyttöliittymä (kielivalitsin profiilisivulla), uudet SVG-ikonit kaikille lajeille, PaikkaSheet hero-redesign hinnastolla ja collapsed arvosteluwidgetillä, sekä joukko UI-parannuksia ja bugifixejä.
+
+- [ ] **Phase 27: Siivous & pienet korjaukset** — Navigaatiosiivous, filtteri/haku-korjaukset, sheet-korjaukset, klusterizoomi ja UI-häivytys
+- [ ] **Phase 28: SVG-ikonit** — Uusi lib/sportIcons.ts -rekisteri, ikonit käytössä kaikkialla (prerequisite for i18n)
+- [ ] **Phase 29: Kortit & sheet redesign** — PaikkaSheet hero-karuselli + hinnasto, PaikkaKortti hinnastokaruselli, DiagonaalKortti placeholder-kuvat
+- [ ] **Phase 30: i18n FI/EN** — next-intl, NEXT_LOCALE-cookie, kielivalitsin profiilisivulla, kaikki UI-tekstit käännetty
+
+## Phase Details
+
+### Phase 27: Siivous & pienet korjaukset
+**Goal**: Kaikki itsenäiset cleanup-tehtävät ja bugifixit ovat valmiina — navigaatio on siisti, filtteripilli toimii oikein, hakuteksti on yksinkertainen, sheet aukeaa ilman viivettä ja klusterin klikkaus zoomaa
+**Depends on**: Phase 26
+**Requirements**: NAV-06, NAV-07, FILTER-04, FILTER-05, SEARCH-01, UI-24, MAP-16, SHEET-04, SHEET-05, SHEET-06
+**Success Criteria** (what must be TRUE):
+  1. /suosikit-reitti ei ole olemassa; TO DO -painike ei näy toolbarissa — sivu ei löydy ja linkki puuttuu
+  2. FilterCarouselPill-pillillä on hieman harmaa tausta ja klikkaaminen koko pillin alla toimii (ei kummituselementtiä)
+  3. Hakukentässä ei näy "Ei tuloksia"- eikä "Tyhjennä haku" -tekstejä missään hakutilanteessa
+  4. Korttilistauksen alareunassa on fade-häivytys eikä kartta leikkaa kortteja karkosti
+  5. Klusteria klikkaamalla kartta zoomaa lähemmäksi (ellei kyseessä sama koordinaatti); sheet aukeaa ilman viivettä kun pientä korttia klikataan
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 28: SVG-ikonit
+**Goal**: Kaikki laji-ikonit tulevat yhdestä lib/sportIcons.ts -rekisteristä — duplikaattirekisterit on poistettu, uudet ikonit näkyvät filtteripillissä, korteissa, karttapinneissä ja CalloutCardissa
+**Depends on**: Phase 27
+**Requirements**: ICON-01, ICON-02
+**Success Criteria** (what must be TRUE):
+  1. lib/sportIcons.ts on olemassa ja sisältää polkumerkkijonot kaikille lajeille — Lucide-ikonit on poistettu lib/lajit.ts:stä
+  2. Filtteripillissä, PaikkaKortin badgessa, DiagonaalKortissa ja CalloutCardissa näkyy uudet SVG-ikonit
+  3. Karttapinneissä näkyy uudet SVG-ikonit samassa sinisessä teemassa kuin ennen
+  4. tsc --noEmit läpäisee ilman virheitä (ei rikkonaisia SPORT_ICONS-tyyppiviittauksia)
+**Plans**: TBD
+
+### Phase 29: Kortit & sheet redesign
+**Goal**: PaikkaSheet on visuaalisesti uudistettu hero-osiolla ja hinnastolla; PaikkaKortti näyttää hinnaston karusellina; DiagonaalKortti näyttää logo- ja kuvaplaceholderit
+**Depends on**: Phase 28
+**Requirements**: UI-25, UI-26, UI-27, SHEET-01, SHEET-02, SHEET-03
+**Success Criteria** (what must be TRUE):
+  1. PaikkaSheet aukeaa hero-osioon jossa on kuvien karuselli (placeholder: harmaa + kamerakuvake) ja paikan nimi & osoite kuvien päällä
+  2. Hero-osion alla on selkeä hinnasto-osio
+  3. Arvosteluwidget on oletuksena pienennetty ja aukeaa klikkaamalla
+  4. PaikkaKortin alaosassa on rullaava hinnastokaruselli
+  5. DiagonaalKortissa vasemmassa yläkulmassa on logopaikka-placeholder ja oikealla kuvapaikka-placeholder laji-ikonin sijaan
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 30: i18n FI/EN
+**Goal**: Käyttäjä voi vaihtaa käyttöliittymäkielen profiilisivulla FI/EN — valinta säilyy sivulatausten välillä ja kaikki UI-tekstit näkyvät valitulla kielellä; kartan tila ja filtterivalinnat eivät häiriinny
+**Depends on**: Phase 29
+**Requirements**: I18N-01, I18N-02, I18N-03
+**Success Criteria** (what must be TRUE):
+  1. Profiilisivulla on kielivalitsin jolla voi vaihtaa FI/EN välillä
+  2. Valittu kieli tallentuu NEXT_LOCALE-cookieen ja säilyy sivun uudelleenlatauksen jälkeen
+  3. Kaikki UI-tekstit (kortit, filtterit, sheet, navigaatio) näkyvät valitulla kielellä
+  4. Kieltä vaihdettaessa kartan sijainti, valittu kaupunki ja lajifiltteri säilyvät ennallaan
+**Plans**: TBD
+
+---
+
 ## Progress Table
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -117,3 +181,7 @@ Full archive: `.planning/milestones/v1.5-ROADMAP.md`
 | 24. Callout-kortti & ikonit | v1.5 | 1/1 | ✅ Complete | 2026-06-02 |
 | 25. TO DO overlay | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
 | 26. Filtterit | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
+| 27. Siivous & pienet korjaukset | v1.6 | 0/? | Not started | - |
+| 28. SVG-ikonit | v1.6 | 0/? | Not started | - |
+| 29. Kortit & sheet redesign | v1.6 | 0/? | Not started | - |
+| 30. i18n FI/EN | v1.6 | 0/? | Not started | - |

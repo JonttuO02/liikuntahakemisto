@@ -75,24 +75,24 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| I18N-01 | — | Pending |
-| I18N-02 | — | Pending |
-| I18N-03 | — | Pending |
-| ICON-01 | — | Pending |
-| ICON-02 | — | Pending |
-| FILTER-04 | — | Pending |
-| FILTER-05 | — | Pending |
-| SEARCH-01 | — | Pending |
-| UI-24 | — | Pending |
-| UI-25 | — | Pending |
-| UI-26 | — | Pending |
-| UI-27 | — | Pending |
-| MAP-16 | — | Pending |
-| SHEET-01 | — | Pending |
-| SHEET-02 | — | Pending |
-| SHEET-03 | — | Pending |
-| SHEET-04 | — | Pending |
-| SHEET-05 | — | Pending |
-| SHEET-06 | — | Pending |
-| NAV-06 | — | Pending |
-| NAV-07 | — | Pending |
+| NAV-06 | Phase 27 | Pending |
+| NAV-07 | Phase 27 | Pending |
+| FILTER-04 | Phase 27 | Pending |
+| FILTER-05 | Phase 27 | Pending |
+| SEARCH-01 | Phase 27 | Pending |
+| UI-24 | Phase 27 | Pending |
+| MAP-16 | Phase 27 | Pending |
+| SHEET-04 | Phase 27 | Pending |
+| SHEET-05 | Phase 27 | Pending |
+| SHEET-06 | Phase 27 | Pending |
+| ICON-01 | Phase 28 | Pending |
+| ICON-02 | Phase 28 | Pending |
+| UI-25 | Phase 29 | Pending |
+| UI-26 | Phase 29 | Pending |
+| UI-27 | Phase 29 | Pending |
+| SHEET-01 | Phase 29 | Pending |
+| SHEET-02 | Phase 29 | Pending |
+| SHEET-03 | Phase 29 | Pending |
+| I18N-01 | Phase 30 | Pending |
+| I18N-02 | Phase 30 | Pending |
+| I18N-03 | Phase 30 | Pending |
