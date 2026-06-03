@@ -565,7 +565,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const focusId = searchParams.get('id')
   const router = useRouter()
 
-  const contentH  = Math.round(fullH * 0.82)
+  const contentH  = Math.round(Math.min(fullH * 0.82, fullH - 108))
   const PILL_W    = 160
   const pillInset = Math.round((fullW - PILL_W) / 2)
 
@@ -1048,9 +1048,15 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                             layoutId={`vc-${p.id}`}
                             onClick={e => {
                               e.stopPropagation()
-                              pendingValittuRef.current = p
-                              setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })
                               setSearchOpen(false)
+                              if (zoomRef.current >= 16) {
+                                // Already at correct zoom — open sheet immediately, skip 700ms zoom animation
+                                setValittu(p)
+                              } else {
+                                // Need to zoom in first — use the existing animated path
+                                pendingValittuRef.current = p
+                                setAutoZoomTarget({ lat: p.latitude, lng: p.longitude })
+                              }
                             }}>
                             <CalloutCard p={p} />
                           </motion.div>
@@ -1502,6 +1508,21 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             </div>
           </div>
         </motion.div>
+
+        {/* UI-24: Gradient fade overlay — positioned relative to the outer sheet container, not the scroll div */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 64,
+            background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.92))',
+            pointerEvents: 'none',
+            zIndex: 2,
+          }}
+        />
       </motion.div>
 
       {/* ── Combined filter pill — at search bar position ── */}
