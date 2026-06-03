@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { X, MapPin, Phone, ExternalLink, Clock, CircleDollarSign, Info, Bookmark, BookmarkCheck } from 'lucide-react'
-import Link from 'next/link'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti, cn } from '@/lib/utils'
 import { formatGroupedHours, getOpenStatus } from '@/lib/aukiolo'
@@ -189,13 +188,6 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
             />
           )}
 
-          {/* Link to full venue page */}
-          <Link
-            href={`/paikat/${paikka.id}`}
-            className="text-center text-xs text-[rgba(17,17,17,0.35)] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)] underline underline-offset-2 mt-2"
-          >
-            Avaa paikkasivu selaimessa →
-          </Link>
         </div>
       </div>
     </motion.div>
