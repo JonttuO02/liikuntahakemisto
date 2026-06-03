@@ -335,7 +335,7 @@ function CombinedFilterPill({
         ref={pillRef}
         animate={{ borderRadius: outerR }}
         transition={{ duration: 0.2, ease: 'easeInOut' }}
-        style={{ position: 'relative', overflow: 'hidden', padding: 2 }}
+        style={{ position: 'relative', overflow: 'hidden', padding: 2, background: 'rgba(0,0,0,0.04)' }}
       >
         <div className="pill-orbit-ring" />
 
