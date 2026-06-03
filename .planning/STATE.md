@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Kielituki, Ikonit & Sheet-redesign
-status: ready_to_plan
+status: ready_to_execute
 last_updated: "2026-06-03T00:00:00.000Z"
-last_activity: 2026-06-03 — Roadmap created (Phases 27–30)
+last_activity: 2026-06-03 — Phase 27 planned (5 plans, 4 waves)
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
+  total_plans: 5
   completed_plans: 0
   percent: 0
 ---
@@ -17,10 +17,10 @@ progress:
 
 ## Current Position
 
-Phase: 27 of 30 (Siivous & pienet korjaukset) — ready to plan
-Plan: —
-Status: Ready to plan
-Last activity: 2026-06-03 — Roadmap created (Phases 27–30)
+Phase: 27 of 30 (Siivous & pienet korjaukset) — ready to execute
+Plan: 5 plans across 4 waves
+Status: Ready to execute
+Last activity: 2026-06-03 — Phase 27 planned (5 plans, 4 waves)
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -61,5 +61,5 @@ See: .planning/PROJECT.md (updated 2026-06-03)
 ## Session Continuity
 
 Last session: 2026-06-03
-Stopped at: Roadmap created, requirements defined
-Resume: `/gsd:plan-phase 27`
+Stopped at: Phase 27 planned — 5 plans across 4 waves, verification passed
+Resume: `/gsd:execute-phase 27`
