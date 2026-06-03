@@ -917,10 +917,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     return instance
   }, [paikatKartalla])
 
-  const mapItems = useMemo(
-    () => (bounds ? sc.getClusters(bounds, Math.round(zoomLevel)) : []),
-    [sc, bounds, zoomLevel]
-  )
+  const mapItems = useMemo(() => {
+    if (!bounds) return []
+    const items = sc.getClusters(bounds, Math.round(zoomLevel))
+    // Sort north-first (descending lat) so southern pins render last in DOM → appear on top
+    return items.sort((a, b) => b.geometry.coordinates[1] - a.geometry.coordinates[1])
+  }, [sc, bounds, zoomLevel])
 
   const anyOverlayOpen = rightOpen
 
@@ -1017,13 +1019,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             }, 3000)
           }}
         >
-          {mapItems.map(item => {
+          {mapItems.map((item, index) => {
             const [lng, lat] = item.geometry.coordinates
 
             if (!('cluster' in item.properties && item.properties.cluster)) {
               const p = (item.properties as VenuePoint).paikka
               return (
-                <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? Math.round((90 - p.latitude) * 100) + 10000 : nearestCardId === p.id ? Math.round((90 - p.latitude) * 100) + 5000 : Math.round((90 - p.latitude) * 100)}>
+                <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={index}>
                   {/* 0×0 anchor — AdvancedMarker pins its bottom-center here, so neither pin
                       nor card can shift the anchor point when transitioning between them */}
                   <div style={{ position: 'relative', width: 0, height: 0 }}>
@@ -1074,11 +1076,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <AdvancedMarker
                 key={`cluster-${clusterId}`}
                 position={{ lat, lng }}
-                zIndex={Math.round((90 - lat) * 100)}
+                zIndex={index}
               >
-                <motion.div whileTap={{ scale: 0.95 }}>
-                  <div
-                    style={{ position: 'relative', width: 36, height: 49, cursor: 'pointer' }}
+                {/* Same 0×0 anchor structure as individual pins — ensures identical stacking context behavior */}
+                <div style={{ position: 'relative', width: 0, height: 0 }}>
+                  <motion.div
+                    whileTap={{ scale: 0.95 }}
+                    style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)', width: 36, height: 49, cursor: 'pointer' }}
                     onClick={e => {
                       e.stopPropagation()
                       const expansionZoom = sc.getClusterExpansionZoom(clusterId)
@@ -1094,13 +1098,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                       </text>
                     </svg>
                     <div className="pin-arc" />
-                  </div>
-                </motion.div>
+                  </motion.div>
+                </div>
               </AdvancedMarker>
             )
           })}
           {coords && (
-            <AdvancedMarker position={coords} zIndex={20}>
+            <AdvancedMarker position={coords} zIndex={9999}>
               <div style={{ width: 24, height: 24, position: 'relative', overflow: 'visible' }}>
                 <motion.div
                   style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.7)', pointerEvents: 'none' }}
