@@ -1585,6 +1585,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               bottom: 0,
               zIndex: 59,
               scrollbarWidth: 'none',
+              pointerEvents: searchFocused ? 'none' : undefined,
             }}
           >
             <div className="px-4 mx-auto" style={{ maxWidth: 480, paddingBottom: `${HANDLE_H + 16}px` }}>
