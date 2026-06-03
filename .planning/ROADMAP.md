@@ -94,7 +94,7 @@ Full archive: `.planning/milestones/v1.5-ROADMAP.md`
 
 **Milestone Goal:** Englanninkielinen käyttöliittymä (kielivalitsin profiilisivulla), uudet SVG-ikonit kaikille lajeille, PaikkaSheet hero-redesign hinnastolla ja collapsed arvosteluwidgetillä, sekä joukko UI-parannuksia ja bugifixejä.
 
-- [ ] **Phase 27: Siivous & pienet korjaukset** — Navigaatiosiivous, filtteri/haku-korjaukset, sheet-korjaukset, klusterizoomi ja UI-häivytys *(5 plans, 4 waves)*
+- [x] **Phase 27: Siivous & pienet korjaukset** — Navigaatiosiivous, filtteri/haku-korjaukset, sheet-korjaukset, klusterizoomi ja UI-häivytys *(5/5 plans)* — 2026-06-03
 - [ ] **Phase 28: SVG-ikonit** — Uusi lib/sportIcons.ts -rekisteri, ikonit käytössä kaikkialla (prerequisite for i18n)
 - [ ] **Phase 29: Kortit & sheet redesign** — PaikkaSheet hero-karuselli + hinnasto, PaikkaKortti hinnastokaruselli, DiagonaalKortti placeholder-kuvat
 - [ ] **Phase 30: i18n FI/EN** — next-intl, NEXT_LOCALE-cookie, kielivalitsin profiilisivulla, kaikki UI-tekstit käännetty
@@ -115,17 +115,17 @@ Full archive: `.planning/milestones/v1.5-ROADMAP.md`
 Plans:
 
 **Wave 1** *(parallel)*
-- [ ] 27-01-PLAN.md — Delete /suosikit route files and scrub all nav links (NAV-06, NAV-07)
-- [ ] 27-02-PLAN.md — Remove "Avaa paikkasivu selaimessa" link from PaikkaSheet (SHEET-04)
+- [x] 27-01-PLAN.md — Delete /suosikit route files and scrub all nav links (NAV-06, NAV-07)
+- [x] 27-02-PLAN.md — Remove "Avaa paikkasivu selaimessa" link from PaikkaSheet (SHEET-04)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 27-03-PLAN.md — Pill background, ghost-element fix, remove empty-state text (FILTER-04, FILTER-05, SEARCH-01)
+- [x] 27-03-PLAN.md — Pill background, ghost-element fix, remove empty-state text (FILTER-04, FILTER-05, SEARCH-01)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 27-04-PLAN.md — Rewrite cluster click to zoom via getExpansionZoom; delete expandedCluster state (MAP-16)
+- [x] 27-04-PLAN.md — Rewrite cluster click to zoom via getClusterExpansionZoom; delete expandedCluster state (MAP-16)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 27-05-PLAN.md — Card list fade overlay, sheet max height, CalloutCard tap delay fix (UI-24, SHEET-05, SHEET-06)
+- [x] 27-05-PLAN.md — Card list fade overlay, sheet max height, CalloutCard tap delay fix (UI-24, SHEET-05, SHEET-06)
 **UI hint**: yes
 
 ### Phase 28: SVG-ikonit
@@ -195,7 +195,7 @@ Plans:
 | 24. Callout-kortti & ikonit | v1.5 | 1/1 | ✅ Complete | 2026-06-02 |
 | 25. TO DO overlay | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
 | 26. Filtterit | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
-| 27. Siivous & pienet korjaukset | v1.6 | 0/5 | In planning | - |
+| 27. Siivous & pienet korjaukset | v1.6 | 5/5 | ✅ Complete | 2026-06-03 |
 | 28. SVG-ikonit | v1.6 | 0/? | Not started | - |
 | 29. Kortit & sheet redesign | v1.6 | 0/? | Not started | - |
 | 30. i18n FI/EN | v1.6 | 0/? | Not started | - |

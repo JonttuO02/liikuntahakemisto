@@ -3,33 +3,32 @@ gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Kielituki, Ikonit & Sheet-redesign
 status: ready_to_execute
-last_updated: "2026-06-03T00:00:00.000Z"
-last_activity: 2026-06-03 — Phase 27 planned (5 plans, 4 waves)
+last_updated: "2026-06-03T12:00:00.000Z"
+last_activity: 2026-06-03 — Phase 27 complete (5/5 plans, 10/10 must-haves verified)
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 0
-  percent: 0
+  completed_plans: 5
+  percent: 25
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 27 of 30 (Siivous & pienet korjaukset) — ready to execute
-Plan: 5 plans across 4 waves
-Status: Ready to execute
-Last activity: 2026-06-03 — Phase 27 planned (5 plans, 4 waves)
+Phase: 28 of 30 (SVG-ikonit) — ready to plan
+Status: Phase 27 complete — ready to start Phase 28
+Last activity: 2026-06-03 — Phase 27 complete (5/5 plans, 10/10 must-haves verified)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 25%
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-06-03)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 27 — Siivous & pienet korjaukset
+**Current focus:** Phase 28 — SVG-ikonit
 
 ## Active Decisions (carried to v1.6)
 
@@ -61,5 +60,5 @@ See: .planning/PROJECT.md (updated 2026-06-03)
 ## Session Continuity
 
 Last session: 2026-06-03
-Stopped at: Phase 27 planned — 5 plans across 4 waves, verification passed
-Resume: `/gsd:execute-phase 27`
+Stopped at: Phase 27 complete — 5/5 plans, 10/10 must-haves verified, REVIEW.md + VERIFICATION.md committed
+Resume: `/gsd:plan-phase 28`
