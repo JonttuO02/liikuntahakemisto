@@ -137,7 +137,10 @@ Plans:
   2. Filtteripillissä, PaikkaKortin badgessa, DiagonaalKortissa ja CalloutCardissa näkyy uudet SVG-ikonit
   3. Karttapinneissä näkyy uudet SVG-ikonit samassa sinisessä teemassa kuin ennen
   4. tsc --noEmit läpäisee ilman virheitä (ei rikkonaisia SPORT_ICONS-tyyppiviittauksia)
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 28-01-PLAN.md — Extract SVG inner markup from zip, write lib/sportIcons.ts with SPORT_ICONS record and SportIcon component
+- [ ] 28-02-PLAN.md — Migrate 5 consumers to SportIcon/SPORT_ICONS; delete Lucide icons and SPORT_ICONS from lib/lajit.ts; tsc clean
 
 ### Phase 29: Kortit & sheet redesign
 **Goal**: PaikkaSheet on visuaalisesti uudistettu hero-osiolla ja hinnastolla; PaikkaKortti näyttää hinnaston karusellina; DiagonaalKortti näyttää logo- ja kuvaplaceholderit
@@ -196,6 +199,6 @@ Plans:
 | 25. TO DO overlay | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
 | 26. Filtterit | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
 | 27. Siivous & pienet korjaukset | v1.6 | 5/5 | ✅ Complete | 2026-06-03 |
-| 28. SVG-ikonit | v1.6 | 0/? | Not started | - |
+| 28. SVG-ikonit | v1.6 | 0/2 | Not started | - |
 | 29. Kortit & sheet redesign | v1.6 | 0/? | Not started | - |
 | 30. i18n FI/EN | v1.6 | 0/? | Not started | - |
