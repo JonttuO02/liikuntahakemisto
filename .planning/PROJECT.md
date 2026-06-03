@@ -4,6 +4,18 @@
 
 Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
 
+## Current Milestone: v1.6 Kielituki, Ikonit & Sheet-redesign
+
+**Goal:** Lisätään englanninkielinen käyttöliittymä (kielivalitsin profiilisivulla), vaihdetaan kaikki laji-ikonit uusiin SVG-tiedostoihin, uudistetaan PaikkaSheet hero-osiolla ja hinnastolla, sekä korjataan joukko bugeja ja tehdään UI-parannuksia.
+
+**Target features:**
+- i18n FI/EN toggle profiilisivulla (`NEXT_LOCALE`-cookie, next-intl without-routing)
+- Uudet SVG-ikonit kaikille lajeille (`lib/sportIcons.ts`), käytössä kaikkialla
+- PaikkaSheet redesign: hero-karuselli + hinnasto + arvosteluwidget collapsed
+- DiagonaalKortti: logo-placeholder vasemmalle, kuva-placeholder oikealle
+- PaikkaKortti: rullaava hinnastokaruselli alareunaan
+- Bugifixit: kummituselementti pillin alla, klusterizoomi, sheet-viive, suosikit-siivous
+
 ## Shipped: v1.5 Visuaalinen elävöitys & UX-hienosäätö (2026-06-02)
 
 **Delivered:** Outfit-fontti, AktiiviLogo sininen sweep-animaatio, SportPin siniset karttapinnit + orbit-kiiltoanimaatio, CalloutCard 160px pystysuuntainen kirjainanimaatio, TO DO overlay etusivulle glassmorphism-panelilla + arvosteluprompt, FilterCarouselPill karuselli-animaatiolla.
@@ -140,7 +152,27 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ### Active (v1.6)
 
-_(Ei vielä määritelty — aloita /gsd:new-milestone)_
+- [ ] **I18N-01**: Käyttäjä voi vaihtaa käyttöliittymäkielen profiilisivulla
+- [ ] **I18N-02**: Valittu kieli tallennetaan `NEXT_LOCALE`-cookieen ja säilyy sivulatausten välillä
+- [ ] **I18N-03**: Kaikki UI-tekstitykset näytetään valitulla kielellä; kartta/filtterivalinnat säilyvät
+- [ ] **ICON-01**: Uudet SVG-ikonit kaikille lajeille (`lib/sportIcons.ts`)
+- [ ] **ICON-02**: Uudet ikonit käytössä kaikkialla: filtteripilli, kortit, karttapinnit, CalloutCard
+- [ ] **FILTER-04**: FilterCarouselPill hieman harmaa tausta
+- [ ] **FILTER-05**: Kummituselementti pillin alla korjattu
+- [ ] **SEARCH-01**: "Ei tuloksia" ja "Tyhjennä haku" poistettu tekstihausta
+- [ ] **UI-24**: Korttilistauksen alareunaan fade-häivytys
+- [ ] **UI-25**: PaikkaKortti: rullaava hinnastokaruselli alareunaan
+- [ ] **UI-26**: DiagonaalKortti: logo-placeholder vasempaan yläkulmaan
+- [ ] **UI-27**: DiagonaalKortti: kuva-placeholder oikealle
+- [ ] **MAP-16**: Klusterin klikkaus → zoom (paitsi sama-sijaintisille)
+- [ ] **SHEET-01**: PaikkaSheet hero-osio: kuvien karuselli + nimi/osoite päälle
+- [ ] **SHEET-02**: Hinnasto hero-osion alle
+- [ ] **SHEET-03**: Arvosteluwidget collapsed oletuksena
+- [ ] **SHEET-04**: "Avaa paikkasivu selaimessa" poistettu
+- [ ] **SHEET-05**: Sheet alemmaksi, TO DO -painike näkyy taustalla
+- [ ] **SHEET-06**: Sheetin avaamisen viive korjattu
+- [ ] **NAV-06**: `/suosikit`-sivu poistettu kokonaan
+- [ ] **NAV-07**: TO DO -painike toolbarista poistettu
 
 ### Future (deferred from v1.1)
 
@@ -228,4 +260,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-02 — v1.5 milestone archived (Visuaalinen elävöitys & UX-hienosäätö)*
+*Last updated: 2026-06-03 — v1.6 milestone started (Kielituki, Ikonit & Sheet-redesign)*

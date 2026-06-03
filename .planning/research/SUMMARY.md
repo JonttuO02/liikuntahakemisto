@@ -1,165 +1,107 @@
 # Project Research Summary
 
-**Project:** AKTIIVI (Liikuntahakemisto)
-**Domain:** Finnish sports venue finder - mobile-first map app with bottom-sheet UI
-**Researched:** 2026-05-31
+**Project:** Liikuntahakemisto (AKTIIVI) — v1.6 milestone
+**Domain:** Adding FI/EN i18n toggle + custom SVG sport icon system to existing Next.js 14 App Router + Google Maps PWA
+**Researched:** 2026-06-03
 **Confidence:** HIGH
 
 ## Executive Summary
 
-AKTIIVI v1.5 is a visual polish and UX refinement milestone on top of a fully shipped v1.4 codebase (Next.js 14, @vis.gl/react-google-maps 1.8.3, Framer Motion 12, Tailwind v3, Supabase). The scope is additive: no stack replacements, no new runtime dependencies required for the core features. The work splits into three natural clusters: map visuals (gradient pins, clustering decision, glow animation), UX flows (TO DO overlay, filter simplification), and cosmetic polish (font swap, logo refinement, callout cycling). Research confirms all core features can ship without adding npm packages.
+v1.6 adds two orthogonal features: a FI/EN language toggle and a unified custom SVG sport icon system. Both interact with the same components (NavBar, filter pills, card badges, map pins), making sequencing matter. SVG icon work must come first — it consolidates two divergent icon registries (`lib/lajit.ts` Lucide components and `SportPin.tsx` inline path strings) into a single `lib/sportIcons.ts` path-string registry. Once that registry exists, i18n wiring is additive (~83 UI strings across ~8 files).
 
-The recommended build order follows the dependency graph: pin visuals first (standalone, no blockers), then callout card interactions (uses upgraded pins), then sport icon consolidation (consumed downstream by the new overlay), then the TO DO overlay itself, and finally filter UI simplification. This sequence minimizes Etusivu.tsx merge conflicts -- five of the eight features modify the same 1150-line file. The key architectural risk is the Etusivu blast radius: each phase must leave the file compilable before the next begins.
+## Stack Additions
 
-The single largest risk is the intersection of CSS animation and the AdvancedMarker overlay layer. Looping CSS animations that touch background, box-shadow, or filter on all visible pins simultaneously will cause full repaints and jank on mid-range Android. Every pin animation must use only transform and opacity. Equally important: geographic clustering (@googlemaps/markerclusterer) is explicitly out of scope per PROJECT.md and confirmed by ARCHITECTURE.md -- the correct v1.5 approach is a visual-only update to clusterPinUrl() in the existing custom system.
+**One new runtime dependency:** `next-intl ^4.13.0`
 
-## Key Findings
+No SVG library added. The path-string approach (`lib/sportIcons.ts`) has zero new dependencies.
 
-### Recommended Stack
+| Addition | Version | Why |
+|----------|---------|-----|
+| `next-intl` | `^4.13.0` | App Router RSC support, without-routing mode, cookie-based, ~14 KB gzip |
+| `lib/sportIcons.ts` | — (new file) | Zero-dep: `SPORT_SVG_PATHS` + `SportIcon` component + `sportIconSvgString()` |
 
-The existing stack is unchanged for v1.5. No new runtime packages are required. @googlemaps/markerclusterer v2.6.2 is already installed but must NOT be activated -- doing so would require a full replacement of mapItems and all AdvancedMarker JSX, which is a UX redesign, not visual polish. The font swap (Inter to Geist) requires a one-line change in app/layout.tsx via next/font/google -- no npm install.
+**Rejected:** `@svgr/webpack` — Turbopack friction in Next.js 14, doesn't solve AdvancedMarker constraint (still needs path strings), independently rejected by 3 of 4 research files.
 
-**Core technologies and their v1.5 roles:**
-- lib/sportPins.ts (existing): SVG gradient change confined to buildPinSvg() -- add defs/linearGradient block; update clusterPinUrl() for visual parity with single pins
-- app/globals.css (existing): @keyframes pin-pulse added here -- must use transform/opacity only, never box-shadow or filter on looping animations
-- Framer Motion 12 (existing): AnimatePresence for TO DO overlay slide-up, icon crossfade, callout cycling; use mode=popLayout if exit animations added to DiagonaalKortti list
-- next/font/google (existing): Geist font loaded with variable --font-sans -- zero downstream changes
-- @vis.gl/react-google-maps 1.8.3 (existing): AdvancedMarker className prop is the attachment point for pin-pulse CSS animation; useAdvancedMarkerRef NOT needed (clustering deferred)
+## Feature Approach
 
-**Font decision -- Geist (not Plus Jakarta Sans):** STACK.md recommends Geist; FEATURES.md recommends Plus Jakarta Sans. Geist wins: geometric/sporty character, on Google Fonts with latin subset (Finnish chars confirmed), variable weight 100-900, trivial drop-in for Inter in Next.js 14, no extra npm dependency. Plus Jakarta Sans is wider and warmer -- better for a consumer wellness app than a sports finder. Decision is final for v1.5.
+### SVG Icon System
+- Single `lib/sportIcons.ts` registry with raw SVG path strings (35 icons from zip)
+- Thin `SportIcon` React component wraps paths — drop-in for Lucide icons in React contexts
+- `sportIconSvgString()` factory for `SportPin.tsx` (Google Maps DOM, non-React)
+- Eliminates two divergent registries + removes `PaikkaKortti.tsx` local duplicate
 
-**Clustering decision -- visual-only update to custom system:** ARCHITECTURE.md recommends skipping @googlemaps/markerclusterer for v1.5. PITFALLS.md confirms that mixing the library with existing React-managed markers causes double markers and broken click handlers (Pitfall 3). PROJECT.md lists geographic cluster markers in Out of Scope. Correct approach: update clusterPinUrl() to use the blue gradient -- purely visual, zero library conflict.
+### i18n FI/EN Toggle
+- `NEXT_LOCALE` cookie (not localStorage) — readable server-side, no hydration mismatch
+- `messages/fi.json` + `messages/en.json` (~83 keys each), auto-precached by Serwist via JS bundle
+- Server Action: sets cookie + `revalidatePath('/', 'layout')`; NavBar calls this + `router.refresh()`
+- `router.refresh()` re-renders RSC in-place without remounting client state (map pan, filters survive)
+- Sport names `Padel/Tennis/Jooga` stay unchanged (international proper nouns); `Kuntosali→Gym`, `Uinti→Swimming`
 
-**Logo API -- deferred:** FEATURES.md correctly categorizes Logo API as an anti-feature for v1.5. The paikat table has no website_domain column, only ~30% of venues have recognizable logos, 50+ simultaneous logo fetches per render cycle creates a performance regression, and Clearbit is dead since Dec 2025. If pursued later: Brandfetch CDN URL pattern with a server-side Route Handler cache and IntersectionObserver-based lazy loading.
+### Anti-features (do not build)
+- URL-based locale routing — breaks existing URL contract
+- `@svgr/webpack` — Turbopack friction + redundant with path-string approach
+- localStorage for locale — not server-readable, causes hydration mismatch
 
-### Expected Features
+## Critical Pitfalls
 
-**Must have (table stakes):**
-- Blue gradient SVG pins -- replaces flat red #c0392b; gradient in buildPinSvg() as defs/linearGradient; blue-600 to sky-500 palette
-- Colorful sport icons -- icon stroke uses lajiKonfig[laji].color instead of universal #374151
-- TO DO overlay -- replaces Link /suosikit in toolbar; /suosikit page route stays intact (PWA deep links, auth redirects, Serwist precache)
-- Simplified filters -- remove Kertakäynti OK and Auki nyt from quick filter bar; keep state vars for sessionStorage compatibility; replace sport select with LajiPillRow animated pill row
+### 1 — Hydration mismatch from locale storage (CRITICAL)
+**Risk:** localStorage read in initial state causes server/client render divergence.
+**Prevention:** Use `NEXT_LOCALE` cookie — server reads it in `i18n/request.ts` and renders correct locale on first request. No hydration flash.
 
-**Should have (differentiators):**
-- Pin glow/pulse animation -- CSS @keyframes pin-pulse on AdvancedMarker wrapper div; transform/opacity only; selected pin only, not all pins simultaneously
-- Callout card cycling text -- AnimatePresence cycling between sport label and venue name on 2.5s interval; width 130px to 160px; ResizeObserver clip-path auto-adjusts
-- Font upgrade -- Inter to Geist via one-line change in app/layout.tsx
-- Bottom sheet logo refinement -- ambient blue glow when sheet open; optionally slow breathing gradient on 5s idle; preserve existing sweep animation
+### 2 — `lib/lajit.ts` type chain breaks all consumers (CRITICAL)
+**Risk:** `SPORT_ICONS: Record<string, LucideIcon>` consumed in 5+ files. Changing type without interface definition errors everywhere simultaneously.
+**Prevention:** Define `SportIconComponent = React.FC<{className?: string; style?: React.CSSProperties}>` first. Run `tsc --noEmit` to confirm. `PaikkaKortti.tsx` has a fully duplicated local registry — remove it separately.
 
-**Defer to future milestone:**
-- Logo API (Brandfetch/Logo.dev) -- requires schema migration, server-side cache, data quality validation; do not build in v1.5
-- Remove to review prompt (Feature 9) -- simple but dependent on TO DO overlay; can be included in v1.5 if overlay ships early
+### 3 — Serwist precache gap for `public/` SVG files (CRITICAL for PWA)
+**Risk:** `@serwist/next` skips `globPublicPatterns` when `additionalPrecacheEntries` is set (this app already sets it). SVGs in `public/` won't be offline-cached.
+**Prevention:** Use path-string approach — icons ship in JS bundle, precached automatically. Do NOT place SVG files in `public/icons/`.
 
-### Architecture Approach
+### 4 — SVG DOM injection cannot use Tailwind or CSS variables (CRITICAL for map pins)
+**Risk:** `element.innerHTML = svgString` with Tailwind classes silently breaks in Google Maps sandbox.
+**Prevention:** Keep map pins on the React portal path (`SportPin.tsx` via `AdvancedMarker` children). Use inline `style` attributes if DOM string injection ever needed.
 
-Five of eight features directly modify Etusivu.tsx (1150 lines) -- the blast-radius file for v1.5. Phases must execute sequentially on this file. Recommended component extractions (CalloutCard.tsx, TodoOverlay.tsx, LajiPillRow.tsx) reduce future blast radius. Icon consolidation belongs in lib/lajit.ts by adding Icon: LucideIcon to LajiKonfig -- use import type to keep the module server-safe. Three icon sources currently exist out of sync (lib/lajit.ts, lib/sportPins.ts, DiagonaalKortti.tsx); the overhaul unifies them.
+## Architecture
 
-**Major components and their v1.5 changes:**
-1. lib/sportPins.ts -- gradient in buildPinSvg(), visual update to clusterPinUrl(), optional stroke color parameter for sport icon colorization
-2. app/globals.css -- @keyframes pin-pulse; .no-scrollbar for pill row; all looping animations must use transform/opacity only
-3. app/components/Etusivu.tsx -- callout cycling state (nearCandidates, cycleIdx), todoOverlayOpen state, toolbar button swap, filter UI simplification; touched by Phases 2/4/5
-4. app/components/TodoOverlay.tsx -- new component; z-index 70 (above PaikkaSheet at 66); bottom-up slide animation; receives todoIds, paikat, onToggleTodo from Etusivu
-5. app/components/LajiPillRow.tsx -- new component; layoutId sport-active-bg inside LayoutGroup; scoped to avoid collision with vc-{id} layoutId in CalloutCard/PaikkaSheet
-6. lib/lajit.ts -- add Icon: LucideIcon to LajiKonfig; use import type so app/page.tsx (Server Component) importing LAJIT_FILTTERI is unaffected
+### New Files
+| File | Purpose |
+|------|---------|
+| `lib/sportIcons.ts` | Single SVG icon registry (paths + SportIcon + sportIconSvgString) |
+| `messages/fi.json` | Finnish UI strings (~83 keys) |
+| `messages/en.json` | English UI strings (~83 keys) |
+| `i18n/request.ts` | next-intl: reads `NEXT_LOCALE` cookie server-side |
+| `actions/locale.ts` | Server Action: sets cookie + revalidatePath |
 
-### Critical Pitfalls
+### Modified Files
+| File | Change |
+|------|--------|
+| `lib/lajit.ts` | Remove Lucide imports, add `labelEn` field |
+| `app/layout.tsx` | Async, wrap in `NextIntlClientProvider` (outside `MapProvider`) |
+| `SportPin.tsx` | Import paths from `lib/sportIcons.ts` |
+| `DiagonaalKortti.tsx`, `PaikkaKortti.tsx`, `Etusivu.tsx` | SVG icon swap + translation hooks |
+| `NavBar.tsx` | FI/EN toggle button + translation hook |
 
-1. **Looping CSS animation on pins causes full repaint on Android** -- Any looping @keyframes on .gmap-pin or AdvancedMarker content must use ONLY transform and opacity. Never box-shadow, background, border-color, or filter on looping animations. Static will-change: transform on .gmap-pin in CSS exhausts GPU compositing layer budget at 80+ pins -- use JS to add/remove will-change dynamically on animation start/end only.
+## Build Order
 
-2. **Mixing @googlemaps/markerclusterer with React-managed markers creates double pins** -- The library is installed but unused. If activated alongside existing mapItems + AdvancedMarker rendering, every venue appears twice with broken click handlers. Decision: extend clusterPinUrl() visually only. Never layer the two systems.
+**Phase 1 — SVG Icon Consolidation (prerequisite):**
+1. Create `lib/sportIcons.ts` with `SportIconComponent` type + 35 paths extracted from zip
+2. Update `SportPin.tsx` — import swap from new registry
+3. Update `lib/lajit.ts` — remove Lucide imports, add `labelEn`
+4. Update `DiagonaalKortti.tsx` + `PaikkaKortti.tsx` (remove local duplicate)
+5. Update `Etusivu.tsx` (CalloutCard + CombinedFilterPill icon usage)
+6. `tsc --noEmit` + visual regression check
 
-3. **Converting /suosikit to overlay-only breaks PWA deep links and auth redirects** -- Keep /suosikit/page.tsx as a real Next.js route. Toolbar button calls setTodoOverlayOpen(true) instead of navigating. Serwist precaches the route -- do not delete it. Audit all three existing href=/suosikit references -- only the Etusivu toolbar reference changes.
+**Phase 2 — FI/EN i18n (after Phase 1):**
+1. Install `next-intl`, create `messages/fi.json` + `messages/en.json`
+2. Create `i18n/request.ts` + `actions/locale.ts`
+3. Update `app/layout.tsx` (async + NextIntlClientProvider wrapper)
+4. Wire NavBar first — validates full cookie → `router.refresh()` pipeline
+5. Wire remaining components (PaikkaKortti, DiagonaalKortti, Etusivu, PaikkaSheet)
+6. Verify: FI↔EN toggle works, hard reload preserves EN, map pins unaffected
 
-4. **Framer Motion layoutId loses snapshot on fast pan+tap** -- layoutId=vc-{p.id} connects CalloutCard to PaikkaSheet. If the map re-renders during tap, AnimatePresence may unmount the card before PaikkaSheet mounts and the expand animation starts from top-left. Do not break the existing zoomRef/zoomLevel debounce. Extend the pendingValittuRef pattern rather than adding competing state paths.
-
-5. **sessionStorage scroll state versioning required when removing filter keys** -- Do NOT remove searchKertakaynti/searchAukinyt state vars -- the etusivu-scroll-state sessionStorage restore logic reads them. Add _v: 2 version field to the scroll state JSON and bail out in the restore effect on version mismatch -- prevents silent filter-active-but-invisible bug for mid-session users across the v1.5 deploy.
-
-## Implications for Roadmap
-
-Based on research, suggested phase structure:
-
-### Phase 1: Visual Foundation -- Pin Gradient + Glow + Font
-**Rationale:** Standalone changes to lib/sportPins.ts, app/globals.css, and app/layout.tsx. No dependencies on other v1.5 features. Establishes the blue visual language that all subsequent phases build on.
-**Delivers:** Blue gradient pins, CSS pulse on selected pin, Geist font, updated cluster pin visual via clusterPinUrl().
-**Addresses:** Table stakes (gradient pins, colorful icons) and differentiators (glow animation, font upgrade).
-**Avoids:** Pitfall 1 (looping animations on pins), Pitfall 12 (static will-change). Verify with 4x CPU throttle and Paint Flashing in DevTools before shipping.
-
-### Phase 2: Callout Card Cycling
-**Rationale:** Depends on Phase 1 upgraded pin visuals. State changes confined to Etusivu.tsx (new nearCandidates, cycleIdx) and optional extraction of CalloutCard.tsx. Width increase 130px to 160px.
-**Delivers:** Animated callout cycling between sport label and venue name on 2.5s interval; wider card; CSS.supports fallback for Safari 15 clip-path: path() (Pitfall 11).
-**Avoids:** Pitfall 4 (layoutId snapshot loss) -- preserve the existing zoomRef debounce pattern; no new layoutId on AdvancedMarker content.
-
-### Phase 3: Sport Icon Consolidation
-**Rationale:** lib/lajit.ts changes are consumed by DiagonaalKortti.tsx, which is used inside TodoOverlay (Phase 4). Must complete before the overlay. Consolidates three out-of-sync icon sources.
-**Delivers:** Icon: LucideIcon field in LajiKonfig; DiagonaalKortti.tsx removes local SPORT_ICONS map; unified icon source of truth.
-**Avoids:** Server-component import issue -- import type (type-only) keeps app/page.tsx unaffected.
-
-### Phase 4: TO DO Overlay
-**Rationale:** Most complex feature; modifies Etusivu.tsx heavily. Must not run in parallel with Phases 2 or 5. New TodoOverlay.tsx at z-index 70.
-**Delivers:** TodoOverlay.tsx with bottom-up slide animation, backdrop, swipe-to-close; toolbar bookmark button with count badge; optional Remove to review prompt for authenticated users.
-**Avoids:** Pitfall 5 (PWA/auth breakage) -- /suosikit/page.tsx survives intact; TodoOverlay at z-[70] closes when PaikkaSheet opens.
-
-### Phase 5: Filter UI Simplification
-**Rationale:** Last phase touching Etusivu. Removing filter buttons is low-risk but requires sessionStorage versioning. LajiPillRow.tsx is a new isolated component.
-**Delivers:** LajiPillRow.tsx animated sport pill row with shared layoutId background; Kertakäynti OK and Auki nyt buttons removed from visible UI; _v: 2 sessionStorage version field added.
-**Avoids:** Pitfall 10 (sessionStorage filter state breakage) -- version the scroll state JSON; keep state vars alive but hidden.
-
-### Phase Ordering Rationale
-
-- Phase 1 before all others: blue visual language is the foundation; HTML element pin migration (if chosen) enables colorful icons and glow animation
-- Phase 2 after Phase 1: callout card should display with upgraded pin visuals
-- Phase 3 before Phase 4: LajiKonfig.Icon is consumed by DiagonaalKortti used inside TodoOverlay
-- Phase 4 before Phase 5: both heavily modify Etusivu; sequential reduces merge conflict risk
-- Bottom sheet logo refinement (Feature 7) can slot into Phase 1 or as a standalone micro-phase -- only touches AktiiviLogo.tsx; keep minimum 800ms between gradient index changes (Pitfall 8)
-- Logo API: do not include in v1.5 roadmap; schedule as a separate spike after website_domain data quality check
-
-### Research Flags
-
-Phases likely needing attention during planning:
-- **Phase 4 (TO DO Overlay):** Most complex; three separate files reference /suosikit; useTodoList hook extraction recommended; test PWA back-button behavior explicitly
-- **Phase 2 (Callout Cycling):** nearCandidates computation changes nearestCardId semantics; verify no regression in layoutId to PaikkaSheet expand animation; test Safari 15 clip-path fallback
-
-Phases with standard patterns (low planning risk):
-- **Phase 1 (Pin Gradient + Font):** All changes in two files; well-documented SVG gradient and next/font patterns
-- **Phase 3 (Icon Consolidation):** Mechanical refactor; TypeScript compiler catches missed references
-- **Phase 5 (Filter UI):** New component in isolation; sessionStorage versioning is a one-line guard
-
-## Confidence Assessment
-
-| Area | Confidence | Notes |
-|------|------------|-------|
-| Stack | HIGH | Direct codebase inspection; all packages confirmed at correct versions; Geist confirmed on Google Fonts with Finnish character support |
-| Features | HIGH | Features grounded in existing codebase with line citations; dependency graph explicit; anti-features identified with specific technical reasons |
-| Architecture | HIGH | Based on direct codebase inspection of 1150-line Etusivu.tsx and all affected files; z-index stack documented; build order validated against dependency graph |
-| Pitfalls | HIGH | Each pitfall tied to specific line numbers and mechanisms in the existing code; not generic advice |
-
-**Overall confidence:** HIGH
-
-### Gaps to Address
-
-- **HTML element pin migration scope:** FEATURES.md calls it a critical prerequisite for glow animation and colorful icons; ARCHITECTURE.md and STACK.md treat it as optional (CSS-only path also viable). Decide at Phase 1 planning: if CSS-only, colorful icon stroke must be parameterized in buildPinSvg() rather than set at JSX render time.
-- **Brandfetch Finnish venue coverage:** Unverified. Before any future Logo API spike, query Brandfetch index for top 10 Finnish gym chains. If less than 50% return valid logos, the feature is not worth the schema migration.
-- **app/page.tsx server-component safety of LucideIcon import:** ARCHITECTURE.md flags this but does not confirm. Verify that import type LucideIcon in lib/lajit.ts does not cause a Next.js 14 server bundle warning when app/page.tsx imports LAJIT_FILTTERI from the same file.
-
-## Sources
-
-### Primary (HIGH confidence)
-- Direct codebase inspection -- Etusivu.tsx (1150 lines), sportPins.ts, lajit.ts, PaikkaSheet.tsx, AktiiviLogo.tsx, Karuselli.tsx, DiagonaalKortti.tsx, SuosikitClient.tsx, globals.css, types.ts, package.json
-- https://www.npmjs.com/package/@googlemaps/markerclusterer -- v2.6.2 confirmed in package.json
-- https://visgl.github.io/react-google-maps/examples/marker-clustering -- AdvancedMarker + MarkerClusterer integration patterns
-- https://github.com/visgl/react-google-maps/discussions/404 -- unmemoized setMarkerRef infinite loop footgun confirmed
-- https://fonts.google.com/specimen/Geist -- latin subset, variable 100-900 confirmed
-- https://www.framer.com/motion/animate-presence/ -- popLayout mode confirmed in v10+
-
-### Secondary (MEDIUM confidence)
-- https://brandfetch.com/developers/logo-api -- 500K free/month, no attribution required; Finnish chain coverage unverified
-- https://developers.hubspot.com/changelog/upcoming-sunset-of-clearbits-free-logo-api -- Clearbit dead Dec 8 2025
-- https://fonts.google.com/specimen/Plus+Jakarta+Sans -- evaluated and rejected in favor of Geist
-
-### Tertiary (informational)
-- https://mapuipatterns.com/call-out/ -- UX pattern reference for callout card cycling
-- https://mapuipatterns.com/cluster-marker/ -- cluster UX patterns
+## Open Questions
+- SVG path extraction: zip contains 35 SVG files; paths need extracting for `SPORT_SVG_PATHS`
+- `ReviewSection`/`ReviewForm` string audit — confirm count before finalizing `messages/fi.json`
+- `lajiKonfig` `labelEn` decisions: confirm which sport names translate vs stay Finnish
 
 ---
-*Research completed: 2026-05-31*
-*Ready for roadmap: yes*
+*Research completed: 2026-06-03 | Ready for roadmap: yes*

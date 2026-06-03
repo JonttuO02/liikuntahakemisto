@@ -1,274 +1,363 @@
-# Domain Pitfalls — v1.5 Visual Polish & UX
+# Domain Pitfalls: i18n + SVG Icons in Existing Next.js 14 App Router + Google Maps + PWA
 
-**Domain:** Adding visual polish & UX improvements to a live Next.js 14 / @vis.gl/react-google-maps / Framer Motion app
-**Researched:** 2026-05-31
-**Scope:** Integration pitfalls specific to THIS codebase — not generic advice
+**Domain:** Adding FI/EN i18n (localStorage) and SVG sport icon system to existing app
+**Researched:** 2026-06-03
+**Stack context:** Next.js 14 App Router, @serwist/next 9.5, Framer Motion 12, @vis.gl/react-google-maps, TypeScript strict, Tailwind v3
 
 ---
 
-## 1. CSS Keyframe Animations on AdvancedMarker DOM Content Cause Full Repaint on Every Frame
+## Critical Pitfalls
+
+---
+
+### Pitfall 1: Hydration Mismatch from localStorage Locale Read on First Render
 
 **What goes wrong:**
-Adding CSS `animation` or `@keyframes` (e.g., a shimmer or pulse on pin icons) to elements inside `<AdvancedMarker>` content triggers repaints for every animating pin simultaneously. At 80+ markers, `gmap-pin` currently uses a one-shot `pinBounce` keyframe which is fine — it fires once, then stops. A looping animation (e.g., gradient shimmer, glint sweep) would repaint all visible pins at 60 fps.
+Any component that reads `localStorage.getItem('locale')` during render — even inside a Context initializer value — produces server HTML with the default locale and client HTML with the stored locale. React detects the mismatch and either throws a hydration error in development or silently dehydrates in production, causing a visible flash and possibly broken layout.
 
-**Why it happens in this system:**
-Each `<AdvancedMarker>` wraps a real DOM node inside Google Maps' overlay layer. That layer does not establish a separate GPU compositing layer for each child — it is a flat DOM overlay. Animating `background`, `background-position`, or `box-shadow` inside it forces the browser to repaint the entire map tile region, not just the element. The existing `pinBounce` works because it uses only `transform` + `opacity` (compositor-promoted properties) and runs once.
+In this codebase, `app/layout.tsx` is a **Server Component** and sets `<html lang="fi">`. If the locale Context is initialized with a synchronous `localStorage` read in the provider's initial state, the very first render already diverges from the server output.
+
+**Why it happens:**
+The server renders with `locale = 'fi'` (no localStorage). The client mounts the Context provider, reads `localStorage.getItem('locale') === 'en'`, and sets state to `'en'`. React runs its first client render with `'en'`, which does not match the server-rendered `'fi'` subtree.
 
 **Consequences:**
-Janky bottom sheet scroll and card list while the map is visible, especially on mid-range Android (4× CPU slowdown exposes this in under 30 seconds). The Google Maps tile renderer and the CSS animation fight for the same paint budget.
+- React hydration error or full client re-render penalty
+- `<html lang>` attribute out of sync unless also patched client-side
+- Text content that drives layout (button labels, nav items) may re-flow after hydration, causing a visible jump
 
 **Prevention:**
-- Any looping animation on pins MUST use only `transform` and/or `opacity` — never `background`, `box-shadow`, `border-color`, or `filter`.
-- Add `will-change: transform` to the animated element immediately before animation starts; remove it afterward (see Pitfall 12 for why static `will-change` is dangerous).
-- Add `translate3d(0,0,0)` on the animated element to force layer promotion for the duration of the animation.
-- Test with Chrome DevTools → Rendering → Paint flashing on a device-level CPU throttle (4×) before shipping.
+Always initialize locale state to the server default (`'fi'`) and resolve localStorage in a `useEffect`. The provider must render the same output on first client pass as the server did:
 
-**Phase flag:** Any phase adding looping CSS animations to map pins.
+```tsx
+// LanguageProvider.tsx — 'use client'
+const [locale, setLocale] = useState<'fi' | 'en'>('fi') // always server default
+
+useEffect(() => {
+  const stored = localStorage.getItem('locale') as 'fi' | 'en' | null
+  if (stored && stored !== locale) setLocale(stored)
+}, [])
+```
+
+The `<html lang>` attribute in `layout.tsx` cannot be made dynamic in a Server Component without moving to a Client Component. Use `suppressHydrationWarning` on `<html>` and patch `document.documentElement.lang` in the same `useEffect`:
+
+```tsx
+// layout.tsx — Server Component
+<html lang="fi" suppressHydrationWarning>
+```
+
+```tsx
+// LanguageProvider.tsx — same useEffect
+document.documentElement.lang = stored
+```
+
+Do not use `suppressHydrationWarning` anywhere else — it silences real bugs. Keep it only on `<html>` where the mismatch is intentional and bounded.
+
+**Detection:**
+Console warning `"Text content did not match"` or `"Hydration failed"` in dev. In production: flash of Finnish text briefly replaced by English on page load. To reproduce: DevTools → Application → Storage → set `locale: en` → hard reload.
+
+**Phase:** Implement provider in the same phase as the toggle UI. This is the first thing to verify with a hard reload from a non-default locale.
 
 ---
 
-## 2. AdvancedMarker Key Instability Causes Marker Churn and z-index Conflicts
+### Pitfall 2: `lib/lajit.ts` Type Change Breaks the Entire Consumer Chain
 
 **What goes wrong:**
-The existing cluster marker key is `'cluster-' + item.items.map(p => p.id).join('-')`. If `paikatKartalla` recomputes when `searchLaji` changes, the items array order may differ, producing a different key for the same coordinate cluster. This unmounts and remounts the `AdvancedMarker`. The remounted marker enters at default `zIndex={2}`, overriding the elevated `zIndex={20}` set for an expanded cluster. The "cluster popup" disappears mid-interaction.
+`lib/lajit.ts` currently exports:
 
-**Why it happens in this system:**
-`mapItems` iterates `paikatKartalla` (filtered from the stable `paikat` server prop, but re-filtered on `searchLaji`). If one venue in a two-venue same-address cluster is filtered out, the remaining single-item group gets a new key vs. the old two-item key. Critically, `expandedCluster === item.items` uses reference equality — after remount, `item.items` is a new array, so the popup state never matches and the popup never reopens.
+```ts
+export const SPORT_ICONS: Record<string, LucideIcon> = { ... }
+```
+
+`LucideIcon` is `React.ForwardRefExoticComponent<LucideProps>`. Every consumer — `Etusivu.tsx` (filter pill carousel, `CalloutCard`), `PaikkaKortti`, etc. — calls it as `<Icon className="w-4 h-4" />` with Lucide's `className`, `style`, `size`, `strokeWidth` props.
+
+If the registry value is replaced with a different type (e.g., a string path, a raw SVG React component imported via SVGR, or a render function returning SVG markup), TypeScript strict mode will error at every callsite because the props interface differs.
+
+**Why it happens:**
+Lucide icons accept `{ className, style, size, strokeWidth, ... }`. SVGR-generated components accept only `{ className, style }` — not `size` or `strokeWidth`. A string path value cannot be JSX-rendered at all.
 
 **Consequences:**
-User opens a cluster popup, changes the laji filter, cluster remounts with new key, old `expandedCluster` state holds stale reference — popup disappears silently with no animation or feedback.
+- Minimum 5 files break at compile time if the registry type changes without a coordinated update
+- `CalloutCard` in `Etusivu.tsx` line 179 (`const Icon = SPORT_ICONS[p.laji] ?? Activity`) fails if `Activity` (a LucideIcon) remains as the fallback while registry values are a different type
+- `CombinedFilterPill` renders icons inline in the ticker carousel — any prop mismatch produces a runtime error in production if TypeScript is bypassed
 
 **Prevention:**
-- Key clusters by their coordinate bucket string (`Math.round(p.latitude * 10000) + ',' + Math.round(p.longitude * 10000)`), not by member IDs.
-- Store `expandedCluster` state by the coordinate bucket key (a string), not by array reference.
-- After any clustering change, verify the scenario: open a cluster popup → change laji filter → popup either stays consistent or closes cleanly with an exit animation.
+Define an explicit interface **before** migrating the registry, and ensure all callsites compile against it:
 
-**Phase flag:** Any phase touching marker clustering or adding visual changes to cluster pins.
+```ts
+// lib/lajit.ts
+export type SportIconComponent = React.FC<{ className?: string; style?: React.CSSProperties }>
+export const SPORT_ICONS: Record<string, SportIconComponent> = { ... }
+```
+
+Migrate callsites first (remove `size`, `strokeWidth` props), then replace registry values. Replace the `Activity` fallback with a neutral SVG component of the same `SportIconComponent` type — never mix types in the same Record.
+
+**Detection:**
+TypeScript build errors at any `<Icon className=...>` callsite. Run `npx tsc --noEmit` after changing the type to catch all consumers before runtime.
+
+**Phase:** Type migration must happen in the same commit as the registry value replacement, not spread across phases.
 
 ---
 
-## 3. @googlemaps/markerclusterer Library Conflicts with the Existing Custom Cluster System
+### Pitfall 3: SVG Files in `public/` Not Precached by Serwist When `additionalPrecacheEntries` Is Set
 
 **What goes wrong:**
-`@googlemaps/markerclusterer` v2.6.2 is in `package.json` but is not used — the app implements same-address clustering manually in the `mapItems` useMemo. If a phase adds `MarkerClusterer` from this library on top of the existing `<AdvancedMarker>` rendering, every venue appears twice: once from the library's cluster renderer and once from the React-managed markers, because `mapItems` still produces markers for all venues.
+`@serwist/next` has a known behavior (tracked in serwist/serwist#139): when `additionalPrecacheEntries` is non-empty, the automatic `globPublicPatterns` scan of the `public/` directory is skipped. The current `next.config.mjs` already sets:
 
-**Why it happens in this system:**
-The custom clustering in `mapItems` outputs `{ type: 'single' | 'cluster' }` items and renders all of them as `<AdvancedMarker>` elements in JSX. `MarkerClusterer` takes an array of `google.maps.marker.AdvancedMarkerElement` imperative instances — it does not know about React-managed markers already on the map. You cannot layer the two systems.
+```js
+additionalPrecacheEntries: [{ url: "/offline", revision }]
+```
+
+This means any SVG files placed in `public/icons/` will NOT appear in the precache manifest — even if you also add `globPublicPatterns: ["icons/*.svg"]`. The two options are mutually exclusive in this version of `@serwist/next`.
+
+**Why it happens:**
+The `@serwist/next` integration performs either automatic glob scanning OR manual entries when `additionalPrecacheEntries` is present. It does not merge them.
 
 **Consequences:**
-Double markers at every location, broken click handlers (both systems respond), potential memory leak if the `MarkerClusterer` object is not destroyed on unmount via `clusterer.setMap(null)`.
+- SVG sport icons load on first visit but are not available offline
+- Service worker install does not fail visibly — the omission is silent
+- After a deploy, returning offline users see broken icon slots instead of the fallback
 
 **Prevention:**
-- If adding `MarkerClusterer`, completely replace `mapItems` and all `<AdvancedMarker>` JSX rendering. Do not layer on top.
-- The lower-risk alternative: extend `clusterPinUrl()` in `lib/sportPins.ts` to accept a gradient or richer SVG — zero library conflict, same visual improvement.
-- If the library is used, the cleanup effect MUST call `clusterer.clearMarkers(); clusterer.setMap(null)` on unmount.
+Add SVG icons explicitly to `additionalPrecacheEntries`, enumerating them programmatically at build time:
 
-**Phase flag:** MAP clustering phases. Decide at phase start: library or extend custom. Never mix.
+```js
+// next.config.mjs
+import { readdirSync } from 'node:fs'
+
+const svgEntries = readdirSync('./public/icons')
+  .filter(f => f.endsWith('.svg'))
+  .map(f => ({ url: `/icons/${f}`, revision })) // use git SHA revision for cache busting
+
+const withSerwist = withSerwistInit({
+  swSrc: 'app/sw.ts',
+  swDest: 'public/sw.js',
+  additionalPrecacheEntries: [
+    { url: '/offline', revision },
+    ...svgEntries,
+  ],
+})
+```
+
+**Detection:**
+After a production build, open DevTools → Application → Cache Storage → find the precache manifest and verify SVG URLs appear. Or: build, go offline, reload — missing icons confirm the omission.
+
+**Phase:** Address in the same phase that moves SVG files into `public/`. Verify precache manifest before shipping.
 
 ---
 
-## 4. Framer Motion `layoutId` Loses Snapshot When Source Unmounts Before Target Mounts
+### Pitfall 4: SVG String Injected into Google Maps DOM Cannot Inherit React CSS Variables or Tailwind Classes
 
 **What goes wrong:**
-`layoutId="vc-{p.id}"` connects `CalloutCard` (inside `AdvancedMarker`) to `PaikkaSheet` (fixed overlay). When the user taps a callout card and the map simultaneously re-renders (zoom crosses the `< 16` threshold), `AnimatePresence` may unmount the callout card's `motion.div` before `PaikkaSheet` has mounted. Framer Motion loses the source element's position snapshot and the expand animation starts from `{x:0, y:0}` (top-left viewport) instead of the card's map location.
+The existing `SportPin.tsx` is rendered by React via `AdvancedMarker` children — this works because `@vis.gl/react-google-maps` portals the React component into the Maps DOM. However, if any migration introduces a code path where SVG content is injected as a raw HTML string (e.g., via `element.innerHTML = svgString` in an imperative Maps API callback), those SVG elements live outside React's reconciliation tree.
 
-**Why it happens in this system:**
-`nearestCardId` re-evaluates on every `onCameraChanged` event (lines 500–511 in Etusivu.tsx). If the user taps while panning, `nearestCardId` can change between tap-start and React commit. The `key="card"` element exits via `AnimatePresence initial={false}`, and the entering `PaikkaSheet` finds no matching mounted `layoutId` to animate from.
+This means:
+- Tailwind utility classes in the string (`w-4 h-4`, `text-[#3b82f6]`) do NOT apply — the Tailwind JIT scanner never sees them inside a runtime string
+- CSS custom properties (`var(--color-padel)`) are not inherited because the element has no ancestor React component providing them
+- `currentColor` on `stroke` or `fill` resolves to the Maps tile container's inherited color, not the sport color
 
-The existing mitigation (the `zoomRef.current` vs `zoomLevel` state debounce at line 562–564) prevents unnecessary `nearestCardId` thrashing during zoom, but only at the threshold — a fast tap during normal pan can still trigger this.
+**Why it happens:**
+The Google Maps JS API's `AdvancedMarkerElement.content` property accepts a DOM element, not a React element. If an SVG React component is rendered to a static string with `renderToStaticMarkup` and then set as `.innerHTML`, Tailwind classes in the string exist as attribute tokens only — they need to be present in the CSS file, which requires being scanned at build time.
 
 **Consequences:**
-Sheet slides in from top-left on fast taps during map pan. Intermittent — only reproduces on slow devices or while map is moving at tap time.
+Icons appear with wrong or missing colors in AdvancedMarker custom content pins. No TypeScript error — the bug is purely visual and only visible in a Maps context.
 
 **Prevention:**
-- Do not break the existing `zoomRef`/`zoomLevel` debounce pattern when adding new animated elements.
-- If expanding CalloutCard's animation in v1.5, add a ref to capture `getBoundingClientRect()` on tap and use it as the `initial` position if `layoutId` snapshot is unavailable.
-- The `pendingValittuRef` pattern (already in use for deferred setValittu after auto-zoom) is the correct mental model — extend it rather than adding new competing state paths.
+Keep SVG sport icons as React components rendered via `AdvancedMarker` children (the current `SportPin.tsx` pattern is correct). If imperative DOM insertion is ever needed, use inline `style` attributes in the SVG string, not class names:
 
-**Phase flag:** Any phase that adds new `layoutId` connections or changes zoom-threshold logic.
+```ts
+// Safe for DOM string injection — no Tailwind dependency
+const svgString = `<svg ...><path stroke="${sportColor}" .../></svg>`
+element.innerHTML = svgString
+```
+
+Never use `renderToStaticMarkup` on a component that relies on Tailwind classes and inject the output into Maps DOM.
+
+**Detection:**
+Visual regression: icons appear gray or unstyled inside map markers. Only visible in a running browser with Maps loaded. Cannot be caught by TypeScript or build tools.
+
+**Phase:** Enforce the React portal path as the only path for map pins. Add a comment to `SportPin.tsx` prohibiting DOM string fallback. Any code that constructs SVG strings for Maps must use inline style attributes.
 
 ---
 
-## 5. Converting /suosikit to an Overlay Breaks Deep Links, PWA History, and Supabase Auth Redirects
+## Moderate Pitfalls
+
+---
+
+### Pitfall 5: Framer Motion `motion.svg` Without Explicit `width`/`height` Renders at 0×0 on Some Browsers
 
 **What goes wrong:**
-If `/suosikit` is replaced by an in-page overlay toggled by a toolbar button, three things break:
-1. **Auth email confirmation:** Supabase `redirectTo` defaults to `window.location.origin`. A user who clicks the email confirmation link while the overlay is open (with `window.history.pushState('/suosikit', ...)`) lands on a 404 if the route no longer exists.
-2. **PWA back button:** If the overlay uses `router.push('/suosikit')` to add a history entry, the PWA installed to homescreen tracks this. `router.back()` navigates to the map but the bottom sheet state is lost. If a `pushState` approach is used instead, Serwist's precache strategy won't serve it correctly offline.
-3. **Existing links:** The current `Etusivu.tsx` toolbar has `href="/suosikit"` (line 805). `SuosikitClient.tsx` and `PaikkaSheet.tsx` also reference this route. Removing the route without updating all call sites produces broken links that Next.js silently lets through (no compile-time route checking).
+If an SVG component is wrapped in `motion.svg` and omits explicit `width` and `height` attributes (relying only on `viewBox`), the element has no intrinsic size in browsers that do not infer dimensions from `viewBox` alone for replaced content. The element collapses to 0×0 and becomes invisible.
 
-**Why it happens in this system:**
-`/suosikit/page.tsx` exists as a real Next.js route. Serwist precaches it (static shell, no dynamic data). Three separate files link to `/suosikit`. The auth subscription in `SuosikitClient.tsx` (the `subscribeToAuthUser` effect) is already duplicated in `Etusivu.tsx` — moving the UI to an overlay reuses the Etusivu subscription but the `/suosikit` route must remain valid.
-
-**Consequences:**
-Auth email confirmations fail for users who are on the overlay. PWA users get 404 on re-launch if last URL was `/suosikit`. Back-button exits the app.
+This is specifically relevant to `CalloutCard` in `Etusivu.tsx` where `<Icon className="w-4 h-4" />` is currently a Lucide component that always emits `width={24} height={24}` internally. A replacement SVG React component must do the same.
 
 **Prevention:**
-- Keep `/suosikit/page.tsx` as a real Next.js route. Either render the overlay content there as a full page, or have the page `redirect('/?overlay=todo')` and handle `?overlay=todo` in Etusivu's mount effect (the scroll-restore effect at line 299 is the right pattern to extend).
-- Do NOT delete `/suosikit/page.tsx` without a redirect.
-- Update Serwist precache config if the URL pattern changes.
-- Search for all `href="/suosikit"` and `router.push('/suosikit')` occurrences before shipping — there are at least 3 (Etusivu toolbar, SuosikitClient back link, NavPill if present).
+Always emit explicit `width` and `height` on `<svg>`. Do not rely on `viewBox` alone for sizing. Provide them as props with a default, and also accept `className` for Tailwind sizing overrides:
 
-**Phase flag:** Any phase converting /suosikit to an overlay or adding a dedicated TO DO panel button.
+```tsx
+// SportIcon.tsx pattern
+export function SportIcon({ className, style, size = 24 }: SportIconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      className={className}
+      style={style}
+      aria-hidden="true"
+      focusable="false"
+    >
+      {/* paths */}
+    </svg>
+  )
+}
+```
+
+Note: SVG elements do not support Framer Motion `layout` animations. Do not add `layout` to `motion.svg` wrappers.
+
+**Detection:**
+Elements invisible in Safari or Firefox despite being in the DOM. Check computed dimensions in DevTools — `width: 0`, `height: 0` confirms the issue.
 
 ---
 
-## 6. Logo API Calls — CORS Block on Client, Rate Limit Exhaustion on Card List Render
+### Pitfall 6: React Context Locale Provider Placed as a Parent of `MapProvider` Causes Map Reinitialization on Locale Toggle
 
 **What goes wrong:**
-Most logo APIs (Clearbit, Brandfetch, Logo.dev) block client-side requests from unknown referers via CORS. Even when CORS passes, free-tier rate limits (Clearbit: 1 req/sec; Logo.dev: ~100 req/day free tier) are exhausted immediately when the card list renders 50+ venues. Google's referrer policy strips the `Referer` header on cross-origin requests, causing Clearbit's domain-matched free endpoint to return 404s.
+If `LanguageProvider` wraps `MapProvider` in `layout.tsx` such that locale state changes cause `MapProvider` to remount, the Maps JS API reinitializes — tiles go blank, the `Map` component fires its initialization sequence again, and any open sheets or cluster popups are reset.
 
-**Why it happens in this system:**
-`searchSuodatettu.map()` in Etusivu.tsx renders up to 80+ `DiagonaalKortti` cards simultaneously. If each card fires a logo fetch in `useEffect`, all requests fire in the same render cycle. There is no debounce or rate-limiting in the current card rendering path.
+The current `layout.tsx` has:
 
-**Consequences:**
-80+ simultaneous 404s in the network tab on every page load. Rate limits exhausted within seconds. Broken `<img>` elements visible to users. On revisit the same day, every card shows a broken logo.
+```tsx
+<MapProvider>
+  <main>{children}</main>
+</MapProvider>
+```
+
+Adding `LanguageProvider` as a wrapper around `MapProvider` with the wrong structure (e.g., the Provider re-renders `MapProvider` on context value change) triggers this.
+
+**Why it happens:**
+React Context value changes cause all consuming children to re-render. If `MapProvider` does not consume the locale context but is structurally inside a component that re-renders, React may still reconcile and remount it depending on component identity.
 
 **Prevention:**
-- All logo fetches MUST go through a Next.js Route Handler (`/api/logo?domain=X`) that calls the logo API server-side with proper `Authorization` headers, caches results in a `Map<string, Buffer|string>` in module scope (process lifetime = warm lambda), and returns a `data:` URI or a redirect to the CDN URL.
-- Always render the sport-color fallback (`laji.color` + Lucide icon) as the initial state. Replace only when the logo fetch succeeds — never show a broken `<img>`.
-- Rate-limit the route handler: if the same domain was requested in the last 60 seconds, return cached result without calling upstream.
-- For venues without a `website` field in Supabase, skip the API call entirely.
-- Cap the number of concurrent logo fetches per page load (e.g., `IntersectionObserver`-based lazy loading — only fetch logos for cards currently in the viewport).
+Make `LanguageProvider` a sibling of `MapProvider`, not a parent:
 
-**Phase flag:** Logo API spike phase. Must be prototyped server-side before wiring to the card list.
+```tsx
+// layout.tsx — correct nesting order
+<LanguageProvider>
+  <MapProvider>
+    <main>{children}</main>
+  </MapProvider>
+</LanguageProvider>
+```
+
+Ensure locale context value changes do NOT cause `MapProvider` to remount by memoizing the context value object.
+
+**Detection:**
+Google Maps reloads (tiles go blank briefly, `Maps JS API loaded` fires twice in console) after toggling locale.
 
 ---
 
-## 7. Font Swap Causes CLS in the Bottom Sheet and AI Widget
+### Pitfall 7: SVGR Webpack Loader Without `issuer` Constraint Breaks Future `next/image` SVG Usage
 
 **What goes wrong:**
-If a new display font is added (or Inter/Playfair Display is replaced) without using `next/font`, the browser loads the fallback system font first, then swaps when the web font arrives. The AI widget text (`text-sm`) and PaikkaSheet heading (`font-serif text-2xl font-bold`) re-layout after the swap because font metrics differ. The bottom sheet pill relies on `HANDLE_H = 44` as a constant — if sheet handle text changes font and gains height, the pill-to-sheet spring animation overshoots and lands at the wrong y position.
+Adding `@svgr/webpack` with a rule matching `/\.svg$/i` without an `issuer` constraint will intercept ALL `.svg` imports — including any `next/image` usage with `.svg` files. The Next.js image optimizer and SVGR cannot both handle the same file extension without scoping.
 
-**Why it happens in this system:**
-`app/layout.tsx` uses `next/font/google` in `variable` mode — both `--font-sans` and `--font-serif` are CSS custom properties. This is the correct pattern and eliminates FOUT. However, if a phase adds a font via `@import` in `globals.css` or a `<link>` tag in `layout.tsx`, it bypasses `next/font`'s size-adjust optimization and reintroduces CLS.
-
-**Consequences:**
-AKTIIVI logo, AI widget text, and sheet headings jump visually on first load. Google PageSpeed Insights and Core Web Vitals flag the CLS regression.
+Without `issuer`, importing an SVG via `next/image` returns a React component (from SVGR) instead of an object with `src`, breaking the Image component at runtime.
 
 **Prevention:**
-- All font additions MUST use `next/font/google` in `app/layout.tsx`. No CSS `@import`, no `<link rel="stylesheet">` for fonts.
-- When changing `font-serif` (Playfair Display), update the `size-adjust` in the `next/font` config to match the new font's cap-height ratio.
-- Never add `style={{ fontFamily: '...' }}` referencing a font not loaded through `next/font`.
-- Verify Lighthouse CLS score (target < 0.1) before shipping any font change.
+Always add the `issuer` constraint to scope SVGR to JSX/TSX imports only:
 
-**Phase flag:** Font redesign / bottom sheet logo area redesign phase.
+```js
+// next.config.mjs
+config.module.rules.push({
+  test: /\.svg$/i,
+  issuer: /\.[jt]sx?$/,
+  use: ['@svgr/webpack'],
+})
+```
+
+**Detection:**
+`TypeError: src must be a string` or `Expected src to be a string` at runtime when using `next/image` with an SVG path after SVGR is added.
 
 ---
 
-## 8. AktiiviLogo Gradient Animation Desynchronizes When `gradientIndex` Changes Faster Than the Wipe Duration
+### Pitfall 8: Translation Keys in Server Components Turn Static Pages Dynamic
 
 **What goes wrong:**
-`AktiiviLogo.tsx` runs a Framer Motion imperative `animate(rect, { width: 1672 }, { duration: 0.55 })` on `currIndex` change. The `useEffect` cleanup calls `controls.cancel()`. If `gradientIndex` increments again before 550ms elapses, `cancel()` fires mid-animation, then the new animation starts from whatever `width` the `<rect>` had at cancellation — not from `0`. The `setPrevIndex(currIndex)` call inside `.then()` never runs for cancelled animations, so `prevIndex` desynchronizes from `currIndex`. The gradient wipe then reveals the wrong "previous" color layer.
+If Server Components render translated strings by calling a locale-aware `t('key')` function where the locale is derived from a cookie or header, those components can no longer be statically cached. In this app, `app/page.tsx` and `app/paikat/[id]/page.tsx` are Server Components that do database fetches — if they also call a locale-aware translation function, they become dynamic per request.
 
-**Why it happens in this system:**
-The `Karuselli` interval (4000ms) is safe. The risk activates if any v1.5 feature auto-cycles the `gradientIndex` prop on a tighter interval, or if the parent re-renders rapidly due to a related state update (e.g., sheet open/close triggering a re-render of the parent that holds `gradientIndex` state).
-
-**Consequences:**
-SVG shows a partial wipe frozen at cancellation width, with wrong gradient on the "previous" layer. Silent visual corruption — no error thrown.
+The Finnish-only content model means the current Server Components are potentially cacheable. Adding i18n that varies per user preference breaks that.
 
 **Prevention:**
-- Reset `rect.setAttribute('width', '0')` in the cleanup (`return () => { controls.cancel(); rectRef.current?.setAttribute('width', '0') }`), not only in `.then()`.
-- Ensure the minimum interval between `gradientIndex` changes is > 650ms (animation 550ms + React commit overhead).
-- Do not use `setInterval` intervals shorter than 800ms for cycling the logo gradient.
-- The `if (currIndex === prevIndex) return` guard (line 25 in AktiiviLogo.tsx) prevents unnecessary animation on same-index renders — do not remove it.
+Keep Server Components locale-agnostic — they render Finnish content only. All locale-dependent UI text lives in Client Components fed by the locale Context. Translate only UI chrome (labels, button text, nav items) client-side. Database content (venue names, descriptions) remains Finnish-only unless a full content translation strategy is in scope.
 
-**Phase flag:** Any phase adding auto-cycling of the logo gradient or "sport highlight" timers.
+**Detection:**
+`next build` output shows pages that were `○ Static` become `λ Server` (dynamic) after adding locale-aware translation to Server Components.
 
 ---
 
-## 9. Framer Motion AnimatePresence on the DiagonaalKortti Card List Blocks Interaction for 200ms+ on Every Filter Change
+## Minor Pitfalls
+
+---
+
+### Pitfall 9: SVG `useId()` Gradient ID Conflicts When Multiple Icon Instances Are Rendered
 
 **What goes wrong:**
-The current `searchSuodatettu.map(p => <DiagonaalKortti key={p.id} .../>)` renders cards without `AnimatePresence`. If `AnimatePresence` is added to animate cards out on filter change, all exiting cards remain in the DOM until their `exit` animation completes. With 50 cards exiting simultaneously at `duration: 0.2`, the filter pills and search input are unresponsive for 200–400ms after every filter tap on a mid-range device.
-
-**Why it happens in this system:**
-Framer Motion keeps exiting elements mounted and pointer-event-blocking until the exit animation finishes. The search results `<div>` is `overflow-y-auto` and re-renders on every `searchHaku` keystroke. Wrapping a large list in `AnimatePresence` causes React to keep 50+ exiting DOM nodes alive per render cycle. At 4× CPU slowdown, this is a 300–500ms freeze per filter change.
-
-**Consequences:**
-Filter pills feel broken immediately after being tapped — the next tap is unregistered because the click target is obscured by an exiting (still-rendered) card at `z-index` overlapping the pills.
+`SportPin.tsx` already uses `useId()` to generate unique `linearGradient` IDs to prevent cross-SVG `url(#id)` reference conflicts. If new SVG icon components also use `<defs>` with `filter`, `clipPath`, or `linearGradient` elements and hardcode IDs (e.g., `id="sport-icon-glow"`), multiple instances of the same icon on one page share the same ID, and only the first definition wins — all subsequent icons render with incorrect effects.
 
 **Prevention:**
-- For list items that re-sort/re-filter on user input, do NOT wrap the `map()` in `AnimatePresence`. Use `variants` on the container with `staggerChildren` for enter-only animations (cards animate in, but never animate out on filter change).
-- If exit animations are required for a specific phase, use `AnimatePresence mode="popLayout"` (available in Framer Motion v10+, this project uses v12). `popLayout` removes exiting elements from layout flow immediately while animating only `opacity`, eliminating the click-blocking problem.
-- Limit exit `duration` to 0.1 at most if `popLayout` is not used.
-- The existing pattern (no AnimatePresence on the card list, only `diagonaalKorttiVariants` for entry) is intentional — do not add exit animations without testing at 80+ cards with CPU throttle.
+Any SVG component that uses `<defs>` with an ID must call `useId()` and prefix all `id` and `href`/`url()` references with the unique value. Path-only icons (no `<defs>`) are immune to this.
 
-**Phase flag:** Any phase adding enter/exit animations to the DiagonaalKortti card list.
+**Detection:**
+Visual regression only when 2+ instances of the same icon appear simultaneously. The cluster popup in `Etusivu.tsx` shows multiple sport badges — test there first.
 
 ---
 
-## 10. Filter State Removal Breaks sessionStorage Scroll Restoration Mid-Session
+### Pitfall 10: Missing `aria-hidden` on Decorative SVG Icons After Lucide Replacement
 
 **What goes wrong:**
-`handleCardClick()` in Etusivu.tsx saves `{ searchHaku, searchLaji, searchKertakaynti, searchAukinyt, searchKaupunki, scrollTop, searchOpen }` as unversioned JSON in sessionStorage. The restore effect reads all keys back. If v1.5 removes a filter key (e.g., `searchAukinyt` is merged into another filter, or `searchKertakaynti` is renamed), the restore effect will attempt to set state for a key that no longer exists. TypeScript does not catch this at compile time because the stored value is parsed from JSON as `unknown` and checked with `typeof s.searchAukinyt === 'boolean'` — but the setter `setSearchAukinyt` may no longer exist.
-
-**Why it happens in this system:**
-The scroll state JSON is unversioned. Mobile users keep browser tabs open for days — a v1.5 deploy mid-session means the stored state uses v1.4 key names while the new code expects v1.5 key names. The `typeof` guards prevent crashes but silently leave filter state in an inconsistent "active but invisible" condition.
-
-**Consequences:**
-Filter is active (venues are filtered) but there's no visual indicator (pill not rendered). User sees fewer venues with no explanation. The only fix is a hard browser refresh.
+Lucide icons default to `aria-hidden="true"` when no `aria-label` is provided. Raw SVG components or SVGR-generated components do not include this default — they render a fully accessible `<svg>` element that screen readers attempt to read, announcing empty or garbled content for each icon.
 
 **Prevention:**
-- Add a version field: save `{ _v: 2, searchHaku, ... }`. In the restore effect, bail out if `s._v !== CURRENT_SCROLL_STATE_VERSION` (increment when any key is added/removed).
-- When removing a filter key, add it to a legacy key blocklist in the restore effect.
-- Update the `isFilterActive` expression (line 526 in Etusivu.tsx) to not reference removed keys — the TypeScript compiler will catch this if the state variable is deleted, but it will not catch references inside the sessionStorage restore JSON parsing block.
+All decorative icons must have `aria-hidden="true"` and `focusable="false"` on the `<svg>` element. Either bake this into the default props of every sport icon component, or enforce it at every callsite.
 
-**Phase flag:** Any phase that changes the filter key set.
+```tsx
+// Default in SportIconComponent
+<svg aria-hidden="true" focusable="false" ...>
+```
+
+**Detection:**
+`axe` or Lighthouse accessibility scan reports "SVG element has no accessible name" warnings. Also testable manually with VoiceOver/NVDA.
 
 ---
 
-## 11. `clip-path: path()` in CalloutCard Breaks on Safari 15 / iOS 15
-
-**What goes wrong:**
-`CalloutCard` uses `clip-path: path('M 10,0 ...')` computed by a `ResizeObserver`. The `path()` function inside `clip-path` is not supported on Safari < 16 (iOS 15, released Sep 2021, still in use on iPhone 6s/7 which cannot upgrade past iOS 15). On these browsers, the callout card renders as an unclipped rectangle — the speech-bubble pointing tail disappears and the card overlaps the pin awkwardly.
-
-**Why it happens in this system:**
-The existing code has a partial fallback: `borderRadius: clipPath ? 0 : 10` — but this only covers the "clip path not computed yet" case (before the `ResizeObserver` fires). It does NOT cover the "browser doesn't support `path()` at all" case. `clipPath` will be set to a non-empty string even on Safari 15, because the JS runs fine — it's only the CSS property that is ignored.
-
-**Consequences:**
-No crash, but visual regression on ~3–5% of iOS users (iOS 15 market share remains non-trivial, 2026). The card shape breaks specifically when the v1.5 "larger callout cards" requirement expands the card height.
-
-**Prevention:**
-- Add a `CSS.supports('clip-path', 'path("M0,0")')` check in the `useLayoutEffect`. If unsupported, set `clipPath` to `''` and rely on the `borderRadius: 10` fallback.
-- The existing conditional `borderRadius: clipPath ? 0 : 10` then handles both "not computed yet" AND "not supported" correctly with no additional code.
-- Do not replace `clip-path: path()` with a CSS `::after` triangle (border-trick) — the current clip approach is tighter against the pin anchor and the fallback rectangle is acceptable.
-
-**Phase flag:** Callout card redesign / expansion phase in v1.5.
-
----
-
-## 12. Static `will-change: transform` on `.gmap-pin` Exhausts GPU Memory on Android
-
-**What goes wrong:**
-Adding `will-change: transform` globally to `.gmap-pin` in `globals.css` (a common "performance optimization" suggestion) promotes every pin to a separate GPU compositing layer. With 80+ pins visible, this exhausts the compositing layer budget on low-end Android devices (2–3 GB RAM). The entire Google Maps tile layer stutters because the compositor is managing too many layers.
-
-**Why it happens in this system:**
-`will-change: transform` must be added immediately before an animation starts and removed when it ends — not held permanently. Adding it statically to a CSS class applied to all 80+ markers simultaneously means all pins are promoted at all times, even when no animation is running.
-
-**Consequences:**
-Visible stutter when panning the map after the pin layer GPU memory exceeds the compositing budget. Chrome DevTools → Layers panel shows 80+ compositor layers. Removing `will-change` restores normal performance immediately.
-
-**Prevention:**
-- Do NOT add `will-change: transform` to `.gmap-pin` in `globals.css`.
-- If a hover or active animation requires GPU promotion, use a JavaScript approach: add `style.willChange = 'transform'` on `mouseenter`/`touchstart` and remove it on `mouseleave`/`touchend`.
-- The existing `pinBounce` keyframe (one-shot, `animation-fill-mode: both`) does not need `will-change` — browsers handle single-fire animations efficiently without explicit promotion hints.
-
-**Phase flag:** Any phase adding looping or hover animations to map pins.
-
----
-
-## Phase-Specific Warning Summary
+## Phase-Specific Warnings
 
 | Phase Topic | Pitfall # | Mitigation |
 |---|---|---|
-| Marker gradient / shimmer / glint animation | 1, 12 | transform/opacity only; no static will-change in CSS |
-| Cluster library integration | 3 | Replace mapItems fully OR extend custom clusterPinUrl only — never mix |
-| CalloutCard expansion / redesign | 4, 11 | Keep zoomRef debounce; add CSS.supports fallback for Safari 15 |
-| TO DO overlay (replacing /suosikit page) | 5 | Keep /suosikit route; use ?overlay=todo param pattern |
-| Logo API spike | 6 | Server-side route handler with module-scope cache; sport-color fallback default |
-| Font redesign / logo area redesign | 7 | next/font only; no @import in CSS; verify Lighthouse CLS < 0.1 |
-| AktiiviLogo gradient cycling | 8 | Reset rect.width in cancel cleanup; min 800ms between index changes |
-| Filter key removal | 10 | Version the sessionStorage scroll state; update isFilterActive |
-| AnimatePresence on DiagonaalKortti list | 9 | mode="popLayout" or entry-only animations; test at 80+ cards with CPU throttle |
-| AdvancedMarker key changes | 2 | Key clusters by coordinate bucket string, not member IDs |
+| LanguageProvider initial implementation | 1 | Initialize state to `'fi'`, patch `lang` in `useEffect`, `suppressHydrationWarning` on `<html>` only |
+| `lib/lajit.ts` type migration | 2 | Define `SportIconComponent` type first, run `tsc --noEmit` before merging |
+| Moving SVG files to `public/icons/` | 3 | Add SVGs explicitly to `additionalPrecacheEntries`; verify precache manifest |
+| SVGR webpack loader setup | 7 | Add `issuer` constraint to webpack rule |
+| Replacing Lucide in `CalloutCard` | 5 | Emit explicit `width`/`height` on every SVG component |
+| Replacing Lucide everywhere | 10 | Default `aria-hidden="true"` `focusable="false"` in all icon components |
+| Any SVG with `<defs>` (gradients, filters) | 9 | Use `useId()` for all `<defs>` IDs |
+| Locale toggle interacting with Maps | 6 | `LanguageProvider` is a parent of `MapProvider`, not ancestor that causes remount |
+| Adding `t()` calls to Server Components | 8 | Translate only in Client Components; keep Server Components locale-agnostic |
+| SVG content in map pin DOM string path | 4 | Use React portal path (`SportPin.tsx`) exclusively; never `innerHTML` with Tailwind classes |
+
+---
+
+## Sources
+
+- [Next.js hydration error documentation](https://nextjs.org/docs/messages/react-hydration-error)
+- [How to Fix Next.js localStorage and Hydration Errors Cleanly — FluentReact](https://www.fluentreact.com/blog/nextjs-localstorage-hydration-errors-fix)
+- [serwist/serwist#139 — additionalPrecacheEntries prevents globPublicPatterns](https://github.com/serwist/serwist/issues/139)
+- [Serwist Next.js getting started](https://serwist.pages.dev/docs/next/getting-started)
+- [Serwist precaching docs](https://serwist.pages.dev/docs/serwist/guide/precaching)
+- [SVGR Next.js integration docs](https://react-svgr.com/docs/next/)
+- [Motion React SVG Animation docs](https://motion.dev/docs/react-svg-animation)
+- [react-google-maps AdvancedMarker API reference](https://visgl.github.io/react-google-maps/docs/api-reference/components/advanced-marker)
+- [Google Maps advanced markers graphics guide](https://developers.google.com/maps/documentation/javascript/advanced-markers/graphic-markers)
+- [next-intl Server/Client Component internationalization](https://next-intl.dev/docs/environments/server-client-components)
+- [Using React Context in combination with Server Components — Medium](https://medium.com/@sjoerd3000/using-react-context-in-combination-with-server-components-afe6b5c8923c)
+- [Serwist/langgenius precache 404 path prefix issue](https://github.com/langgenius/dify/issues/31677)
