@@ -2,13 +2,13 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { MapPin, Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity, Bookmark, BookmarkCheck } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { MapPin, Bookmark, BookmarkCheck } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti, cn } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
 import { isMembershipOnly } from '@/lib/priceUtils'
 import type { Liikuntapaikka } from '@/lib/types'
+import { SportIcon } from '@/lib/sportIcons'
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
 
@@ -19,16 +19,6 @@ export const korttiVariants = {
     y: 0,
     transition: { duration: 0.22, ease: EASE_OUT },
   },
-}
-
-const SPORT_ICONS: Record<string, LucideIcon> = {
-  padel:         Zap,
-  kuntosali:     Dumbbell,
-  jooga:         Leaf,
-  uinti:         Waves,
-  tennis:        Target,
-  liikuntahalli: Building2,
-  liikunta:      Activity,
 }
 
 interface PaikkaKorttiProps {
@@ -52,7 +42,6 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
     ? (paikka.hinta_kuvaus ?? (hintaTeksti !== '' ? hintaTeksti : null))
     : null
   const osoite       = [paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')
-  const Icon         = SPORT_ICONS[paikka.laji] ?? Activity
 
   return (
     <motion.div
@@ -81,7 +70,7 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
             className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full text-white"
             style={{ backgroundColor: laji.color }}
           >
-            <Icon className="w-3 h-3" />
+            <SportIcon laji={paikka.laji} size={12} className="shrink-0" />
             {laji.label}
           </span>
           {paikka.featured && (

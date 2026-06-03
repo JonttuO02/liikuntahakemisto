@@ -2,8 +2,9 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { MapPin, Check, Activity } from 'lucide-react'
-import { lajiKonfig, SPORT_ICONS } from '@/lib/lajit'
+import { MapPin, Check } from 'lucide-react'
+import { lajiKonfig } from '@/lib/lajit'
+import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
 import { isMembershipOnly } from '@/lib/priceUtils'
@@ -36,7 +37,6 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
   const membershipOnly = isMembershipOnly(paikka)
   const priceText    = membershipOnly ? null : (paikka.hinta_kuvaus?.split('\n')[0] ?? (hintaTeksti !== '' ? hintaTeksti : null))
   const hasCoords    = paikka.latitude != null && paikka.longitude != null
-  const Icon         = SPORT_ICONS[paikka.laji] ?? Activity
 
   return (
     <motion.div
@@ -58,7 +58,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-white self-start truncate max-w-full"
             style={{ backgroundColor: laji.color }}
           >
-            <Icon className="w-3 h-3 shrink-0" />
+            <SportIcon laji={paikka.laji} size={12} className="shrink-0" />
             {laji.label}
           </span>
 
@@ -117,7 +117,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             data-fallback
             hidden={!!paikka.image_url}
           >
-            <Icon className="w-8 h-8 text-white opacity-80" />
+            <SportIcon laji={paikka.laji} size={32} className="text-white opacity-80" />
           </div>
         </div>
 

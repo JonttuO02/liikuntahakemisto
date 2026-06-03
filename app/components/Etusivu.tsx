@@ -4,10 +4,11 @@ import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
-import { Moon, Sun, Locate, Search, Bookmark, X, MoreHorizontal, LogOut, User, LayoutList, Activity } from 'lucide-react'
+import { Moon, Sun, Locate, Search, Bookmark, X, MoreHorizontal, LogOut, User, LayoutList } from 'lucide-react'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
-import { LAJIT_FILTTERI, lajiKonfig, SPORT_ICONS } from '@/lib/lajit'
+import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
+import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
 import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
@@ -190,7 +191,6 @@ function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude:
   }, [])
 
   const sportColor = lajiKonfig[p.laji]?.color ?? '#6b7280'
-  const Icon = SPORT_ICONS[p.laji] ?? Activity
 
   const chars = (text: string) =>
     text.split(' ').flatMap((word, wi) => [
@@ -249,7 +249,7 @@ function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude:
                 className="flex flex-wrap items-center gap-1"
               >
                 <motion.span variants={CHAR_VARIANTS} className="flex items-center">
-                  <Icon className="w-4 h-4" style={{ color: sportColor }} />
+                  <span style={{ color: sportColor }}><SportIcon laji={p.laji} size={16} className="flex-shrink-0" /></span>
                 </motion.span>
                 <span className="flex items-center text-lg font-bold text-[#111111]">
                   {chars(lajiKonfig[p.laji]?.label ?? p.laji)}
@@ -410,14 +410,13 @@ function CombinedFilterPill({
               >
                 {[...sportItems, ...sportItems].map((sport, i) => {
                   const isSelected = selectedSports.some(s => s.toLowerCase() === sport.toLowerCase())
-                  const Icon = SPORT_ICONS[sport.toLowerCase()]
                   const color = lajiKonfig[sport.toLowerCase()]?.color
                   return (
                     <span
                       key={i}
                       className={`flex items-center gap-1 ${isSelected ? 'text-[#111111]' : 'text-[rgba(17,17,17,0.35)]'}`}
                     >
-                      {Icon && <Icon className="w-3 h-3 shrink-0" style={{ color: isSelected ? color : undefined }} />}
+                      <span style={{ color: isSelected ? color : undefined }}><SportIcon laji={sport.toLowerCase()} size={12} className="shrink-0" /></span>
                       {sport}
                     </span>
                   )
@@ -493,7 +492,6 @@ function CombinedFilterPill({
           >
             {sportItems.map(sport => {
               const isSelected = selectedSports.some(s => s.toLowerCase() === sport.toLowerCase())
-              const Icon = SPORT_ICONS[sport.toLowerCase()]
               const color = lajiKonfig[sport.toLowerCase()]?.color
               return (
                 <button
@@ -502,7 +500,7 @@ function CombinedFilterPill({
                   className={`w-full text-left px-4 py-2.5 text-xs font-bold flex items-center gap-2.5 [transition:color_100ms] ${isSelected ? 'text-[#111111]' : 'text-[rgba(17,17,17,0.45)]'}`}
                 >
                   <span className={`w-3 h-3 rounded-full flex-shrink-0 ${isSelected ? 'bg-[#111111]' : 'border border-[rgba(0,0,0,0.15)]'}`} />
-                  {Icon && <Icon className="w-3 h-3 flex-shrink-0" style={{ color: isSelected ? color : undefined }} />}
+                  <span style={{ color: isSelected ? color : undefined }}><SportIcon laji={sport.toLowerCase()} size={12} className="flex-shrink-0" /></span>
                   {sport}
                 </button>
               )
