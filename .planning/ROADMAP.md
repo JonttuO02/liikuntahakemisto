@@ -95,7 +95,7 @@ Full archive: `.planning/milestones/v1.5-ROADMAP.md`
 **Milestone Goal:** Englanninkielinen käyttöliittymä (kielivalitsin profiilisivulla), uudet SVG-ikonit kaikille lajeille, PaikkaSheet hero-redesign hinnastolla ja collapsed arvosteluwidgetillä, sekä joukko UI-parannuksia ja bugifixejä.
 
 - [x] **Phase 27: Siivous & pienet korjaukset** — Navigaatiosiivous, filtteri/haku-korjaukset, sheet-korjaukset, klusterizoomi ja UI-häivytys *(5/5 plans)* — 2026-06-03
-- [ ] **Phase 28: SVG-ikonit** — Uusi lib/sportIcons.ts -rekisteri, ikonit käytössä kaikkialla (prerequisite for i18n)
+- [ ] **Phase 28: SVG-ikonit** — Uusi lib/sportIcons.ts -rekisteri, ikonit käytössä kaikkialla (prerequisite for i18n) *(2 plans)*
 - [ ] **Phase 29: Kortit & sheet redesign** — PaikkaSheet hero-karuselli + hinnasto, PaikkaKortti hinnastokaruselli, DiagonaalKortti placeholder-kuvat
 - [ ] **Phase 30: i18n FI/EN** — next-intl, NEXT_LOCALE-cookie, kielivalitsin profiilisivulla, kaikki UI-tekstit käännetty
 
@@ -139,8 +139,12 @@ Plans:
   4. tsc --noEmit läpäisee ilman virheitä (ei rikkonaisia SPORT_ICONS-tyyppiviittauksia)
 **Plans**: 2 plans
 Plans:
-- [ ] 28-01-PLAN.md — Extract SVG inner markup from zip, write lib/sportIcons.ts with SPORT_ICONS record and SportIcon component
-- [ ] 28-02-PLAN.md — Migrate 5 consumers to SportIcon/SPORT_ICONS; delete Lucide icons and SPORT_ICONS from lib/lajit.ts; tsc clean
+
+**Wave 1**
+- [ ] 28-01-PLAN.md — Extract SVGs from final_sports_svg_exports.zip, write lib/sportIcons.ts (ICON-01)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 28-02-PLAN.md — Migrate 5 consumers, delete Lucide from lib/lajit.ts, run tsc --noEmit (ICON-01, ICON-02)
 
 ### Phase 29: Kortit & sheet redesign
 **Goal**: PaikkaSheet on visuaalisesti uudistettu hero-osiolla ja hinnastolla; PaikkaKortti näyttää hinnaston karusellina; DiagonaalKortti näyttää logo- ja kuvaplaceholderit

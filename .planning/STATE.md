@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Kielituki, Ikonit & Sheet-redesign
-status: completed
-stopped_at: Phase 28 context gathered
-last_updated: "2026-06-03T16:46:09.656Z"
-last_activity: 2026-06-03 — Phase 27 complete (5/5 plans, 10/10 must-haves verified)
+status: planned
+stopped_at: Phase 28 planned
+last_updated: "2026-06-03T17:30:00.000Z"
+last_activity: 2026-06-03 — Phase 28 planned (2 plans ready to execute)
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 5
+  total_plans: 7
   completed_plans: 5
   percent: 25
 ---
@@ -18,9 +18,9 @@ progress:
 
 ## Current Position
 
-Phase: 28 of 30 (SVG-ikonit) — ready to plan
-Status: Phase 27 complete — ready to start Phase 28
-Last activity: 2026-06-03 — Phase 27 complete (5/5 plans, 10/10 must-haves verified)
+Phase: 28 of 30 (SVG-ikonit) — ready to execute
+Status: Phase 28 planned (2/2 plans in 2 waves) — ready to execute
+Last activity: 2026-06-03 — Phase 28 planned (2 plans ready to execute)
 
 Progress: [██░░░░░░░░] 25%
 
@@ -55,11 +55,10 @@ See: .planning/PROJECT.md (updated 2026-06-03)
 
 ## Blockers/Concerns
 
-- Phase 28: zip-tiedoston SVG-polut täytyy ekstraktoida lib/sportIcons.ts:ään (manuaalinen vaihe)
-- Phase 28: SPORT_ICONS-tyyppi muuttuu 5+ tiedostossa samanaikaisesti — tsc --noEmit ennen commit
+- Phase 28: SPORT_ICONS-tyyppi muuttuu 5+ tiedostossa samanaikaisesti — tsc --noEmit ennen commit (plan handles this)
 
 ## Session Continuity
 
-Last session: 2026-06-03T16:46:09.650Z
-Stopped at: Phase 28 context gathered
-Resume: `/gsd:plan-phase 28`
+Last session: 2026-06-03T17:30:00.000Z
+Stopped at: Phase 28 planned
+Resume: `/gsd:execute-phase 28`
