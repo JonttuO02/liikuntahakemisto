@@ -1510,20 +1510,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           </div>
         </motion.div>
 
-        {/* UI-24: Gradient fade overlay — positioned relative to the outer sheet container, not the scroll div */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 64,
-            background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.92))',
-            pointerEvents: 'none',
-            zIndex: 2,
-          }}
-        />
       </motion.div>
 
       {/* ── Combined filter pill — at search bar position ── */}
@@ -1576,16 +1562,17 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed overflow-y-auto"
+            className="fixed"
             style={{
               top: 'calc(max(12px, env(safe-area-inset-top)) + 96px)',
               left: 0,
               right: 0,
               maxHeight: `calc(100dvh - max(12px, env(safe-area-inset-top)) - 96px - ${HANDLE_H + 8}px)`,
               zIndex: 61,
+              position: 'relative',
             }}
           >
-            <div className="px-4 pb-4 mx-auto" style={{ maxWidth: 480 }}>
+            <div className="px-4 pb-4 mx-auto overflow-y-auto" style={{ maxWidth: 480, maxHeight: 'inherit' }}>
 
               {/* Card list — only in browse mode (LayoutList), not when typing (Search) */}
               {!searchFocused && searchSuodatettu.length > 0 && (
@@ -1608,6 +1595,18 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 </div>
               )}
             </div>
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 64,
+                background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.92))',
+                pointerEvents: 'none',
+              }}
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -55,7 +55,7 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
       style={{
         position: 'fixed',
         left: 0, right: 0, bottom: 0,
-        height: '90vh',
+        height: 'calc(100dvh - 116px)',
         zIndex: 66,
         overflow: 'hidden',
       }}
