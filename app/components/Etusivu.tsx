@@ -1562,17 +1562,17 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed"
+            className="fixed overflow-y-auto"
             style={{
               top: 'calc(max(12px, env(safe-area-inset-top)) + 96px)',
               left: 0,
               right: 0,
-              maxHeight: `calc(100dvh - max(12px, env(safe-area-inset-top)) - 96px - ${HANDLE_H + 8}px)`,
+              bottom: 0,
               zIndex: 61,
-              position: 'relative',
+              scrollbarWidth: 'none',
             }}
           >
-            <div className="px-4 pb-4 mx-auto overflow-y-auto" style={{ maxWidth: 480, maxHeight: 'inherit' }}>
+            <div className="px-4 mx-auto" style={{ maxWidth: 480, paddingBottom: `${HANDLE_H + 16}px` }}>
 
               {/* Card list — only in browse mode (LayoutList), not when typing (Search) */}
               {!searchFocused && searchSuodatettu.length > 0 && (
@@ -1595,18 +1595,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 </div>
               )}
             </div>
-            <div
-              aria-hidden="true"
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 64,
-                background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.92))',
-                pointerEvents: 'none',
-              }}
-            />
           </motion.div>
         )}
       </AnimatePresence>
