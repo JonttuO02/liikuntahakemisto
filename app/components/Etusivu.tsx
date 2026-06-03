@@ -1553,16 +1553,16 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       </AnimatePresence>
 
       {/* ── Search results — transparent container, cards float over map ── */}
-      {searchOpen && (
+      {searchOpen && !searchFocused && searchSuodatettu.length > 0 && (
         <div
           aria-hidden="true"
           style={{
             position: 'fixed',
-            top: 'calc(max(12px, env(safe-area-inset-top)) + 96px)',
+            top: 'calc(max(12px, env(safe-area-inset-top)) + 52px)',
             left: 0,
             right: 0,
             height: 48,
-            background: 'linear-gradient(to bottom, rgba(255,255,255,0.95), transparent)',
+            background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.95))',
             pointerEvents: 'none',
             zIndex: 62,
           }}
