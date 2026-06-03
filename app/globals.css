@@ -117,8 +117,8 @@
 /* Arc sweep: ring in the blue zone outside white circle (r=10→14, center 14,14 in 28×38 div) */
 .pin-arc {
   position: absolute;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   top: 0;
   left: 0;
   border-radius: 50%;
@@ -129,8 +129,8 @@
     rgba(56, 189, 248, 0.55) 270deg,
     rgba(186, 230, 253, 0.35) 360deg
   );
-  -webkit-mask: radial-gradient(circle at center, transparent 10px, black 11px, black 13px, transparent 14px);
-  mask: radial-gradient(circle at center, transparent 10px, black 11px, black 13px, transparent 14px);
+  -webkit-mask: radial-gradient(circle at center, transparent 13px, black 14px, black 17px, transparent 18px);
+  mask: radial-gradient(circle at center, transparent 13px, black 14px, black 17px, transparent 18px);
   animation: spinOrbit 3s linear infinite;
   pointer-events: none;
 }

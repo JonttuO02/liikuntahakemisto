@@ -16,8 +16,8 @@ export default function SportPin({ laji, animDelay }: SportPinProps) {
   const gradId = useId().replace(/:/g, '-')
 
   return (
-    <div style={{ position: 'relative', width: 28, height: 38, cursor: 'pointer' }}>
-      <svg viewBox="0 0 28 38" width="28" height="38" style={{ display: 'block' }}>
+    <div style={{ position: 'relative', width: 36, height: 49, cursor: 'pointer' }}>
+      <svg viewBox="0 0 28 38" width="36" height="49" style={{ display: 'block' }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#38bdf8" />
