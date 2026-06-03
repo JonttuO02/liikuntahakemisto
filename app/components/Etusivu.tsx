@@ -1023,7 +1023,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             if (!('cluster' in item.properties && item.properties.cluster)) {
               const p = (item.properties as VenuePoint).paikka
               return (
-                <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? 10 : nearestCardId === p.id ? 5 : 1}>
+                <AdvancedMarker key={p.id} position={{ lat: p.latitude, lng: p.longitude }} zIndex={valittu?.id === p.id ? Math.round((90 - p.latitude) * 100) + 10000 : nearestCardId === p.id ? Math.round((90 - p.latitude) * 100) + 5000 : Math.round((90 - p.latitude) * 100)}>
                   {/* 0×0 anchor — AdvancedMarker pins its bottom-center here, so neither pin
                       nor card can shift the anchor point when transitioning between them */}
                   <div style={{ position: 'relative', width: 0, height: 0 }}>
@@ -1074,11 +1074,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <AdvancedMarker
                 key={`cluster-${clusterId}`}
                 position={{ lat, lng }}
-                zIndex={2}
+                zIndex={Math.round((90 - lat) * 100)}
               >
                 <motion.div whileTap={{ scale: 0.95 }}>
                   <div
-                    style={{ position: 'relative', width: 28, height: 38, cursor: 'pointer' }}
+                    style={{ position: 'relative', width: 36, height: 49, cursor: 'pointer' }}
                     onClick={e => {
                       e.stopPropagation()
                       const expansionZoom = sc.getClusterExpansionZoom(clusterId)
@@ -1086,7 +1086,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                       setSearchOpen(false)
                     }}
                   >
-                    <svg viewBox="0 0 28 38" width="28" height="38" style={{ display: 'block' }}>
+                    <svg viewBox="0 0 28 38" width="36" height="49" style={{ display: 'block' }}>
                       <path d="M14 0C6.268 0 0 6.268 0 14c0 5.25 2.875 9.83 7.125 12.3L14 38l6.875-11.7C25.125 23.83 28 19.25 28 14 28 6.268 21.732 0 14 0Z" fill="#1e40af" />
                       <circle cx="14" cy="14" r="10" fill="white" />
                       <text x="14" y="18" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#0284c7" fontFamily="sans-serif">
