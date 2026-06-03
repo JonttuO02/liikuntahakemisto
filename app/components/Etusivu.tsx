@@ -107,6 +107,19 @@ function MapAutoZoom({ target, onComplete }: { target: { lat: number; lng: numbe
   return null
 }
 
+function MapClusterZoom({ target, onComplete }: { target: { zoom: number; center: { lat: number; lng: number } } | null; onComplete: () => void }) {
+  const map = useMap()
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
+  useEffect(() => {
+    if (!map || !target) return
+    map.setZoom(target.zoom)
+    map.panTo(target.center)
+    onCompleteRef.current()
+  }, [map, target])
+  return null
+}
+
 const CHAR_VARIANTS = {
   initial: { x: 16, opacity: 0 },
   enter:   { x: 0,  opacity: 1, transition: { duration: 0.15, ease: [0.25, 0.1, 0.25, 1] as [number,number,number,number] } },
@@ -238,7 +251,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const [saa, setSaa]               = useState<SaaTiedot | null>(null)
   const [aiTeksti, setAiTeksti]     = useState<string | null>(null)
   const [valittu, setValittu]       = useState<Liikuntapaikka | null>(null)
-  const [expandedCluster, setExpandedCluster] = useState<{ id: number; items: (Liikuntapaikka & { latitude: number; longitude: number })[] } | null>(null)
+  const [clusterZoomTarget, setClusterZoomTarget] = useState<{ zoom: number; center: { lat: number; lng: number } } | null>(null)
   const [bounds, setBounds] = useState<[number, number, number, number] | null>(null)
   // 'open' → 'sliding' (y to contentH) → onAnimationComplete → 'closed' (pill)
   const [sheetPhase, setSheetPhase] = useState<'open' | 'sliding' | 'closed'>('closed')
@@ -560,9 +573,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     return instance
   }, [paikatKartalla])
 
-  // Close popup when filter/data changes (sc changes → cluster IDs invalidated)
-  useEffect(() => { setExpandedCluster(null) }, [sc])
-
   const mapItems = useMemo(
     () => (bounds ? sc.getClusters(bounds, Math.round(zoomLevel)) : []),
     [sc, bounds, zoomLevel]
@@ -642,7 +652,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           gestureHandling={sheetPhase === 'open' ? 'none' : 'greedy'}
           clickableIcons={false}
           keyboardShortcuts={false}
-          onClick={() => { setValittu(null); setExpandedCluster(null) }}
+          onClick={() => { setValittu(null) }}
           onCameraChanged={ev => {
             const newZoom = ev.detail.zoom
             const center = ev.detail.center
@@ -711,73 +721,28 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
               <AdvancedMarker
                 key={`cluster-${clusterId}`}
                 position={{ lat, lng }}
-                zIndex={expandedCluster?.id === clusterId ? 20 : 2}
+                zIndex={2}
               >
-                <div style={{ position: 'relative' }}>
-                  <motion.div whileTap={{ scale: 0.95 }}>
-                    <div
-                      style={{ position: 'relative', width: 28, height: 38, cursor: 'pointer' }}
-                      onClick={e => {
-                        e.stopPropagation()
-                        if (expandedCluster?.id === clusterId) {
-                          setExpandedCluster(null)
-                        } else {
-                          const leaves = sc.getLeaves(clusterId, Infinity).map(f => f.properties.paikka)
-                          setExpandedCluster({ id: clusterId, items: leaves })
-                        }
-                        setSearchOpen(false)
-                      }}
-                    >
-                      <svg viewBox="0 0 28 38" width="28" height="38" style={{ display: 'block' }}>
-                        <path d="M14 0C6.268 0 0 6.268 0 14c0 5.25 2.875 9.83 7.125 12.3L14 38l6.875-11.7C25.125 23.83 28 19.25 28 14 28 6.268 21.732 0 14 0Z" fill="#1e40af" />
-                        <circle cx="14" cy="14" r="10" fill="white" />
-                        <text x="14" y="18" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#0284c7" fontFamily="sans-serif">
-                          {count > 99 ? '99+' : String(count)}
-                        </text>
-                      </svg>
-                      <div className="pin-arc" />
-                    </div>
-                  </motion.div>
-                  <AnimatePresence>
-                    {expandedCluster?.id === clusterId && (
-                      <motion.div
-                        key="cluster-popup"
-                        initial={{ opacity: 0, scale: 0.95, y: 4 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.18 }}
-                        className="glass rounded-2xl py-2"
-                        style={{
-                          position: 'absolute',
-                          bottom: 'calc(100% + 8px)',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          width: 200,
-                          maxHeight: 240,
-                          overflowY: 'auto',
-                          zIndex: 10,
-                        }}
-                        onClick={e => e.stopPropagation()}
-                      >
-                        {expandedCluster.items.map(venue => (
-                          <button
-                            key={venue.id}
-                            onClick={() => { setValittu(venue); setExpandedCluster(null); setSearchOpen(false) }}
-                            className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-[rgba(0,0,0,0.04)] [transition:background-color_150ms_ease]"
-                          >
-                            <span
-                              className="inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white shrink-0"
-                              style={{ backgroundColor: lajiKonfig[venue.laji]?.color ?? '#6b7280' }}
-                            >
-                              {lajiKonfig[venue.laji]?.label ?? venue.laji}
-                            </span>
-                            <span className="font-bold text-xs text-[#111111] truncate leading-tight">{venue.nimi}</span>
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <motion.div whileTap={{ scale: 0.95 }}>
+                  <div
+                    style={{ position: 'relative', width: 28, height: 38, cursor: 'pointer' }}
+                    onClick={e => {
+                      e.stopPropagation()
+                      const expansionZoom = sc.getClusterExpansionZoom(clusterId)
+                      setClusterZoomTarget({ zoom: expansionZoom, center: { lat, lng } })
+                      setSearchOpen(false)
+                    }}
+                  >
+                    <svg viewBox="0 0 28 38" width="28" height="38" style={{ display: 'block' }}>
+                      <path d="M14 0C6.268 0 0 6.268 0 14c0 5.25 2.875 9.83 7.125 12.3L14 38l6.875-11.7C25.125 23.83 28 19.25 28 14 28 6.268 21.732 0 14 0Z" fill="#1e40af" />
+                      <circle cx="14" cy="14" r="10" fill="white" />
+                      <text x="14" y="18" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#0284c7" fontFamily="sans-serif">
+                        {count > 99 ? '99+' : String(count)}
+                      </text>
+                    </svg>
+                    <div className="pin-arc" />
+                  </div>
+                </motion.div>
               </AdvancedMarker>
             )
           })}
@@ -805,6 +770,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 pendingValittuRef.current = null
               }
             }}
+          />
+          <MapClusterZoom
+            target={clusterZoomTarget}
+            onComplete={() => setClusterZoomTarget(null)}
           />
         </Map>
       </div>
