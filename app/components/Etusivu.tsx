@@ -1558,11 +1558,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           aria-hidden="true"
           style={{
             position: 'fixed',
-            top: 'calc(max(12px, env(safe-area-inset-top)) + 52px)',
+            top: 'calc(max(12px, env(safe-area-inset-top)) + 56px)',
             left: 0,
             right: 0,
-            height: 48,
-            background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.95))',
+            height: 80,
+            background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.92) 50%, transparent)',
             pointerEvents: 'none',
             zIndex: 62,
           }}
