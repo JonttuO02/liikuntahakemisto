@@ -111,7 +111,13 @@ Full archive: `.planning/milestones/v1.5-ROADMAP.md`
   3. Hakukentässä ei näy "Ei tuloksia"- eikä "Tyhjennä haku" -tekstejä missään hakutilanteessa
   4. Korttilistauksen alareunassa on fade-häivytys eikä kartta leikkaa kortteja karkosti
   5. Klusteria klikkaamalla kartta zoomaa lähemmäksi (ellei kyseessä sama koordinaatti); sheet aukeaa ilman viivettä kun pientä korttia klikataan
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 27-01-PLAN.md — Delete /suosikit route files and scrub all nav links (NAV-06, NAV-07)
+- [ ] 27-02-PLAN.md — Remove "Avaa paikkasivu selaimessa" link from PaikkaSheet (SHEET-04)
+- [ ] 27-03-PLAN.md — Pill background, ghost-element fix, remove empty-state text (FILTER-04, FILTER-05, SEARCH-01)
+- [ ] 27-04-PLAN.md — Rewrite cluster click to zoom via getExpansionZoom; delete expandedCluster state (MAP-16)
+- [ ] 27-05-PLAN.md — Card list fade overlay, sheet max height, CalloutCard tap delay fix (UI-24, SHEET-05, SHEET-06)
 **UI hint**: yes
 
 ### Phase 28: SVG-ikonit
@@ -181,7 +187,7 @@ Full archive: `.planning/milestones/v1.5-ROADMAP.md`
 | 24. Callout-kortti & ikonit | v1.5 | 1/1 | ✅ Complete | 2026-06-02 |
 | 25. TO DO overlay | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
 | 26. Filtterit | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
-| 27. Siivous & pienet korjaukset | v1.6 | 0/? | Not started | - |
+| 27. Siivous & pienet korjaukset | v1.6 | 0/5 | In planning | - |
 | 28. SVG-ikonit | v1.6 | 0/? | Not started | - |
 | 29. Kortit & sheet redesign | v1.6 | 0/? | Not started | - |
 | 30. i18n FI/EN | v1.6 | 0/? | Not started | - |
