@@ -135,6 +135,34 @@
   pointer-events: none;
 }
 
+/* ── Combined filter pill — animated arc border ─────────────────── */
+@keyframes pillOrbit {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes tickerScrollRight {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+
+.pill-orbit-ring {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  top: 50%;
+  left: 50%;
+  background: conic-gradient(
+    rgba(186, 230, 253, 0.35) 0deg,
+    rgba(56, 189, 248, 0.55) 90deg,
+    rgba(14, 40, 120, 0.95) 180deg,
+    rgba(56, 189, 248, 0.55) 270deg,
+    rgba(186, 230, 253, 0.35) 360deg
+  );
+  animation: pillOrbit 3s linear infinite;
+  pointer-events: none;
+}
+
 /* ── Night page theme ───────────────────────────────────────────── */
 
 /* Dark glassmorphism — mainoswidget yötilassa */

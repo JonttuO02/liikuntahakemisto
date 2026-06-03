@@ -256,125 +256,247 @@ function getTimeBasedFallback(): string {
   return 'Iltaa · Löydä paras liikuntapaikka Tampereelta'
 }
 
-interface FilterCarouselPillProps {
-  label: string
-  allItems: string[]
-  selected: string[]
-  onToggle: (item: string) => void
-  singleSelect?: boolean
-}
-
-function FilterCarouselPill({ label, allItems, selected, onToggle, singleSelect }: FilterCarouselPillProps) {
-  const [idx, setIdx] = useState(0)
-  const [open, setOpen] = useState(false)
-  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+function CombinedFilterPill({
+  showCities,
+  cityItems,
+  selectedCity,
+  onCityToggle,
+  sportItems,
+  selectedSports,
+  onSportToggle,
+  listOpen,
+  searchHaku,
+  onSearchChange,
+}: {
+  showCities: boolean
+  cityItems: string[]
+  selectedCity: string
+  onCityToggle: (city: string) => void
+  sportItems: string[]
+  selectedSports: string[]
+  onSportToggle: (sport: string) => void
+  listOpen: boolean
+  searchHaku: string
+  onSearchChange: (val: string) => void
+}) {
+  const [cityDropOpen, setCityDropOpen] = useState(false)
+  const [sportDropOpen, setSportDropOpen] = useState(false)
+  const [cityDropPos, setCityDropPos] = useState<{ top: number; left: number } | null>(null)
+  const [sportDropPos, setSportDropPos] = useState<{ top: number; left: number } | null>(null)
+  const pillRef = useRef<HTMLDivElement>(null)
+  const cityDropRef = useRef<HTMLDivElement>(null)
+  const sportDropRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setIdx(0)
-  }, [selected.join(',')])
-
-  useEffect(() => {
-    if (selected.length === 1) return
-    const items = selected.length > 1 ? selected : allItems
-    const id = setInterval(() => setIdx(i => (i + 1) % items.length), 2000)
-    return () => clearInterval(id)
-  }, [selected.length, allItems.length]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!open) return
-    function handleOutside(e: MouseEvent | TouchEvent) {
+    if (!cityDropOpen && !sportDropOpen) return
+    function handle(e: MouseEvent | TouchEvent) {
+      const t = e.target as Node
       if (
-        buttonRef.current && !buttonRef.current.contains(e.target as Node) &&
-        dropdownRef.current && !dropdownRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false)
-      }
+        pillRef.current?.contains(t) ||
+        cityDropRef.current?.contains(t) ||
+        sportDropRef.current?.contains(t)
+      ) return
+      setCityDropOpen(false)
+      setSportDropOpen(false)
     }
-    document.addEventListener('mousedown', handleOutside)
-    document.addEventListener('touchstart', handleOutside)
+    document.addEventListener('mousedown', handle)
+    document.addEventListener('touchstart', handle)
     return () => {
-      document.removeEventListener('mousedown', handleOutside)
-      document.removeEventListener('touchstart', handleOutside)
+      document.removeEventListener('mousedown', handle)
+      document.removeEventListener('touchstart', handle)
     }
-  }, [open])
+  }, [cityDropOpen, sportDropOpen])
 
-  const displayText = selected.length === 0
-    ? allItems[idx % allItems.length]
-    : selected.length === 1
-      ? selected[0]
-      : selected[idx % selected.length]
-
-  function handleToggle() {
-    if (!open && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      setDropdownPos({ top: rect.bottom + 6, left: rect.left })
-    }
-    setOpen(v => !v)
+  function openCity() {
+    if (!pillRef.current) return
+    const r = pillRef.current.getBoundingClientRect()
+    setCityDropPos({ top: r.bottom + 6, left: r.left })
+    setSportDropOpen(false)
+    setCityDropOpen(v => !v)
   }
 
-  const displayKey = displayText.toLowerCase()
-  const DisplayIcon = SPORT_ICONS[displayKey]
-  const displayColor = lajiKonfig[displayKey]?.color
+  function openSport() {
+    if (!pillRef.current) return
+    const r = pillRef.current.getBoundingClientRect()
+    const left = showCities ? r.left + r.width / 2 : r.left
+    setSportDropPos({ top: r.bottom + 6, left })
+    setCityDropOpen(false)
+    setSportDropOpen(v => !v)
+  }
+
+  const cityDuration = Math.max(8, cityItems.length * 2.5)
+  const sportDuration = Math.max(10, sportItems.length * 1.8)
+  const outerR = listOpen ? 20 : 9999
+  const innerR = listOpen ? 18 : 9999
 
   return (
-    <div>
-      <motion.button
-        ref={buttonRef}
-        whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
-        onClick={handleToggle}
-        aria-label={label}
-        className="h-8 min-w-[7rem] px-3 rounded-full text-xs font-bold glass text-[rgba(17,17,17,0.45)] flex items-center justify-center gap-1.5 overflow-hidden"
+    <>
+      <motion.div
+        ref={pillRef}
+        animate={{ borderRadius: outerR }}
+        transition={{ duration: 0.2, ease: 'easeInOut' }}
+        style={{ position: 'relative', overflow: 'hidden', padding: 2 }}
       >
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={selected.length === 1 ? 'static' : idx}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="pointer-events-none flex items-center gap-1.5 whitespace-nowrap"
-          >
-            {DisplayIcon && <DisplayIcon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: displayColor ?? 'currentColor' }} />}
-            {displayText}
-          </motion.span>
-        </AnimatePresence>
-        {selected.length > 1 && (
-          <span className="text-[10px] font-bold bg-[rgba(17,17,17,0.12)] rounded-full px-1 flex-shrink-0">{selected.length}</span>
-        )}
-      </motion.button>
+        <div className="pill-orbit-ring" />
+
+        <motion.div
+          className="relative"
+          animate={{ borderRadius: innerR }}
+          transition={{ duration: 0.2, ease: 'easeInOut' }}
+          style={{ background: '#ffffff', overflow: 'hidden' }}
+        >
+          <div className="flex items-center" style={{ height: 40 }}>
+            {showCities && (
+              <>
+                <button
+                  onClick={openCity}
+                  className="flex-1 min-w-0 h-full overflow-hidden flex items-center px-3"
+                  aria-label="Suodata kaupungin mukaan"
+                  style={{
+                    WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%)',
+                    maskImage: 'linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%)',
+                  }}
+                >
+                  <div
+                    className="flex items-center gap-4 whitespace-nowrap text-xs font-bold"
+                    style={{
+                      animation: `tickerScrollRight ${cityDuration}s linear infinite`,
+                      willChange: 'transform',
+                    }}
+                  >
+                    {[...cityItems, ...cityItems].map((city, i) => (
+                      <span
+                        key={i}
+                        className={selectedCity === city ? 'text-[#111111]' : 'text-[rgba(17,17,17,0.35)]'}
+                      >
+                        {city}
+                      </span>
+                    ))}
+                  </div>
+                </button>
+                <div className="w-px h-4 bg-[rgba(0,0,0,0.15)] shrink-0 mx-1" />
+              </>
+            )}
+
+            <button
+              onClick={openSport}
+              className="flex-1 min-w-0 h-full overflow-hidden flex items-center px-3"
+              aria-label="Suodata lajin mukaan"
+              style={{
+                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%)',
+                maskImage: 'linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%)',
+              }}
+            >
+              <div
+                className="flex items-center gap-3 whitespace-nowrap text-xs font-bold"
+                style={{
+                  animation: `tickerScrollRight ${sportDuration}s linear infinite`,
+                  willChange: 'transform',
+                }}
+              >
+                {[...sportItems, ...sportItems].map((sport, i) => {
+                  const isSelected = selectedSports.some(s => s.toLowerCase() === sport.toLowerCase())
+                  const Icon = SPORT_ICONS[sport.toLowerCase()]
+                  const color = lajiKonfig[sport.toLowerCase()]?.color
+                  return (
+                    <span
+                      key={i}
+                      className={`flex items-center gap-1 ${isSelected ? 'text-[#111111]' : 'text-[rgba(17,17,17,0.35)]'}`}
+                    >
+                      {Icon && <Icon className="w-3 h-3 shrink-0" style={{ color: isSelected ? color : undefined }} />}
+                      {sport}
+                    </span>
+                  )
+                })}
+              </div>
+            </button>
+          </div>
+
+          <AnimatePresence>
+            {listOpen && (
+              <motion.div
+                key="search-expand"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 44, opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                style={{ overflow: 'hidden' }}
+              >
+                <div className="flex items-center gap-2 px-3 pb-2.5 pt-1 border-t border-[rgba(0,0,0,0.07)]">
+                  <Search className="w-3.5 h-3.5 text-[rgba(17,17,17,0.4)] shrink-0 pointer-events-none" />
+                  <input
+                    type="search"
+                    placeholder="Hae liikuntapaikkaa..."
+                    value={searchHaku}
+                    onChange={e => onSearchChange(e.target.value)}
+                    className="flex-1 min-w-0 bg-transparent border-0 outline-none text-sm text-[#111111] placeholder:text-[rgba(17,17,17,0.4)]"
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
+
       <AnimatePresence>
-        {open && dropdownPos && (
+        {cityDropOpen && cityDropPos && (
           <motion.div
-            ref={dropdownRef}
+            ref={cityDropRef}
             initial={{ opacity: 0, y: -4, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            style={{ top: dropdownPos.top, left: dropdownPos.left }}
-            className="fixed z-[65] glass rounded-2xl overflow-hidden min-w-[9rem] divide-y divide-[rgba(0,0,0,0.06)]"
+            style={{ top: cityDropPos.top, left: cityDropPos.left, position: 'fixed', zIndex: 65 }}
+            className="glass rounded-2xl overflow-hidden min-w-[9rem] divide-y divide-[rgba(0,0,0,0.06)]"
           >
-            {allItems.map(item => {
-              const isSelected = selected.some(s => s.toLowerCase() === item.toLowerCase())
+            {cityItems.map(city => {
+              const isSelected = selectedCity === city
               return (
                 <button
-                  key={item}
-                  onClick={() => {
-                    onToggle(item)
-                    if (singleSelect) setOpen(false)
-                  }}
+                  key={city}
+                  onClick={() => { onCityToggle(city); setCityDropOpen(false) }}
                   className={`w-full text-left px-4 py-2.5 text-xs font-bold flex items-center gap-2.5 [transition:color_100ms] ${isSelected ? 'text-[#111111]' : 'text-[rgba(17,17,17,0.45)]'}`}
                 >
                   <span className={`w-3 h-3 rounded-full flex-shrink-0 ${isSelected ? 'bg-[#111111]' : 'border border-[rgba(0,0,0,0.15)]'}`} />
-                  {item}
+                  {city}
                 </button>
               )
             })}
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+
+      <AnimatePresence>
+        {sportDropOpen && sportDropPos && (
+          <motion.div
+            ref={sportDropRef}
+            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            style={{ top: sportDropPos.top, left: sportDropPos.left, position: 'fixed', zIndex: 65 }}
+            className="glass rounded-2xl overflow-hidden min-w-[9rem] divide-y divide-[rgba(0,0,0,0.06)]"
+          >
+            {sportItems.map(sport => {
+              const isSelected = selectedSports.some(s => s.toLowerCase() === sport.toLowerCase())
+              const Icon = SPORT_ICONS[sport.toLowerCase()]
+              const color = lajiKonfig[sport.toLowerCase()]?.color
+              return (
+                <button
+                  key={sport}
+                  onClick={() => onSportToggle(sport)}
+                  className={`w-full text-left px-4 py-2.5 text-xs font-bold flex items-center gap-2.5 [transition:color_100ms] ${isSelected ? 'text-[#111111]' : 'text-[rgba(17,17,17,0.45)]'}`}
+                >
+                  <span className={`w-3 h-3 rounded-full flex-shrink-0 ${isSelected ? 'bg-[#111111]' : 'border border-[rgba(0,0,0,0.15)]'}`} />
+                  {Icon && <Icon className="w-3 h-3 flex-shrink-0" style={{ color: isSelected ? color : undefined }} />}
+                  {sport}
+                </button>
+              )
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
 
@@ -1413,12 +1535,11 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         </motion.div>
       </motion.div>
 
-      {/* ── Search overlay ──────────────────────────────────── */}
-      {/* ── Search input bar — between toolbar pills, same row ──────────── */}
+      {/* ── Combined filter pill — at search bar position ── */}
       <AnimatePresence>
         {searchOpen && (
           <motion.div
-            key="search-bar"
+            key="combined-filter-pill"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1426,66 +1547,29 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             className="fixed"
             style={{
               top: 'max(12px, env(safe-area-inset-top))',
-              left: 104,
-              right: 64,
-              height: 40,
+              left: 108,
+              right: 72,
               zIndex: 64,
             }}
           >
-            <div className="glass rounded-full flex items-center gap-2 px-3 h-full">
-              <Search className="w-3.5 h-3.5 text-[rgba(17,17,17,0.4)] shrink-0 pointer-events-none" />
-              <input
-                autoFocus={searchFocused}
-                type="search"
-                placeholder="Hae liikuntapaikkaa..."
-                value={searchHaku}
-                onChange={e => setSearchHaku(e.target.value)}
-                className="flex-1 min-w-0 bg-transparent border-0 outline-none text-sm text-[#111111] placeholder:text-[rgba(17,17,17,0.4)]"
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Filter pills — centered below search bar ── */}
-      <AnimatePresence>
-        {searchOpen && (
-          <motion.div
-            key="filter-pills"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="fixed flex justify-center gap-2 py-2"
-            style={{
-              top: 'calc(max(12px, env(safe-area-inset-top)) + 52px)',
-              left: 0,
-              right: 0,
-              zIndex: 62,
-            }}
-          >
-            {kaupungit.length > 2 && (
-              <FilterCarouselPill
-                label="Suodata kaupungin mukaan"
-                allItems={kaupunkiItems}
-                selected={searchKaupunki === 'Kaikki' ? [] : [searchKaupunki]}
-                singleSelect={true}
-                onToggle={(item) => {
-                  const newCity = item === searchKaupunki ? 'Kaikki' : item
-                  setSearchKaupunki(newCity)
-                  if (newCity !== 'Kaikki') {
-                    const city = SUOMI_KAUPUNGIT.find(c => c.nimi === newCity)
-                    if (city) setCityZoomTarget({ lat: city.lat, lng: city.lng, zoom: 11 })
-                  }
-                }}
-              />
-            )}
-            <FilterCarouselPill
-              label="Suodata lajin mukaan"
-              allItems={LAJIT_FILTTERI.filter(l => l !== 'Kaikki')}
-              selected={searchLaji}
-              singleSelect={false}
-              onToggle={(item) => setSearchLaji(prev => prev.includes(item) ? prev.filter(l => l !== item) : [...prev, item])}
+            <CombinedFilterPill
+              showCities={kaupungit.length > 2}
+              cityItems={kaupunkiItems}
+              selectedCity={searchKaupunki}
+              onCityToggle={(city) => {
+                const newCity = city === searchKaupunki ? 'Kaikki' : city
+                setSearchKaupunki(newCity)
+                if (newCity !== 'Kaikki') {
+                  const c = SUOMI_KAUPUNGIT.find(c => c.nimi === newCity)
+                  if (c) setCityZoomTarget({ lat: c.lat, lng: c.lng, zoom: 11 })
+                }
+              }}
+              sportItems={LAJIT_FILTTERI.filter(l => l !== 'Kaikki')}
+              selectedSports={searchLaji}
+              onSportToggle={(item) => setSearchLaji(prev => prev.includes(item) ? prev.filter(l => l !== item) : [...prev, item])}
+              listOpen={!searchFocused}
+              searchHaku={searchHaku}
+              onSearchChange={setSearchHaku}
             />
           </motion.div>
         )}
@@ -1503,10 +1587,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             transition={{ duration: 0.2 }}
             className="fixed overflow-y-auto"
             style={{
-              top: 'calc(max(12px, env(safe-area-inset-top)) + 100px)',
+              top: 'calc(max(12px, env(safe-area-inset-top)) + 96px)',
               left: 0,
               right: 0,
-              maxHeight: `calc(100dvh - max(12px, env(safe-area-inset-top)) - 100px - ${HANDLE_H + 8}px)`,
+              maxHeight: `calc(100dvh - max(12px, env(safe-area-inset-top)) - 96px - ${HANDLE_H + 8}px)`,
               zIndex: 61,
             }}
           >
