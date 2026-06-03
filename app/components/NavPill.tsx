@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bookmark, User, LogOut, MoreHorizontal, X } from 'lucide-react'
+import { User, LogOut, MoreHorizontal, X } from 'lucide-react'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 
@@ -60,18 +60,12 @@ export default function NavPill() {
                 transition={{ duration: 0.12, delay: 0.06 }}
                 className="flex items-center gap-1 pl-2 whitespace-nowrap"
               >
-                {/* /profiili and /suosikit both have their own unauthenticated guest guards (ProfiiliClient, SuosikitClient) */}
+                {/* /profiili has its own unauthenticated guest guard (ProfiiliClient) */}
                 {user && (
-                  <>
-                    <Link href="/profiili" onClick={() => setOpen(false)} className={BTN}>
-                      <User className="w-3.5 h-3.5" />
-                      Profiili
-                    </Link>
-                    <Link href="/suosikit" onClick={() => setOpen(false)} className={BTN}>
-                      <Bookmark className="w-3.5 h-3.5" />
-                      TO DO
-                    </Link>
-                  </>
+                  <Link href="/profiili" onClick={() => setOpen(false)} className={BTN}>
+                    <User className="w-3.5 h-3.5" />
+                    Profiili
+                  </Link>
                 )}
                 {user ? (
                   <button onClick={handleSignOut} className={BTN}>
