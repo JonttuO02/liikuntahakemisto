@@ -145,9 +145,10 @@ function MapClusterZoom({ target, onComplete }: { target: { zoom: number; center
   onCompleteRef.current = onComplete
   useEffect(() => {
     if (!map || !target) return
-    map.setZoom(target.zoom)
-    map.panTo(target.center)
-    onCompleteRef.current()
+    map.moveCamera({ center: target.center, zoom: target.zoom })
+    // Defer state clear so the Maps SDK can process the camera update first
+    const id = setTimeout(() => onCompleteRef.current(), 0)
+    return () => clearTimeout(id)
   }, [map, target])
   return null
 }
