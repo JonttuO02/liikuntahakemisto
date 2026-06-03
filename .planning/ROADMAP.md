@@ -95,7 +95,7 @@ Full archive: `.planning/milestones/v1.5-ROADMAP.md`
 **Milestone Goal:** Englanninkielinen käyttöliittymä (kielivalitsin profiilisivulla), uudet SVG-ikonit kaikille lajeille, PaikkaSheet hero-redesign hinnastolla ja collapsed arvosteluwidgetillä, sekä joukko UI-parannuksia ja bugifixejä.
 
 - [x] **Phase 27: Siivous & pienet korjaukset** — Navigaatiosiivous, filtteri/haku-korjaukset, sheet-korjaukset, klusterizoomi ja UI-häivytys *(5/5 plans)* — 2026-06-03
-- [ ] **Phase 28: SVG-ikonit** — Uusi lib/sportIcons.ts -rekisteri, ikonit käytössä kaikkialla (prerequisite for i18n) *(2 plans)*
+- [x] **Phase 28: SVG-ikonit** — Uusi lib/sportIcons.tsx -rekisteri, ikonit käytössä kaikkialla (prerequisite for i18n) *(2/2 plans)* — 2026-06-03
 - [ ] **Phase 29: Kortit & sheet redesign** — PaikkaSheet hero-karuselli + hinnasto, PaikkaKortti hinnastokaruselli, DiagonaalKortti placeholder-kuvat
 - [ ] **Phase 30: i18n FI/EN** — next-intl, NEXT_LOCALE-cookie, kielivalitsin profiilisivulla, kaikki UI-tekstit käännetty
 
@@ -141,10 +141,10 @@ Plans:
 Plans:
 
 **Wave 1**
-- [ ] 28-01-PLAN.md — Extract SVGs from final_sports_svg_exports.zip, write lib/sportIcons.ts (ICON-01)
+- [x] 28-01-PLAN.md — Extract SVGs from final_sports_svg_exports.zip, write lib/sportIcons.tsx (ICON-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 28-02-PLAN.md — Migrate 5 consumers, delete Lucide from lib/lajit.ts, run tsc --noEmit (ICON-01, ICON-02)
+- [x] 28-02-PLAN.md — Migrate 5 consumers, delete Lucide from lib/lajit.ts, run tsc --noEmit (ICON-01, ICON-02)
 
 ### Phase 29: Kortit & sheet redesign
 **Goal**: PaikkaSheet on visuaalisesti uudistettu hero-osiolla ja hinnastolla; PaikkaKortti näyttää hinnaston karusellina; DiagonaalKortti näyttää logo- ja kuvaplaceholderit
@@ -203,6 +203,6 @@ Plans:
 | 25. TO DO overlay | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
 | 26. Filtterit | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
 | 27. Siivous & pienet korjaukset | v1.6 | 5/5 | ✅ Complete | 2026-06-03 |
-| 28. SVG-ikonit | v1.6 | 0/2 | Not started | - |
+| 28. SVG-ikonit | v1.6 | 2/2 | ✅ Complete | 2026-06-03 |
 | 29. Kortit & sheet redesign | v1.6 | 0/? | Not started | - |
 | 30. i18n FI/EN | v1.6 | 0/? | Not started | - |
