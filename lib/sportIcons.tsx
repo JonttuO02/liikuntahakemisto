@@ -1,17 +1,16 @@
 // Sport icon image paths. Files served from /public/icons/.
-// SVG files sourced from final_sports_svg_exports.zip — original design artwork.
-// These are PNG-embedded SVGs; rendered via <img> tags (no CSS color inheritance needed).
+// PNG files sourced from urheiluikonit_era1.zip — high quality, transparent background.
 export const SPORT_ICONS: Record<string, string> = {
-  padel: '/icons/padel.svg',
-  kuntosali: '/icons/kuntosali.svg',
-  jooga: '/icons/jooga.svg',
-  uinti: '/icons/uinti.svg',
-  tennis: '/icons/tennis.svg',
-  liikuntahalli: '/icons/liikuntahalli.svg',
-  liikunta: '/icons/liikunta.svg',
-  kiipeily: '/icons/kiipeily.svg',
-  jääkiekko: '/icons/jääkiekko.svg',
-  fallback: '/icons/liikunta.svg',
+  padel: '/icons/padel.png',
+  kuntosali: '/icons/kuntosali.png',
+  jooga: '/icons/jooga.png',
+  uinti: '/icons/uinti.png',
+  tennis: '/icons/tennis.png',
+  liikuntahalli: '/icons/liikuntahalli.png',
+  liikunta: '/icons/liikunta.png',
+  kiipeily: '/icons/kiipeily.png',
+  jääkiekko: '/icons/jääkiekko.png',
+  fallback: '/icons/liikunta.png',
 }
 
 export function SportIcon({

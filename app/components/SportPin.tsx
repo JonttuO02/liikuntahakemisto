@@ -28,13 +28,13 @@ export default function SportPin({ laji, animDelay }: SportPinProps) {
         <path d={PIN_PATH} fill={`url(#${gradId})`} />
         {/* White circle — cx=14 cy=14 r=10 matches original */}
         <circle cx="14" cy="14" r="10" fill="white" />
-        {/* Icon — <image> at (5,5) 18×18px; white circle is cx=14 cy=14 r=10 (usable 20px) */}
+        {/* Icon — fills white circle fully; cx=14 cy=14 r=10 → usable area x=4..24 y=4..24 */}
         <image
           href={SPORT_ICONS[laji.toLowerCase()] ?? SPORT_ICONS['fallback']}
-          x="5"
-          y="5"
-          width="18"
-          height="18"
+          x="4"
+          y="4"
+          width="20"
+          height="20"
         />
       </svg>
 
