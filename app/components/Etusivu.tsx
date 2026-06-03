@@ -420,7 +420,7 @@ function CombinedFilterPill({
                 animate={{ height: 44, opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
-                style={{ overflow: 'hidden' }}
+                style={{ overflow: 'hidden', pointerEvents: listOpen ? undefined : 'none' }}
               >
                 <div className="flex items-center gap-2 px-3 pb-2.5 pt-1 border-t border-[rgba(0,0,0,0.07)]">
                   <Search className="w-3.5 h-3.5 text-[rgba(17,17,17,0.4)] shrink-0 pointer-events-none" />
@@ -1597,7 +1597,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             <div className="px-4 pb-4 mx-auto" style={{ maxWidth: 480 }}>
 
               {/* Card list — only in browse mode (LayoutList), not when typing (Search) */}
-              {!searchFocused && (searchSuodatettu.length > 0 ? (
+              {!searchFocused && searchSuodatettu.length > 0 && (
                 <div className="flex flex-col gap-3">
                   {searchSuodatettu.map(p => (
                     <DiagonaalKortti
@@ -1615,22 +1615,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                     />
                   ))}
                 </div>
-              ) : (
-                <div className="flex flex-col items-center py-12">
-                  <p className="glass rounded-2xl px-6 py-4 text-[rgba(17,17,17,0.5)] text-sm">Ei tuloksia</p>
-                  <motion.button
-                    onClick={() => {
-                      setSearchHaku('')
-                      setSearchLaji([])
-                      setSearchKaupunki('Kaikki')
-                    }}
-                    whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
-                    className="mt-3 text-[#111111] text-sm font-medium underline underline-offset-2"
-                  >
-                    Tyhjennä haku
-                  </motion.button>
-                </div>
-              ))}
+              )}
             </div>
           </motion.div>
         )}
