@@ -1,16 +1,3 @@
-import { Dumbbell, Waves, Leaf, Building2, Zap, Target, Activity } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-
-export const SPORT_ICONS: Record<string, LucideIcon> = {
-  padel:         Zap,
-  kuntosali:     Dumbbell,
-  jooga:         Leaf,
-  uinti:         Waves,
-  tennis:        Target,
-  liikuntahalli: Building2,
-  liikunta:      Activity,
-}
-
 export interface LajiKonfig {
   label: string
   badgeTw: string
