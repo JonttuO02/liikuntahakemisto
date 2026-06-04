@@ -97,7 +97,7 @@ Full archive: `.planning/milestones/v1.5-ROADMAP.md`
 - [x] **Phase 27: Siivous & pienet korjaukset** — Navigaatiosiivous, filtteri/haku-korjaukset, sheet-korjaukset, klusterizoomi ja UI-häivytys *(5/5 plans)* — 2026-06-03
 - [x] **Phase 28: SVG-ikonit** — Uusi lib/sportIcons.tsx -rekisteri, ikonit käytössä kaikkialla (prerequisite for i18n) *(2/2 plans)* — 2026-06-03
 - [x] **Phase 29: Kortit & sheet redesign** — PaikkaSheet hero-karuselli + hinnasto, PaikkaKortti hinnastokaruselli, DiagonaalKortti placeholder-kuvat *(4/4 plans)* — 2026-06-04
-- [ ] **Phase 30: i18n FI/EN** — next-intl, NEXT_LOCALE-cookie, kielivalitsin profiilisivulla, kaikki UI-tekstit käännetty
+- [~] **Phase 30: i18n FI/EN** — next-intl, NEXT_LOCALE-cookie, kielivalitsin profiilisivulla, kaikki UI-tekstit käännetty *(4/4 plans, 5 gaps)*
 
 ## Phase Details
 
@@ -184,14 +184,14 @@ Plans:
 Plans:
 
 **Wave 1** *(blocking — must complete before Wave 2)*
-- [ ] 30-01-PLAN.md — Install next-intl, message files (fi.json + en.json), i18n/request.ts, lib/i18nUtils + tests, global.d.ts, app/actions/locale.ts, next.config.mjs, layout.tsx (I18N-01, I18N-02, I18N-03)
+- [x] 30-01-PLAN.md — Install next-intl, message files (fi.json + en.json), i18n/request.ts, lib/i18nUtils + tests, global.d.ts, app/actions/locale.ts, next.config.mjs, layout.tsx (I18N-01, I18N-02, I18N-03)
 
 **Wave 2** *(parallel — no file overlap)*
-- [ ] 30-02-PLAN.md — Translate NavPill, Etusivu, PaikkaKortti, DiagonaalKortti (I18N-03)
-- [ ] 30-03-PLAN.md — Translate ProfiiliClient + add LanguageToggle (I18N-01, I18N-02)
+- [x] 30-02-PLAN.md — Translate NavPill, Etusivu, PaikkaKortti, DiagonaalKortti (I18N-03)
+- [x] 30-03-PLAN.md — Translate ProfiiliClient + add LanguageToggle (I18N-01, I18N-02)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 30-04-PLAN.md — Translate PaikkaSheet, AuthModal, paikat/[id]/page.tsx, not-found.tsx; tsc --noEmit gate; visual checkpoint (I18N-03)
+- [x] 30-04-PLAN.md — Translate PaikkaSheet, AuthModal, paikat/[id]/page.tsx, not-found.tsx; tsc --noEmit gate; visual checkpoint (I18N-03)
 
 ---
 

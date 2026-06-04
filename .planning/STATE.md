@@ -17,9 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 30 (i18n FI/EN) — READY TO EXECUTE
-Status: Phase 30 planned — 4 plans in 3 waves, verified
-Last activity: 2026-06-04 -- Phase 30 planned
+Phase: 30 (i18n FI/EN) — EXECUTED, GAPS FOUND
+Status: Phase 30 executed — 4/4 plans complete, 5 gaps need closure
+Last activity: 2026-06-04 -- Phase 30 executed; code review + verification found 5 gaps
 
 Progress: [███░░░░░░░] 75%
 
@@ -59,4 +59,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-06-04T15:00:00.000Z
-Resume: `/gsd:execute-phase 30`
+Resume: `/gsd:code-review 30 --fix` to fix gaps, or `/gsd:verify-work 30` after fixing
