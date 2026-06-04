@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Phone, ExternalLink, Clock, CircleDollarSign, Info, Bookmark, BookmarkCheck, Camera, ChevronDown } from 'lucide-react'
+import { X, Phone, ExternalLink, Clock, CircleDollarSign, Info, Bookmark, BookmarkCheck, Camera, ChevronDown, Building2 } from 'lucide-react'
 import { hintateksti, cn } from '@/lib/utils'
 import { formatGroupedHours, getOpenStatus } from '@/lib/aukiolo'
 import { isSafeUrl } from '@/lib/urlUtils'
@@ -123,20 +123,27 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
             ))}
           </div>
 
-          {/* Gradient overlay with name + address */}
+          {/* Gradient overlay with logo placeholder + name + address */}
           <div
-            className="absolute bottom-0 inset-x-0 px-4 pb-3 pt-8"
+            className="absolute bottom-0 inset-x-0 px-3 pb-3 pt-8"
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 60%)' }}
           >
-            <h2 className="font-bold text-white text-lg leading-tight">{paikka.nimi}</h2>
-            {(paikka.osoite || paikka.kaupunki) && (
-              <p className="text-sm text-white/70 mt-0.5">
-                {[paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')}
-                {distanceKm != null && (
-                  <span className="tabular-nums">{' · '}{formatDistance(distanceKm)}</span>
+            <div className="flex items-end gap-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[rgba(255,255,255,0.15)] flex items-center justify-center shrink-0">
+                <Building2 size={18} className="text-white opacity-60" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="font-bold text-white text-lg leading-tight">{paikka.nimi}</h2>
+                {(paikka.osoite || paikka.kaupunki) && (
+                  <p className="text-sm text-white/70 mt-0.5">
+                    {[paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')}
+                    {distanceKm != null && (
+                      <span className="tabular-nums">{' · '}{formatDistance(distanceKm)}</span>
+                    )}
+                  </p>
                 )}
-              </p>
-            )}
+              </div>
+            </div>
           </div>
         </div>
 
