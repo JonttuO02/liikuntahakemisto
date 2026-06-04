@@ -72,13 +72,8 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
       }}
       onClick={e => e.stopPropagation()}
     >
-      {/* Drag handle — keep h-8 (32px) for calc(100% - 32px) on scrollRef */}
-      <div className="flex justify-center pt-3 pb-1 shrink-0">
-        <div className="w-10 h-1 bg-[rgba(0,0,0,0.12)] rounded-full" />
-      </div>
-
-      {/* Scrollable content — separate from drag target to avoid scroll/drag conflict */}
-      <div ref={scrollRef} className="overflow-y-auto" style={{ height: 'calc(100% - 32px)' }}>
+      {/* Scrollable content — hero extends to sheet top; drag-to-close via outer motion.div drag="y" */}
+      <div ref={scrollRef} className="overflow-y-auto" style={{ height: '100%' }}>
 
         {/* Hero carousel — first child of scrollable area */}
         <div className="relative aspect-video w-full overflow-hidden">
