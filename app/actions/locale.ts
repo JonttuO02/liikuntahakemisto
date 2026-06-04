@@ -6,5 +6,7 @@ export async function changeLocaleAction(locale: 'fi' | 'en') {
   store.set('NEXT_LOCALE', locale, {
     path: '/',
     maxAge: 60 * 60 * 24 * 365, // 1 year
+    httpOnly: true,
+    sameSite: 'lax',
   })
 }
