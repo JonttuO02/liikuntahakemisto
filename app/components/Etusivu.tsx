@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
 import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
+import { isMembershipOnly, marqueePriceLines } from '@/lib/priceUtils'
 import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
 import { isNightHour } from '@/lib/mapStyles'
@@ -190,7 +191,11 @@ function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude:
     return () => clearInterval(id)
   }, [])
 
-  const sportColor = lajiKonfig[p.laji]?.color ?? '#6b7280'
+  const sportColor    = lajiKonfig[p.laji]?.color ?? '#6b7280'
+  const membershipOnly = isMembershipOnly(p)
+  const priceLines    = marqueePriceLines(p.hinta_kuvaus, membershipOnly)
+  const hintaTekstiCC = hintateksti(p.hinta_min, p.hinta_max)
+  const priceText     = membershipOnly ? null : (p.hinta_kuvaus?.split('\n')[0] ?? (hintaTekstiCC !== '' ? hintaTekstiCC : null))
 
   const chars = (text: string) =>
     text.split(' ').flatMap((word, wi) => [
@@ -258,6 +263,25 @@ function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude:
             )}
           </AnimatePresence>
         </div>
+        {(priceLines && priceLines.length >= 2) ? (
+          <div className="overflow-hidden w-full">
+            <div
+              className="flex whitespace-nowrap text-xs font-bold text-[#111111] tabular-nums"
+              style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
+            >
+              {[...priceLines, ...priceLines].map((line, i) => (
+                <span key={i} className="flex items-center shrink-0">
+                  {line}
+                  <span className="mx-1.5 text-[rgba(17,17,17,0.3)]">·</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : membershipOnly ? (
+          <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
+        ) : priceText ? (
+          <span className="text-xs font-bold text-[#111111] tabular-nums">{priceText}</span>
+        ) : null}
       </div>
     </div>
   )

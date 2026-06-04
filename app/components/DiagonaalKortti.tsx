@@ -7,7 +7,7 @@ import { lajiKonfig } from '@/lib/lajit'
 import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
-import { isMembershipOnly } from '@/lib/priceUtils'
+import { isMembershipOnly, marqueePriceLines } from '@/lib/priceUtils'
 import type { Liikuntapaikka } from '@/lib/types'
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
@@ -35,6 +35,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
   const openStatus   = getOpenStatus(paikka.aukioloajat)
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
   const membershipOnly = isMembershipOnly(paikka)
+  const priceLines   = marqueePriceLines(paikka.hinta_kuvaus, membershipOnly)
   const priceText    = membershipOnly ? null : (paikka.hinta_kuvaus?.split('\n')[0] ?? (hintaTeksti !== '' ? hintaTeksti : null))
   const hasCoords    = paikka.latitude != null && paikka.longitude != null
 
@@ -76,6 +77,20 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             </p>
             {membershipOnly ? (
               <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
+            ) : (priceLines && priceLines.length >= 2) ? (
+              <div className="overflow-hidden">
+                <div
+                  className="flex whitespace-nowrap text-xs font-bold text-[#111111] tabular-nums"
+                  style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
+                >
+                  {[...priceLines, ...priceLines].map((line, i) => (
+                    <span key={i} className="flex items-center shrink-0">
+                      {line}
+                      <span className="mx-1.5 text-[rgba(17,17,17,0.3)]">·</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
             ) : priceText ? (
               <span className="text-xs font-bold text-[#111111] tabular-nums truncate">{priceText}</span>
             ) : (
