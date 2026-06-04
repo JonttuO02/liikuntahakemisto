@@ -51,7 +51,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
 
         {/* LEFT: info panel */}
         <div
-          className="absolute inset-0 z-10 flex flex-col gap-1 p-3"
+          className="absolute inset-0 z-10 flex flex-col p-3"
           style={{ clipPath: 'polygon(0 0, 62% 0, 57% 100%, 0 100%)' }}
         >
           <div className="flex items-start gap-2 self-start">
@@ -69,8 +69,8 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             </span>
           </div>
 
-          {/* Name + price grouped so they stay visually tight together */}
-          <div className="flex flex-col gap-0.5 min-w-0">
+          {/* Name + price grouped tight, mt-1.5 gives minimal breathing room from badge */}
+          <div className="flex flex-col gap-0.5 mt-1.5 min-w-0">
             <p className="font-bold text-[#111111] text-sm leading-snug line-clamp-1 overflow-hidden">
               {paikka.nimi}
             </p>
