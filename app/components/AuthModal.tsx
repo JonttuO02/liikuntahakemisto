@@ -24,7 +24,11 @@ function mapError(message: string): string {
   if (message.includes('User already registered') || message.includes('already been registered') || message.includes('already exists')) {
     return 'Sähköpostiosoite on jo käytössä.'
   }
-  if (message.includes('Password should be at least') || message.includes('password') && message.includes('6')) {
+  if (
+    (message.includes('Password should be at least') ||
+      message.includes('password')) &&
+    message.includes('6')
+  ) {
     return 'Salasanan on oltava vähintään 6 merkkiä.'
   }
   return 'Jokin meni pieleen. Yritä uudelleen.'
