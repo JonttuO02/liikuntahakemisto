@@ -10,7 +10,8 @@ import Link from 'next/link'
 import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
 import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
-import { isMembershipOnly, marqueePriceLines } from '@/lib/priceUtils'
+import { isMembershipOnly, priceItemList } from '@/lib/priceUtils'
+import { useOverflowMarquee } from '@/lib/useOverflowMarquee'
 import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
 import { isNightHour } from '@/lib/mapStyles'
@@ -193,9 +194,9 @@ function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude:
 
   const sportColor    = lajiKonfig[p.laji]?.color ?? '#6b7280'
   const membershipOnly = isMembershipOnly(p)
-  const priceLines    = marqueePriceLines(p.hinta_kuvaus, membershipOnly)
   const hintaTekstiCC = hintateksti(p.hinta_min, p.hinta_max)
-  const priceText     = membershipOnly ? null : (p.hinta_kuvaus?.split('\n')[0] ?? (hintaTekstiCC !== '' ? hintaTekstiCC : null))
+  const priceItems    = priceItemList(p.hinta_kuvaus, membershipOnly, hintaTekstiCC)
+  const { containerRef, measureRef, shouldMarquee } = useOverflowMarquee(priceItems?.join('\n') ?? null)
 
   const chars = (text: string) =>
     text.split(' ').flatMap((word, wi) => [
@@ -263,28 +264,50 @@ function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude:
             )}
           </AnimatePresence>
         </div>
-        <div className="mt-auto">
-          {(priceLines && priceLines.length >= 2) ? (
-            <div
-              className="overflow-hidden"
-              style={{
-                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 12%, black 82%, transparent 100%)',
-                maskImage: 'linear-gradient(to right, transparent 0%, black 12%, black 82%, transparent 100%)',
-              }}
-            >
+        <div
+          ref={containerRef}
+          className="mt-auto overflow-hidden relative"
+          style={shouldMarquee ? {
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 12%, black 82%, transparent 100%)',
+            maskImage: 'linear-gradient(to right, transparent 0%, black 12%, black 82%, transparent 100%)',
+          } : undefined}
+        >
+          {membershipOnly ? (
+            <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
+          ) : priceItems ? (
+            <>
               <div
-                className="flex items-center gap-6 whitespace-nowrap text-xs font-bold text-[#111111] tabular-nums"
-                style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
+                ref={measureRef}
+                className="absolute invisible flex items-center gap-1.5 pointer-events-none"
+                aria-hidden="true"
               >
-                {[...priceLines, ...priceLines].map((line, i) => (
-                  <span key={i} className="shrink-0">{line}</span>
+                {priceItems.map((item, i) => (
+                  <span key={i} className="text-xs font-bold tabular-nums bg-[rgba(0,0,0,0.05)] px-1.5 py-0.5 rounded whitespace-nowrap">
+                    {item}
+                  </span>
                 ))}
               </div>
-            </div>
-          ) : membershipOnly ? (
-            <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
-          ) : priceText ? (
-            <span className="text-xs font-bold text-[#111111] tabular-nums">{priceText}</span>
+              {shouldMarquee ? (
+                <div
+                  className="flex items-center gap-3 whitespace-nowrap"
+                  style={{ animation: 'marquee 7s linear infinite', willChange: 'transform' }}
+                >
+                  {[...priceItems, ...priceItems].map((item, i) => (
+                    <span key={i} className="shrink-0 text-xs font-bold text-[#111111] tabular-nums bg-[rgba(0,0,0,0.05)] px-1.5 py-0.5 rounded">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-1">
+                  {priceItems.map((item, i) => (
+                    <span key={i} className="text-xs font-bold text-[#111111] tabular-nums bg-[rgba(0,0,0,0.05)] px-1.5 py-0.5 rounded whitespace-nowrap">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </>
           ) : null}
         </div>
       </div>

@@ -6,7 +6,8 @@ import { MapPin, Bookmark, BookmarkCheck } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti, cn } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
-import { isMembershipOnly, marqueePriceLines } from '@/lib/priceUtils'
+import { isMembershipOnly, priceItemList } from '@/lib/priceUtils'
+import { useOverflowMarquee } from '@/lib/useOverflowMarquee'
 import type { Liikuntapaikka } from '@/lib/types'
 import { SportIcon } from '@/lib/sportIcons'
 
@@ -35,10 +36,8 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
   const hasDropIn    = paikka.hinta_kuvaus?.toLowerCase().includes('kertakäynti') ?? false
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
   const membershipOnly = isMembershipOnly(paikka)
-  const priceLines   = marqueePriceLines(paikka.hinta_kuvaus, membershipOnly)
-  const priceText    = !membershipOnly
-    ? (paikka.hinta_kuvaus ?? (hintaTeksti !== '' ? hintaTeksti : null))
-    : null
+  const priceItems   = priceItemList(paikka.hinta_kuvaus, membershipOnly, hintaTeksti)
+  const { containerRef, measureRef, shouldMarquee } = useOverflowMarquee(priceItems?.join('\n') ?? null)
   const osoite       = [paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')
 
   return (
@@ -110,28 +109,51 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
           </span>
         )}
 
-        {/* Price / Marquee */}
+        {/* Price / Marquee — aktivoituu DOM-ylivuodon perusteella */}
         {membershipOnly ? (
           <span className="text-sm text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
-        ) : (priceLines && priceLines.length >= 2) ? (
+        ) : priceItems ? (
           <div
-            className="border-t border-[rgba(0,0,0,0.07)] overflow-hidden pt-2"
-            style={{
+            ref={containerRef}
+            className="border-t border-[rgba(0,0,0,0.07)] overflow-hidden pt-2 relative"
+            style={shouldMarquee ? {
               WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 82%, transparent 100%)',
               maskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 82%, transparent 100%)',
-            }}
+            } : undefined}
           >
+            {/* Piilotettu mittausdiv — oikea pillileveys arviota varten */}
             <div
-              className="flex items-center gap-6 whitespace-nowrap text-sm font-bold text-[#111111] tabular-nums"
-              style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
+              ref={measureRef}
+              className="absolute invisible flex items-center gap-2 pointer-events-none"
+              aria-hidden="true"
             >
-              {[...priceLines, ...priceLines].map((line, i) => (
-                <span key={i} className="shrink-0">{line}</span>
+              {priceItems.map((item, i) => (
+                <span key={i} className="text-sm font-bold tabular-nums bg-[rgba(0,0,0,0.05)] px-2 py-0.5 rounded-md whitespace-nowrap">
+                  {item}
+                </span>
               ))}
             </div>
+            {shouldMarquee ? (
+              <div
+                className="flex items-center gap-4 whitespace-nowrap"
+                style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
+              >
+                {[...priceItems, ...priceItems].map((item, i) => (
+                  <span key={i} className="shrink-0 text-sm font-bold text-[#111111] tabular-nums bg-[rgba(0,0,0,0.05)] px-2 py-0.5 rounded-md">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {priceItems.map((item, i) => (
+                  <span key={i} className="text-sm font-bold text-[#111111] tabular-nums bg-[rgba(0,0,0,0.05)] px-2 py-0.5 rounded-md whitespace-nowrap">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-        ) : priceText ? (
-          <span className="text-sm font-bold text-[#111111] tabular-nums">{priceText}</span>
         ) : (
           <span className="text-xs text-[rgba(17,17,17,0.35)]">Lisätään pian</span>
         )}

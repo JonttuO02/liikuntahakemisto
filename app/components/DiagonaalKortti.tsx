@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef, useState, useLayoutEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { MapPin, Check, Building2, Camera } from 'lucide-react'
@@ -7,7 +8,8 @@ import { lajiKonfig } from '@/lib/lajit'
 import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
-import { isMembershipOnly, marqueePriceLines } from '@/lib/priceUtils'
+import { isMembershipOnly, priceItemList } from '@/lib/priceUtils'
+import { useOverflowMarquee } from '@/lib/useOverflowMarquee'
 import type { Liikuntapaikka } from '@/lib/types'
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
@@ -35,9 +37,30 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
   const openStatus   = getOpenStatus(paikka.aukioloajat)
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
   const membershipOnly = isMembershipOnly(paikka)
-  const priceLines   = marqueePriceLines(paikka.hinta_kuvaus, membershipOnly)
-  const priceText    = membershipOnly ? null : (paikka.hinta_kuvaus?.split('\n')[0] ?? (hintaTeksti !== '' ? hintaTeksti : null))
+  const priceItems   = priceItemList(paikka.hinta_kuvaus, membershipOnly, hintaTeksti)
+  const { containerRef, measureRef, shouldMarquee } = useOverflowMarquee(priceItems?.join('\n') ?? null)
   const hasCoords    = paikka.latitude != null && paikka.longitude != null
+
+  // Dynaaminen hinta-alueen leveys — lasketaan kortin todellisen leveyden mukaan.
+  // Vasen paneeli on leikattu diagonaalipolygonilla (0 0, 62% 0, 57% 100%, 0 100%).
+  // Hintatekstin kohdalla (y ≈ 55% kortin korkeudesta) leikkausraja ≈ 59,25% kortin leveydestä.
+  const leftPanelRef = useRef<HTMLDivElement>(null)
+  const [priceAreaW, setPriceAreaW] = useState(120)
+  useLayoutEffect(() => {
+    const el = leftPanelRef.current
+    if (!el) return
+    const compute = () => {
+      // 57% = polygon-leikkauksen alin piste (kuvan vasen alareuna).
+      // Käytetään tätä tiukimpana rajana niin että sisältö ei koskaan mene
+      // kuvan päälle riippumatta siitä millä korkeudella teksti on.
+      const w = Math.floor(el.offsetWidth * 0.57) - 12 - 4
+      setPriceAreaW(Math.max(60, w))
+    }
+    compute()
+    const ro = new ResizeObserver(compute)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   return (
     <motion.div
@@ -52,6 +75,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
 
         {/* LEFT: info panel */}
         <div
+          ref={leftPanelRef}
           className="absolute inset-0 z-10 flex flex-col p-3 overflow-hidden"
           style={{ clipPath: 'polygon(0 0, 62% 0, 57% 100%, 0 100%)' }}
         >
@@ -77,25 +101,51 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             </p>
             {membershipOnly ? (
               <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
-            ) : (priceLines && priceLines.length >= 2) ? (
+            ) : priceItems ? (
               <div
-                className="overflow-hidden"
+                ref={containerRef}
+                className="overflow-hidden relative"
                 style={{
-                  WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 12%, black 78%, transparent 100%)',
-                  maskImage: 'linear-gradient(to right, transparent 0%, black 12%, black 78%, transparent 100%)',
+                  maxWidth: priceAreaW,
+                  // Maski on aina päällä. Fade LOPPUU 78%:iin kontista — jättää 22% tyhjää
+                  // puskuritilaa ennen kontin fyysistä reunaa (joka on lähellä diagonaalia).
+                  WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 70%, transparent 86%)',
+                  maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 70%, transparent 86%)',
                 }}
               >
+                {/* Piilotettu mittausdiv — oikea pillileveys, rajataan priceAreaW:n mukaan */}
                 <div
-                  className="flex items-center gap-6 whitespace-nowrap text-xs font-bold text-[#111111] tabular-nums"
-                  style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
+                  ref={measureRef}
+                  className="absolute invisible flex items-center gap-1.5 pointer-events-none"
+                  aria-hidden="true"
                 >
-                  {[...priceLines, ...priceLines].map((line, i) => (
-                    <span key={i} className="shrink-0">{line}</span>
+                  {priceItems.map((item, i) => (
+                    <span key={i} className="text-xs font-bold tabular-nums bg-[rgba(0,0,0,0.05)] px-1.5 py-0.5 rounded whitespace-nowrap">
+                      {item}
+                    </span>
                   ))}
                 </div>
+                {shouldMarquee ? (
+                  <div
+                    className="flex items-center gap-3 whitespace-nowrap"
+                    style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
+                  >
+                    {[...priceItems, ...priceItems].map((item, i) => (
+                      <span key={i} className="shrink-0 text-xs font-bold text-[#111111] tabular-nums bg-[rgba(0,0,0,0.05)] px-1.5 py-0.5 rounded">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-1">
+                    {priceItems.map((item, i) => (
+                      <span key={i} className="text-xs font-bold text-[#111111] tabular-nums bg-[rgba(0,0,0,0.05)] px-1.5 py-0.5 rounded whitespace-nowrap">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
-            ) : priceText ? (
-              <span className="text-xs font-bold text-[#111111] tabular-nums truncate">{priceText}</span>
             ) : (
               <span className="text-xs text-[rgba(17,17,17,0.35)]">Lisätään pian</span>
             )}
