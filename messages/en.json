@@ -97,7 +97,9 @@
     "hours": "Opening hours",
     "phone": "Phone",
     "description": "Description",
-    "bookNow": "Book now"
+    "bookNow": "Book now",
+    "location": "Location",
+    "showOnMap": "Show on map →"
   },
   "NotFound": {
     "title": "Page not found.",

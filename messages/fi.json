@@ -97,7 +97,9 @@
     "hours": "Aukioloajat",
     "phone": "Puhelin",
     "description": "Kuvaus",
-    "bookNow": "Varaa aika"
+    "bookNow": "Varaa aika",
+    "location": "Sijainti",
+    "showOnMap": "Näytä kartalla →"
   },
   "NotFound": {
     "title": "Sivua ei löydy.",

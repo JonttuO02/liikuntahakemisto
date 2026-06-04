@@ -88,12 +88,12 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
           <div className="p-6 sm:p-8 flex flex-col gap-5">
 
             {paikka.latitude != null && paikka.longitude != null && (
-              <Row icon={<MapPin className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Sijainti">
+              <Row icon={<MapPin className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label={t('location')}>
                 <Link
                   href={`/?id=${paikka.id}`}
                   className="text-[#111111] hover:text-[rgba(17,17,17,0.6)] text-sm font-bold underline underline-offset-2 [transition:color_150ms_var(--ease-out)]"
                 >
-                  Näytä kartalla →
+                  {t('showOnMap')}
                 </Link>
               </Row>
             )}
