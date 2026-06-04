@@ -2,15 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Kielituki, Ikonit & Sheet-redesign
-status: in_progress
-stopped_at: Phase 28 complete
-last_updated: "2026-06-03T20:00:00.000Z"
-last_activity: 2026-06-03 — Phase 28 complete (2/2 plans executed)
+status: planned
+last_updated: "2026-06-04"
+last_activity: 2026-06-04 — Phase 29 planned (4/4 plans ready to execute)
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 11
+  completed_plans: 8
   percent: 50
 ---
 
@@ -18,9 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 28 of 30 (SVG-ikonit) — COMPLETE
-Status: Phase 28 executed (2/2 plans done) — ready to verify, then Phase 29
-Last activity: 2026-06-03 — Phase 28 complete (2/2 plans executed)
+Phase: 29 of 30 (Kortit & sheet redesign) — PLANNED
+Status: Ready to execute — 4 plans in 2 waves
+Last activity: 2026-06-04 — Phase 29 planned (4 plans created)
 
 Progress: [██░░░░░░░░] 25%
 
@@ -55,10 +54,9 @@ See: .planning/PROJECT.md (updated 2026-06-03)
 
 ## Blockers/Concerns
 
-- Phase 28: SPORT_ICONS-tyyppi muuttuu 5+ tiedostossa samanaikaisesti — tsc --noEmit ennen commit (plan handles this)
+None — Phase 29 plans are verified and ready.
 
 ## Session Continuity
 
-Last session: 2026-06-03T17:30:00.000Z
-Stopped at: Phase 28 planned
-Resume: `/gsd:execute-phase 29` (after `/gsd:verify-work 28` if needed)
+Last session: 2026-06-04
+Resume: `/gsd:execute-phase 29`

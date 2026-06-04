@@ -632,7 +632,7 @@ Note: `priceLines` is already computed in the existing code at line 38: `const p
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Outer drag handle div height accounting**
    - What we know: Current `calc(100% - 32px)` assumes 32px for the drag handle strip above the scroll area.
