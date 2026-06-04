@@ -51,7 +51,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
 
         {/* LEFT: info panel */}
         <div
-          className="absolute inset-0 z-10 flex flex-col gap-1 p-3"
+          className="absolute inset-0 z-10 flex flex-col justify-between p-3"
           style={{ clipPath: 'polygon(0 0, 62% 0, 57% 100%, 0 100%)' }}
         >
           <div className="flex items-start gap-2 self-start">
@@ -81,8 +81,8 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             <span className="text-xs text-[rgba(17,17,17,0.35)]">Lisätään pian</span>
           )}
 
-          {/* Bottom row: distance + aukiolo status */}
-          <div className="flex items-center gap-2 mt-auto min-w-0">
+          {/* Bottom row: distance + aukiolo status — pl-9 clears the absolute map button */}
+          <div className="flex items-center gap-2 pl-9 min-w-0">
             {distanceStr && (
               <div className="flex items-center gap-1 text-xs text-[rgba(17,17,17,0.4)] shrink-0">
                 <MapPin className="w-3 h-3 shrink-0" />
@@ -134,7 +134,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
         <button
           onClick={e => { e.stopPropagation(); e.preventDefault(); onShowMap?.(paikka) }}
           aria-label="Näytä kartalla"
-          className="absolute bottom-3 left-3 z-20 w-7 h-7 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_ease]"
+          className="absolute bottom-2 left-2 z-20 w-7 h-7 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_ease]"
         >
           <MapPin className="w-3.5 h-3.5" />
         </button>
