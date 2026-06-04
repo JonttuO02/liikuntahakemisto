@@ -2,24 +2,24 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Kielituki, Ikonit & Sheet-redesign
-status: planning
-last_updated: "2026-06-04T15:00:00.000Z"
-last_activity: 2026-06-04 -- Phase 29 complete; Phase 30 next
+status: complete
+last_updated: "2026-06-04T23:55:00.000Z"
+last_activity: 2026-06-04 -- Phase 30 complete; v1.6 shipped
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 15
   completed_plans: 15
-  percent: 75
+  percent: 100
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 30 (i18n FI/EN) — GAPS CLOSED, READY FOR RE-VERIFICATION
-Status: Phase 30 gaps closed — sport name i18n gap resolved; all 8 UAT tests now pass
-Last activity: 2026-06-04 -- Phase 30 sport name translation gap fixed; UAT 8/8 pass
+Phase: 30 (i18n FI/EN) — COMPLETE ✅
+Status: v1.6 milestone complete — all 4 phases done (27–30)
+Last activity: 2026-06-04 -- Phase 30 complete; UAT 8/8 pass; v1.6 shipped
 
 Progress: [███░░░░░░░] 75%
 

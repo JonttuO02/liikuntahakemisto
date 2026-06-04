@@ -8,7 +8,7 @@
 - ✅ **v1.3 AKTIIVI — Redesign & Polish** — Phases 16–18 (shipped 2026-05-30)
 - ✅ **v1.4 UX-parannukset & Profiili** — Phases 19–22 (shipped 2026-05-31)
 - ✅ **v1.5 Visuaalinen elävöitys & UX-hienosäätö** — Phases 23–26 (shipped 2026-06-02)
-- 🚧 **v1.6 Kielituki, Ikonit & Sheet-redesign** — Phases 27–30 (in progress)
+- ✅ **v1.6 Kielituki, Ikonit & Sheet-redesign** — Phases 27–30 (shipped 2026-06-04)
 
 ---
 
@@ -90,14 +90,14 @@ Full archive: `.planning/milestones/v1.5-ROADMAP.md`
 
 ---
 
-### 🚧 v1.6 Kielituki, Ikonit & Sheet-redesign (Phases 27–30)
+### ✅ v1.6 Kielituki, Ikonit & Sheet-redesign (Phases 27–30) — SHIPPED 2026-06-04
 
 **Milestone Goal:** Englanninkielinen käyttöliittymä (kielivalitsin profiilisivulla), uudet SVG-ikonit kaikille lajeille, PaikkaSheet hero-redesign hinnastolla ja collapsed arvosteluwidgetillä, sekä joukko UI-parannuksia ja bugifixejä.
 
 - [x] **Phase 27: Siivous & pienet korjaukset** — Navigaatiosiivous, filtteri/haku-korjaukset, sheet-korjaukset, klusterizoomi ja UI-häivytys *(5/5 plans)* — 2026-06-03
 - [x] **Phase 28: SVG-ikonit** — Uusi lib/sportIcons.tsx -rekisteri, ikonit käytössä kaikkialla (prerequisite for i18n) *(2/2 plans)* — 2026-06-03
 - [x] **Phase 29: Kortit & sheet redesign** — PaikkaSheet hero-karuselli + hinnasto, PaikkaKortti hinnastokaruselli, DiagonaalKortti placeholder-kuvat *(4/4 plans)* — 2026-06-04
-- [~] **Phase 30: i18n FI/EN** — next-intl, NEXT_LOCALE-cookie, kielivalitsin profiilisivulla, kaikki UI-tekstit käännetty *(4/4 plans, 5 gaps)*
+- [x] **Phase 30: i18n FI/EN** — next-intl, NEXT_LOCALE-cookie, kielivalitsin profiilisivulla, kaikki UI-tekstit käännetty *(4/4 plans)* — 2026-06-04
 
 ## Phase Details
 
@@ -228,4 +228,4 @@ Plans:
 | 27. Siivous & pienet korjaukset | v1.6 | 5/5 | ✅ Complete | 2026-06-03 |
 | 28. SVG-ikonit | v1.6 | 2/2 | ✅ Complete | 2026-06-03 |
 | 29. Kortit & sheet redesign | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
-| 30. i18n FI/EN | v1.6 | 0/4 | Not started | - |
+| 30. i18n FI/EN | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |

@@ -1,5 +1,5 @@
 ---
-status: resolved
+status: complete
 phase: 30-i18n-fien
 source:
   - .planning/phases/30-i18n-fien/30-01-SUMMARY.md
@@ -30,12 +30,10 @@ result: pass
 ### 3. Card labels in EN locale (PaikkaKortti / DiagonaalKortti)
 expected: With EN locale active, venue cards on the list/map show English text: "Open now" instead of "Auki nyt", "Closed" instead of "Suljettu", and "membership only" instead of "vain jäsenyys". Sport filter pills and distance text are also in English.
 result: pass
-note: "Fixed — added Lajit i18n namespace; PaikkaKortti and DiagonaalKortti now use tLajit(paikka.laji) for sport badge label"
 
 ### 4. Etusivu filter/search strings in EN
 expected: With EN locale, the filter area on the homepage shows English text — city filter label, "All" option, search placeholder, filter button labels, and the To-do overlay strings (including "Submit review" and "Saving..." for the inline review button).
 result: pass
-note: "Fixed — CombinedFilterPill now uses tLajit(sport.toLowerCase()) for sport ticker and dropdown labels"
 
 ### 5. PaikkaSheet (detail side panel) in EN
 expected: Opening a venue detail sheet with EN locale shows English section headings: "Price", "Hours", "Phone", "Book now", "Reviews" (or "No reviews yet"). The close button is accessible (has aria-label). Review count shows "1 review" or "N reviews" in English.
