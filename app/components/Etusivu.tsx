@@ -170,6 +170,7 @@ const TEXT_CONTAINER_VARIANTS = {
 }
 
 function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude: number } }) {
+  const t = useTranslations('PaikkaKortti')
   const ref = useRef<HTMLDivElement>(null)
   const [clipPath, setClipPath] = useState('')
   const [showName, setShowName] = useState(true)
@@ -275,7 +276,7 @@ function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude:
           } : undefined}
         >
           {membershipOnly ? (
-            <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
+            <span className="text-xs text-[rgba(17,17,17,0.5)]">{t('membershipOnly')}</span>
           ) : priceItems ? (
             <>
               <div
@@ -1259,7 +1260,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                             </div>
                             {inlineSubmitError && <p className="text-sm text-red-600">{inlineSubmitError}</p>}
                             <div className="flex items-center gap-3">
-                              <button disabled={inlineRating === 0 || inlineSubmitting} onClick={handleInlineReviewSubmit} className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-2 rounded-full [transition:background-color_150ms_ease] disabled:opacity-40">{inlineSubmitting ? 'Tallennetaan…' : 'Jätä arvostelu'}</button>
+                              <button disabled={inlineRating === 0 || inlineSubmitting} onClick={handleInlineReviewSubmit} className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-2 rounded-full [transition:background-color_150ms_ease] disabled:opacity-40">{inlineSubmitting ? tTodo('saving') : tTodo('submitReview')}</button>
                               <button onClick={() => { toggleTodo(p.id); resetInlineReview() }} className="text-sm text-[rgba(17,17,17,0.45)] underline">{tTodo('skip')}</button>
                             </div>
                           </>

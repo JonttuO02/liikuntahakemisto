@@ -52,7 +52,9 @@
     "commentLabel": "KOMMENTTI",
     "commentPlaceholder": "Vapaaehtoinen kommentti",
     "openList": "Avaa TO DO -lista",
-    "closeList": "Sulje TO DO -lista"
+    "closeList": "Sulje TO DO -lista",
+    "saving": "Tallennetaan…",
+    "submitReview": "Jätä arvostelu"
   },
   "Profiili": {
     "title": "Profiili",

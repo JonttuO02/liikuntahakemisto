@@ -52,7 +52,9 @@
     "commentLabel": "COMMENT",
     "commentPlaceholder": "Optional comment",
     "openList": "Open TO DO list",
-    "closeList": "Close TO DO list"
+    "closeList": "Close TO DO list",
+    "saving": "Saving...",
+    "submitReview": "Submit review"
   },
   "Profiili": {
     "title": "Profile",
