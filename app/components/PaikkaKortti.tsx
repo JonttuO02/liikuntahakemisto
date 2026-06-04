@@ -6,7 +6,7 @@ import { MapPin, Bookmark, BookmarkCheck } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti, cn } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
-import { isMembershipOnly } from '@/lib/priceUtils'
+import { isMembershipOnly, marqueePriceLines } from '@/lib/priceUtils'
 import type { Liikuntapaikka } from '@/lib/types'
 import { SportIcon } from '@/lib/sportIcons'
 
@@ -35,9 +35,7 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
   const hasDropIn    = paikka.hinta_kuvaus?.toLowerCase().includes('kertakäynti') ?? false
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
   const membershipOnly = isMembershipOnly(paikka)
-  const priceLines   = !membershipOnly && paikka.hinta_kuvaus?.includes('\n')
-    ? paikka.hinta_kuvaus.split('\n')
-    : null
+  const priceLines   = marqueePriceLines(paikka.hinta_kuvaus, membershipOnly)
   const priceText    = !membershipOnly
     ? (paikka.hinta_kuvaus ?? (hintaTeksti !== '' ? hintaTeksti : null))
     : null
@@ -112,22 +110,28 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
           </span>
         )}
 
-        {/* Price block (position 4 — between open-status and address) */}
-        <div>
-          {membershipOnly ? (
-            <span className="text-sm text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
-          ) : priceLines ? (
-            <span className="text-sm font-bold text-[#111111] tabular-nums">
-              {priceLines.map((line, i) => (
-                <span key={i} className="block">{line}</span>
+        {/* Price / Marquee */}
+        {membershipOnly ? (
+          <span className="text-sm text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
+        ) : (priceLines && priceLines.length >= 2) ? (
+          <div className="border-t border-[rgba(0,0,0,0.07)] overflow-hidden pt-2">
+            <div
+              className="flex whitespace-nowrap text-sm font-bold text-[#111111] tabular-nums"
+              style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
+            >
+              {[...priceLines, ...priceLines].map((line, i) => (
+                <span key={i} className="flex items-center shrink-0">
+                  {line}
+                  <span className="mx-2 text-[rgba(17,17,17,0.3)]">·</span>
+                </span>
               ))}
-            </span>
-          ) : priceText ? (
-            <span className="text-sm font-bold text-[#111111] tabular-nums">{priceText}</span>
-          ) : (
-            <span className="text-xs text-[rgba(17,17,17,0.35)]">Lisätään pian</span>
-          )}
-        </div>
+            </div>
+          </div>
+        ) : priceText ? (
+          <span className="text-sm font-bold text-[#111111] tabular-nums">{priceText}</span>
+        ) : (
+          <span className="text-xs text-[rgba(17,17,17,0.35)]">Lisätään pian</span>
+        )}
 
         {/* Address */}
         {osoite && (
