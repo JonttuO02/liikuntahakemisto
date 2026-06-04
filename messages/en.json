@@ -79,7 +79,13 @@
     "passwordPlaceholder": "Password",
     "continueWithGoogle": "Continue with Google",
     "or": "OR",
-    "close": "Close"
+    "close": "Close",
+    "signingIn": "Signing in...",
+    "creatingAccount": "Creating account...",
+    "noAccount": "No account?",
+    "createAccount": "Create account",
+    "alreadyHaveAccount": "Already have an account?",
+    "signInLink": "Sign in"
   },
   "Map": {
     "recenter": "Return to my location"

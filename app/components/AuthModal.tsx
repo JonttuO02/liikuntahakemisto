@@ -275,7 +275,7 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
                   className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 w-full [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
                 >
                   {loading
-                    ? mode === 'signin' ? 'Kirjaudutaan...' : 'Luodaan tiliä...'
+                    ? mode === 'signin' ? t('signingIn') : t('creatingAccount')
                     : mode === 'signin' ? t('signIn') : t('signUp')
                   }
                 </button>
@@ -285,24 +285,24 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
               <p className="text-sm text-[rgba(17,17,17,0.45)] text-center">
                 {mode === 'signin' ? (
                   <>
-                    Ei tiliä?{' '}
+                    {t('noAccount')}{' '}
                     <button
                       type="button"
                       onClick={() => setMode('signup')}
                       className="font-bold text-[#111111] hover:underline"
                     >
-                      Luo tili
+                      {t('createAccount')}
                     </button>
                   </>
                 ) : (
                   <>
-                    Onko sinulla jo tili?{' '}
+                    {t('alreadyHaveAccount')}{' '}
                     <button
                       type="button"
                       onClick={() => setMode('signin')}
                       className="font-bold text-[#111111] hover:underline"
                     >
-                      Kirjaudu
+                      {t('signInLink')}
                     </button>
                   </>
                 )}

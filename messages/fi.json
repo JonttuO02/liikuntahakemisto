@@ -79,7 +79,13 @@
     "passwordPlaceholder": "Salasana",
     "continueWithGoogle": "Jatka Googlella",
     "or": "TAI",
-    "close": "Sulje"
+    "close": "Sulje",
+    "signingIn": "Kirjaudutaan...",
+    "creatingAccount": "Luodaan tiliä...",
+    "noAccount": "Ei tiliä?",
+    "createAccount": "Luo tili",
+    "alreadyHaveAccount": "Onko sinulla jo tili?",
+    "signInLink": "Kirjaudu"
   },
   "Map": {
     "recenter": "Palaa omalle sijainnille"
