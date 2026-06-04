@@ -179,7 +179,19 @@ Plans:
   2. Valittu kieli tallentuu NEXT_LOCALE-cookieen ja säilyy sivun uudelleenlatauksen jälkeen
   3. Kaikki UI-tekstit (kortit, filtterit, sheet, navigaatio) näkyvät valitulla kielellä
   4. Kieltä vaihdettaessa kartan sijainti, valittu kaupunki ja lajifiltteri säilyvät ennallaan
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+
+**Wave 1** *(blocking — must complete before Wave 2)*
+- [ ] 30-01-PLAN.md — Install next-intl, message files (fi.json + en.json), i18n/request.ts, lib/i18nUtils + tests, global.d.ts, app/actions/locale.ts, next.config.mjs, layout.tsx (I18N-01, I18N-02, I18N-03)
+
+**Wave 2** *(parallel — no file overlap)*
+- [ ] 30-02-PLAN.md — Translate NavPill, Etusivu, PaikkaKortti, DiagonaalKortti (I18N-03)
+- [ ] 30-03-PLAN.md — Translate ProfiiliClient + add LanguageToggle (I18N-01, I18N-02)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 30-04-PLAN.md — Translate PaikkaSheet, AuthModal, paikat/[id]/page.tsx, not-found.tsx; tsc --noEmit gate; visual checkpoint (I18N-03)
 
 ---
 
@@ -216,4 +228,4 @@ Plans:
 | 27. Siivous & pienet korjaukset | v1.6 | 5/5 | ✅ Complete | 2026-06-03 |
 | 28. SVG-ikonit | v1.6 | 2/2 | ✅ Complete | 2026-06-03 |
 | 29. Kortit & sheet redesign | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
-| 30. i18n FI/EN | v1.6 | 0/? | Not started | - |
+| 30. i18n FI/EN | v1.6 | 0/4 | Not started | - |
