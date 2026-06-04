@@ -59,12 +59,12 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             <div className="w-10 h-10 rounded-lg bg-[rgba(0,0,0,0.06)] flex items-center justify-center shrink-0">
               <Building2 size={20} className="text-[rgba(0,0,0,0.25)]" />
             </div>
-            {/* Sport pill — unchanged */}
+            {/* Sport pill */}
             <span
-              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-white truncate max-w-full mt-1"
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full text-white truncate max-w-full mt-1"
               style={{ backgroundColor: laji.color }}
             >
-              <SportIcon laji={paikka.laji} size={12} className="shrink-0" />
+              <SportIcon laji={paikka.laji} size={16} className="shrink-0" />
               {laji.label}
             </span>
           </div>
@@ -72,15 +72,6 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
           <p className="font-bold text-[#111111] text-sm leading-snug line-clamp-1 overflow-hidden">
             {paikka.nimi}
           </p>
-
-          {openStatus.status === 'open' && (
-            <span className="text-xs font-bold text-green-700 truncate">
-              Auki · {openStatus.hours}
-            </span>
-          )}
-          {openStatus.status === 'closed' && (
-            <span className="text-xs text-[rgba(17,17,17,0.45)] truncate">Suljettu</span>
-          )}
 
           {membershipOnly ? (
             <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
@@ -90,12 +81,23 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             <span className="text-xs text-[rgba(17,17,17,0.35)]">Lisätään pian</span>
           )}
 
-          {distanceStr && (
-            <div className="flex items-center gap-1 text-xs text-[rgba(17,17,17,0.4)] mt-auto">
-              <MapPin className="w-3 h-3 shrink-0" />
-              <span className="tabular-nums">{distanceStr}</span>
-            </div>
-          )}
+          {/* Bottom row: distance + aukiolo status */}
+          <div className="flex items-center gap-2 mt-auto min-w-0">
+            {distanceStr && (
+              <div className="flex items-center gap-1 text-xs text-[rgba(17,17,17,0.4)] shrink-0">
+                <MapPin className="w-3 h-3 shrink-0" />
+                <span className="tabular-nums">{distanceStr}</span>
+              </div>
+            )}
+            {openStatus.status === 'open' && (
+              <span className="text-xs font-bold text-green-700 truncate">
+                Auki · {openStatus.hours}
+              </span>
+            )}
+            {openStatus.status === 'closed' && (
+              <span className="text-xs text-[rgba(17,17,17,0.45)] truncate">Suljettu</span>
+            )}
+          </div>
         </div>
 
         {/* RIGHT: venue photo or sport-color fallback */}
