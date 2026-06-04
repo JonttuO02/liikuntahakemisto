@@ -41,7 +41,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
   return (
     <motion.div
       variants={diagonaalKorttiVariants}
-      className="relative glass glass-hover rounded-2xl h-32 cursor-pointer"
+      className="relative glass glass-hover rounded-2xl h-36 cursor-pointer"
       whileHover={{ scale: 1.02, transition: { duration: 0.18, ease: 'easeOut' } }}
       whileTap={{ scale: 0.98, transition: { duration: 0.12, ease: 'easeOut' } }}
     >
