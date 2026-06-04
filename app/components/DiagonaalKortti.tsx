@@ -51,7 +51,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
 
         {/* LEFT: info panel */}
         <div
-          className="absolute inset-0 z-10 flex flex-col justify-between p-3"
+          className="absolute inset-0 z-10 flex flex-col gap-1 p-3"
           style={{ clipPath: 'polygon(0 0, 62% 0, 57% 100%, 0 100%)' }}
         >
           <div className="flex items-start gap-2 self-start">
@@ -83,8 +83,8 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             )}
           </div>
 
-          {/* Bottom row: distance + aukiolo status — pl-6 positions text right of map button */}
-          <div className="flex items-center gap-2 pl-6 min-w-0">
+          {/* Bottom row: mt-auto pins it to the bottom; pl-7 clears the map button */}
+          <div className="flex items-center gap-3 pl-7 mt-auto min-w-0">
             {distanceStr && (
               <span className="text-xs tabular-nums text-[rgba(17,17,17,0.4)] shrink-0">{distanceStr}</span>
             )}
