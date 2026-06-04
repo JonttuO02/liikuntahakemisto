@@ -11,6 +11,7 @@ import type { Liikuntapaikka } from '@/lib/types'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import { computeAvgRating } from '@/lib/reviewUtils'
 import { formatDistance } from '@/lib/geo'
+import { useTranslations } from 'next-intl'
 
 interface Props {
   paikka: Liikuntapaikka
@@ -21,6 +22,8 @@ interface Props {
 }
 
 export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggleTodo }: Props) {
+  const t = useTranslations('PaikkaSheet')
+  const tKortti = useTranslations('PaikkaKortti')
   const [reviews, setReviews] = useState<ReviewRow[] | null>(null)
   const [activeSlide, setActiveSlide] = useState(0)
   const [reviewOpen, setReviewOpen] = useState(false)
@@ -85,7 +88,7 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
             <motion.button
               whileTap={{ scale: 0.85, transition: { duration: 0.12 } }}
               onClick={() => onToggleTodo(paikka.id)}
-              aria-label={todo ? 'Poista TO DO -listalta' : 'Lisää TO DO -listalle'}
+              aria-label={todo ? tKortti('removeFromTodo') : tKortti('addToTodo')}
               className="glass-btn w-8 h-8 rounded-full flex items-center justify-center"
             >
               {todo
@@ -163,7 +166,7 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
 
           {/* Price — immediately below hero + dots */}
           {priceDisplay && (
-            <SheetRow icon={<CircleDollarSign className="w-4 h-4" />} label="Hinta">
+            <SheetRow icon={<CircleDollarSign className="w-4 h-4" />} label={t('price')}>
               {paikka.hinta_kuvaus
                 ? <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed">{paikka.hinta_kuvaus}</p>
                 : <span className="font-serif text-xl font-bold text-[#111111]">{priceDisplay}</span>
@@ -175,22 +178,22 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
           {openStatus.status !== 'no-data' && (
             <p className="text-sm">
               {openStatus.status === 'open'
-                ? <span className="text-green-700 font-bold">● Auki nyt{openStatus.hours ? ` · ${openStatus.hours}` : ''}</span>
-                : <span className="text-[rgba(17,17,17,0.45)]">Suljettu{openStatus.hours ? ` · ${openStatus.hours}` : ''}</span>
+                ? <span className="text-green-700 font-bold">● {tKortti('openNow')}{openStatus.hours ? ` · ${openStatus.hours}` : ''}</span>
+                : <span className="text-[rgba(17,17,17,0.45)]">{tKortti('closed')}{openStatus.hours ? ` · ${openStatus.hours}` : ''}</span>
               }
             </p>
           )}
 
           {/* Hours */}
           {hoursGroups.length > 0 && (
-            <SheetRow icon={<Clock className="w-4 h-4" />} label="Aukioloajat">
+            <SheetRow icon={<Clock className="w-4 h-4" />} label={t('hours')}>
               <HoursTable groups={hoursGroups} />
             </SheetRow>
           )}
 
           {/* Phone */}
           {paikka.puhelin && (
-            <SheetRow icon={<Phone className="w-4 h-4" />} label="Puhelin">
+            <SheetRow icon={<Phone className="w-4 h-4" />} label={t('phone')}>
               <a
                 href={`tel:${paikka.puhelin}`}
                 className="text-sm font-bold text-[#111111] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]"
@@ -209,13 +212,13 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
               className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm [transition:background-color_150ms_var(--ease-out)]"
             >
               <ExternalLink className="w-4 h-4" />
-              Varaa aika
+              {t('bookNow')}
             </a>
           )}
 
           {/* Description */}
           {paikka.kuvaus && (
-            <SheetRow icon={<Info className="w-4 h-4" />} label="Kuvaus">
+            <SheetRow icon={<Info className="w-4 h-4" />} label={t('description')}>
               <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed">{paikka.kuvaus}</p>
             </SheetRow>
           )}
@@ -232,13 +235,13 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
                   <span className="text-sm">★</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">Arvostelut</p>
+                  <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">{t('reviews')}</p>
                   {reviews.length === 0 ? (
-                    <span className="text-sm text-[rgba(17,17,17,0.45)]">☆ Ei arvosteluja</span>
+                    <span className="text-sm text-[rgba(17,17,17,0.45)]">☆ {t('noReviews')}</span>
                   ) : (
                     <span className="text-sm text-[#111111]">
                       {'★'.repeat(Math.round(avgRating ?? 0))}{'☆'.repeat(5 - Math.round(avgRating ?? 0))}
-                      {' '}{(avgRating ?? 0).toFixed(1)} · {reviews.length} arvostelua
+                      {' '}{(avgRating ?? 0).toFixed(1)} · {reviews.length === 1 ? t('reviewCountSingular') : t('reviewCountPlural', { count: reviews.length })}
                     </span>
                   )}
                 </div>

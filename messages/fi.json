@@ -27,7 +27,10 @@
     "bookNow": "Varaa aika",
     "reviews": "Arvostelut",
     "noReviews": "Ei arvosteluja",
-    "reviewCount": "{count} arvostelua"
+    "reviewCount": "{count} arvostelua",
+    "reviewCountSingular": "1 arvostelu",
+    "reviewCountPlural": "{count} arvostelua",
+    "close": "Sulje"
   },
   "Filters": {
     "all": "Kaikki",

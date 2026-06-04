@@ -6,6 +6,7 @@ import { X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import type { AuthChangeEvent, Session, AuthError } from '@supabase/supabase-js'
+import { useTranslations } from 'next-intl'
 
 interface AuthModalProps {
   open: boolean
@@ -30,6 +31,7 @@ function mapError(message: string): string {
 }
 
 export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }: AuthModalProps) {
+  const t = useTranslations('Auth')
   const [mode, setMode] = useState<Mode>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -149,7 +151,7 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
           className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center"
           aria-modal="true"
           role="dialog"
-          aria-label={mode === 'signin' ? 'Kirjaudu sisään' : 'Luo tili'}
+          aria-label={mode === 'signin' ? t('signIn') : t('signUp')}
         >
           {/* Backdrop */}
           <motion.div
@@ -175,7 +177,7 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
             <button
               onClick={handleClose}
               disabled={loading}
-              aria-label="Sulje"
+              aria-label={t('close')}
               className="glass-btn w-7 h-7 rounded-full flex items-center justify-center absolute top-4 right-4 text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
             >
               <X className="w-3.5 h-3.5" />
@@ -184,7 +186,7 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
             <div className="flex flex-col gap-4">
               {/* Heading */}
               <h2 className="text-xl font-bold text-[#111111] pr-8">
-                {mode === 'signin' ? 'Kirjaudu sisään' : 'Luo tili'}
+                {mode === 'signin' ? t('signIn') : t('signUp')}
               </h2>
 
               {/* Google OAuth */}
@@ -201,13 +203,13 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
                   <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05" />
                   <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335" />
                 </svg>
-                Jatka Googlella
+                {t('continueWithGoogle')}
               </button>
 
               {/* Separator */}
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px bg-[rgba(0,0,0,0.07)]" />
-                <span className="text-[10px] font-bold text-[rgba(17,17,17,0.35)] uppercase tracking-widest">TAI</span>
+                <span className="text-[10px] font-bold text-[rgba(17,17,17,0.35)] uppercase tracking-widest">{t('or')}</span>
                 <div className="flex-1 h-px bg-[rgba(0,0,0,0.07)]" />
               </div>
 
@@ -225,7 +227,7 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
                     <input
                       type="email"
                       autoComplete="email"
-                      placeholder="Sähköpostiosoite"
+                      placeholder={t('emailPlaceholder')}
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       required
@@ -235,7 +237,7 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
                     <input
                       type="password"
                       autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                      placeholder="Salasana"
+                      placeholder={t('passwordPlaceholder')}
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       required
@@ -270,7 +272,7 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
                 >
                   {loading
                     ? mode === 'signin' ? 'Kirjaudutaan...' : 'Luodaan tiliä...'
-                    : mode === 'signin' ? 'Kirjaudu' : 'Luo tili'
+                    : mode === 'signin' ? t('signIn') : t('signUp')
                   }
                 </button>
               </form>
