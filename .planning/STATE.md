@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Kielituki, Ikonit & Sheet-redesign
-status: complete
-last_updated: "2026-06-04T23:55:00.000Z"
-last_activity: 2026-06-04 -- Phase 30 complete; v1.6 shipped
+status: archived
+last_updated: "2026-06-05T00:00:00.000Z"
+last_activity: 2026-06-05 -- v1.6 milestone archived; ready for next milestone
 progress:
   total_phases: 4
   completed_phases: 4
@@ -17,18 +17,16 @@ progress:
 
 ## Current Position
 
-Phase: 30 (i18n FI/EN) — COMPLETE ✅
-Status: v1.6 milestone complete — all 4 phases done (27–30)
-Last activity: 2026-06-04 -- Phase 30 complete; UAT 8/8 pass; v1.6 shipped
-
-Progress: [███░░░░░░░] 75%
+Phase: — (between milestones)
+Status: v1.6 archived 2026-06-05 — ready for `/gsd:new-milestone`
+Last activity: 2026-06-05 -- v1.6 archived; all 21 requirements validated; UAT 8/8 pass
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-03)
+See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 30 — i18n FI/EN
+**Current focus:** Planning next milestone
 
 ## Active Decisions (carried to v1.6)
 
@@ -58,5 +56,5 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-04T15:00:00.000Z
-Resume: `/gsd:verify-work 30` to re-verify all must-haves now that gaps are closed
+Last session: 2026-06-05T00:00:00.000Z
+Resume: `/gsd:new-milestone` to start planning v1.7

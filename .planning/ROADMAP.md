@@ -88,110 +88,17 @@ Full archive: `.planning/milestones/v1.5-ROADMAP.md`
 
 </details>
 
----
-
-### ✅ v1.6 Kielituki, Ikonit & Sheet-redesign (Phases 27–30) — SHIPPED 2026-06-04
-
-**Milestone Goal:** Englanninkielinen käyttöliittymä (kielivalitsin profiilisivulla), uudet SVG-ikonit kaikille lajeille, PaikkaSheet hero-redesign hinnastolla ja collapsed arvosteluwidgetillä, sekä joukko UI-parannuksia ja bugifixejä.
+<details>
+<summary>✅ v1.6 Kielituki, Ikonit & Sheet-redesign (Phases 27–30) — SHIPPED 2026-06-04</summary>
 
 - [x] **Phase 27: Siivous & pienet korjaukset** — Navigaatiosiivous, filtteri/haku-korjaukset, sheet-korjaukset, klusterizoomi ja UI-häivytys *(5/5 plans)* — 2026-06-03
 - [x] **Phase 28: SVG-ikonit** — Uusi lib/sportIcons.tsx -rekisteri, ikonit käytössä kaikkialla (prerequisite for i18n) *(2/2 plans)* — 2026-06-03
 - [x] **Phase 29: Kortit & sheet redesign** — PaikkaSheet hero-karuselli + hinnasto, PaikkaKortti hinnastokaruselli, DiagonaalKortti placeholder-kuvat *(4/4 plans)* — 2026-06-04
 - [x] **Phase 30: i18n FI/EN** — next-intl, NEXT_LOCALE-cookie, kielivalitsin profiilisivulla, kaikki UI-tekstit käännetty *(4/4 plans)* — 2026-06-04
 
-## Phase Details
+Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 
-### Phase 27: Siivous & pienet korjaukset
-**Goal**: Kaikki itsenäiset cleanup-tehtävät ja bugifixit ovat valmiina — navigaatio on siisti, filtteripilli toimii oikein, hakuteksti on yksinkertainen, sheet aukeaa ilman viivettä ja klusterin klikkaus zoomaa
-**Depends on**: Phase 26
-**Requirements**: NAV-06, NAV-07, FILTER-04, FILTER-05, SEARCH-01, UI-24, MAP-16, SHEET-04, SHEET-05, SHEET-06
-**Success Criteria** (what must be TRUE):
-  1. /suosikit-reitti ei ole olemassa; TO DO -painike ei näy toolbarissa — sivu ei löydy ja linkki puuttuu
-  2. FilterCarouselPill-pillillä on hieman harmaa tausta ja klikkaaminen koko pillin alla toimii (ei kummituselementtiä)
-  3. Hakukentässä ei näy "Ei tuloksia"- eikä "Tyhjennä haku" -tekstejä missään hakutilanteessa
-  4. Korttilistauksen alareunassa on fade-häivytys eikä kartta leikkaa kortteja karkosti
-  5. Klusteria klikkaamalla kartta zoomaa lähemmäksi (ellei kyseessä sama koordinaatti); sheet aukeaa ilman viivettä kun pientä korttia klikataan
-**Plans**: 5 plans
-Plans:
-
-**Wave 1** *(parallel)*
-- [x] 27-01-PLAN.md — Delete /suosikit route files and scrub all nav links (NAV-06, NAV-07)
-- [x] 27-02-PLAN.md — Remove "Avaa paikkasivu selaimessa" link from PaikkaSheet (SHEET-04)
-
-**Wave 2** *(blocked on Wave 1 completion)*
-- [x] 27-03-PLAN.md — Pill background, ghost-element fix, remove empty-state text (FILTER-04, FILTER-05, SEARCH-01)
-
-**Wave 3** *(blocked on Wave 2 completion)*
-- [x] 27-04-PLAN.md — Rewrite cluster click to zoom via getClusterExpansionZoom; delete expandedCluster state (MAP-16)
-
-**Wave 4** *(blocked on Wave 3 completion)*
-- [x] 27-05-PLAN.md — Card list fade overlay, sheet max height, CalloutCard tap delay fix (UI-24, SHEET-05, SHEET-06)
-**UI hint**: yes
-
-### Phase 28: SVG-ikonit
-**Goal**: Kaikki laji-ikonit tulevat yhdestä lib/sportIcons.ts -rekisteristä — duplikaattirekisterit on poistettu, uudet ikonit näkyvät filtteripillissä, korteissa, karttapinneissä ja CalloutCardissa
-**Depends on**: Phase 27
-**Requirements**: ICON-01, ICON-02
-**Success Criteria** (what must be TRUE):
-  1. lib/sportIcons.ts on olemassa ja sisältää polkumerkkijonot kaikille lajeille — Lucide-ikonit on poistettu lib/lajit.ts:stä
-  2. Filtteripillissä, PaikkaKortin badgessa, DiagonaalKortissa ja CalloutCardissa näkyy uudet SVG-ikonit
-  3. Karttapinneissä näkyy uudet SVG-ikonit samassa sinisessä teemassa kuin ennen
-  4. tsc --noEmit läpäisee ilman virheitä (ei rikkonaisia SPORT_ICONS-tyyppiviittauksia)
-**Plans**: 2 plans
-Plans:
-
-**Wave 1**
-- [x] 28-01-PLAN.md — Extract SVGs from final_sports_svg_exports.zip, write lib/sportIcons.tsx (ICON-01)
-
-**Wave 2** *(blocked on Wave 1 completion)*
-- [x] 28-02-PLAN.md — Migrate 5 consumers, delete Lucide from lib/lajit.ts, run tsc --noEmit (ICON-01, ICON-02)
-
-### Phase 29: Kortit & sheet redesign
-**Goal**: PaikkaSheet on visuaalisesti uudistettu hero-osiolla ja hinnastolla; PaikkaKortti näyttää hinnaston karusellina; DiagonaalKortti näyttää logo- ja kuvaplaceholderit
-**Depends on**: Phase 28
-**Requirements**: UI-25, UI-26, UI-27, SHEET-01, SHEET-02, SHEET-03
-**Success Criteria** (what must be TRUE):
-  1. PaikkaSheet aukeaa hero-osioon jossa on kuvien karuselli (placeholder: harmaa + kamerakuvake) ja paikan nimi & osoite kuvien päällä
-  2. Hero-osion alla on selkeä hinnasto-osio
-  3. Arvosteluwidget on oletuksena pienennetty ja aukeaa klikkaamalla
-  4. PaikkaKortin alaosassa on rullaava hinnastokaruselli
-  5. DiagonaalKortissa vasemmassa yläkulmassa on logopaikka-placeholder ja oikealla kuvapaikka-placeholder laji-ikonin sijaan
-**Plans**: 4 plans
-**UI hint**: yes
-
-Plans:
-
-**Wave 1** *(parallel — no file overlap)*
-- [x] 29-01-PLAN.md — Add @keyframes marquee to globals.css + marqueePriceLines() guard with unit tests (UI-25)
-- [x] 29-03-PLAN.md — DiagonaalKortti logo placeholder + gray/camera right-panel fallback (UI-26, UI-27)
-- [x] 29-04-PLAN.md — PaikkaSheet hero carousel, pricing SheetRow, collapsible review widget (SHEET-01, SHEET-02, SHEET-03)
-
-**Wave 2** *(blocked on 29-01)*
-- [ ] 29-02-PLAN.md — PaikkaKortti marquee price row using shared keyframe + guard (UI-25)
-
-
-### Phase 30: i18n FI/EN
-**Goal**: Käyttäjä voi vaihtaa käyttöliittymäkielen profiilisivulla FI/EN — valinta säilyy sivulatausten välillä ja kaikki UI-tekstit näkyvät valitulla kielellä; kartan tila ja filtterivalinnat eivät häiriinny
-**Depends on**: Phase 29
-**Requirements**: I18N-01, I18N-02, I18N-03
-**Success Criteria** (what must be TRUE):
-  1. Profiilisivulla on kielivalitsin jolla voi vaihtaa FI/EN välillä
-  2. Valittu kieli tallentuu NEXT_LOCALE-cookieen ja säilyy sivun uudelleenlatauksen jälkeen
-  3. Kaikki UI-tekstit (kortit, filtterit, sheet, navigaatio) näkyvät valitulla kielellä
-  4. Kieltä vaihdettaessa kartan sijainti, valittu kaupunki ja lajifiltteri säilyvät ennallaan
-**Plans**: 4 plans
-
-Plans:
-
-**Wave 1** *(blocking — must complete before Wave 2)*
-- [x] 30-01-PLAN.md — Install next-intl, message files (fi.json + en.json), i18n/request.ts, lib/i18nUtils + tests, global.d.ts, app/actions/locale.ts, next.config.mjs, layout.tsx (I18N-01, I18N-02, I18N-03)
-
-**Wave 2** *(parallel — no file overlap)*
-- [x] 30-02-PLAN.md — Translate NavPill, Etusivu, PaikkaKortti, DiagonaalKortti (I18N-03)
-- [x] 30-03-PLAN.md — Translate ProfiiliClient + add LanguageToggle (I18N-01, I18N-02)
-
-**Wave 3** *(blocked on Wave 2 completion)*
-- [x] 30-04-PLAN.md — Translate PaikkaSheet, AuthModal, paikat/[id]/page.tsx, not-found.tsx; tsc --noEmit gate; visual checkpoint (I18N-03)
+</details>
 
 ---
 
