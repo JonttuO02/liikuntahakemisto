@@ -27,7 +27,10 @@
     "bookNow": "Book now",
     "reviews": "Reviews",
     "noReviews": "No reviews",
-    "reviewCount": "{count} reviews"
+    "reviewCount": "{count} reviews",
+    "reviewCountSingular": "1 review",
+    "reviewCountPlural": "{count} reviews",
+    "close": "Close"
   },
   "Filters": {
     "all": "All",
