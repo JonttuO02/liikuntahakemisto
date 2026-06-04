@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { User, LogOut, MoreHorizontal, X } from 'lucide-react'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
+import { useTranslations } from 'next-intl'
 
 const BTN = 'flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]'
 
@@ -15,6 +16,7 @@ export default function NavPill() {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
   const router = useRouter()
+  const t = useTranslations('Nav')
 
   useEffect(() => subscribeToAuthUser(setUser), [])
 
@@ -64,18 +66,18 @@ export default function NavPill() {
                 {user && (
                   <Link href="/profiili" onClick={() => setOpen(false)} className={BTN}>
                     <User className="w-3.5 h-3.5" />
-                    Profiili
+                    {t('profile')}
                   </Link>
                 )}
                 {user ? (
                   <button onClick={handleSignOut} className={BTN}>
                     <LogOut className="w-3.5 h-3.5" />
-                    Kirjaudu ulos
+                    {t('signOut')}
                   </button>
                 ) : (
                   <button onClick={() => { setAuthModalOpen(true); setOpen(false) }} className={BTN}>
                     <User className="w-3.5 h-3.5" />
-                    Kirjaudu
+                    {t('signIn')}
                   </button>
                 )}
               </motion.div>
@@ -85,7 +87,7 @@ export default function NavPill() {
           {/* Trigger */}
           <button
             onClick={() => setOpen(o => !o)}
-            aria-label={open ? 'Sulje valikko' : 'Avaa valikko'}
+            aria-label={open ? t('closeMenu') : t('openMenu')}
             className="w-10 h-10 shrink-0 flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
           >
             <AnimatePresence mode="wait" initial={false}>
