@@ -171,6 +171,7 @@ const TEXT_CONTAINER_VARIANTS = {
 
 function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude: number } }) {
   const t = useTranslations('PaikkaKortti')
+  const tLajit = useTranslations('Lajit')
   const ref = useRef<HTMLDivElement>(null)
   const [clipPath, setClipPath] = useState('')
   const [showName, setShowName] = useState(true)
@@ -261,7 +262,7 @@ function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude:
                   <span style={{ color: sportColor }}><SportIcon laji={p.laji} size={16} className="flex-shrink-0" /></span>
                 </motion.span>
                 <span className="flex items-center text-lg font-bold text-[#111111]">
-                  {chars(lajiKonfig[p.laji]?.label ?? p.laji)}
+                  {chars(tLajit(p.laji as any))}
                 </span>
               </motion.div>
             )}
@@ -349,6 +350,7 @@ function CombinedFilterPill({
   onSearchChange: (val: string) => void
 }) {
   const tFilters = useTranslations('Filters')
+  const tLajit = useTranslations('Lajit')
   const [cityDropOpen, setCityDropOpen] = useState(false)
   const [sportDropOpen, setSportDropOpen] = useState(false)
   const [cityDropPos, setCityDropPos] = useState<{ top: number; left: number } | null>(null)
@@ -473,7 +475,7 @@ function CombinedFilterPill({
                       className={`flex items-center gap-1 ${isSelected ? 'text-[#111111]' : 'text-[rgba(17,17,17,0.35)]'}`}
                     >
                       <span style={{ color: isSelected ? color : undefined }}><SportIcon laji={sport.toLowerCase()} size={12} className="shrink-0" /></span>
-                      {sport}
+                      {tLajit(sport.toLowerCase() as any)}
                     </span>
                   )
                 })}
@@ -557,7 +559,7 @@ function CombinedFilterPill({
                 >
                   <span className={`w-3 h-3 rounded-full flex-shrink-0 ${isSelected ? 'bg-[#111111]' : 'border border-[rgba(0,0,0,0.15)]'}`} />
                   <span style={{ color: isSelected ? color : undefined }}><SportIcon laji={sport.toLowerCase()} size={12} className="flex-shrink-0" /></span>
-                  {sport}
+                  {tLajit(sport.toLowerCase() as any)}
                 </button>
               )
             })}
