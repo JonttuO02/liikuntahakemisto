@@ -98,6 +98,7 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
             </motion.button>
             <button
               onClick={onClose}
+              aria-label={t('close')}
               className="glass-btn w-8 h-8 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
             >
               <X className="w-4 h-4" />
