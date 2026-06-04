@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { MapPin, Check } from 'lucide-react'
+import { MapPin, Check, Building2, Camera } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
@@ -54,13 +54,20 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
           className="absolute inset-0 z-10 flex flex-col gap-1 p-3"
           style={{ clipPath: 'polygon(0 0, 62% 0, 57% 100%, 0 100%)' }}
         >
-          <span
-            className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-white self-start truncate max-w-full"
-            style={{ backgroundColor: laji.color }}
-          >
-            <SportIcon laji={paikka.laji} size={12} className="shrink-0" />
-            {laji.label}
-          </span>
+          <div className="flex items-start gap-2 self-start">
+            {/* Logo placeholder — 40×40px rounded box */}
+            <div className="w-10 h-10 rounded-lg bg-[rgba(0,0,0,0.06)] flex items-center justify-center shrink-0">
+              <Building2 size={20} className="text-[rgba(0,0,0,0.25)]" />
+            </div>
+            {/* Sport pill — unchanged */}
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-white truncate max-w-full mt-1"
+              style={{ backgroundColor: laji.color }}
+            >
+              <SportIcon laji={paikka.laji} size={12} className="shrink-0" />
+              {laji.label}
+            </span>
+          </div>
 
           <p className="font-bold text-[#111111] text-sm leading-snug line-clamp-1 overflow-hidden">
             {paikka.nimi}
@@ -111,13 +118,12 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             />
           ) : null}
           <div
-            className="w-full h-full flex items-center justify-center"
-            style={{ backgroundColor: laji.color }}
+            className="w-full h-full flex items-center justify-center bg-[rgba(0,0,0,0.06)]"
             aria-hidden
             data-fallback
             hidden={!!paikka.image_url}
           >
-            <SportIcon laji={paikka.laji} size={32} className="text-white opacity-80" />
+            <Camera size={24} className="text-[rgba(0,0,0,0.2)]" />
           </div>
         </div>
 
