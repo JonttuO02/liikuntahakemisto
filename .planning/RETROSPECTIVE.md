@@ -119,6 +119,125 @@
 
 ---
 
+## Milestone: v1.3 — AKTIIVI Redesign & Polish
+
+**Shipped:** 2026-05-30
+**Phases:** 3 (phases 16–18) | **Plans:** 8 | **Timeline:** 1 day
+
+### What Was Built
+- AKTIIVI rebrand: name, meta-tags, PWA manifest
+- AktiiviLogo animated SVG watermark with 5 sport color gradients per-open
+- Unified toolbar: Search+Filter pill + separate LayoutList toggle
+- Unified red SVG sport pins (#ef4444); same-address clustering; clusterPinUrl
+- CalloutCard clip-path spike + PaikkaSheet layoutId expansion animation
+
+### What Worked
+- clip-path spike approach: ResizeObserver measures height, calculates path — no separate elements
+- layoutId animation required isolating translateX into a wrapper div — discovered constraint about conflicting transforms
+- Record<string,T[]> workaround for TS 5.9.3 Map<K,V> generic regression — surfaced quickly
+
+### What Was Inefficient
+- TS 5.9.3 regression in Map<K,V> generics required a workaround; discovered during execution
+
+### Patterns Established
+- Pin color unification: laji differentiated by icon, not color — visual consistency
+- layoutId: element must not own conflicting CSS transforms; use wrapper div for translateX
+- Cluster markers: same-address grouping by ±0.0001° coordinate proximity
+
+### Key Lessons
+1. Framer Motion layoutId conflicts: the animated element cannot own conflicting transforms — wrap instead
+2. TypeScript minor versions can introduce regressions; always check before upgrading
+
+---
+
+## Milestone: v1.4 — UX-parannukset & Profiili
+
+**Shipped:** 2026-05-31
+**Phases:** 4 (phases 19–22) | **Plans:** 11 | **Timeline:** 1 day
+
+### What Was Built
+- Kertakäynti OK filter; DiagonaalKortti pin button for map focus; image_url from Supabase
+- Back-scroll restoration; "Näytä kartalla" coordinates focus; bottom sheet auto-open on load
+- TODO list: suosikit renamed, heart → bookmark icon; /suosikit page shows TODO items
+- Profile interests (multi-select sports); AI personalization uses interests
+
+### What Worked
+- sessionStorage scroll position: simple `key + url` fingerprint, restored on back navigation
+- Interests as string[] in profiles table: flexible, no separate table needed for MVP
+- Auto-open bottom sheet on mount: simple useEffect, no URL param needed
+
+### What Was Inefficient
+- /suosikit page added in v1.4 only to be removed in v1.6 — short-lived feature
+
+### Key Lessons
+1. Plan for feature lifecycle: /suosikit page was added and removed within 3 milestones
+2. Scroll restoration needs a stable key — URL + component name works well
+
+---
+
+## Milestone: v1.5 — Visuaalinen elävöitys & UX-hienosäätö
+
+**Shipped:** 2026-06-02
+**Phases:** 4 (phases 23–26) | **Plans:** 9 | **Timeline:** 2 days
+
+### What Was Built
+- Outfit font via CSS variable abstraction (zero downstream changes)
+- AktiiviLogo blue sweep animation (auto-loop, 32px)
+- SportPin: blue gradient (#38bdf8→#0284c7) + @keyframes spinOrbit orbit glow
+- CalloutCard: 160×160px, vertical layout, letter-by-letter slide animation (22ms stagger)
+- TO DO overlay: glassmorphism panel over Etusivu, scale animation, stagger list, inline review prompt
+- FilterCarouselPill: carousel animation for active selections; ambient cycle when no selections
+
+### What Worked
+- CSS variable font abstraction: swapping Inter→Outfit with zero component changes
+- spinOrbit animation: transform/opacity only (no box-shadow) — AdvancedMarker constraint respected
+- Inline review in TODO overlay: keeps user in context vs navigating to venue page
+
+### What Was Inefficient
+- MAP-15 partial: DiagonaalKortti sport icon not updated in v1.5 (done in v1.6 Phase 28)
+
+### Key Lessons
+1. CSS variable abstraction for fonts: the correct level of indirection — changes at one point
+2. AdvancedMarker CSS constraint (transform/opacity only) must be front-of-mind for all pin animations
+
+---
+
+## Milestone: v1.6 — Kielituki, Ikonit & Sheet-redesign
+
+**Shipped:** 2026-06-04
+**Phases:** 4 (phases 27–30) | **Plans:** 15 | **Timeline:** 2 days
+**Commits:** ~126 | **Files:** 108 changed | **Lines:** +13,608 / -2,255
+
+### What Was Built
+- Phase 27 cleanup: /suosikit removed, TODO toolbar button removed, filter pill ghost fix, cluster zoom, sheet fade overlay + height cap + tap delay fix
+- Phase 28 SVG icons: lib/sportIcons.tsx single registry; Lucide removed from lib/lajit.ts; all 5 consumers migrated; tsc clean
+- Phase 29 redesign: PaikkaSheet 16:9 hero carousel + gradient overlay + pricing row + collapsible reviews; DiagonaalKortti placeholders; PaikkaKortti marquee price row
+- Phase 30 i18n: next-intl without-routing; NEXT_LOCALE cookie; LanguageToggle on /profiili; all UI translated; compile-time key coverage assertion; UAT 8/8
+
+### What Worked
+- next-intl without-routing: cleanest way to add i18n without touching URL structure
+- Compile-time assertion for translation coverage (IN-05): caught missing keys at build time, not runtime
+- `zoomRef.current` fast path for SHEET-06: synchronous ref avoids React async state timing issues
+- Path-string approach for SVG icons: no webpack plugin, Turbopack-compatible from day one
+- Single registry (lib/sportIcons.tsx) with clear consumer list: migration was mechanical and verifiable
+
+### What Was Inefficient
+- UAT found sport name translations missing after Phase 30 UAT — required 5 additional fix commits
+- REQUIREMENTS.md checkboxes still not updated during execution (recurring pattern)
+
+### Patterns Established
+- i18n namespace per component: `useTranslations('NavPill')`, `getTranslations('PaikkaSheet')` — clear ownership
+- Compile-time translation coverage: compile-time assertion over unit test — fails build, not test run
+- SVG as compile-time path strings in a typed registry — `SPORT_ICONS: Record<LajiId, string>`
+
+### Key Lessons
+1. UAT should include language-switch smoke test from the start — sport names were missed because they weren't in a component-namespaced translation key
+2. Compile-time key coverage assertion is better than a separate test file — it's always in the critical path
+3. Recurring pattern: REQUIREMENTS.md checkboxes not updated during execution — either automate or accept that archive is the canonical "done" record
+4. SVG icon migration: list all render sites before starting; verify each with grep — five sites, no surprise sixth
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -128,6 +247,10 @@
 | v1.0 | 5 | 25 | 3 days | Foundation: security + data + AI |
 | v1.1 | 6 | 23 | 6 days | Added auth, map arch, PWA |
 | v1.2 | 4 | 14 | 2 days | UI overhaul: search integration, new card model, reviews, AI personalization |
+| v1.3 | 3 | 8 | 1 day | AKTIIVI rebrand, animated logo, unified toolbar, SVG pins, layoutId expansion |
+| v1.4 | 4 | 11 | 1 day | Kertakäynti filter, scroll restore, TODO list, profile interests + AI personalization |
+| v1.5 | 4 | 9 | 2 days | Outfit font, blue sport pins + orbit glow, CalloutCard letter animation, TODO overlay, FilterCarouselPill |
+| v1.6 | 4 | 15 | 2 days | i18n FI/EN, SVG icon registry, PaikkaSheet hero redesign, nav/filter/sheet bugfixes |
 
 ### Cumulative Quality
 
@@ -136,6 +259,8 @@
 | v1.0 | lib/aukiolo.ts 100% | aukiolo, priceUtils | 0 major |
 | v1.1 | lib/priceUtils + lib/cityFilter | priceUtils, cityFilter | @supabase/ssr, @serwist/next, serwist |
 | v1.2 | lib/reviewUtils 9 tests (TDD) | reviewUtils (resolveDisplayName, computeAvgRating) | 0 major |
+| v1.3–v1.5 | no new lib tests | — | framer-motion patterns only |
+| v1.6 | lib/i18nUtils tests, compile-time key coverage assertion | i18nUtils | next-intl |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -144,3 +269,5 @@
 3. Single source of truth in lib/: prevents duplicate logic across components
 4. Generate SUMMARY.md after every plan execution — missing summaries create gaps at milestone close
 5. DB-level constraints beat app-level enforcement for business rules (composite UNIQUE for reviews)
+6. Compile-time assertions beat unit tests for coverage invariants (translation key coverage in v1.6)
+7. Recurring gap: REQUIREMENTS.md checkboxes not updated during execution — accept archive as canonical "done"
