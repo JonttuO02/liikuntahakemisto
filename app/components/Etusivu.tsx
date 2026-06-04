@@ -224,7 +224,7 @@ function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude:
         borderRadius: clipPath ? 0 : 10,
       }}
     >
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 h-full">
         <div
           className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center"
           style={{ backgroundColor: sportColor }}
@@ -263,25 +263,30 @@ function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude:
             )}
           </AnimatePresence>
         </div>
-        {(priceLines && priceLines.length >= 2) ? (
-          <div className="overflow-hidden w-full">
+        <div className="mt-auto">
+          {(priceLines && priceLines.length >= 2) ? (
             <div
-              className="flex whitespace-nowrap text-xs font-bold text-[#111111] tabular-nums"
-              style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
+              className="overflow-hidden"
+              style={{
+                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 12%, black 82%, transparent 100%)',
+                maskImage: 'linear-gradient(to right, transparent 0%, black 12%, black 82%, transparent 100%)',
+              }}
             >
-              {[...priceLines, ...priceLines].map((line, i) => (
-                <span key={i} className="flex items-center shrink-0">
-                  {line}
-                  <span className="mx-1.5 text-[rgba(17,17,17,0.3)]">·</span>
-                </span>
-              ))}
+              <div
+                className="flex items-center gap-6 whitespace-nowrap text-xs font-bold text-[#111111] tabular-nums"
+                style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
+              >
+                {[...priceLines, ...priceLines].map((line, i) => (
+                  <span key={i} className="shrink-0">{line}</span>
+                ))}
+              </div>
             </div>
-          </div>
-        ) : membershipOnly ? (
-          <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
-        ) : priceText ? (
-          <span className="text-xs font-bold text-[#111111] tabular-nums">{priceText}</span>
-        ) : null}
+          ) : membershipOnly ? (
+            <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
+          ) : priceText ? (
+            <span className="text-xs font-bold text-[#111111] tabular-nums">{priceText}</span>
+          ) : null}
+        </div>
       </div>
     </div>
   )

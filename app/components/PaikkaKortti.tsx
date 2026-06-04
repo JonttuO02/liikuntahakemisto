@@ -114,16 +114,19 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
         {membershipOnly ? (
           <span className="text-sm text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
         ) : (priceLines && priceLines.length >= 2) ? (
-          <div className="border-t border-[rgba(0,0,0,0.07)] overflow-hidden pt-2">
+          <div
+            className="border-t border-[rgba(0,0,0,0.07)] overflow-hidden pt-2"
+            style={{
+              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 82%, transparent 100%)',
+              maskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 82%, transparent 100%)',
+            }}
+          >
             <div
-              className="flex whitespace-nowrap text-sm font-bold text-[#111111] tabular-nums"
+              className="flex items-center gap-6 whitespace-nowrap text-sm font-bold text-[#111111] tabular-nums"
               style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
             >
               {[...priceLines, ...priceLines].map((line, i) => (
-                <span key={i} className="flex items-center shrink-0">
-                  {line}
-                  <span className="mx-2 text-[rgba(17,17,17,0.3)]">·</span>
-                </span>
+                <span key={i} className="shrink-0">{line}</span>
               ))}
             </div>
           </div>

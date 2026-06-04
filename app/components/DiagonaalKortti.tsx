@@ -52,7 +52,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
 
         {/* LEFT: info panel */}
         <div
-          className="absolute inset-0 z-10 flex flex-col p-3"
+          className="absolute inset-0 z-10 flex flex-col p-3 overflow-hidden"
           style={{ clipPath: 'polygon(0 0, 62% 0, 57% 100%, 0 100%)' }}
         >
           <div className="flex items-start gap-2 self-start">
@@ -78,16 +78,19 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             {membershipOnly ? (
               <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
             ) : (priceLines && priceLines.length >= 2) ? (
-              <div className="overflow-hidden">
+              <div
+                className="overflow-hidden"
+                style={{
+                  WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 12%, black 78%, transparent 100%)',
+                  maskImage: 'linear-gradient(to right, transparent 0%, black 12%, black 78%, transparent 100%)',
+                }}
+              >
                 <div
-                  className="flex whitespace-nowrap text-xs font-bold text-[#111111] tabular-nums"
+                  className="flex items-center gap-6 whitespace-nowrap text-xs font-bold text-[#111111] tabular-nums"
                   style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
                 >
                   {[...priceLines, ...priceLines].map((line, i) => (
-                    <span key={i} className="flex items-center shrink-0">
-                      {line}
-                      <span className="mx-1.5 text-[rgba(17,17,17,0.3)]">·</span>
-                    </span>
+                    <span key={i} className="shrink-0">{line}</span>
                   ))}
                 </div>
               </div>
