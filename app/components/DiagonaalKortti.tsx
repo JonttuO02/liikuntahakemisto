@@ -9,6 +9,7 @@ import { hintateksti } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
 import { isMembershipOnly } from '@/lib/priceUtils'
 import type { Liikuntapaikka } from '@/lib/types'
+import { useTranslations } from 'next-intl'
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
 
@@ -31,6 +32,7 @@ interface DiagonaalKorttiProps {
 }
 
 export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMap, onCardClick, onToggleTodo }: DiagonaalKorttiProps) {
+  const t = useTranslations('PaikkaKortti')
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
   const openStatus   = getOpenStatus(paikka.aukioloajat)
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
@@ -68,19 +70,19 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
 
           {openStatus.status === 'open' && (
             <span className="text-xs font-bold text-green-700 truncate">
-              Auki · {openStatus.hours}
+              {t('openNow')} · {openStatus.hours}
             </span>
           )}
           {openStatus.status === 'closed' && (
-            <span className="text-xs text-[rgba(17,17,17,0.45)] truncate">Suljettu</span>
+            <span className="text-xs text-[rgba(17,17,17,0.45)] truncate">{t('closed')}</span>
           )}
 
           {membershipOnly ? (
-            <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
+            <span className="text-xs text-[rgba(17,17,17,0.5)]">{t('membershipOnly')}</span>
           ) : priceText ? (
             <span className="text-xs font-bold text-[#111111] tabular-nums truncate">{priceText}</span>
           ) : (
-            <span className="text-xs text-[rgba(17,17,17,0.35)]">Lisätään pian</span>
+            <span className="text-xs text-[rgba(17,17,17,0.35)]">{t('priceComingSoon')}</span>
           )}
 
           {distanceStr && (
@@ -134,7 +136,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
       {onToggleTodo && (
         <button
           onClick={e => { e.stopPropagation(); e.preventDefault(); onToggleTodo(paikka.id) }}
-          aria-label={isSaved ? 'Poista TO DO -listalta' : 'Lisää TO DO -listaan'}
+          aria-label={isSaved ? t('removeFromTodo') : t('addToTodo')}
           className="absolute bottom-3 right-3 z-20 w-7 h-7 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_ease]"
         >
           <Check className="w-3.5 h-3.5" />
