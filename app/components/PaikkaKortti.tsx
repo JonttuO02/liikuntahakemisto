@@ -33,6 +33,7 @@ interface PaikkaKorttiProps {
 
 export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isTodo, onToggleTodo }: PaikkaKorttiProps) {
   const t = useTranslations('PaikkaKortti')
+  const tLajit = useTranslations('Lajit')
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
   const openStatus   = getOpenStatus(paikka.aukioloajat)
   const hasDropIn    = paikka.hinta_kuvaus?.toLowerCase().includes('kertakäynti') ?? false
@@ -70,7 +71,7 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
             style={{ backgroundColor: laji.color }}
           >
             <SportIcon laji={paikka.laji} size={12} className="shrink-0" />
-            {laji.label}
+            {tLajit(paikka.laji as any)}
           </span>
           {paikka.featured && (
             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">

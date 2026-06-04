@@ -35,6 +35,7 @@ interface DiagonaalKorttiProps {
 
 export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMap, onCardClick, onToggleTodo }: DiagonaalKorttiProps) {
   const t = useTranslations('PaikkaKortti')
+  const tLajit = useTranslations('Lajit')
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
   const openStatus   = getOpenStatus(paikka.aukioloajat)
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
@@ -92,7 +93,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
               style={{ backgroundColor: laji.color }}
             >
               <SportIcon laji={paikka.laji} size={16} className="shrink-0" />
-              {laji.label}
+              {tLajit(paikka.laji as any)}
             </span>
           </div>
 
