@@ -202,7 +202,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
       {hasCoords && (
         <button
           onClick={e => { e.stopPropagation(); e.preventDefault(); onShowMap?.(paikka) }}
-          aria-label="Näytä kartalla"
+          aria-label={t('showOnMap')}
           className="absolute bottom-2 left-2 z-20 w-7 h-7 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_ease]"
         >
           <MapPin className="w-3.5 h-3.5" />

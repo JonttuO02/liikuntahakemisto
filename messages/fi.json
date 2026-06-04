@@ -17,7 +17,8 @@
     "priceComingSoon": "Lisätään pian",
     "showDetails": "Näytä tiedot",
     "addToTodo": "Lisää TO DO -listalle",
-    "removeFromTodo": "Poista TO DO -listalta"
+    "removeFromTodo": "Poista TO DO -listalta",
+    "showOnMap": "Näytä kartalla"
   },
   "PaikkaSheet": {
     "price": "Hinta",

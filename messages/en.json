@@ -17,7 +17,8 @@
     "priceComingSoon": "Coming soon",
     "showDetails": "Show details",
     "addToTodo": "Add to TO DO list",
-    "removeFromTodo": "Remove from TO DO list"
+    "removeFromTodo": "Remove from TO DO list",
+    "showOnMap": "Show on map"
   },
   "PaikkaSheet": {
     "price": "Price",
