@@ -6,7 +6,7 @@ const revision =
   spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf-8" }).stdout?.trim() ||
   crypto.randomUUID();
 
-const withNextIntl = createNextIntlPlugin()
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 
 const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
