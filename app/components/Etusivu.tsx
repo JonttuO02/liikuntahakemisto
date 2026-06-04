@@ -27,6 +27,7 @@ import { deriveKaupungit } from '@/lib/cityFilter'
 import DiagonaalKortti, { diagonaalKorttiVariants } from './DiagonaalKortti'
 import PaikkaSheet from './PaikkaSheet'
 import StarPicker from './StarPicker'
+import { useTranslations } from 'next-intl'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 const HANDLE_H = 44 // visible sheet tab height when closed
@@ -60,12 +61,13 @@ function MapPanController({ coords }: { coords: { lat: number; lng: number } | n
 
 function RecenterButton({ coords }: { coords: { lat: number; lng: number } | null }) {
   const map = useMap()
+  const tMap = useTranslations('Map')
   return (
     <motion.button
       whileTap={{ scale: 0.95 }}
       onClick={() => { if (map && coords) map.panTo(coords) }}
       className="absolute bottom-20 right-4 z-10 w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.6)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
-      aria-label="Palaa omalle sijainnille"
+      aria-label={tMap('recenter')}
     >
       <Locate className="w-4 h-4" />
     </motion.button>
@@ -345,6 +347,7 @@ function CombinedFilterPill({
   searchHaku: string
   onSearchChange: (val: string) => void
 }) {
+  const tFilters = useTranslations('Filters')
   const [cityDropOpen, setCityDropOpen] = useState(false)
   const [sportDropOpen, setSportDropOpen] = useState(false)
   const [cityDropPos, setCityDropPos] = useState<{ top: number; left: number } | null>(null)
@@ -417,7 +420,7 @@ function CombinedFilterPill({
                 <button
                   onClick={openCity}
                   className="flex-1 min-w-0 h-full overflow-hidden flex items-center px-3"
-                  aria-label="Suodata kaupungin mukaan"
+                  aria-label={tFilters('filterByCity')}
                   style={{
                     WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%)',
                     maskImage: 'linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%)',
@@ -447,7 +450,7 @@ function CombinedFilterPill({
             <button
               onClick={openSport}
               className="flex-1 min-w-0 h-full overflow-hidden flex items-center px-3"
-              aria-label="Suodata lajin mukaan"
+              aria-label={tFilters('filterBySport')}
               style={{
                 WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%)',
                 maskImage: 'linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%)',
@@ -491,7 +494,7 @@ function CombinedFilterPill({
                   <Search className="w-3.5 h-3.5 text-[rgba(17,17,17,0.4)] shrink-0 pointer-events-none" />
                   <input
                     type="search"
-                    placeholder="Hae liikuntapaikkaa..."
+                    placeholder={tFilters('searchPlaceholder')}
                     value={searchHaku}
                     onChange={e => onSearchChange(e.target.value)}
                     className="flex-1 min-w-0 bg-transparent border-0 outline-none text-sm text-[#111111] placeholder:text-[rgba(17,17,17,0.4)]"
@@ -565,6 +568,9 @@ function CombinedFilterPill({
 }
 
 export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
+  const tTodo = useTranslations('Todo')
+  const tFilters = useTranslations('Filters')
+  const tNav = useTranslations('Nav')
   const [saa, setSaa]               = useState<SaaTiedot | null>(null)
   const [aiTeksti, setAiTeksti]     = useState<string | null>(null)
   const [valittu, setValittu]       = useState<Liikuntapaikka | null>(null)
@@ -1214,12 +1220,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             className="fixed glass rounded-2xl overflow-y-auto p-4"
             style={{ transformOrigin: 'top right', top: 'max(60px, env(safe-area-inset-top) + 48px)', right: 12, bottom: 12, width: 'calc(100vw - 56px)', maxWidth: 420, zIndex: 62 }}
           >
-            <p className="text-sm font-bold text-[#111111] uppercase tracking-widest mb-4">TO DO</p>
+            <p className="text-sm font-bold text-[#111111] uppercase tracking-widest mb-4">{tTodo('title')}</p>
             {todoPaikat.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 gap-3">
                 <Bookmark className="w-8 h-8 text-[rgba(17,17,17,0.2)]" />
-                <p className="text-sm font-bold text-[rgba(17,17,17,0.45)]">Lista on tyhjä</p>
-                <p className="text-sm text-[rgba(17,17,17,0.35)] text-center leading-normal">Lisää paikkoja kirjanmerkkipainikkeella</p>
+                <p className="text-sm font-bold text-[rgba(17,17,17,0.45)]">{tTodo('empty')}</p>
+                <p className="text-sm text-[rgba(17,17,17,0.35)] text-center leading-normal">{tTodo('emptyHint')}</p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -1228,10 +1234,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   if (pendingReviewPaikkaId === p.id) {
                     return (
                       <motion.div key={p.id} layout transition={LAYOUT_T} className="glass rounded-2xl p-4 flex items-center justify-between">
-                        <p className="text-sm font-bold text-[#111111]">Kävikö paikassa?</p>
+                        <p className="text-sm font-bold text-[#111111]">{tTodo('visited')}</p>
                         <div className="flex gap-2">
-                          <motion.button whileTap={{ scale: 0.95 }} onClick={() => { setReviewPaikkaId(p.id); setPendingReviewPaikkaId(null) }} className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-2 rounded-full [transition:background-color_150ms_ease]">Kyllä</motion.button>
-                          <motion.button whileTap={{ scale: 0.95 }} onClick={async () => { await toggleTodo(p.id); setPendingReviewPaikkaId(null) }} className="border border-[rgba(0,0,0,0.12)] text-[#111111] font-bold text-sm px-4 py-2 rounded-full">Ei</motion.button>
+                          <motion.button whileTap={{ scale: 0.95 }} onClick={() => { setReviewPaikkaId(p.id); setPendingReviewPaikkaId(null) }} className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-2 rounded-full [transition:background-color_150ms_ease]">{tTodo('yes')}</motion.button>
+                          <motion.button whileTap={{ scale: 0.95 }} onClick={async () => { await toggleTodo(p.id); setPendingReviewPaikkaId(null) }} className="border border-[rgba(0,0,0,0.12)] text-[#111111] font-bold text-sm px-4 py-2 rounded-full">{tTodo('no')}</motion.button>
                         </div>
                       </motion.div>
                     )
@@ -1240,21 +1246,21 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                     return (
                       <motion.div key={p.id} layout transition={LAYOUT_T} className="glass rounded-2xl flex flex-col gap-3 p-4">
                         {inlineSubmitted ? (
-                          <p className="text-sm font-bold text-[#111111]">Arvostelu tallennettu</p>
+                          <p className="text-sm font-bold text-[#111111]">{tTodo('reviewSaved')}</p>
                         ) : (
                           <>
                             <div className="flex flex-col gap-1">
-                              <p className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">TÄHTIARVOSANA</p>
+                              <p className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">{tTodo('ratingLabel')}</p>
                               <StarPicker value={inlineRating} onChange={setInlineRating} />
                             </div>
                             <div className="flex flex-col gap-1">
-                              <p className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">KOMMENTTI</p>
-                              <textarea className="w-full text-sm text-[#111111] bg-transparent border border-[rgba(0,0,0,0.12)] rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-[rgba(0,0,0,0.25)]" rows={3} placeholder="Vapaaehtoinen kommentti" value={inlineTeksti} onChange={e => setInlineTeksti(e.target.value)} />
+                              <p className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">{tTodo('commentLabel')}</p>
+                              <textarea className="w-full text-sm text-[#111111] bg-transparent border border-[rgba(0,0,0,0.12)] rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-[rgba(0,0,0,0.25)]" rows={3} placeholder={tTodo('commentPlaceholder')} value={inlineTeksti} onChange={e => setInlineTeksti(e.target.value)} />
                             </div>
                             {inlineSubmitError && <p className="text-sm text-red-600">{inlineSubmitError}</p>}
                             <div className="flex items-center gap-3">
                               <button disabled={inlineRating === 0 || inlineSubmitting} onClick={handleInlineReviewSubmit} className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-4 py-2 rounded-full [transition:background-color_150ms_ease] disabled:opacity-40">{inlineSubmitting ? 'Tallennetaan…' : 'Jätä arvostelu'}</button>
-                              <button onClick={() => { toggleTodo(p.id); resetInlineReview() }} className="text-sm text-[rgba(17,17,17,0.45)] underline">Ohita</button>
+                              <button onClick={() => { toggleTodo(p.id); resetInlineReview() }} className="text-sm text-[rgba(17,17,17,0.45)] underline">{tTodo('skip')}</button>
                             </div>
                           </>
                         )}
@@ -1289,7 +1295,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             onClick={() => searchOpen ? setSearchOpen(false) : openSearch(true)}
             className="w-10 h-10 shrink-0 flex items-center justify-center [transition:color_150ms_ease] relative"
             style={{ color: isFilterActive || searchOpen ? '#111111' : 'rgba(17,17,17,0.7)' }}
-            aria-label="Haku ja filtterit"
+            aria-label={tFilters('searchAndFilters')}
           >
             <Search className="w-4 h-4" />
             {isFilterActive && (
@@ -1317,7 +1323,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   onClick={() => setSearchFocused(f => !f)}
                   className="w-10 h-10 shrink-0 flex items-center justify-center [transition:color_150ms_ease]"
                   style={{ color: !searchFocused ? '#111111' : 'rgba(17,17,17,0.7)' }}
-                  aria-label="Näytä lista"
+                  aria-label={tFilters('showList')}
                 >
                   <LayoutList className="w-4 h-4" />
                 </motion.button>
@@ -1357,14 +1363,14 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                 >
                   <User className="w-3.5 h-3.5" />
-                  Profiili
+                  {tNav('profile')}
                 </Link>
                 <button
                   onClick={openTodoOverlay}
                   className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                 >
                   <Bookmark className="w-3.5 h-3.5" />
-                  TO DO
+                  {tTodo('title')}
                 </button>
                 {supabaseUser ? (
                   <button
@@ -1379,7 +1385,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                     className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                   >
                     <LogOut className="w-3.5 h-3.5" />
-                    Kirjaudu ulos
+                    {tNav('signOut')}
                   </button>
                 ) : (
                   <button
@@ -1387,7 +1393,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                     className="flex items-center gap-1.5 px-3 h-8 rounded-full glass-btn text-sm font-bold text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]"
                   >
                     <User className="w-3.5 h-3.5" />
-                    Kirjaudu
+                    {tNav('signIn')}
                   </button>
                 )}
               </motion.div>
@@ -1424,7 +1430,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           : 'w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]'
         }
         style={{ position: 'fixed', right: 16, top: 'calc(max(12px, env(safe-area-inset-top)) + 48px)', zIndex: 66 }}
-        aria-label={todoOpen ? 'Sulje TO DO -lista' : 'Avaa TO DO -lista'}
+        aria-label={todoOpen ? tTodo('closeList') : tTodo('openList')}
       >
         <AnimatePresence mode="wait">
           {todoOpen
