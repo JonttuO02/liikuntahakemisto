@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isMembershipOnly } from './priceUtils'
+import { isMembershipOnly, marqueePriceLines } from './priceUtils'
 
 describe('isMembershipOnly', () => {
   it('palauttaa true kun hinta_kuvaus sisältää "jäsenyys" ja hinnat ovat null', () => {
@@ -36,5 +36,35 @@ describe('isMembershipOnly', () => {
 
   it('palauttaa false kun hinta_kuvaus sisältää sekä "kertakäynti" että "jäsenyys" (ei pelkkä jäsenyys)', () => {
     expect(isMembershipOnly({ hinta_kuvaus: 'kertakäynti 8€, jäsenyys 50€/v', hinta_min: null, hinta_max: null })).toBe(false)
+  })
+})
+
+describe('marqueePriceLines', () => {
+  it('palauttaa taulukon kun 2+ ei-tyhjää riviä (Testi 1)', () => {
+    expect(marqueePriceLines('8€/kerta\n50€/kk', false)).toEqual(['8€/kerta', '50€/kk'])
+  })
+
+  it('palauttaa null kun vain yksi rivi (Testi 2)', () => {
+    expect(marqueePriceLines('8€/kerta', false)).toBeNull()
+  })
+
+  it('palauttaa null kun hinta_kuvaus on null (Testi 3)', () => {
+    expect(marqueePriceLines(null, false)).toBeNull()
+  })
+
+  it('palauttaa null kun hinta_kuvaus on undefined (Testi 4)', () => {
+    expect(marqueePriceLines(undefined, false)).toBeNull()
+  })
+
+  it('suodattaa tyhjät ja pelkät välilyönnit sisältävät rivit — 2 oikeaa riviä (Testi 5)', () => {
+    expect(marqueePriceLines('8€/kerta\n\n50€/kk\n   ', false)).toEqual(['8€/kerta', '50€/kk'])
+  })
+
+  it('palauttaa null kun suodatuksen jälkeen jää vain 1 rivi (Testi 6)', () => {
+    expect(marqueePriceLines('8€\n   ', false)).toBeNull()
+  })
+
+  it('palauttaa null kun membershipOnly=true vaikka rivejä olisi 2+ (Testi 7)', () => {
+    expect(marqueePriceLines('8€/kerta\n50€/kk', true)).toBeNull()
   })
 })
