@@ -17,21 +17,21 @@ interface AuthModalProps {
 
 type Mode = 'signin' | 'signup'
 
-function mapError(message: string): string {
+function mapError(message: string): 'errorInvalidCredentials' | 'errorEmailInUse' | 'errorWeakPassword' | 'errorGeneric' {
   if (message.includes('Invalid login credentials') || message.includes('invalid_credentials')) {
-    return 'Virheellinen sähköposti tai salasana.'
+    return 'errorInvalidCredentials'
   }
   if (message.includes('User already registered') || message.includes('already been registered') || message.includes('already exists')) {
-    return 'Sähköpostiosoite on jo käytössä.'
+    return 'errorEmailInUse'
   }
   if (
     (message.includes('Password should be at least') ||
       message.includes('password')) &&
     message.includes('6')
   ) {
-    return 'Salasanan on oltava vähintään 6 merkkiä.'
+    return 'errorWeakPassword'
   }
-  return 'Jokin meni pieleen. Yritä uudelleen.'
+  return 'errorGeneric'
 }
 
 export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }: AuthModalProps) {
@@ -101,12 +101,12 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
       void supabase.auth.signInWithPassword({ email, password }).then(
         ({ error }: { data: unknown; error: AuthError | null }) => {
           if (error) {
-            setError(mapError(error.message))
+            setError(t(mapError(error.message)))
             setLoading(false)
           }
         }
       ).catch(() => {
-        setError('Jokin meni pieleen. Yritä uudelleen.')
+        setError(t('errorGeneric'))
         setLoading(false)
       })
       return
@@ -116,11 +116,11 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
     try {
       const { data, error: err } = await supabase.auth.signUp({ email, password })
       if (err) {
-        setError(mapError(err.message))
+        setError(t(mapError(err.message)))
         return
       }
       if (!data.session) {
-        setError('Tarkista sähköpostisi ja vahvista tili.')
+        setError(t('errorCheckEmail'))
         return
       }
       onSuccess?.(pendingPaikkaId ?? null)
@@ -128,7 +128,7 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
       router.refresh()
     } catch (e) {
       console.error('[AuthModal] signup error:', e)
-      setError('Jokin meni pieleen. Yritä uudelleen.')
+      setError(t('errorGeneric'))
     } finally {
       setLoading(false)
     }
@@ -145,7 +145,7 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
-    if (error) setError('Google-kirjautuminen epäonnistui. Yritä uudelleen.')
+    if (error) setError(t('errorGoogle'))
   }
 
   return (

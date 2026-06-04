@@ -87,7 +87,13 @@
     "noAccount": "Ei tiliä?",
     "createAccount": "Luo tili",
     "alreadyHaveAccount": "Onko sinulla jo tili?",
-    "signInLink": "Kirjaudu"
+    "signInLink": "Kirjaudu",
+    "errorGeneric": "Jokin meni pieleen. Yritä uudelleen.",
+    "errorCheckEmail": "Tarkista sähköpostisi ja vahvista tili.",
+    "errorGoogle": "Google-kirjautuminen epäonnistui. Yritä uudelleen.",
+    "errorInvalidCredentials": "Virheellinen sähköposti tai salasana.",
+    "errorEmailInUse": "Sähköpostiosoite on jo käytössä.",
+    "errorWeakPassword": "Salasanan on oltava vähintään 6 merkkiä."
   },
   "Map": {
     "recenter": "Palaa omalle sijainnille"

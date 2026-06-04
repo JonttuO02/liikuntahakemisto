@@ -87,7 +87,13 @@
     "noAccount": "No account?",
     "createAccount": "Create account",
     "alreadyHaveAccount": "Already have an account?",
-    "signInLink": "Sign in"
+    "signInLink": "Sign in",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "errorCheckEmail": "Check your email to confirm your account.",
+    "errorGoogle": "Google sign-in failed. Please try again.",
+    "errorInvalidCredentials": "Invalid email or password.",
+    "errorEmailInUse": "Email address is already in use.",
+    "errorWeakPassword": "Password must be at least 6 characters."
   },
   "Map": {
     "recenter": "Return to my location"
