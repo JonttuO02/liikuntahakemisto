@@ -678,6 +678,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   }
 
   function handleOverlayDelete(id: number) {
+    if (!isAuthReady) return
     if (supabaseUser !== null) {
       setPendingReviewPaikkaId(id)
     } else {
