@@ -242,7 +242,7 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
                   ) : (
                     <span className="text-sm text-[#111111]">
                       {'★'.repeat(Math.round(avgRating ?? 0))}{'☆'.repeat(5 - Math.round(avgRating ?? 0))}
-                      {' '}{(avgRating ?? 0).toFixed(1)} · {reviews.length === 1 ? t('reviewCountSingular') : t('reviewCountPlural', { count: reviews.length })}
+                      {' '}{(avgRating ?? 0).toFixed(1)} · {reviews.length === 1 ? t('reviewCountSingular', { count: 1 }) : t('reviewCountPlural', { count: reviews.length })}
                     </span>
                   )}
                 </div>
