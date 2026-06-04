@@ -121,5 +121,16 @@
     "pe": "Pe",
     "la": "La",
     "su": "Su"
+  },
+  "Lajit": {
+    "padel": "Padel",
+    "tennis": "Tennis",
+    "jooga": "Jooga",
+    "kuntosali": "Kuntosali",
+    "uinti": "Uinti",
+    "kiipeily": "Kiipeily",
+    "jääkiekko": "Jääkiekko",
+    "liikuntahalli": "Liikuntahalli",
+    "liikunta": "Liikunta"
   }
 }

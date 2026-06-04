@@ -121,5 +121,16 @@
     "pe": "Fri",
     "la": "Sat",
     "su": "Sun"
+  },
+  "Lajit": {
+    "padel": "Padel",
+    "tennis": "Tennis",
+    "jooga": "Yoga",
+    "kuntosali": "Gym",
+    "uinti": "Swimming",
+    "kiipeily": "Climbing",
+    "jääkiekko": "Ice Hockey",
+    "liikuntahalli": "Sports Hall",
+    "liikunta": "Sports"
   }
 }
