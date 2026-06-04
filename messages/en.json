@@ -1,0 +1,106 @@
+{
+  "Nav": {
+    "profile": "Profile",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "PaikkaKortti": {
+    "sponsored": "Sponsored",
+    "dropIn": "Drop-in OK",
+    "openNow": "Open now",
+    "closed": "Closed",
+    "hoursUnknown": "Hours unknown",
+    "hoursComingSoon": "Hours coming soon",
+    "membershipOnly": "membership only",
+    "priceComingSoon": "Coming soon",
+    "showDetails": "Show details",
+    "addToTodo": "Add to TO DO list",
+    "removeFromTodo": "Remove from TO DO list"
+  },
+  "PaikkaSheet": {
+    "price": "Price",
+    "hours": "Opening hours",
+    "phone": "Phone",
+    "description": "Description",
+    "bookNow": "Book now",
+    "reviews": "Reviews",
+    "noReviews": "No reviews",
+    "reviewCount": "{count} reviews"
+  },
+  "Filters": {
+    "all": "All",
+    "searchPlaceholder": "Search venues...",
+    "filterBySport": "Filter by sport",
+    "filterByCity": "Filter by city",
+    "searchAndFilters": "Search and filters",
+    "showList": "Show list"
+  },
+  "Todo": {
+    "title": "TO DO",
+    "empty": "List is empty",
+    "emptyHint": "Add places using the bookmark button",
+    "visited": "Did you visit?",
+    "yes": "Yes",
+    "no": "No",
+    "reviewSaved": "Review saved",
+    "skip": "Skip",
+    "ratingLabel": "RATING",
+    "commentLabel": "COMMENT",
+    "commentPlaceholder": "Optional comment",
+    "openList": "Open TO DO list",
+    "closeList": "Close TO DO list"
+  },
+  "Profiili": {
+    "title": "Profile",
+    "requiresAuth": "Profile requires sign-in",
+    "requiresAuthDesc": "Sign in to view and edit your profile.",
+    "signInButton": "Sign in",
+    "backToDirectory": "Back to directory",
+    "homeCity": "Home city",
+    "homeCityPlaceholder": "e.g. Tampere",
+    "save": "Save",
+    "homeCitySaved": "Home city saved",
+    "saveError": "Save failed. Please try again.",
+    "interests": "Interests",
+    "interestsSaved": "Interests saved",
+    "language": "Language",
+    "switchToEnglish": "Switch to English",
+    "switchToFinnish": "Switch to Finnish"
+  },
+  "Auth": {
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "emailPlaceholder": "Email address",
+    "passwordPlaceholder": "Password",
+    "continueWithGoogle": "Continue with Google",
+    "or": "OR",
+    "close": "Close"
+  },
+  "Map": {
+    "recenter": "Return to my location"
+  },
+  "PaikkaPage": {
+    "backToDirectory": "Back to directory",
+    "price": "Price",
+    "hours": "Opening hours",
+    "phone": "Phone",
+    "description": "Description",
+    "bookNow": "Book now"
+  },
+  "NotFound": {
+    "title": "Page not found.",
+    "description": "The page you're looking for doesn't exist or has been moved.",
+    "backHome": "Back to home"
+  },
+  "Days": {
+    "ma": "Mon",
+    "ti": "Tue",
+    "ke": "Wed",
+    "to": "Thu",
+    "pe": "Fri",
+    "la": "Sat",
+    "su": "Sun"
+  }
+}
