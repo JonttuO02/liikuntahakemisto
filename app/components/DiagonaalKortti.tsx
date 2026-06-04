@@ -69,25 +69,24 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             </span>
           </div>
 
-          <p className="font-bold text-[#111111] text-sm leading-snug line-clamp-1 overflow-hidden">
-            {paikka.nimi}
-          </p>
+          {/* Name + price grouped so they stay visually tight together */}
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <p className="font-bold text-[#111111] text-sm leading-snug line-clamp-1 overflow-hidden">
+              {paikka.nimi}
+            </p>
+            {membershipOnly ? (
+              <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
+            ) : priceText ? (
+              <span className="text-xs font-bold text-[#111111] tabular-nums truncate">{priceText}</span>
+            ) : (
+              <span className="text-xs text-[rgba(17,17,17,0.35)]">Lisätään pian</span>
+            )}
+          </div>
 
-          {membershipOnly ? (
-            <span className="text-xs text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
-          ) : priceText ? (
-            <span className="text-xs font-bold text-[#111111] tabular-nums truncate">{priceText}</span>
-          ) : (
-            <span className="text-xs text-[rgba(17,17,17,0.35)]">Lisätään pian</span>
-          )}
-
-          {/* Bottom row: distance + aukiolo status — pl-9 clears the absolute map button */}
-          <div className="flex items-center gap-2 pl-9 min-w-0">
+          {/* Bottom row: distance + aukiolo status — pl-6 positions text right of map button */}
+          <div className="flex items-center gap-2 pl-6 min-w-0">
             {distanceStr && (
-              <div className="flex items-center gap-1 text-xs text-[rgba(17,17,17,0.4)] shrink-0">
-                <MapPin className="w-3 h-3 shrink-0" />
-                <span className="tabular-nums">{distanceStr}</span>
-              </div>
+              <span className="text-xs tabular-nums text-[rgba(17,17,17,0.4)] shrink-0">{distanceStr}</span>
             )}
             {openStatus.status === 'open' && (
               <span className="text-xs font-bold text-green-700 truncate">
