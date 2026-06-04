@@ -156,8 +156,19 @@ Plans:
   3. Arvosteluwidget on oletuksena pienennetty ja aukeaa klikkaamalla
   4. PaikkaKortin alaosassa on rullaava hinnastokaruselli
   5. DiagonaalKortissa vasemmassa yläkulmassa on logopaikka-placeholder ja oikealla kuvapaikka-placeholder laji-ikonin sijaan
-**Plans**: TBD
+**Plans**: 4 plans
 **UI hint**: yes
+
+Plans:
+
+**Wave 1** *(parallel — no file overlap)*
+- [ ] 29-01-PLAN.md — Add @keyframes marquee to globals.css + marqueePriceLines() guard with unit tests (UI-25)
+- [ ] 29-03-PLAN.md — DiagonaalKortti logo placeholder + gray/camera right-panel fallback (UI-26, UI-27)
+- [ ] 29-04-PLAN.md — PaikkaSheet hero carousel, pricing SheetRow, collapsible review widget (SHEET-01, SHEET-02, SHEET-03)
+
+**Wave 2** *(blocked on 29-01)*
+- [ ] 29-02-PLAN.md — PaikkaKortti marquee price row using shared keyframe + guard (UI-25)
+
 
 ### Phase 30: i18n FI/EN
 **Goal**: Käyttäjä voi vaihtaa käyttöliittymäkielen profiilisivulla FI/EN — valinta säilyy sivulatausten välillä ja kaikki UI-tekstit näkyvät valitulla kielellä; kartan tila ja filtterivalinnat eivät häiriinny
@@ -204,5 +215,5 @@ Plans:
 | 26. Filtterit | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
 | 27. Siivous & pienet korjaukset | v1.6 | 5/5 | ✅ Complete | 2026-06-03 |
 | 28. SVG-ikonit | v1.6 | 2/2 | ✅ Complete | 2026-06-03 |
-| 29. Kortit & sheet redesign | v1.6 | 0/? | Not started | - |
+| 29. Kortit & sheet redesign | v1.6 | 0/4 | Planned | - |
 | 30. i18n FI/EN | v1.6 | 0/? | Not started | - |
