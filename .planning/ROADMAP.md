@@ -96,7 +96,7 @@ Full archive: `.planning/milestones/v1.5-ROADMAP.md`
 
 - [x] **Phase 27: Siivous & pienet korjaukset** — Navigaatiosiivous, filtteri/haku-korjaukset, sheet-korjaukset, klusterizoomi ja UI-häivytys *(5/5 plans)* — 2026-06-03
 - [x] **Phase 28: SVG-ikonit** — Uusi lib/sportIcons.tsx -rekisteri, ikonit käytössä kaikkialla (prerequisite for i18n) *(2/2 plans)* — 2026-06-03
-- [ ] **Phase 29: Kortit & sheet redesign** — PaikkaSheet hero-karuselli + hinnasto, PaikkaKortti hinnastokaruselli, DiagonaalKortti placeholder-kuvat
+- [x] **Phase 29: Kortit & sheet redesign** — PaikkaSheet hero-karuselli + hinnasto, PaikkaKortti hinnastokaruselli, DiagonaalKortti placeholder-kuvat *(4/4 plans)* — 2026-06-04
 - [ ] **Phase 30: i18n FI/EN** — next-intl, NEXT_LOCALE-cookie, kielivalitsin profiilisivulla, kaikki UI-tekstit käännetty
 
 ## Phase Details
@@ -215,5 +215,5 @@ Plans:
 | 26. Filtterit | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
 | 27. Siivous & pienet korjaukset | v1.6 | 5/5 | ✅ Complete | 2026-06-03 |
 | 28. SVG-ikonit | v1.6 | 2/2 | ✅ Complete | 2026-06-03 |
-| 29. Kortit & sheet redesign | v1.6 | 3/4 | In Progress|  |
+| 29. Kortit & sheet redesign | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 30. i18n FI/EN | v1.6 | 0/? | Not started | - |

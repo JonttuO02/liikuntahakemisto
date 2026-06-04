@@ -2,34 +2,33 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Kielituki, Ikonit & Sheet-redesign
-status: executing
-last_updated: "2026-06-04T08:20:55.285Z"
-last_activity: 2026-06-04 -- Phase 29 execution started
+status: planning
+last_updated: "2026-06-04T15:00:00.000Z"
+last_activity: 2026-06-04 -- Phase 29 complete; Phase 30 next
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 11
-  completed_plans: 8
-  percent: 50
+  completed_phases: 3
+  total_plans: 15
+  completed_plans: 15
+  percent: 75
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 29 (kortit-sheet-redesign) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 29
-Last activity: 2026-06-04 -- Phase 29 execution started
+Phase: 30 (i18n FI/EN) — PLANNING
+Status: Phase 29 complete — ready to plan Phase 30
+Last activity: 2026-06-04 -- Phase 29 complete; Phase 30 next
 
-Progress: [██░░░░░░░░] 25%
+Progress: [███░░░░░░░] 75%
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-06-03)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 29 — kortit-sheet-redesign
+**Current focus:** Phase 30 — i18n FI/EN
 
 ## Active Decisions (carried to v1.6)
 
@@ -55,9 +54,9 @@ See: .planning/PROJECT.md (updated 2026-06-03)
 
 ## Blockers/Concerns
 
-None — Phase 29 plans are verified and ready.
+None — Phase 30 depends on Phase 29 (complete).
 
 ## Session Continuity
 
-Last session: 2026-06-04
-Resume: `/gsd:execute-phase 29`
+Last session: 2026-06-04T15:00:00.000Z
+Resume: `/gsd:plan-phase 30`
