@@ -17,9 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 30 (i18n FI/EN) — PLANNING
-Status: Phase 29 complete — ready to plan Phase 30
-Last activity: 2026-06-04 -- Phase 29 complete; Phase 30 next
+Phase: 30 (i18n FI/EN) — READY TO EXECUTE
+Status: Phase 30 planned — 4 plans in 3 waves, verified
+Last activity: 2026-06-04 -- Phase 30 planned
 
 Progress: [███░░░░░░░] 75%
 
@@ -54,9 +54,9 @@ See: .planning/PROJECT.md (updated 2026-06-03)
 
 ## Blockers/Concerns
 
-None — Phase 30 depends on Phase 29 (complete).
+None.
 
 ## Session Continuity
 
 Last session: 2026-06-04T15:00:00.000Z
-Resume: `/gsd:plan-phase 30`
+Resume: `/gsd:execute-phase 30`

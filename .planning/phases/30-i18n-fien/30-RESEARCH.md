@@ -739,17 +739,11 @@ export default getRequestConfig(async () => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Tietosuoja (privacy policy) translation scope**
-   - What we know: Long-form legal text in Finnish; translating fully would be ~30 additional string keys
-   - What's unclear: Whether v1.6 requires EN privacy policy text
-   - Recommendation: Skip tietosuoja translation in Phase 30; add a note in PLAN.md
+1. **Tietosuoja (privacy policy) translation scope** — RESOLVED: Skip in Phase 30, Finnish-only for v1.6. No plan touches `app/tietosuoja/page.tsx`. Scope too large (~30 keys of legal text) relative to v1.6 goals.
 
-2. **`reviewCount` plural form**
-   - What we know: Finnish `"{count} arvostelua"` works for all numbers (Finnish doesn't pluralize the same way); English needs "1 review" vs "2 reviews"
-   - What's unclear: Whether next-intl ICU plural is needed, or simple conditional string is acceptable
-   - Recommendation: Use two keys — `reviewCountSingular` and `reviewCountPlural` — and pick in component logic. Avoids ICU dependency for v1.6.
+2. **`reviewCount` plural form** — RESOLVED: Use two keys (`reviewCountSingular` and `reviewCountPlural`) picked in component logic. Avoids ICU dependency for v1.6. Implemented in plan 30-04 Task 1.
 
 ---
 
