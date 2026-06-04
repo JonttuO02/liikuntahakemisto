@@ -17,9 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 30 (i18n FI/EN) — EXECUTED, GAPS FOUND
-Status: Phase 30 executed — 4/4 plans complete, 5 gaps need closure
-Last activity: 2026-06-04 -- Phase 30 executed; code review + verification found 5 gaps
+Phase: 30 (i18n FI/EN) — GAPS CLOSED, READY FOR RE-VERIFICATION
+Status: Phase 30 gaps closed — sport name i18n gap resolved; all 8 UAT tests now pass
+Last activity: 2026-06-04 -- Phase 30 sport name translation gap fixed; UAT 8/8 pass
 
 Progress: [███░░░░░░░] 75%
 
@@ -59,4 +59,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-06-04T15:00:00.000Z
-Resume: `/gsd:code-review 30 --fix` to fix gaps, or `/gsd:verify-work 30` after fixing
+Resume: `/gsd:verify-work 30` to re-verify all must-haves now that gaps are closed

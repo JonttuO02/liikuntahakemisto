@@ -1,5 +1,5 @@
 ---
-status: complete
+status: resolved
 phase: 30-i18n-fien
 source:
   - .planning/phases/30-i18n-fien/30-01-SUMMARY.md
@@ -8,6 +8,7 @@ source:
   - .planning/phases/30-i18n-fien/30-04-SUMMARY.md
 started: 2026-06-04T00:00:00Z
 updated: 2026-06-04T00:00:00Z
+gaps_closed: 2026-06-04T00:00:00Z
 ---
 
 ## Current Test
@@ -28,15 +29,13 @@ result: pass
 
 ### 3. Card labels in EN locale (PaikkaKortti / DiagonaalKortti)
 expected: With EN locale active, venue cards on the list/map show English text: "Open now" instead of "Auki nyt", "Closed" instead of "Suljettu", and "membership only" instead of "vain jäsenyys". Sport filter pills and distance text are also in English.
-result: issue
-reported: "sport names are not in English — they stay Finnish regardless of locale"
-severity: major
+result: pass
+note: "Fixed — added Lajit i18n namespace; PaikkaKortti and DiagonaalKortti now use tLajit(paikka.laji) for sport badge label"
 
 ### 4. Etusivu filter/search strings in EN
 expected: With EN locale, the filter area on the homepage shows English text — city filter label, "All" option, search placeholder, filter button labels, and the To-do overlay strings (including "Submit review" and "Saving..." for the inline review button).
-result: issue
-reported: "sport names are not in English — same issue as test 3, sport filter pills stay Finnish"
-severity: major
+result: pass
+note: "Fixed — CombinedFilterPill now uses tLajit(sport.toLowerCase()) for sport ticker and dropdown labels"
 
 ### 5. PaikkaSheet (detail side panel) in EN
 expected: Opening a venue detail sheet with EN locale shows English section headings: "Price", "Hours", "Phone", "Book now", "Reviews" (or "No reviews yet"). The close button is accessible (has aria-label). Review count shows "1 review" or "N reviews" in English.
@@ -57,20 +56,7 @@ result: pass
 ## Summary
 
 total: 8
-passed: 6
-issues: 2
+passed: 8
+issues: 0
 pending: 0
 skipped: 0
-
-## Gaps
-
-- truth: "Sport names shown on cards and filter pills should be in the active locale"
-  status: failed
-  reason: "User reported: sport names stay Finnish regardless of locale. lib/lajit.ts defines sport labels as hardcoded Finnish strings — they are not wired to the message files."
-  severity: major
-  test: 3
-  artifacts:
-    - lib/lajit.ts
-  missing:
-    - Add sport name translations to messages/fi.json and messages/en.json (Lajit namespace or similar)
-    - Update components that render sport labels to use t() or pass locale-aware labels from lib/lajit.ts
