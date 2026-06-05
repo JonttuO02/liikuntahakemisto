@@ -4,23 +4,23 @@ milestone: v1.7
 milestone_name: Yritysportaali
 status: active
 last_updated: "2026-06-05T00:00:00.000Z"
-last_activity: 2026-06-05 -- Phase 31 Wave 1 complete (plans 01-03 merged; Wave 2 pending push)
+last_activity: 2026-06-05 -- Phase 31 complete: all 4 plans done, DB pushed, Storage + is_admin confirmed
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
-  percent: 8
+  completed_plans: 4
+  percent: 17
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 31 — DB-skeema & Storage-perusta (Wave 1 complete — Wave 2 pending)
-Plan: 4/4 plans (3 complete, 1 pending: PLAN-04 DB push + manual steps)
-Status: Wave 2 ready — run `supabase db push` then manual SQL Editor steps
-Last activity: 2026-06-05 — Wave 1 merged (plans 01-03): migrations + Storage SQL + sync filter; 81/81 tests green
+Phase: Phase 32 — Yritysrekisteröinti & auth (next)
+Plan: Phase 31 complete — 4/4 plans done
+Status: Phase 31 complete — ready for Phase 32
+Last activity: 2026-06-05 — Phase 31 complete: all 4 plans done, DB pushed, Storage + is_admin confirmed
 
 ## Project Reference
 
@@ -64,4 +64,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-06-05T00:00:00.000Z
-Resume: `/gsd:execute-phase 31` to execute (4 plans ready)
+Resume: `/gsd:execute-phase 32` to start Phase 32 — Yritysrekisteröinti & auth

@@ -103,7 +103,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 
 ## v1.7 Yritysportaali (Phases 31–36)
 
-- [ ] **Phase 31: DB-skeema & Storage-perusta** — business_accounts, business_paikka_links, business_managed, business-media bucket ja RLS (3/4 plans — Wave 1 complete)
+- [x] **Phase 31: DB-skeema & Storage-perusta** — business_accounts, business_paikka_links, business_managed, business-media bucket ja RLS (4/4 plans)
 - [ ] **Phase 32: Yritysrekisteröinti & auth** — Rekisteröintilomake, kirjautuminen, automaattinen ohjaus /business-sivulle
 - [ ] **Phase 33: Claim & paikan luonti** — Olemassa olevan paikan haku + claim-pyyntö; uuden paikan luonti; näkyvyyssäännöt
 - [ ] **Phase 34: Onboarding-velhou** — 6-vaiheinen ohjattu wizard (paikka → mediat → hinnasto → aukioloajat → yhteystiedot → esikatselu)
@@ -131,7 +131,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 - [x] 31-PLAN-03.md — sync-paikat pre-filter + unit tests (DATA-09)
 
 **Wave 2** *(blocked on Wave 1 completion)*:
-- [ ] 31-PLAN-04.md — [BLOCKING] supabase db push + manual Storage + is_admin checkpoint (BIZ-02, DATA-09, DATA-10)
+- [x] 31-PLAN-04.md — [BLOCKING] supabase db push + manual Storage + is_admin checkpoint (BIZ-02, DATA-09, DATA-10)
 
 **Cross-cutting constraints:**
 - All migrations use `liikuntapaikat` (not `paikat`) — verified from sync route source
@@ -233,7 +233,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 | 28. SVG-ikonit | v1.6 | 2/2 | ✅ Complete | 2026-06-03 |
 | 29. Kortit & sheet redesign | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 30. i18n FI/EN | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
-| 31. DB-skeema & Storage-perusta | v1.7 | 0/4 | Not started | - |
+| 31. DB-skeema & Storage-perusta | v1.7 | 4/4 | ✅ Complete | 2026-06-05 |
 | 32. Yritysrekisteröinti & auth | v1.7 | 0/? | Not started | - |
 | 33. Claim & paikan luonti | v1.7 | 0/? | Not started | - |
 | 34. Onboarding-velhou | v1.7 | 0/? | Not started | - |
