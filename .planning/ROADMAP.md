@@ -104,7 +104,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 ## v1.7 Yritysportaali (Phases 31–36)
 
 - [x] **Phase 31: DB-skeema & Storage-perusta** — business_accounts, business_paikka_links, business_managed, business-media bucket ja RLS (4/4 plans)
-- [ ] **Phase 32: Yritysrekisteröinti & auth** — Rekisteröintilomake, kirjautuminen, automaattinen ohjaus /business-sivulle
+- [x] **Phase 32: Yritysrekisteröinti & auth** — Rekisteröintilomake, kirjautuminen, automaattinen ohjaus /business-sivulle (completed 2026-06-05)
 - [ ] **Phase 33: Claim & paikan luonti** — Olemassa olevan paikan haku + claim-pyyntö; uuden paikan luonti; näkyvyyssäännöt
 - [ ] **Phase 34: Onboarding-velhou** — 6-vaiheinen ohjattu wizard (paikka → mediat → hinnasto → aukioloajat → yhteystiedot → esikatselu)
 - [ ] **Phase 35: Admin-hyväksyntäjärjestelmä** — Email-ilmoitukset, /admin-sivu, hyväksy/hylkää toiminto, vahvistussähköpostit, is_admin-suojaus
@@ -153,7 +153,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 - [x] 32-02-PLAN.md — /api/business/register Route Handler with JWT verification + atomicity rollback (BIZ-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*:
-- [ ] 32-03-PLAN.md — /business/rekisteroidy registration page + AuthModal SIGNED_IN business redirect (BIZ-01, BIZ-03)
+- [x] 32-03-PLAN.md — /business/rekisteroidy registration page + AuthModal SIGNED_IN business redirect (BIZ-01, BIZ-03)
 
 **Cross-cutting constraints:**
 - JWT from Authorization header verified via `supabaseAdmin.auth.getUser(token)` before trusting client-supplied user_id
@@ -245,7 +245,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 | 29. Kortit & sheet redesign | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 30. i18n FI/EN | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 31. DB-skeema & Storage-perusta | v1.7 | 4/4 | ✅ Complete | 2026-06-05 |
-| 32. Yritysrekisteröinti & auth | v1.7 | 2/3 | In Progress|  |
+| 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | Complete   | 2026-06-05 |
 | 33. Claim & paikan luonti | v1.7 | 0/? | Not started | - |
 | 34. Onboarding-velhou | v1.7 | 0/? | Not started | - |
 | 35. Admin-hyväksyntäjärjestelmä | v1.7 | 0/? | Not started | - |
