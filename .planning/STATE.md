@@ -3,31 +3,30 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Yritysportaali
 status: executing
-last_updated: "2026-06-05T16:02:35.255Z"
-last_activity: 2026-06-05 -- Phase 33 execution started
+last_updated: "2026-06-06T00:00:00.000Z"
+last_activity: 2026-06-06 -- Phase 33 complete
 progress:
   total_phases: 6
-  completed_phases: 1
-  total_plans: 10
-  completed_plans: 7
-  percent: 17
+  completed_phases: 3
+  total_plans: 21
+  completed_plans: 21
+  percent: 50
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 33 (claim-paikan-luonti) — EXECUTING
-Plan: 1 of 7
-Status: Executing Phase 33
-Last activity: 2026-06-05 -- Phase 33 execution started
+Phase: 34 (onboarding-velhou) — NOT STARTED
+Status: Phase 33 complete — ready for Phase 34
+Last activity: 2026-06-06 -- Phase 33 complete
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 33 — claim-paikan-luonti
+**Current focus:** Phase 34 — onboarding-velhou
 
 ## Active Decisions (carried to v1.7)
 
@@ -52,7 +51,7 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 |-------|------|--------------|--------|
 | 31 | DB-skeema & Storage-perusta | BIZ-02, DATA-09, DATA-10 | Complete |
 | 32 | Yritysrekisteröinti & auth | BIZ-01, BIZ-03 | Planned (3 plans) |
-| 33 | Claim & paikan luonti | CLAIM-01, CLAIM-02, CLAIM-03 | Planned (7 plans) |
+| 33 | Claim & paikan luonti | CLAIM-01, CLAIM-02, CLAIM-03 | Complete |
 | 34 | Onboarding-velhou | ONBOARD-01–07 | Not started |
 | 35 | Admin-hyväksyntäjärjestelmä | ADMIN-01–05 | Not started |
 | 36 | Hallintapaneeli | BIZPANEL-01–03 | Not started |
@@ -63,5 +62,5 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-05T14:00:00.000Z
-Resume: `/gsd:execute-phase 33` — 7 plans ready to execute
+Last session: 2026-06-06
+Resume: `/gsd:discuss-phase 34` — Phase 34 (Onboarding-velhou) is next
