@@ -95,6 +95,22 @@
     "errorEmailInUse": "Email address is already in use.",
     "errorWeakPassword": "Password must be at least 6 characters."
   },
+  "Business": {
+    "registerTitle": "Register your business",
+    "companyNamePlaceholder": "Company name",
+    "emailPlaceholder": "Email address",
+    "passwordPlaceholder": "Password (min. 6 characters)",
+    "registerCta": "Register",
+    "registering": "Registering...",
+    "alreadyHaveAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "errorEmailInUse": "Email address is already in use.",
+    "errorWeakPassword": "Password must be at least 6 characters.",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "errorAccountCreationFailed": "Account creation failed. Please try again.",
+    "dashboardTitle": "Welcome to the dashboard",
+    "dashboardComingSoon": "Features coming soon."
+  },
   "Map": {
     "recenter": "Return to my location"
   },
