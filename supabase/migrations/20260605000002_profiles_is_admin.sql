@@ -1,0 +1,14 @@
+-- Add is_admin boolean column to profiles table.
+-- is_admin enables Phase 35 admin UI (/admin) to gate access without a separate
+-- migration at that point — the column exists from this migration forward.
+-- DEFAULT false ensures all existing profiles automatically get is_admin = false.
+-- IF NOT EXISTS guard makes this migration idempotent on re-run.
+-- No new RLS policies needed — the existing UPDATE policy on profiles already covers
+-- all columns. is_admin can only be legitimately set to true via the Supabase SQL Editor
+-- (service-role context, which bypasses RLS). Phase 35 will add a WITH CHECK clause
+-- to the profiles UPDATE policy to structurally block self-elevation.
+--
+-- Manual post-migration step (run in Supabase SQL Editor, NOT in a migration file):
+--   UPDATE profiles SET is_admin = true
+--   WHERE user_id = (SELECT id FROM auth.users WHERE email = 'joona.orava@gmail.com');
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false;
