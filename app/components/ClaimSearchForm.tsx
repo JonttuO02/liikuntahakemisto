@@ -112,7 +112,7 @@ export default function ClaimSearchForm() {
       })
 
       if (res.ok) {
-        router.refresh()
+        window.location.reload()
         return
       }
 
@@ -164,7 +164,7 @@ export default function ClaimSearchForm() {
       })
 
       if (res.ok) {
-        router.refresh()
+        window.location.reload()
         return
       }
 
