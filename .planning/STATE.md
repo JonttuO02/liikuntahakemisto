@@ -1,54 +1,50 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.6
-milestone_name: Kielituki, Ikonit & Sheet-redesign
-status: archived
+milestone: v1.7
+milestone_name: Yritysportaali
+status: planning
 last_updated: "2026-06-05T00:00:00.000Z"
-last_activity: 2026-06-05 -- v1.6 milestone archived; ready for next milestone
+last_activity: 2026-06-05 -- v1.7 milestone started; requirements defined
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 15
-  completed_plans: 15
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: — (between milestones)
-Status: v1.6 archived 2026-06-05 — ready for `/gsd:new-milestone`
-Last activity: 2026-06-05 -- v1.6 archived; all 21 requirements validated; UAT 8/8 pass
+Phase: Not started (defining roadmap)
+Plan: —
+Status: Defining roadmap
+Last activity: 2026-06-05 — Milestone v1.7 started (Yritysportaali)
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Planning next milestone
+**Current focus:** v1.7 Yritysportaali — Business Auth, Onboarding, Admin-hyväksyntä, Hallintapaneeli
 
-## Active Decisions (carried to v1.6)
+## Active Decisions (carried to v1.7)
 
 - URL routing: `/` and `/?nakyma=kartta` both render Etusivu — `?nakyma=kartta` is a dead parameter
 - GPS: client-side only, never URL params
 - AI widget: never SSR, use `/api/saasuositus` Route Handler
 - Supabase writes: service role key only; anon key is read-only after RLS
 - CSS animations on AdvancedMarker: transform/opacity ONLY — no box-shadow, background, filter
-- sessionStorage key 'etusivu-scroll-state' _v: 2 SHIPPED — old sessions rejected
-- SVG icons: path-string approach in lib/sportIcons.ts, no @svgr/webpack (Phase 28)
+- SVG icons: path-string approach in lib/sportIcons.tsx, no @svgr/webpack (Phase 28)
 - i18n: next-intl without-routing + NEXT_LOCALE cookie, not localStorage (Phase 30)
-- Language toggle location: /profiili only — NOT NavBar
-- Images: placeholders in v1.6 (gray box + camera icon)
+- Business auth: same Supabase Auth as regular users; role differentiated via business_accounts table
+- Business media: Supabase Storage bucket `business-media`; RLS per yritys
+- Business data priority: yrityksen data ylikirjoittaa Google Places -datan; business_managed-flag
 
 ## Phase Sequence
 
-| Phase | Name | Requirements | Depends on |
-|-------|------|--------------|------------|
-| 27 | Siivous & pienet korjaukset | NAV-06, NAV-07, FILTER-04, FILTER-05, SEARCH-01, UI-24, MAP-16, SHEET-04, SHEET-05, SHEET-06 | Phase 26 |
-| 28 | SVG-ikonit | ICON-01, ICON-02 | Phase 27 |
-| 29 | Kortit & sheet redesign | UI-25, UI-26, UI-27, SHEET-01, SHEET-02, SHEET-03 | Phase 28 |
-| 30 | i18n FI/EN | I18N-01, I18N-02, I18N-03 | Phase 29 |
+*(Defined by roadmapper — TBD)*
 
 ## Blockers/Concerns
 
@@ -57,4 +53,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-06-05T00:00:00.000Z
-Resume: `/gsd:new-milestone` to start planning v1.7
+Resume: `/gsd:plan-phase [N]` once roadmap is created

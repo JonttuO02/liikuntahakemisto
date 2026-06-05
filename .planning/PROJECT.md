@@ -4,6 +4,19 @@
 
 Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
 
+## Current Milestone: v1.7 Yritysportaali
+
+**Goal:** Yritykset voivat rekisteröityä, käydä ohjatun onboarding-velhon (kuvat, logo, hinnasto, aukioloajat, yhteystiedot), nähdä esikatselun, ja saada admin-hyväksynnän — jonka jälkeen heillä on hallintapaneeli (/business) oman paikkatietonsa ylläpitoon.
+
+**Target features:**
+- Business Auth: Supabase Auth + `business_accounts` + `business_paikka_links`; useita paikkoja per tili
+- Claim tai luo paikka: hae olemassa oleva tai luo uusi; claim-paikka pysyy näkyvänä, uusi paikka pending
+- Ohjattu onboarding-velhou (6 vaihetta): paikka → kuvat+logo → hinnasto → aukioloajat → yhteystiedot → esikatselu
+- Admin-hyväksyntä: email-ilmoitus + `/admin`-sivu; pending/approved/rejected per paikka
+- Hallintapaneeli (`/business`): muokkaa kaikkia tietoja, esikatselu, useamman paikan lista
+- Yrityksen data ylikirjoittaa Google Places -datan; `business_managed`-flag suojaa sync-skriptiltä
+- Kuvat Supabase Storageen (bucket: `business-media`); RLS-suojaus per yritys
+
 ## Shipped: v1.6 Kielituki, Ikonit & Sheet-redesign (2026-06-04)
 
 **Delivered:** next-intl FI/EN kielituki (NEXT_LOCALE-cookie, kielivalitsin profiilisivulla), `lib/sportIcons.tsx` SVG-ikonit kaikille lajeille (Lucide poistettu), PaikkaSheet hero-karuselli + hinnasto + collapsible arvostelut, DiagonaalKortti & PaikkaKortti placeholderit ja marquee-hinnastokaruselli, navigaatio/filtteri/sheet-bugifixit.
@@ -166,8 +179,25 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ I18N-02: Valittu kieli tallennetaan `NEXT_LOCALE`-cookieen ja säilyy sivulatausten välillä — v1.6
 - ✓ I18N-03: Kaikki UI-tekstitykset näytetään valitulla kielellä; kartta/filtterivalinnat säilyvät — v1.6
 
-### Future (deferred from v1.1)
+### Active (v1.7)
 
+- [ ] **BIZ-01**: Yritys voi rekisteröityä palveluun erillisellä lomakkeella (yritysnimi, sähköposti, salasana)
+- [ ] **BIZ-02**: `business_accounts` + `business_paikka_links` -taulut; yksi tili hallitsee useita paikkoja
+- [ ] **BIZ-03**: Kirjautunut yritys ohjataan automaattisesti `/business`-hallintapaneeliin
+- [ ] **CLAIM-01**: Yritys hakee olemassa olevan paikan nimellä/osoitteella ja lähettää claim-pyynnön
+- [ ] **CLAIM-02**: Jos paikkaa ei löydy, yritys luo uuden paikan
+- [ ] **CLAIM-03**: Claim-paikka pysyy näkyvänä; uusi paikka piilotettu kunnes admin hyväksyy
+- [ ] **ONBOARD-01–07**: Vaiheistettu 6-vaiheen onboarding-velhou (paikka → mediat → hinnasto → aukioloajat → yhteystiedot → esikatselu)
+- [ ] **ADMIN-01–05**: Admin-hyväksyntä email + /admin-sivu; is_admin-suojaus
+- [ ] **BIZPANEL-01–03**: Hallintapaneeli /business: paikkalistaus, muokkaus, esikatselu
+- [ ] **DATA-09**: `business_managed`-boolean; sync-skripti ohittaa managed-paikat
+- [ ] **DATA-10**: Supabase Storage `business-media`-bucket; RLS per yritys
+
+### Future (deferred from v1.1 + v1.7)
+
+- Automaattinen väriteemat kuvista (color extraction Hero + kortit)
+- Maksullisuus / sponsored-paketti yrityksille
+- Ketjuadmin (yksi tili, useita toimipisteitä eri omistajilla)
 - Suosikkipaikat-sivu kirjautuneelle käyttäjälle (/suosikit)
 - Kartta: etäisyyspohjainen suodatus
 - Käyttäjäprofiili ja asetukset (laaja)
@@ -258,4 +288,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-05 after v1.6 milestone (Kielituki, Ikonit & Sheet-redesign)*
+*Last updated: 2026-06-05 — v1.7 milestone started (Yritysportaali)*
