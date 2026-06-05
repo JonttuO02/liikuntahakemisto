@@ -174,7 +174,7 @@ Plans:
 - [x] 33-02-PLAN.md — i18n: Business namespace Phase 33 keys (CLAIM-01, CLAIM-02)
 - [x] 33-03-PLAN.md — API Route Handlers: claim-paikka + create-paikka (CLAIM-01, CLAIM-02, CLAIM-03)
 - [x] 33-04-PLAN.md — published filter on app/page.tsx (CLAIM-03)
-- [ ] 33-05-PLAN.md — ClaimSearchForm client component (CLAIM-01, CLAIM-02)
+- [x] 33-05-PLAN.md — ClaimSearchForm client component (CLAIM-01, CLAIM-02)
 - [ ] 33-06-PLAN.md — /business/page.tsx server component replacement (CLAIM-01, CLAIM-02, CLAIM-03)
 - [ ] 33-07-PLAN.md — [BLOCKING] supabase db push + smoke test
 **UI hint**: yes
@@ -254,7 +254,7 @@ Plans:
 | 30. i18n FI/EN | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 31. DB-skeema & Storage-perusta | v1.7 | 4/4 | ✅ Complete | 2026-06-05 |
 | 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | Complete    | 2026-06-05 |
-| 33. Claim & paikan luonti | v1.7 | 4/7 | In Progress|  |
+| 33. Claim & paikan luonti | v1.7 | 5/7 | In Progress|  |
 | 34. Onboarding-velhou | v1.7 | 0/? | Not started | - |
 | 35. Admin-hyväksyntäjärjestelmä | v1.7 | 0/? | Not started | - |
 | 36. Hallintapaneeli | v1.7 | 0/? | Not started | - |
