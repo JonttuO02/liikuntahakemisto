@@ -24,10 +24,15 @@ function parseAukioloajat(
   const result: Record<string, { open: string; close: string }> = {}
   const fmt = (t: string) => `${t.slice(0, 2)}:${t.slice(2)}`
   for (const p of periods) {
-    if (!p.open || !p.close) continue
+    if (!p.open) continue
     const day = DAY_NAMES[p.open.day]
     if (!day || result[day]) continue
-    result[day] = { open: fmt(p.open.time), close: fmt(p.close.time) }
+    if (!p.close) {
+      // 24/7 open: Google encodes all-day as a period with no close field
+      result[day] = { open: '00:00', close: '23:59' }
+    } else {
+      result[day] = { open: fmt(p.open.time), close: fmt(p.close.time) }
+    }
   }
   return Object.keys(result).length > 0 ? result : null
 }
@@ -41,12 +46,12 @@ function parseOsoite(name: string, formattedAddress: string, kaupunki: string): 
   return filtered[0]?.trim() ?? null
 }
 
-async function fetchPlaceDetails(placeId: string): Promise<PlaceDetailsResult> {
+async function fetchPlaceDetails(placeId: string, apiKey: string): Promise<PlaceDetailsResult> {
   const url = new URL('https://maps.googleapis.com/maps/api/place/details/json')
   url.searchParams.set('place_id', placeId)
   url.searchParams.set('fields', 'website,formatted_phone_number,opening_hours')
   url.searchParams.set('language', 'fi')
-  url.searchParams.set('key', API_KEY!)
+  url.searchParams.set('key', apiKey)
 
   try {
     const res = await fetch(url.toString())
@@ -165,7 +170,7 @@ export async function GET(req: Request) {
   }
 
   // Fetch Place Details for all results in parallel
-  const details = await Promise.all(syncResults.map(p => fetchPlaceDetails(p.place_id)))
+  const details = await Promise.all(syncResults.map(p => fetchPlaceDetails(p.place_id, API_KEY)))
 
   const rivit = syncResults.map((p, i) => ({
     place_id:     p.place_id,
