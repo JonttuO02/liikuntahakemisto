@@ -2,32 +2,33 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Yritysportaali
-status: executing
-last_updated: "2026-06-05T11:43:22.761Z"
+status: ready_to_plan
+last_updated: 2026-06-05T12:42:19.764Z
 last_activity: 2026-06-05 -- Phase 32 execution started
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 3
-  completed_plans: 4
+  completed_plans: 64
   percent: 0
+stopped_at: Phase 32 complete (3/3) — ready to discuss Phase 33
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 32 (Yritysrekisteröinti & auth) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 32
-Last activity: 2026-06-05 -- Phase 32 execution started
+Phase: 33
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-05
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 32 — Yritysrekisteröinti & auth
+**Current focus:** Phase 33 — claim & paikan luonti
 
 ## Active Decisions (carried to v1.7)
 

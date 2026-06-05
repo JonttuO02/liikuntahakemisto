@@ -245,7 +245,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 | 29. Kortit & sheet redesign | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 30. i18n FI/EN | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 31. DB-skeema & Storage-perusta | v1.7 | 4/4 | ✅ Complete | 2026-06-05 |
-| 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | Complete   | 2026-06-05 |
+| 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | Complete    | 2026-06-05 |
 | 33. Claim & paikan luonti | v1.7 | 0/? | Not started | - |
 | 34. Onboarding-velhou | v1.7 | 0/? | Not started | - |
 | 35. Admin-hyväksyntäjärjestelmä | v1.7 | 0/? | Not started | - |

@@ -8,9 +8,9 @@
 
 ### Yritystili & Auth (BIZ)
 
-- [ ] **BIZ-01**: Yritys voi rekisteröityä palveluun erillisellä lomakkeella (yritysnimi, sähköposti, salasana)
+- [x] **BIZ-01**: Yritys voi rekisteröityä palveluun erillisellä lomakkeella (yritysnimi, sähköposti, salasana)
 - [ ] **BIZ-02**: `business_accounts`-taulu linkittää Supabase Auth -käyttäjän yritykseen; `business_paikka_links` yhdistää useita paikkoja yhteen tiliin
-- [ ] **BIZ-03**: Kirjautunut yritys ohjataan automaattisesti `/business`-hallintapaneeliin
+- [x] **BIZ-03**: Kirjautunut yritys ohjataan automaattisesti `/business`-hallintapaneeliin
 
 ### Paikan haltuunotto & luonti (CLAIM)
 
@@ -67,9 +67,9 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| BIZ-01 | Phase 32 | Pending |
+| BIZ-01 | Phase 32 | Complete |
 | BIZ-02 | Phase 31 | Pending |
-| BIZ-03 | Phase 32 | Pending |
+| BIZ-03 | Phase 32 | Complete |
 | CLAIM-01 | Phase 33 | Pending |
 | CLAIM-02 | Phase 33 | Pending |
 | CLAIM-03 | Phase 33 | Pending |
