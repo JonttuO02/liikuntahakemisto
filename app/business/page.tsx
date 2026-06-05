@@ -1,29 +1,42 @@
-import { cookies } from 'next/headers'
-import { getTranslations } from 'next-intl/server'
-import { createServerSupabase } from '@/lib/supabaseSSR'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import ClaimSearchForm from '@/app/components/ClaimSearchForm'
 
-export default async function BusinessPage() {
-  const cookieStore = cookies()
-  const supabase = createServerSupabase(cookieStore)
-  const { data: { user } } = await supabase.auth.getUser()
-  const t = await getTranslations('Business')
+export default function BusinessPage() {
+  const t = useTranslations('Business')
+  const [hasLinks, setHasLinks] = useState(false)
+  const [venueName, setVenueName] = useState('')
+  const [loading, setLoading] = useState(true)
 
-  let hasLinks = false
-  let venueName = ''
-
-  if (user) {
-    const { data: links } = await supabase
-      .from('business_paikka_links')
-      .select('paikka_id, liikuntapaikat(nimi)')
-      .eq('business_account_id', user.id)
-      .limit(1)
-
-    if (links && links.length > 0) {
-      hasLinks = true
-      const firstLink = links[0] as unknown as { paikka_id: number; liikuntapaikat: { nimi: string } | null }
-      venueName = firstLink.liikuntapaikat?.nimi ?? ''
+  useEffect(() => {
+    async function checkLinks() {
+      const supabase = createBrowserSupabase()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setLoading(false); return }
+      const { data: links } = await supabase
+        .from('business_paikka_links')
+        .select('paikka_id, liikuntapaikat(nimi)')
+        .eq('business_account_id', user.id)
+        .limit(1)
+      if (links && links.length > 0) {
+        setHasLinks(true)
+        const first = links[0] as unknown as { paikka_id: number; liikuntapaikat: { nimi: string } | null }
+        setVenueName(first.liikuntapaikat?.nimi ?? '')
+      }
+      setLoading(false)
     }
+    checkLinks()
+  }, [])
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-6 h-6 rounded-full border-2 border-[rgba(17,17,17,0.12)] border-t-[#111111] animate-spin" />
+      </main>
+    )
   }
 
   if (hasLinks) {
