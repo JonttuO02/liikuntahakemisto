@@ -4,23 +4,23 @@ milestone: v1.7
 milestone_name: Yritysportaali
 status: active
 last_updated: "2026-06-05T00:00:00.000Z"
-last_activity: 2026-06-05 -- Phase 31 planned (4 plans, 2 waves)
+last_activity: 2026-06-05 -- Phase 31 Wave 1 complete (plans 01-03 merged; Wave 2 pending push)
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 0
-  percent: 0
+  completed_plans: 3
+  percent: 8
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 31 — DB-skeema & Storage-perusta (planned — ready to execute)
-Plan: 4 plans in 2 waves
-Status: Ready to execute
-Last activity: 2026-06-05 — Phase 31 planned (4 plans: PLAN-01 tables+RLS, PLAN-02 columns+storage, PLAN-03 sync filter, PLAN-04 push+checkpoint)
+Phase: Phase 31 — DB-skeema & Storage-perusta (Wave 1 complete — Wave 2 pending)
+Plan: 4/4 plans (3 complete, 1 pending: PLAN-04 DB push + manual steps)
+Status: Wave 2 ready — run `supabase db push` then manual SQL Editor steps
+Last activity: 2026-06-05 — Wave 1 merged (plans 01-03): migrations + Storage SQL + sync filter; 81/81 tests green
 
 ## Project Reference
 

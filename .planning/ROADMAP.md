@@ -103,7 +103,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 
 ## v1.7 Yritysportaali (Phases 31–36)
 
-- [ ] **Phase 31: DB-skeema & Storage-perusta** — business_accounts, business_paikka_links, business_managed, business-media bucket ja RLS
+- [ ] **Phase 31: DB-skeema & Storage-perusta** — business_accounts, business_paikka_links, business_managed, business-media bucket ja RLS (3/4 plans — Wave 1 complete)
 - [ ] **Phase 32: Yritysrekisteröinti & auth** — Rekisteröintilomake, kirjautuminen, automaattinen ohjaus /business-sivulle
 - [ ] **Phase 33: Claim & paikan luonti** — Olemassa olevan paikan haku + claim-pyyntö; uuden paikan luonti; näkyvyyssäännöt
 - [ ] **Phase 34: Onboarding-velhou** — 6-vaiheinen ohjattu wizard (paikka → mediat → hinnasto → aukioloajat → yhteystiedot → esikatselu)
@@ -126,9 +126,9 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 **Plans**: 4 plans in 2 waves
 
 **Wave 1** (parallel):
-- [ ] 31-PLAN-01.md — business_accounts + business_paikka_links tables + RLS (BIZ-02)
-- [ ] 31-PLAN-02.md — business_managed + is_admin columns + Storage bucket SQL (DATA-09, DATA-10)
-- [ ] 31-PLAN-03.md — sync-paikat pre-filter + unit tests (DATA-09)
+- [x] 31-PLAN-01.md — business_accounts + business_paikka_links tables + RLS (BIZ-02)
+- [x] 31-PLAN-02.md — business_managed + is_admin columns + Storage bucket SQL (DATA-09, DATA-10)
+- [x] 31-PLAN-03.md — sync-paikat pre-filter + unit tests (DATA-09)
 
 **Wave 2** *(blocked on Wave 1 completion)*:
 - [ ] 31-PLAN-04.md — [BLOCKING] supabase db push + manual Storage + is_admin checkpoint (BIZ-02, DATA-09, DATA-10)
