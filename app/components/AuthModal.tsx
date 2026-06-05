@@ -73,16 +73,30 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
   }, [open, handleClose])
 
   // Close modal when SIGNED_IN fires — handles @supabase/ssr bug where
-  // signInWithPassword promise hangs after the auth event already resolved
+  // signInWithPassword promise hangs after the auth event already resolved.
+  // After sign-in, query business_accounts to determine if this is a business user.
+  // Business users are redirected to /business; regular users follow the existing flow.
   useEffect(() => {
     if (!open || !loading) return
     const supabase = createBrowserSupabase()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
-      if (event === 'SIGNED_IN' && session) {
-        onSuccess?.(pendingPaikkaId ?? null)
-        onClose()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, session: Session | null) => {
+        if (event === 'SIGNED_IN' && session) {
+          const { data: bizRow } = await supabase
+            .from('business_accounts')
+            .select('user_id')
+            .eq('user_id', session.user.id)
+            .maybeSingle()
+          if (bizRow) {
+            onClose()
+            router.push('/business')
+          } else {
+            onSuccess?.(pendingPaikkaId ?? null)
+            onClose()
+          }
+        }
       }
-    })
+    )
     return () => subscription.unsubscribe()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, loading])
