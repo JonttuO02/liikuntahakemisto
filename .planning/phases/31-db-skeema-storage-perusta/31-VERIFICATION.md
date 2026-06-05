@@ -1,9 +1,10 @@
 ---
 phase: 31-db-skeema-storage-perusta
 verified: 2026-06-05T12:14:00Z
-status: human_needed
-score: 6/7 must-haves verified
+status: passed
+score: 7/7 must-haves verified
 overrides_applied: 0
+human_confirmed: 2026-06-05 — user confirmed all 5 live DB/Storage items (tables, columns, bucket, is_admin)
 human_verification:
   - test: "Confirm live DB has business_accounts and business_paikka_links tables with correct columns"
     expected: "SELECT count(*) FROM information_schema.tables WHERE table_name IN ('business_accounts','business_paikka_links') AND table_schema='public' returns 2"
