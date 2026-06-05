@@ -1,7 +1,7 @@
 ---
 phase: 33
 slug: claim-paikan-luonti
-status: draft
+status: approved
 shadcn_initialized: true
 preset: base-nova / neutral / cssVariables
 created: 2026-06-05
@@ -173,7 +173,7 @@ flex flex-col gap-4
 ```
 .glass rounded-xl p-3 flex items-center gap-3
 ├── IF claimed: bg-[rgba(17,17,17,0.04)] opacity via wrapper
-├── left: flex flex-col gap-0.5 (flex-1)
+├── left: flex flex-col gap-1 (flex-1)
 │   ├── <span> text-sm font-bold text-[#111111]      ← nimi
 │   │    IF claimed: text-[rgba(17,17,17,0.35)]
 │   ├── <span> text-sm text-[rgba(17,17,17,0.45)]    ← osoite
@@ -463,11 +463,11 @@ Source: components.json `"registries": {}`; CONTEXT.md — no third-party compon
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: pending
-- [ ] Dimension 2 Visuals: pending
-- [ ] Dimension 3 Color: pending
-- [ ] Dimension 4 Typography: pending
-- [ ] Dimension 5 Spacing: pending
-- [ ] Dimension 6 Registry Safety: pending
+- [x] Dimension 1 Copywriting: FLAG (non-blocking — "Valitse" single-word CTA mitigated by aria-label)
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS (gap-0.5 → gap-1 fix applied in revision)
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-06-05
