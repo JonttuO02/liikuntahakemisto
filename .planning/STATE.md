@@ -2,32 +2,32 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Yritysportaali
-status: in_progress
-last_updated: "2026-06-05T12:00:00.000Z"
-last_activity: "2026-06-05 — Phase 32 planned: 3 plans in 2 waves (registration page + Route Handler + AuthModal redirect)"
+status: executing
+last_updated: "2026-06-05T11:43:22.761Z"
+last_activity: 2026-06-05 -- Phase 32 execution started
 progress:
   total_phases: 6
-  completed_phases: 1
-  total_plans: 7
+  completed_phases: 0
+  total_plans: 3
   completed_plans: 4
-  percent: 17
+  percent: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: Phase 32 — Yritysrekisteröinti & auth (ready to execute)
-Plan: Phase 32 planned — 3/3 plans ready
-Status: Ready to execute Phase 32
-Last activity: 2026-06-05 — Phase 32 planned: 3 plans in 2 waves (i18n + stub | Route Handler | registration page + AuthModal)
+Phase: 32 (Yritysrekisteröinti & auth) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 32
+Last activity: 2026-06-05 -- Phase 32 execution started
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.7 Yritysportaali — Business Auth, Onboarding, Admin-hyväksyntä, Hallintapaneeli
+**Current focus:** Phase 32 — Yritysrekisteröinti & auth
 
 ## Active Decisions (carried to v1.7)
 

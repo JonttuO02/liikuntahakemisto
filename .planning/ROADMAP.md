@@ -149,8 +149,8 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 **Plans**: 3 plans in 2 waves
 
 **Wave 1** (parallel):
-- [ ] 32-01-PLAN.md — i18n Business namespace (fi.json + en.json) + /business stub page (BIZ-01, BIZ-03)
-- [ ] 32-02-PLAN.md — /api/business/register Route Handler with JWT verification + atomicity rollback (BIZ-01)
+- [x] 32-01-PLAN.md — i18n Business namespace (fi.json + en.json) + /business stub page (BIZ-01, BIZ-03)
+- [x] 32-02-PLAN.md — /api/business/register Route Handler with JWT verification + atomicity rollback (BIZ-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*:
 - [ ] 32-03-PLAN.md — /business/rekisteroidy registration page + AuthModal SIGNED_IN business redirect (BIZ-01, BIZ-03)
@@ -245,7 +245,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 | 29. Kortit & sheet redesign | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 30. i18n FI/EN | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 31. DB-skeema & Storage-perusta | v1.7 | 4/4 | ✅ Complete | 2026-06-05 |
-| 32. Yritysrekisteröinti & auth | v1.7 | 0/3 | Not started | - |
+| 32. Yritysrekisteröinti & auth | v1.7 | 2/3 | In Progress|  |
 | 33. Claim & paikan luonti | v1.7 | 0/? | Not started | - |
 | 34. Onboarding-velhou | v1.7 | 0/? | Not started | - |
 | 35. Admin-hyväksyntäjärjestelmä | v1.7 | 0/? | Not started | - |
