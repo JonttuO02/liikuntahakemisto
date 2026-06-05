@@ -4,11 +4,11 @@ milestone: v1.7
 milestone_name: Yritysportaali
 status: executing
 last_updated: "2026-06-06T00:00:00.000Z"
-last_activity: 2026-06-06 -- Phase 33 complete
+last_activity: 2026-06-06 -- Phase 34 planned (9 plans in 5 waves)
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 21
+  total_plans: 30
   completed_plans: 21
   percent: 50
 ---
@@ -17,9 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 34 (onboarding-velhou) — NOT STARTED
-Status: Phase 33 complete — ready for Phase 34
-Last activity: 2026-06-06 -- Phase 33 complete
+Phase: 34 (onboarding-velhou) — PLANNED (9 plans, ready to execute)
+Status: Ready to execute Phase 34
+Last activity: 2026-06-06 -- Phase 34 planned (9 plans in 5 waves)
 
 ## Project Reference
 
@@ -52,7 +52,7 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 | 31 | DB-skeema & Storage-perusta | BIZ-02, DATA-09, DATA-10 | Complete |
 | 32 | Yritysrekisteröinti & auth | BIZ-01, BIZ-03 | Planned (3 plans) |
 | 33 | Claim & paikan luonti | CLAIM-01, CLAIM-02, CLAIM-03 | Complete |
-| 34 | Onboarding-velhou | ONBOARD-01–07 | Not started |
+| 34 | Onboarding-velhou | ONBOARD-01–07 | Planned (9 plans) |
 | 35 | Admin-hyväksyntäjärjestelmä | ADMIN-01–05 | Not started |
 | 36 | Hallintapaneeli | BIZPANEL-01–03 | Not started |
 
@@ -63,4 +63,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-06-06
-Resume: `/gsd:discuss-phase 34` — Phase 34 (Onboarding-velhou) is next
+Resume: `/gsd:execute-phase 34` — Phase 34 (Onboarding-velhou) has 9 plans ready
