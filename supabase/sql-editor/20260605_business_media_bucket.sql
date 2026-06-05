@@ -7,6 +7,9 @@
 -- Path structure:
 --   Logo:   {business_account_id}/logo/logo.{ext}
 --   Images: {business_account_id}/{paikka_id}/images/{filename}
+--
+-- NOTE: Function is in public schema (not storage) — SQL Editor lacks permission
+-- to create functions in the storage schema on hosted Supabase.
 
 -- ============================================================
 -- 1. Bucket creation (D-10, D-13 — public=true for public read)
@@ -16,12 +19,12 @@ VALUES ('business-media', 'business-media', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
--- 2. Security-definer ownership function
+-- 2. Security-definer ownership function (in public schema)
 -- Avoids RLS cascade on business_paikka_links (RESEARCH.md Pitfall 3).
 -- p_paikka_id is TEXT because Storage path segments are strings;
 -- cast to bigint inside the function body.
 -- ============================================================
-CREATE OR REPLACE FUNCTION storage.business_owns_paikka(
+CREATE OR REPLACE FUNCTION public.business_owns_paikka(
   p_business_id uuid,
   p_paikka_id   text
 ) RETURNS boolean
@@ -64,7 +67,7 @@ CREATE POLICY "Business INSERT own folder"
       (storage.foldername(objects.name))[2] = 'logo'
       OR
       -- Image path: {uid}/{paikka_id}/images/{filename}
-      storage.business_owns_paikka(
+      public.business_owns_paikka(
         auth.uid(),
         (storage.foldername(objects.name))[2]
       )
@@ -90,7 +93,7 @@ CREATE POLICY "Business UPDATE own folder"
     AND (
       (storage.foldername(objects.name))[2] = 'logo'
       OR
-      storage.business_owns_paikka(
+      public.business_owns_paikka(
         auth.uid(),
         (storage.foldername(objects.name))[2]
       )
