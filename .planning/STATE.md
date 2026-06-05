@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Yritysportaali
-status: active
-last_updated: "2026-06-05T00:00:00.000Z"
-last_activity: 2026-06-05 -- Phase 31 complete: all 4 plans done, DB pushed, Storage + is_admin confirmed
+status: completed
+last_updated: "2026-06-05T10:30:28.461Z"
+last_activity: "2026-06-05 — Phase 31 complete: all 4 plans done, DB pushed, Storage + is_admin confirmed"
 progress:
   total_phases: 6
   completed_phases: 1
@@ -63,5 +63,5 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-05T00:00:00.000Z
+Last session: 2026-06-05T10:30:28.457Z
 Resume: `/gsd:execute-phase 32` to start Phase 32 — Yritysrekisteröinti & auth
