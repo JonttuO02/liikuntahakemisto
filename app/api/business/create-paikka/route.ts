@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   // business_managed=true: protects from overwrite by Google Places sync script.
   const { data: newPaikka, error: paikkaError } = await supabaseAdmin
     .from('liikuntapaikat')
-    .insert({ nimi, osoite, kaupunki, published: false, business_managed: true })
+    .insert({ nimi, osoite, kaupunki, laji: 'Muu', published: false, business_managed: true })
     .select('id')
     .single()
 

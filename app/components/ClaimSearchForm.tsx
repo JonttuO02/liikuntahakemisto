@@ -112,7 +112,7 @@ export default function ClaimSearchForm() {
       })
 
       if (res.ok) {
-        router.push('/business')
+        router.refresh()
         return
       }
 
@@ -164,7 +164,7 @@ export default function ClaimSearchForm() {
       })
 
       if (res.ok) {
-        router.push('/business')
+        router.refresh()
         return
       }
 
