@@ -17,6 +17,10 @@ Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaist
 - Yrityksen data ylikirjoittaa Google Places -datan; `business_managed`-flag suojaa sync-skriptiltä
 - Kuvat Supabase Storageen (bucket: `business-media`); RLS-suojaus per yritys
 
+## Shipped: Phase 32 — Yritysrekisteröinti & auth (2026-06-05)
+
+**Delivered:** Business i18n namespace (15 keys, FI+EN), /business stub Server Component, POST /api/business/register Route Handler (JWT-verified via supabaseAdmin.auth.getUser, atomicity rollback via deleteUser), /business/rekisteroidy registration form (signUp + JWT-authenticated Route Handler call), AuthModal SIGNED_IN useEffect extended with async business_accounts query + conditional router.push('/business') for business users. BIZ-01 and BIZ-03 complete.
+
 ## Shipped: v1.6 Kielituki, Ikonit & Sheet-redesign (2026-06-04)
 
 **Delivered:** next-intl FI/EN kielituki (NEXT_LOCALE-cookie, kielivalitsin profiilisivulla), `lib/sportIcons.tsx` SVG-ikonit kaikille lajeille (Lucide poistettu), PaikkaSheet hero-karuselli + hinnasto + collapsible arvostelut, DiagonaalKortti & PaikkaKortti placeholderit ja marquee-hinnastokaruselli, navigaatio/filtteri/sheet-bugifixit.
