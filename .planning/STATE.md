@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Yritysportaali
-status: completed
-last_updated: "2026-06-05T10:30:28.461Z"
-last_activity: "2026-06-05 — Phase 31 complete: all 4 plans done, DB pushed, Storage + is_admin confirmed"
+status: in_progress
+last_updated: "2026-06-05T12:00:00.000Z"
+last_activity: "2026-06-05 — Phase 32 planned: 3 plans in 2 waves (registration page + Route Handler + AuthModal redirect)"
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 4
+  total_plans: 7
   completed_plans: 4
   percent: 17
 ---
@@ -17,10 +17,10 @@ progress:
 
 ## Current Position
 
-Phase: Phase 32 — Yritysrekisteröinti & auth (next)
-Plan: Phase 31 complete — 4/4 plans done
-Status: Phase 31 complete — ready for Phase 32
-Last activity: 2026-06-05 — Phase 31 complete: all 4 plans done, DB pushed, Storage + is_admin confirmed
+Phase: Phase 32 — Yritysrekisteröinti & auth (ready to execute)
+Plan: Phase 32 planned — 3/3 plans ready
+Status: Ready to execute Phase 32
+Last activity: 2026-06-05 — Phase 32 planned: 3 plans in 2 waves (i18n + stub | Route Handler | registration page + AuthModal)
 
 ## Project Reference
 
@@ -50,8 +50,8 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
-| 31 | DB-skeema & Storage-perusta | BIZ-02, DATA-09, DATA-10 | Planned (4 plans) |
-| 32 | Yritysrekisteröinti & auth | BIZ-01, BIZ-03 | Not started |
+| 31 | DB-skeema & Storage-perusta | BIZ-02, DATA-09, DATA-10 | Complete |
+| 32 | Yritysrekisteröinti & auth | BIZ-01, BIZ-03 | Planned (3 plans) |
 | 33 | Claim & paikan luonti | CLAIM-01, CLAIM-02, CLAIM-03 | Not started |
 | 34 | Onboarding-velhou | ONBOARD-01–07 | Not started |
 | 35 | Admin-hyväksyntäjärjestelmä | ADMIN-01–05 | Not started |
@@ -63,5 +63,5 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-05T10:30:28.457Z
-Resume: `/gsd:execute-phase 32` to start Phase 32 — Yritysrekisteröinti & auth
+Last session: 2026-06-05T12:00:00.000Z
+Resume: `/gsd:execute-phase 32` — 3 plans ready to execute

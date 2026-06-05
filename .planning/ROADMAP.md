@@ -155,6 +155,11 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 **Wave 2** *(blocked on Wave 1 completion)*:
 - [ ] 32-03-PLAN.md — /business/rekisteroidy registration page + AuthModal SIGNED_IN business redirect (BIZ-01, BIZ-03)
 
+**Cross-cutting constraints:**
+- JWT from Authorization header verified via `supabaseAdmin.auth.getUser(token)` before trusting client-supplied user_id
+- Business redirect check uses `.maybeSingle()` — returns null (not error) when no business_accounts row
+- AuthModal: only SIGNED_IN useEffect modified — signup handleSubmit branch unchanged
+
 ### Phase 33: Claim & paikan luonti
 **Goal**: Yritys pystyy joko ottamaan haltuunsa olemassa olevan paikan tai luomaan uuden, ja näkyvyyssäännöt toimivat oikein
 **Depends on**: Phase 32
