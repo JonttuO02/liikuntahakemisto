@@ -95,6 +95,22 @@
     "errorEmailInUse": "Sähköpostiosoite on jo käytössä.",
     "errorWeakPassword": "Salasanan on oltava vähintään 6 merkkiä."
   },
+  "Business": {
+    "registerTitle": "Rekisteröi yrityksesi",
+    "companyNamePlaceholder": "Yrityksen nimi",
+    "emailPlaceholder": "Sähköpostiosoite",
+    "passwordPlaceholder": "Salasana (väh. 6 merkkiä)",
+    "registerCta": "Rekisteröidy",
+    "registering": "Rekisteröidään...",
+    "alreadyHaveAccount": "Onko sinulla jo tili?",
+    "signInLink": "Kirjaudu sisään",
+    "errorEmailInUse": "Sähköpostiosoite on jo käytössä.",
+    "errorWeakPassword": "Salasanan on oltava vähintään 6 merkkiä.",
+    "errorGeneric": "Jokin meni pieleen. Yritä uudelleen.",
+    "errorAccountCreationFailed": "Tilin luonti epäonnistui. Yritä uudelleen.",
+    "dashboardTitle": "Tervetuloa hallintapaneeliin",
+    "dashboardComingSoon": "Ominaisuudet lisätään pian."
+  },
   "Map": {
     "recenter": "Palaa omalle sijainnille"
   },
