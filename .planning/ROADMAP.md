@@ -120,10 +120,23 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 **Requirements**: BIZ-02, DATA-09, DATA-10
 **Success Criteria** (what must be TRUE):
   1. `business_accounts`-taulu ja `business_paikka_links`-liitostaulu ovat olemassa Supabasessa oikeilla foreign key -suhteilla
-  2. `paikat`-taululla on `business_managed`-boolean-sarake; sync-skripti ohittaa rivit joissa `business_managed = true`
+  2. `liikuntapaikat`-taululla on `business_managed`-boolean-sarake; sync-skripti ohittaa rivit joissa `business_managed = true`
   3. `business-media` Supabase Storage -bucket on olemassa; RLS-politiikka sallii kirjoittamisen vain paikalle oikeuden omaavalle yritykselle (`business_paikka_links`-liitoksen kautta)
   4. Kaikki uudet taulut ovat RLS-suojattuja — anon-avaimella ei pysty lukemaan tai kirjoittamaan muiden yritysten tietoja
-**Plans**: TBD
+**Plans**: 4 plans in 2 waves
+
+**Wave 1** (parallel):
+- [ ] 31-PLAN-01.md — business_accounts + business_paikka_links tables + RLS (BIZ-02)
+- [ ] 31-PLAN-02.md — business_managed + is_admin columns + Storage bucket SQL (DATA-09, DATA-10)
+- [ ] 31-PLAN-03.md — sync-paikat pre-filter + unit tests (DATA-09)
+
+**Wave 2** *(blocked on Wave 1 completion)*:
+- [ ] 31-PLAN-04.md — [BLOCKING] supabase db push + manual Storage + is_admin checkpoint (BIZ-02, DATA-09, DATA-10)
+
+**Cross-cutting constraints:**
+- All migrations use `liikuntapaikat` (not `paikat`) — verified from sync route source
+- Storage RLS uses `SECURITY DEFINER` function for `business_paikka_links` ownership check
+- `objects.name` qualification required in all Storage policies
 
 ### Phase 32: Yritysrekisteröinti & auth
 **Goal**: Yritys pystyy luomaan tilin ja kirjautumaan sisään, jonka jälkeen se ohjataan suoraan hallintapaneeliin
@@ -220,7 +233,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 | 28. SVG-ikonit | v1.6 | 2/2 | ✅ Complete | 2026-06-03 |
 | 29. Kortit & sheet redesign | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 30. i18n FI/EN | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
-| 31. DB-skeema & Storage-perusta | v1.7 | 0/? | Not started | - |
+| 31. DB-skeema & Storage-perusta | v1.7 | 0/4 | Not started | - |
 | 32. Yritysrekisteröinti & auth | v1.7 | 0/? | Not started | - |
 | 33. Claim & paikan luonti | v1.7 | 0/? | Not started | - |
 | 34. Onboarding-velhou | v1.7 | 0/? | Not started | - |

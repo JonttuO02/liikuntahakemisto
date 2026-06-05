@@ -4,11 +4,11 @@ milestone: v1.7
 milestone_name: Yritysportaali
 status: active
 last_updated: "2026-06-05T00:00:00.000Z"
-last_activity: 2026-06-05 -- v1.7 roadmap created; 6 phases defined (31-36)
+last_activity: 2026-06-05 -- Phase 31 planned (4 plans, 2 waves)
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
+  total_plans: 4
   completed_plans: 0
   percent: 0
 ---
@@ -17,10 +17,10 @@ progress:
 
 ## Current Position
 
-Phase: Phase 31 — DB-skeema & Storage-perusta (not started)
-Plan: —
-Status: Roadmap defined; ready for planning
-Last activity: 2026-06-05 — v1.7 roadmap created (6 phases, 23 requirements)
+Phase: Phase 31 — DB-skeema & Storage-perusta (planned — ready to execute)
+Plan: 4 plans in 2 waves
+Status: Ready to execute
+Last activity: 2026-06-05 — Phase 31 planned (4 plans: PLAN-01 tables+RLS, PLAN-02 columns+storage, PLAN-03 sync filter, PLAN-04 push+checkpoint)
 
 ## Project Reference
 
@@ -50,7 +50,7 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
-| 31 | DB-skeema & Storage-perusta | BIZ-02, DATA-09, DATA-10 | Not started |
+| 31 | DB-skeema & Storage-perusta | BIZ-02, DATA-09, DATA-10 | Planned (4 plans) |
 | 32 | Yritysrekisteröinti & auth | BIZ-01, BIZ-03 | Not started |
 | 33 | Claim & paikan luonti | CLAIM-01, CLAIM-02, CLAIM-03 | Not started |
 | 34 | Onboarding-velhou | ONBOARD-01–07 | Not started |
@@ -64,4 +64,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-06-05T00:00:00.000Z
-Resume: `/gsd:plan-phase 31` to begin
+Resume: `/gsd:execute-phase 31` to execute (4 plans ready)
