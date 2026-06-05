@@ -9,6 +9,7 @@
 - ✅ **v1.4 UX-parannukset & Profiili** — Phases 19–22 (shipped 2026-05-31)
 - ✅ **v1.5 Visuaalinen elävöitys & UX-hienosäätö** — Phases 23–26 (shipped 2026-06-02)
 - ✅ **v1.6 Kielituki, Ikonit & Sheet-redesign** — Phases 27–30 (shipped 2026-06-04)
+- 🔄 **v1.7 Yritysportaali** — Phases 31–36 (active)
 
 ---
 
@@ -100,6 +101,89 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 
 </details>
 
+## v1.7 Yritysportaali (Phases 31–36)
+
+- [ ] **Phase 31: DB-skeema & Storage-perusta** — business_accounts, business_paikka_links, business_managed, business-media bucket ja RLS
+- [ ] **Phase 32: Yritysrekisteröinti & auth** — Rekisteröintilomake, kirjautuminen, automaattinen ohjaus /business-sivulle
+- [ ] **Phase 33: Claim & paikan luonti** — Olemassa olevan paikan haku + claim-pyyntö; uuden paikan luonti; näkyvyyssäännöt
+- [ ] **Phase 34: Onboarding-velhou** — 6-vaiheinen ohjattu wizard (paikka → mediat → hinnasto → aukioloajat → yhteystiedot → esikatselu)
+- [ ] **Phase 35: Admin-hyväksyntäjärjestelmä** — Email-ilmoitukset, /admin-sivu, hyväksy/hylkää toiminto, vahvistussähköpostit, is_admin-suojaus
+- [ ] **Phase 36: Hallintapaneeli** — /business-sivu: paikkalistaus tiloineen, kaikkien tietojen muokkaus, esikatselu
+
+---
+
+## Phase Details
+
+### Phase 31: DB-skeema & Storage-perusta
+**Goal**: Tietokantaskeema ja tallennus on valmis kaikkia yritystoimintoja varten — yksikään myöhempi vaihe ei voi edetä ilman tätä pohjaa
+**Depends on**: Phase 30 (v1.6 complete)
+**Requirements**: BIZ-02, DATA-09, DATA-10
+**Success Criteria** (what must be TRUE):
+  1. `business_accounts`-taulu ja `business_paikka_links`-liitostaulu ovat olemassa Supabasessa oikeilla foreign key -suhteilla
+  2. `paikat`-taululla on `business_managed`-boolean-sarake; sync-skripti ohittaa rivit joissa `business_managed = true`
+  3. `business-media` Supabase Storage -bucket on olemassa; RLS-politiikka sallii kirjoittamisen vain paikalle oikeuden omaavalle yritykselle (`business_paikka_links`-liitoksen kautta)
+  4. Kaikki uudet taulut ovat RLS-suojattuja — anon-avaimella ei pysty lukemaan tai kirjoittamaan muiden yritysten tietoja
+**Plans**: TBD
+
+### Phase 32: Yritysrekisteröinti & auth
+**Goal**: Yritys pystyy luomaan tilin ja kirjautumaan sisään, jonka jälkeen se ohjataan suoraan hallintapaneeliin
+**Depends on**: Phase 31
+**Requirements**: BIZ-01, BIZ-03
+**Success Criteria** (what must be TRUE):
+  1. Yritys täyttää rekisteröintilomakkeen (yritysnimi, sähköposti, salasana) ja tili luodaan Supabase Auth -järjestelmään linkitettynä `business_accounts`-riviin
+  2. Yrityksen kirjautuessa olemassa olevalla tilillä se ohjataan automaattisesti `/business`-hallintapaneeliin eikä tavalliseen käyttäjänäkymään
+  3. Tavallinen käyttäjä ei ohjaudu `/business`-sivulle — ohjaus tapahtuu vain kun `business_accounts`-rivi on olemassa
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 33: Claim & paikan luonti
+**Goal**: Yritys pystyy joko ottamaan haltuunsa olemassa olevan paikan tai luomaan uuden, ja näkyvyyssäännöt toimivat oikein
+**Depends on**: Phase 32
+**Requirements**: CLAIM-01, CLAIM-02, CLAIM-03
+**Success Criteria** (what must be TRUE):
+  1. Yritys voi hakea olemassa olevaa paikkaa nimellä tai osoitteella ja lähettää claim-pyynnön — paikka pysyy näkyvänä sovelluksen käyttäjille koko prosessin ajan
+  2. Jos haulla ei löydy sopivaa paikkaa, yritys voi luoda uuden paikan manuaalisesti — uusi paikka tallennetaan `published = false` -tilassa eikä näy sovelluksessa ennen admin-hyväksyntää
+  3. Sekä claim-pyyntö että uusi paikka yhdistyvät yrityksen tiliin `business_paikka_links`-taulun kautta
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 34: Onboarding-velhou
+**Goal**: Ensimmäistä kertaa kirjautunut yritys käy läpi 6-vaiheisen onboarding-velhon ja toimittaa kaikki tarvittavat tiedot hyväksyttäväksi
+**Depends on**: Phase 33
+**Requirements**: ONBOARD-01, ONBOARD-02, ONBOARD-03, ONBOARD-04, ONBOARD-05, ONBOARD-06, ONBOARD-07
+**Success Criteria** (what must be TRUE):
+  1. Ensimmäisellä kirjautumisella velhou käynnistyy automaattisesti eikä yritys pysty siirtymään hallintapaneeliin ennen kuin kaikki pakolliset vaiheet on täytetty
+  2. Vaihe 1 (Paikka) esitäyttää paikan nimen ja osoitteen claim/luonti-valinnan perusteella; vaihe 2 (Mediat) lataa 1–5 kuvaa ja logon `business-media`-buckettiin edistymispalkin kera
+  3. Vaihe 3 (Hinnasto) vaatii vähintään yhden hintarivin ennen kuin voi jatkaa; vaihe 4 (Aukioloajat) esitäyttää Google Places -datan jos saatavilla
+  4. Vaihe 5 (Yhteystiedot) kerää puhelimen, sähköpostin, websiten ja kuvauksen (max 300 merkkiä); vaihe 6 (Esikatselu) näyttää PaikkaKortin, DiagonaalKortin ja PaikkaSheetin yrityksen syöttämillä tiedoilla
+  5. Velhousta ei voi hypätä yli pakollisten vaiheiden — edistymispalkki ja navigointi kertovat missä vaiheessa ollaan
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 35: Admin-hyväksyntäjärjestelmä
+**Goal**: Admin voi tarkistaa, hyväksyä tai hylätä yritystililöinnit ja claim-pyynnöt, ja sekä yritys että admin saavat asianmukaiset sähköposti-ilmoitukset
+**Depends on**: Phase 34
+**Requirements**: ADMIN-01, ADMIN-02, ADMIN-03, ADMIN-04, ADMIN-05
+**Success Criteria** (what must be TRUE):
+  1. Uusi rekisteröityminen tai claim-pyyntö lähettää välittömästi sähköposti-ilmoituksen osoitteeseen joona.orava@gmail.com
+  2. `/admin`-sivulla näkyy lista odottavista hakemuksista — admin näkee yrityksen tiedot, haetun paikan ja ladatut kuvat
+  3. Admin voi hyväksyä hakemuksen yhdellä klikkauksella tai hylätä sen syy-tekstillä — molemmat toiminnot päivittävät hakemuksen tilan välittömästi
+  4. Hyväksytty yritys saa vahvistussähköpostin; hylätty yritys saa sähköpostin jossa kerrotaan syy — molemmissa tapauksissa yritys tietää päätöksestä
+  5. `/admin`-sivu näkyy vain käyttäjälle jonka `profiles`-taulussa on `is_admin = true` — kaikki muut saavat 404 tai unauthorized-vastauksen
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 36: Hallintapaneeli
+**Goal**: Hyväksytyllä yrityksellä on täysin toimiva /business-hallintapaneeli omien paikkatietojensa ylläpitoon ja esikatseluun
+**Depends on**: Phase 35
+**Requirements**: BIZPANEL-01, BIZPANEL-02, BIZPANEL-03
+**Success Criteria** (what must be TRUE):
+  1. `/business`-sivu näyttää listan kaikista yrityksen paikoista ja kunkin tilan (pending / approved) — useamman paikan tili näyttää kaikki paikat listana
+  2. Yritys pystyy muokkaamaan kaikkia onboarding-tietoja (kuvat, logo, hinnasto, aukioloajat, yhteystiedot) suoraan hallintapaneelista — muutokset astuvat voimaan välittömästi ilman erillistä hyväksyntäpyyntöä
+  3. Hallintapaneelissa on esikatselu-näkymä joka näyttää miten paikka näyttää sovelluksen käyttäjille (PaikkaKortti, DiagonaalKortti, PaikkaSheet yrityksen datalla)
+**Plans**: TBD
+**UI hint**: yes
+
 ---
 
 ## Progress Table
@@ -136,3 +220,9 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 | 28. SVG-ikonit | v1.6 | 2/2 | ✅ Complete | 2026-06-03 |
 | 29. Kortit & sheet redesign | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 30. i18n FI/EN | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
+| 31. DB-skeema & Storage-perusta | v1.7 | 0/? | Not started | - |
+| 32. Yritysrekisteröinti & auth | v1.7 | 0/? | Not started | - |
+| 33. Claim & paikan luonti | v1.7 | 0/? | Not started | - |
+| 34. Onboarding-velhou | v1.7 | 0/? | Not started | - |
+| 35. Admin-hyväksyntäjärjestelmä | v1.7 | 0/? | Not started | - |
+| 36. Hallintapaneeli | v1.7 | 0/? | Not started | - |

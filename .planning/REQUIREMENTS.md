@@ -67,26 +67,26 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| BIZ-01 | TBD | Pending |
-| BIZ-02 | TBD | Pending |
-| BIZ-03 | TBD | Pending |
-| CLAIM-01 | TBD | Pending |
-| CLAIM-02 | TBD | Pending |
-| CLAIM-03 | TBD | Pending |
-| ONBOARD-01 | TBD | Pending |
-| ONBOARD-02 | TBD | Pending |
-| ONBOARD-03 | TBD | Pending |
-| ONBOARD-04 | TBD | Pending |
-| ONBOARD-05 | TBD | Pending |
-| ONBOARD-06 | TBD | Pending |
-| ONBOARD-07 | TBD | Pending |
-| ADMIN-01 | TBD | Pending |
-| ADMIN-02 | TBD | Pending |
-| ADMIN-03 | TBD | Pending |
-| ADMIN-04 | TBD | Pending |
-| ADMIN-05 | TBD | Pending |
-| BIZPANEL-01 | TBD | Pending |
-| BIZPANEL-02 | TBD | Pending |
-| BIZPANEL-03 | TBD | Pending |
-| DATA-09 | TBD | Pending |
-| DATA-10 | TBD | Pending |
+| BIZ-01 | Phase 32 | Pending |
+| BIZ-02 | Phase 31 | Pending |
+| BIZ-03 | Phase 32 | Pending |
+| CLAIM-01 | Phase 33 | Pending |
+| CLAIM-02 | Phase 33 | Pending |
+| CLAIM-03 | Phase 33 | Pending |
+| ONBOARD-01 | Phase 34 | Pending |
+| ONBOARD-02 | Phase 34 | Pending |
+| ONBOARD-03 | Phase 34 | Pending |
+| ONBOARD-04 | Phase 34 | Pending |
+| ONBOARD-05 | Phase 34 | Pending |
+| ONBOARD-06 | Phase 34 | Pending |
+| ONBOARD-07 | Phase 34 | Pending |
+| ADMIN-01 | Phase 35 | Pending |
+| ADMIN-02 | Phase 35 | Pending |
+| ADMIN-03 | Phase 35 | Pending |
+| ADMIN-04 | Phase 35 | Pending |
+| ADMIN-05 | Phase 35 | Pending |
+| BIZPANEL-01 | Phase 36 | Pending |
+| BIZPANEL-02 | Phase 36 | Pending |
+| BIZPANEL-03 | Phase 36 | Pending |
+| DATA-09 | Phase 31 | Pending |
+| DATA-10 | Phase 31 | Pending |
