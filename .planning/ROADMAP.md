@@ -146,8 +146,14 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
   1. Yritys täyttää rekisteröintilomakkeen (yritysnimi, sähköposti, salasana) ja tili luodaan Supabase Auth -järjestelmään linkitettynä `business_accounts`-riviin
   2. Yrityksen kirjautuessa olemassa olevalla tilillä se ohjataan automaattisesti `/business`-hallintapaneeliin eikä tavalliseen käyttäjänäkymään
   3. Tavallinen käyttäjä ei ohjaudu `/business`-sivulle — ohjaus tapahtuu vain kun `business_accounts`-rivi on olemassa
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 3 plans in 2 waves
+
+**Wave 1** (parallel):
+- [ ] 32-01-PLAN.md — i18n Business namespace (fi.json + en.json) + /business stub page (BIZ-01, BIZ-03)
+- [ ] 32-02-PLAN.md — /api/business/register Route Handler with JWT verification + atomicity rollback (BIZ-01)
+
+**Wave 2** *(blocked on Wave 1 completion)*:
+- [ ] 32-03-PLAN.md — /business/rekisteroidy registration page + AuthModal SIGNED_IN business redirect (BIZ-01, BIZ-03)
 
 ### Phase 33: Claim & paikan luonti
 **Goal**: Yritys pystyy joko ottamaan haltuunsa olemassa olevan paikan tai luomaan uuden, ja näkyvyyssäännöt toimivat oikein
@@ -234,7 +240,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 | 29. Kortit & sheet redesign | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 30. i18n FI/EN | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 31. DB-skeema & Storage-perusta | v1.7 | 4/4 | ✅ Complete | 2026-06-05 |
-| 32. Yritysrekisteröinti & auth | v1.7 | 0/? | Not started | - |
+| 32. Yritysrekisteröinti & auth | v1.7 | 0/3 | Not started | - |
 | 33. Claim & paikan luonti | v1.7 | 0/? | Not started | - |
 | 34. Onboarding-velhou | v1.7 | 0/? | Not started | - |
 | 35. Admin-hyväksyntäjärjestelmä | v1.7 | 0/? | Not started | - |
