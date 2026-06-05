@@ -20,16 +20,19 @@ CREATE TABLE IF NOT EXISTS reviews (
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can read reviews (public read for REVIEW-04)
+DROP POLICY IF EXISTS "Anyone can read reviews" ON reviews;
 CREATE POLICY "Anyone can read reviews"
   ON reviews FOR SELECT
   USING (true);
 
 -- Users can insert only their own review (T-15-01 mitigation)
+DROP POLICY IF EXISTS "Users can insert own review" ON reviews;
 CREATE POLICY "Users can insert own review"
   ON reviews FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 -- Users can update only their own review (D-03 edit path)
+DROP POLICY IF EXISTS "Users can update own review" ON reviews;
 CREATE POLICY "Users can update own review"
   ON reviews FOR UPDATE
   USING (auth.uid() = user_id)
