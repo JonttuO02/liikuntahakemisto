@@ -170,8 +170,8 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
   3. Sekä claim-pyyntö että uusi paikka yhdistyvät yrityksen tiliin `business_paikka_links`-taulun kautta
 **Plans**: 7 plans in 4 waves
 Plans:
-- [ ] 33-01-PLAN.md — DB migration: published + is_claimed columns (CLAIM-03)
-- [ ] 33-02-PLAN.md — i18n: Business namespace Phase 33 keys (CLAIM-01, CLAIM-02)
+- [x] 33-01-PLAN.md — DB migration: published + is_claimed columns (CLAIM-03)
+- [x] 33-02-PLAN.md — i18n: Business namespace Phase 33 keys (CLAIM-01, CLAIM-02)
 - [ ] 33-03-PLAN.md — API Route Handlers: claim-paikka + create-paikka (CLAIM-01, CLAIM-02, CLAIM-03)
 - [ ] 33-04-PLAN.md — published filter on app/page.tsx (CLAIM-03)
 - [ ] 33-05-PLAN.md — ClaimSearchForm client component (CLAIM-01, CLAIM-02)
@@ -254,7 +254,7 @@ Plans:
 | 30. i18n FI/EN | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 31. DB-skeema & Storage-perusta | v1.7 | 4/4 | ✅ Complete | 2026-06-05 |
 | 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | Complete    | 2026-06-05 |
-| 33. Claim & paikan luonti | v1.7 | 0/? | Not started | - |
+| 33. Claim & paikan luonti | v1.7 | 2/7 | In Progress|  |
 | 34. Onboarding-velhou | v1.7 | 0/? | Not started | - |
 | 35. Admin-hyväksyntäjärjestelmä | v1.7 | 0/? | Not started | - |
 | 36. Hallintapaneeli | v1.7 | 0/? | Not started | - |
