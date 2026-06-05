@@ -150,10 +150,24 @@ export async function GET(req: Request) {
     return NextResponse.json({ loydetty: 0, tallennettu: 0, website_loydetty: 0 })
   }
 
-  // Fetch Place Details for all results in parallel
-  const details = await Promise.all(allResults.map(p => fetchPlaceDetails(p.place_id)))
+  // Pre-filter: exclude venues managed by businesses (business_managed = true)
+  // Note: upsert() cannot be WHERE-filtered — must exclude in TypeScript before building rivit
+  const { data: managedRows } = await supabaseAdmin
+    .from('liikuntapaikat')
+    .select('place_id')
+    .eq('business_managed', true)
 
-  const rivit = allResults.map((p, i) => ({
+  const managedSet = new Set((managedRows ?? []).map(r => r.place_id))
+  const syncResults = allResults.filter(r => !managedSet.has(r.place_id))
+
+  if (syncResults.length === 0) {
+    return NextResponse.json({ loydetty: allResults.length, tallennettu: 0, website_loydetty: 0 })
+  }
+
+  // Fetch Place Details for all results in parallel
+  const details = await Promise.all(syncResults.map(p => fetchPlaceDetails(p.place_id)))
+
+  const rivit = syncResults.map((p, i) => ({
     place_id:     p.place_id,
     nimi:         p.name,
     laji:         p.assignedLaji,
