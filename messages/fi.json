@@ -107,6 +107,7 @@
     "errorEmailInUse": "Sähköpostiosoite on jo käytössä.",
     "errorWeakPassword": "Salasanan on oltava vähintään 6 merkkiä.",
     "errorGeneric": "Jokin meni pieleen. Yritä uudelleen.",
+    "errorCheckEmail": "Tarkista sähköpostisi ja vahvista tili.",
     "errorAccountCreationFailed": "Tilin luonti epäonnistui. Yritä uudelleen.",
     "dashboardTitle": "Tervetuloa hallintapaneeliin",
     "dashboardComingSoon": "Ominaisuudet lisätään pian."

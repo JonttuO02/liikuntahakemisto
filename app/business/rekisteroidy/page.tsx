@@ -54,9 +54,11 @@ export default function BusinessRekisteroidyPage() {
         return
       }
 
-      // Guard: if email confirmation is required, session won't be available immediately
+      // Guard: if email confirmation is required, session won't be available immediately.
+      // The registration flow requires an immediate session to call the Route Handler —
+      // disable "Confirm email" in Supabase Auth settings for this flow to work.
       if (!data.session) {
-        setError(t('errorGeneric'))
+        setError(t('errorCheckEmail'))
         setLoading(false)
         return
       }
