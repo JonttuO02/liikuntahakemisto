@@ -168,7 +168,15 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
   1. Yritys voi hakea olemassa olevaa paikkaa nimellä tai osoitteella ja lähettää claim-pyynnön — paikka pysyy näkyvänä sovelluksen käyttäjille koko prosessin ajan
   2. Jos haulla ei löydy sopivaa paikkaa, yritys voi luoda uuden paikan manuaalisesti — uusi paikka tallennetaan `published = false` -tilassa eikä näy sovelluksessa ennen admin-hyväksyntää
   3. Sekä claim-pyyntö että uusi paikka yhdistyvät yrityksen tiliin `business_paikka_links`-taulun kautta
-**Plans**: TBD
+**Plans**: 7 plans in 4 waves
+Plans:
+- [ ] 33-01-PLAN.md — DB migration: published + is_claimed columns (CLAIM-03)
+- [ ] 33-02-PLAN.md — i18n: Business namespace Phase 33 keys (CLAIM-01, CLAIM-02)
+- [ ] 33-03-PLAN.md — API Route Handlers: claim-paikka + create-paikka (CLAIM-01, CLAIM-02, CLAIM-03)
+- [ ] 33-04-PLAN.md — published filter on app/page.tsx (CLAIM-03)
+- [ ] 33-05-PLAN.md — ClaimSearchForm client component (CLAIM-01, CLAIM-02)
+- [ ] 33-06-PLAN.md — /business/page.tsx server component replacement (CLAIM-01, CLAIM-02, CLAIM-03)
+- [ ] 33-07-PLAN.md — [BLOCKING] supabase db push + smoke test
 **UI hint**: yes
 
 ### Phase 34: Onboarding-velhou
