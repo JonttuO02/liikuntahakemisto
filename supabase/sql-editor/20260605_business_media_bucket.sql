@@ -102,8 +102,13 @@ CREATE POLICY "Business UPDATE own folder"
 
 -- ============================================================
 -- 6. DELETE policy (D-12; covers both logo and image paths)
--- Only checks top-level folder ownership — no paikka check needed
--- since a user can only delete files under their own uid folder.
+-- Checks paikka ownership for image sub-paths so a business whose
+-- claim is revoked cannot delete images from a venue they no longer own.
+-- Logo sub-path ({uid}/logo/*) only requires top-level ownership.
+--
+-- To apply this fix on an existing database, run first:
+--   DROP POLICY "Business DELETE own folder" ON storage.objects;
+-- Then re-run the CREATE POLICY block below.
 -- ============================================================
 CREATE POLICY "Business DELETE own folder"
   ON storage.objects FOR DELETE
@@ -111,4 +116,12 @@ CREATE POLICY "Business DELETE own folder"
   USING (
     bucket_id = 'business-media'
     AND (storage.foldername(objects.name))[1] = (auth.uid())::text
+    AND (
+      (storage.foldername(objects.name))[2] = 'logo'
+      OR
+      public.business_owns_paikka(
+        auth.uid(),
+        (storage.foldername(objects.name))[2]
+      )
+    )
   );
