@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import ClaimSearchForm from '@/app/components/ClaimSearchForm'
 
 export default function BusinessPage() {
   const t = useTranslations('Business')
+  const router = useRouter()
   const [hasLinks, setHasLinks] = useState(false)
   const [venueName, setVenueName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -16,6 +18,18 @@ export default function BusinessPage() {
       const supabase = createBrowserSupabase()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
+
+      const { data: account } = await supabase
+        .from('business_accounts')
+        .select('onboarding_completed')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (account && !account.onboarding_completed) {
+        router.push('/business/onboarding')
+        return
+      }
+
       const { data: links } = await supabase
         .from('business_paikka_links')
         .select('paikka_id, liikuntapaikat(nimi)')

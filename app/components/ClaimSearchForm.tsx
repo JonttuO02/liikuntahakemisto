@@ -112,7 +112,7 @@ export default function ClaimSearchForm() {
       })
 
       if (res.ok) {
-        window.location.reload()
+        router.push('/business/onboarding')
         return
       }
 
@@ -164,7 +164,8 @@ export default function ClaimSearchForm() {
       })
 
       if (res.ok) {
-        window.location.reload()
+        const data = await res.json()
+        router.push(`/business/onboarding${data.paikka_id ? `?paikka_id=${data.paikka_id}` : ''}`)
         return
       }
 
