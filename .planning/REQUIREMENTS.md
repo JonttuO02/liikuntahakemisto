@@ -38,9 +38,9 @@
 
 ### Hallintapaneeli (BIZPANEL)
 
-- [ ] **BIZPANEL-01**: `/business`-sivu näyttää listan yrityksen paikoista ja niiden tilan (pending / approved)
-- [ ] **BIZPANEL-02**: Yritys voi muokata kaikkia onboarding-tietoja (kuvat, logo, hinnasto, aukioloajat, yhteystiedot) — muutokset julkaistaan heti ilman erillistä hyväksyntää
-- [ ] **BIZPANEL-03**: Hallintapaneelissa on esikatselu-näkymä joka näyttää miten paikka näyttää sovelluksen käyttäjille
+- [x] **BIZPANEL-01**: `/business`-sivu näyttää listan yrityksen paikoista ja niiden tilan (pending / approved)
+- [x] **BIZPANEL-02**: Yritys voi muokata kaikkia onboarding-tietoja (kuvat, logo, hinnasto, aukioloajat, yhteystiedot) — muutokset julkaistaan heti ilman erillistä hyväksyntää
+- [x] **BIZPANEL-03**: Hallintapaneelissa on esikatselu-näkymä joka näyttää miten paikka näyttää sovelluksen käyttäjille
 
 ### Data & tietoturva (DATA)
 
@@ -85,8 +85,8 @@
 | ADMIN-03 | Phase 35 | Pending |
 | ADMIN-04 | Phase 35 | Pending |
 | ADMIN-05 | Phase 35 | Pending |
-| BIZPANEL-01 | Phase 36 | Pending |
-| BIZPANEL-02 | Phase 36 | Pending |
-| BIZPANEL-03 | Phase 36 | Pending |
+| BIZPANEL-01 | Phase 36 | Complete |
+| BIZPANEL-02 | Phase 36 | Complete |
+| BIZPANEL-03 | Phase 36 | Complete |
 | DATA-09 | Phase 31 | Pending |
 | DATA-10 | Phase 31 | Pending |

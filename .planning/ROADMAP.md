@@ -109,7 +109,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 - [x] **Phase 33: Claim & paikan luonti** — Olemassa olevan paikan haku + claim-pyyntö; uuden paikan luonti; näkyvyyssäännöt (completed 2026-06-06)
 - [x] **Phase 34: Onboarding-velhou** — 6-vaiheinen ohjattu wizard (paikka → mediat → hinnasto → aukioloajat → yhteystiedot → esikatselu) *(10 plans, 6 waves)* (completed 2026-06-10)
 - [x] **Phase 35: Admin-hyväksyntäjärjestelmä** — Email-ilmoitukset, /admin-sivu, hyväksy/hylkää toiminto, vahvistussähköpostit, is_admin-suojaus *(11 plans, 4 waves)* (completed 2026-06-10)
-- [ ] **Phase 36: Hallintapaneeli** — /business-sivu: paikkalistaus tiloineen, kaikkien tietojen muokkaus, esikatselu
+- [x] **Phase 36: Hallintapaneeli** — /business-sivu: paikkalistaus tiloineen, kaikkien tietojen muokkaus, esikatselu (completed 2026-06-10)
 
 ---
 
@@ -304,4 +304,4 @@ Plans:
 | 33. Claim & paikan luonti | v1.7 | 7/7 | ✅ Complete | 2026-06-06 |
 | 34. Onboarding-velhou | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
 | 35. Admin-hyväksyntäjärjestelmä | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
-| 36. Hallintapaneeli | v1.7 | 0/? | Not started | - |
+| 36. Hallintapaneeli | v1.7 | 1/1 | Complete   | 2026-06-10 |
