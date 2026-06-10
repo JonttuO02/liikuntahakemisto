@@ -9,14 +9,12 @@ import UploadProgressBar from './UploadProgressBar'
 
 interface StepMediatProps {
   paikkaId: number
-  businessAccountId: string
   onNext: () => void
   onPrev: () => void
 }
 
 export default function StepMediat({
   paikkaId,
-  businessAccountId,
   onNext,
   onPrev,
 }: StepMediatProps) {
@@ -48,9 +46,18 @@ export default function StepMediat({
 
     try {
       const supabase = createBrowserSupabase()
+      // Security: always derive the storage path prefix from the session, never from a prop.
+      // Using session.user.id ensures the path matches the RLS policy (auth.uid() = path prefix).
       const {
         data: { session },
       } = await supabase.auth.getSession()
+
+      if (!session) {
+        setError(t('errorUploadFailed'))
+        return
+      }
+
+      const userId = session.user.id
 
       let logoUrl: string | null = null
       const photoUrls: string[] = []
@@ -59,7 +66,7 @@ export default function StepMediat({
       if (logoFiles[0]) {
         const ext = logoFiles[0].name.split('.').pop() ?? 'jpg'
         const filename = `logo-${Date.now()}.${ext}`
-        const path = `${businessAccountId}/${paikkaId}/logo/${filename}`
+        const path = `${userId}/${paikkaId}/logo/${filename}`
 
         const { error: uploadErr } = await supabase.storage
           .from('business-media')
@@ -85,7 +92,7 @@ export default function StepMediat({
         const file = photoFiles[i]
         const ext = file.name.split('.').pop() ?? 'jpg'
         const filename = `photo-${Date.now()}-${i}.${ext}`
-        const path = `${businessAccountId}/${paikkaId}/photos/${filename}`
+        const path = `${userId}/${paikkaId}/photos/${filename}`
 
         const { error: uploadErr } = await supabase.storage
           .from('business-media')
@@ -113,7 +120,7 @@ export default function StepMediat({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token ?? ''}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           paikka_id: paikkaId,
@@ -199,6 +206,7 @@ export default function StepMediat({
             type="button"
             whileTap={{ scale: 0.95 }}
             onClick={onPrev}
+            disabled={isUploading}
             className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)] flex items-center gap-1"
           >
             {t('prevCta')}
