@@ -3,14 +3,37 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { AnimatePresence } from 'framer-motion'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import ClaimSearchForm from '@/app/components/ClaimSearchForm'
+import PreviewModal from '@/app/components/PreviewModal'
+import type { Liikuntapaikka } from '@/lib/types'
+
+type VenueLiikuntapaikka = {
+  id: number
+  nimi: string
+  laji: string
+  osoite: string | null
+  kaupunki: string | null
+  latitude: number | null
+  longitude: number | null
+  hinta_min: number | null
+  hinta_max: number | null
+  hinta_kuvaus: string | null
+  puhelin: string | null
+  varauslinkki: string | null
+  kuvaus: string | null
+  aukioloajat: Record<string, unknown> | null
+  image_url: string | null
+  logo_url: string | null
+  photo_urls: string[] | null
+}
 
 type VenueLink = {
   paikka_id: number
   claim_status: string
   rejection_reason: string | null
-  liikuntapaikat: { nimi: string } | null
+  liikuntapaikat: VenueLiikuntapaikka | null
 }
 
 export default function BusinessPage() {
@@ -20,6 +43,7 @@ export default function BusinessPage() {
   const [loading, setLoading] = useState(true)
   const [isNotBusinessAccount, setIsNotBusinessAccount] = useState(false)
   const [showAddVenue, setShowAddVenue] = useState(false)
+  const [previewPaikka, setPreviewPaikka] = useState<Liikuntapaikka | null>(null)
 
   useEffect(() => {
     async function checkState() {
@@ -55,7 +79,7 @@ export default function BusinessPage() {
       // Fetch all linked venues with their approval status and rejection reason
       const { data: links } = await supabase
         .from('business_paikka_links')
-        .select('paikka_id, claim_status, rejection_reason, liikuntapaikat(nimi)')
+        .select('paikka_id, claim_status, rejection_reason, liikuntapaikat(id, nimi, laji, osoite, kaupunki, latitude, longitude, hinta_min, hinta_max, hinta_kuvaus, puhelin, varauslinkki, kuvaus, aukioloajat, image_url, logo_url, photo_urls)')
         .eq('business_account_id', user.id)
         .order('created_at', { ascending: true })
 
@@ -94,6 +118,16 @@ export default function BusinessPage() {
   if (venueLinks.length > 0) {
     return (
       <main className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-16">
+        {/* Preview modal */}
+        <AnimatePresence>
+          {previewPaikka && (
+            <PreviewModal
+              paikka={previewPaikka}
+              onClose={() => setPreviewPaikka(null)}
+            />
+          )}
+        </AnimatePresence>
+
         <div className={`glass rounded-2xl p-6 w-full ${showAddVenue ? 'max-w-md' : 'max-w-sm'} flex flex-col gap-5`}>
           <h1 className="text-xl font-bold text-[#111111]">{t('venuesTitle')}</h1>
 
@@ -119,6 +153,24 @@ export default function BusinessPage() {
                       : t('statusPending')}
                   </span>
                 </div>
+
+                {/* Action buttons — shown for all statuses */}
+                <div className="flex items-center gap-3 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewPaikka(link.liikuntapaikat as unknown as Liikuntapaikka)}
+                    className="text-xs text-[rgba(17,17,17,0.45)] hover:text-[#111111] underline-offset-2 hover:underline [transition:color_150ms]"
+                  >
+                    {t('esikatseluCta')}
+                  </button>
+                  <a
+                    href={'/business/' + link.paikka_id}
+                    className="text-xs font-bold text-[#111111] border border-[rgba(0,0,0,0.12)] hover:border-[rgba(0,0,0,0.25)] rounded-full px-3 py-1 [transition:border-color_150ms_var(--ease-out)]"
+                  >
+                    {t('muokkaaCta')}
+                  </a>
+                </div>
+
                 {link.claim_status === 'rejected' && (
                   <div className="flex flex-col gap-2 mt-1">
                     {link.rejection_reason && (
