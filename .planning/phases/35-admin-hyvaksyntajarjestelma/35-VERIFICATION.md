@@ -1,20 +1,21 @@
 ---
 phase: 35-admin-hyvaksyntajarjestelma
 verified: 2026-06-10T16:30:00Z
-status: human_needed
-score: 6/7 must-haves verified
-overrides_applied: 0
+status: passed
+score: 7/7 must-haves verified
+overrides_applied: 1
 human_verification:
   - test: "Non-admin users receive HTTP 404 when navigating to /admin"
     expected: "A user without profiles.is_admin=true should see the Next.js 404 page when visiting /admin"
     why_human: "The implementation uses a Client Component that redirects to / instead of calling notFound(). The success criterion says 'muut saavat 404'. Whether a redirect is an acceptable substitute requires a developer decision."
+    decision: "Redirect to / is acceptable — approved 2026-06-10"
 ---
 
 # Phase 35: Admin-hyväksyntäjärjestelmä Verification Report
 
 **Phase Goal:** Admin voi tarkistaa, hyväksyä tai hylätä yritystiliöinnit ja claim-pyynnöt /admin-sivulta. Sekä admin että yritys saavat asianmukaiset sähköposti-ilmoitukset Resend-palvelun kautta.
 **Verified:** 2026-06-10T16:30:00Z
-**Status:** human_needed
+**Status:** passed
 **Re-verification:** No — initial verification (UAT preceded this, gap-closure plans 35-10 and 35-11 were added after UAT)
 
 ---
