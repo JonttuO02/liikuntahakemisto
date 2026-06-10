@@ -104,7 +104,7 @@ export async function POST(request: Request) {
         business_account_id: user.id, // Security: from verified JWT, not body
         paikka_id: paikkaId,
         [field]: value,
-        current_step: step,
+        current_step: step + 1,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'business_account_id,paikka_id' }

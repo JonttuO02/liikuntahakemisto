@@ -110,10 +110,44 @@ export default function OnboardingWizardInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Step 1 is read-only — no draft save needed
-  function saveAndAdvance(stepNum: number) {
+  // Re-fetch draft from Supabase so back-navigation passes fresh initialProps to each step.
+  // This also ensures draftAsPaikka on step 6 reflects the latest saved data.
+  async function saveAndAdvance(stepNum: number) {
+    try {
+      const supabase = createBrowserSupabase()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: freshDraft } = await supabase
+          .from('onboarding_draft')
+          .select('*')
+          .eq('business_account_id', user.id)
+          .maybeSingle()
+        if (freshDraft) setDraft(freshDraft as OnboardingDraft)
+      }
+    } catch {
+      // Non-critical: if re-fetch fails, proceed anyway — user navigates forward
+    }
     goToStep(stepNum + 1)
   }
+
+  // Re-fetch draft when user navigates to step 6 so the preview is always up to date
+  useEffect(() => {
+    if (step !== 6) return
+    async function refreshDraftForPreview() {
+      try {
+        const supabase = createBrowserSupabase()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { data: freshDraft } = await supabase
+          .from('onboarding_draft')
+          .select('*')
+          .eq('business_account_id', user.id)
+          .maybeSingle()
+        if (freshDraft) setDraft(freshDraft as OnboardingDraft)
+      } catch { /* ignore */ }
+    }
+    refreshDraftForPreview()
+  }, [step])
 
   if (loading) {
     return (
