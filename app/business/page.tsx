@@ -86,6 +86,12 @@ export default function BusinessPage() {
           <h1 className="text-xl font-bold text-[#111111]">{t('pendingTitle')}</h1>
           <p className="text-sm text-[rgba(17,17,17,0.45)]">{t('pendingVenueLabel')}: {venueName}</p>
           <p className="text-sm text-[rgba(17,17,17,0.45)]">{t('pendingBody')}</p>
+          <a
+            href="/"
+            className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 flex items-center [transition:background-color_150ms_var(--ease-out)]"
+          >
+            {t('backToHome')}
+          </a>
         </div>
       </main>
     )

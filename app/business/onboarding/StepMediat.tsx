@@ -6,15 +6,18 @@ import { useTranslations } from 'next-intl'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import UploadDropZone from './UploadDropZone'
 import UploadProgressBar from './UploadProgressBar'
+import type { OnboardingDraft } from '@/lib/onboardingUtils'
 
 interface StepMediatProps {
   paikkaId: number
+  initialDraft?: OnboardingDraft | null
   onNext: () => void
   onPrev: () => void
 }
 
 export default function StepMediat({
   paikkaId,
+  initialDraft,
   onNext,
   onPrev,
 }: StepMediatProps) {
@@ -22,6 +25,12 @@ export default function StepMediat({
 
   const [logoFiles, setLogoFiles] = useState<File[]>([])
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
+  const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(
+    initialDraft?.media_urls?.logo ?? null
+  )
+  const [existingPhotoUrls, setExistingPhotoUrls] = useState<string[]>(
+    initialDraft?.media_urls?.photos ?? []
+  )
   const [uploadProgress, setUploadProgress] = useState<number>(0)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -68,10 +77,10 @@ export default function StepMediat({
 
       const userId = session.user.id
 
-      let logoUrl: string | null = null
-      const photoUrls: string[] = []
+      let logoUrl: string | null = existingLogoUrl
+      const photoUrls: string[] = [...existingPhotoUrls]
 
-      // Upload logo
+      // Upload logo (replaces existing if a new file is selected)
       if (logoFiles[0]) {
         const ext = logoFiles[0].name.split('.').pop() ?? 'jpg'
         const filename = `logo-${Date.now()}.${ext}`
@@ -169,26 +178,59 @@ export default function StepMediat({
         <h2 className="text-xl font-bold text-[#111111]">{t('stepMedia')}</h2>
 
         {/* Logo drop zone */}
-        <UploadDropZone
-          label={t('logoDropLabel')}
-          allowMultiple={false}
-          maxFileSizeMB={2}
-          maxFiles={1}
-          selectedFiles={logoFiles}
-          onFilesSelected={handleLogoFilesSelected}
-          onRemove={removeLogoFile}
-        />
+        <div className="flex flex-col gap-2">
+          {existingLogoUrl && logoFiles.length === 0 && (
+            <div className="flex items-center gap-3">
+              <img src={existingLogoUrl} alt="" className="w-14 h-14 object-cover rounded-lg border border-[rgba(0,0,0,0.07)]" />
+              <button
+                type="button"
+                onClick={() => setExistingLogoUrl(null)}
+                className="text-xs text-[rgba(17,17,17,0.45)] hover:text-red-600 [transition:color_150ms]"
+              >
+                Poista
+              </button>
+            </div>
+          )}
+          <UploadDropZone
+            label={existingLogoUrl && logoFiles.length === 0 ? 'Vaihda logo' : t('logoDropLabel')}
+            allowMultiple={false}
+            maxFileSizeMB={2}
+            maxFiles={1}
+            selectedFiles={logoFiles}
+            onFilesSelected={handleLogoFilesSelected}
+            onRemove={removeLogoFile}
+          />
+        </div>
 
         {/* Images drop zone */}
-        <UploadDropZone
-          label={t('imagesDropLabel')}
-          allowMultiple={true}
-          maxFileSizeMB={5}
-          maxFiles={5}
-          selectedFiles={photoFiles}
-          onFilesSelected={handlePhotoFilesSelected}
-          onRemove={removePhotoFile}
-        />
+        <div className="flex flex-col gap-2">
+          {existingPhotoUrls.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {existingPhotoUrls.map((url, i) => (
+                <div key={url} className="relative">
+                  <img src={url} alt="" className="w-14 h-14 object-cover rounded-lg border border-[rgba(0,0,0,0.07)]" />
+                  <button
+                    type="button"
+                    onClick={() => setExistingPhotoUrls(prev => prev.filter((_, idx) => idx !== i))}
+                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#111111] text-white text-[10px] flex items-center justify-center leading-none"
+                    aria-label="Poista kuva"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <UploadDropZone
+            label={t('imagesDropLabel')}
+            allowMultiple={true}
+            maxFileSizeMB={5}
+            maxFiles={5}
+            selectedFiles={photoFiles}
+            onFilesSelected={handlePhotoFilesSelected}
+            onRemove={removePhotoFile}
+          />
+        </div>
 
         {/* Upload progress bar */}
         <UploadProgressBar pct={uploadProgress} />

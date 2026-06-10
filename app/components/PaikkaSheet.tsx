@@ -54,12 +54,13 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => 
   const priceDisplay = paikka.hinta_kuvaus || priceStr || null
   const avgRating = reviews ? computeAvgRating(reviews.map(r => r.rating)) : null
 
-  // Carousel slides: slide 0 shows paikka.image_url when available; slides 1 and 2 are placeholders
-  const carouselSlides: (string | null)[] = [
-    paikka.image_url ?? null,
-    null,
-    null,
-  ]
+  // Carousel slides: use photo_urls array when available; fallback to image_url in slot 0
+  const rawSlides: (string | null)[] =
+    paikka.photo_urls && paikka.photo_urls.length > 0
+      ? paikka.photo_urls.map(u => u || null)
+      : [paikka.image_url ?? null]
+  while (rawSlides.length < 3) rawSlides.push(null)
+  const carouselSlides = rawSlides
 
   return (
     <motion.div
@@ -184,7 +185,7 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => 
 
         {/* Dot indicators — below hero, outside image */}
         <div className="flex justify-center gap-1.5 py-2">
-          {[0, 1, 2].map(i => (
+          {carouselSlides.map((_, i) => (
             <span
               key={i}
               className={`w-1.5 h-1.5 rounded-full transition-colors duration-150 ${

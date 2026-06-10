@@ -137,6 +137,7 @@
     "pendingTitle": "Your application has been received",
     "pendingVenueLabel": "Venue",
     "pendingBody": "Awaiting admin approval. We sent a confirmation to your email.",
+    "backToHome": "Back to homepage",
     "onboardingTitle": "Complete your information",
     "stepPlaceName": "Your venue",
     "stepMedia": "Media",

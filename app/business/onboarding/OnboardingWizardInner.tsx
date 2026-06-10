@@ -184,6 +184,7 @@ export default function OnboardingWizardInner() {
             {step === 2 && paikkaId !== null && (
               <StepMediat
                 paikkaId={paikkaId}
+                initialDraft={draft}
                 onNext={() => saveAndAdvance(2)}
                 onPrev={() => goToStep(1)}
               />

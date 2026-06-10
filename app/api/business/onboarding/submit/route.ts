@@ -71,6 +71,7 @@ export async function POST(request: Request) {
       puhelin: draft.yhteystiedot?.puhelin?.trim() ?? null,
       varauslinkki,
       image_url: draft.media_urls?.photos?.[0] ?? null,
+      photo_urls: draft.media_urls?.photos ?? null,
       business_managed: true,
     })
     .eq('id', draft.paikka_id)
