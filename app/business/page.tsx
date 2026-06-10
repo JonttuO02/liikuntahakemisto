@@ -126,7 +126,24 @@ export default function BusinessPage() {
                     )}
                     <button
                       type="button"
-                      onClick={() => setShowAddVenue(true)}
+                      onClick={async () => {
+                        const supabase = createBrowserSupabase()
+                        const { data: { session } } = await supabase.auth.getSession()
+                        const token = session?.access_token ?? ''
+                        const res = await fetch('/api/business/reapply', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: 'Bearer ' + token,
+                          },
+                          body: JSON.stringify({ paikka_id: link.paikka_id }),
+                        })
+                        if (res.ok) {
+                          setVenueLinks(prev => prev.map(l => l.paikka_id === link.paikka_id ? { ...l, claim_status: 'pending', rejection_reason: null } : l))
+                        } else {
+                          console.error('[reapply] failed', await res.json())
+                        }
+                      }}
                       className="text-xs font-bold text-[#111111] underline hover:no-underline text-left"
                     >
                       {t('reapplyCta')} →
