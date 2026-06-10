@@ -7,33 +7,52 @@ import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import UploadDropZone from './UploadDropZone'
 import UploadProgressBar from './UploadProgressBar'
 import type { OnboardingDraft } from '@/lib/onboardingUtils'
+import type { Liikuntapaikka } from '@/lib/types'
 
 interface StepMediatProps {
   paikkaId: number
   initialDraft?: OnboardingDraft | null
+  initialPaikka?: Liikuntapaikka | null
+  editMode?: boolean
   onNext: () => void
   onPrev: () => void
+  onSaveSuccess?: () => void
 }
 
 export default function StepMediat({
   paikkaId,
   initialDraft,
+  initialPaikka,
+  editMode = false,
   onNext,
   onPrev,
+  onSaveSuccess,
 }: StepMediatProps) {
   const t = useTranslations('Business')
 
   const [logoFiles, setLogoFiles] = useState<File[]>([])
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
   const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(
-    initialDraft?.media_urls?.logo ?? null
+    editMode
+      ? (initialPaikka?.logo_url ?? null)
+      : (initialDraft?.media_urls?.logo ?? null)
   )
   const [existingPhotoUrls, setExistingPhotoUrls] = useState<string[]>(
-    initialDraft?.media_urls?.photos ?? []
+    editMode
+      ? ((initialPaikka?.photo_urls as string[] | null) ?? [])
+      : (initialDraft?.media_urls?.photos ?? [])
   )
   const [uploadProgress, setUploadProgress] = useState<number>(0)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Edit mode specific state
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveSuccessVisible, setSaveSuccessVisible] = useState(false)
+
+  const totalPhotos = existingPhotoUrls.length + photoFiles.length
+  const photosAtMax = totalPhotos >= 5
 
   function handleLogoFilesSelected(files: File[]) {
     // Logo zone: only the first file
@@ -54,6 +73,22 @@ export default function StepMediat({
 
   function removePhotoFile(i: number) {
     setPhotoFiles((prev) => prev.filter((_, idx) => idx !== i))
+  }
+
+  async function handleDeleteExistingPhoto(url: string) {
+    // Derive storage path from URL
+    // URL pattern: https://<project>.supabase.co/storage/v1/object/public/business-media/<path>
+    const pathMatch = url.match(/\/storage\/v1\/object\/public\/business-media\/(.+)/)
+    const storagePath = pathMatch?.[1]
+
+    // Try to delete from Storage (non-blocking)
+    if (storagePath) {
+      const supabase = createBrowserSupabase()
+      await supabase.storage.from('business-media').remove([storagePath])
+    }
+
+    // Remove from state regardless of storage result
+    setExistingPhotoUrls((prev) => prev.filter((u) => u !== url))
   }
 
   async function handleNext() {
@@ -163,6 +198,104 @@ export default function StepMediat({
     }
   }
 
+  async function handleSave() {
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const supabase = createBrowserSupabase()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session) {
+        setSaveError('Tallennus epäonnistui')
+        return
+      }
+
+      const userId = session.user.id
+
+      let finalLogoUrl = existingLogoUrl
+      let finalPhotoUrls = [...existingPhotoUrls]
+
+      // Upload new logo if selected
+      if (logoFiles.length > 0) {
+        const file = logoFiles[0]
+        const ext = file.name.split('.').pop() ?? 'jpg'
+        const filename = `logo-${Date.now()}.${ext}`
+        const path = `${userId}/${paikkaId}/logo/${filename}`
+
+        const { error: uploadErr } = await supabase.storage
+          .from('business-media')
+          .upload(path, file, {
+            contentType: file.type,
+            upsert: true,
+          })
+
+        if (uploadErr) {
+          setSaveError('Tallennus epäonnistui')
+          return
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('business-media').getPublicUrl(path)
+        finalLogoUrl = publicUrl
+      }
+
+      // Upload new photos if selected
+      if (photoFiles.length > 0) {
+        for (let i = 0; i < photoFiles.length; i++) {
+          const file = photoFiles[i]
+          const ext = file.name.split('.').pop() ?? 'jpg'
+          const filename = `photo-${Date.now()}-${i}.${ext}`
+          const path = `${userId}/${paikkaId}/photos/${filename}`
+
+          const { error: uploadErr } = await supabase.storage
+            .from('business-media')
+            .upload(path, file, {
+              contentType: file.type,
+              upsert: true,
+            })
+
+          if (uploadErr) {
+            setSaveError('Tallennus epäonnistui')
+            return
+          }
+
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from('business-media').getPublicUrl(path)
+          finalPhotoUrls = [...finalPhotoUrls, publicUrl]
+        }
+      }
+
+      // POST to update-paikka
+      const res = await fetch('/api/business/update-paikka', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + session.access_token,
+        },
+        body: JSON.stringify({
+          paikka_id: paikkaId,
+          section: 'mediat',
+          data: { logo_url: finalLogoUrl, photo_urls: finalPhotoUrls },
+        }),
+      })
+
+      if (!res.ok) throw new Error('Save failed')
+
+      // Show success feedback
+      setSaveSuccessVisible(true)
+      setTimeout(() => setSaveSuccessVisible(false), 2000)
+      onSaveSuccess?.()
+    } catch {
+      setSaveError('Tallennus epäonnistui')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const submitButtonClass =
     'bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none'
 
@@ -212,32 +345,56 @@ export default function StepMediat({
             selectedFiles={photoFiles}
             onFilesSelected={handlePhotoFilesSelected}
             onRemove={removePhotoFile}
+            disabled={editMode ? photosAtMax : false}
           />
+          {editMode && photosAtMax && (
+            <p className="text-sm text-[rgba(17,17,17,0.45)]">{t('photoMaxReached')}</p>
+          )}
+
+          {/* Existing photo thumbnails */}
           {existingPhotoUrls.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
-              {existingPhotoUrls.map((url, i) => (
-                <div key={url} className="relative">
-                  <img src={url} alt="" className="w-14 h-14 object-cover rounded-lg border border-[rgba(0,0,0,0.07)]" />
-                  <button
-                    type="button"
-                    onClick={() => setExistingPhotoUrls(prev => prev.filter((_, idx) => idx !== i))}
-                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#111111] text-white text-[10px] flex items-center justify-center leading-none"
-                    aria-label="Poista kuva"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
+              {editMode
+                ? existingPhotoUrls.map((url) => (
+                    <div key={url} className="relative">
+                      <img
+                        src={url}
+                        alt={t('photoDeleteAlt')}
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteExistingPhoto(url)}
+                        className="absolute -top-1 -right-1 bg-[#111111] text-white rounded-full w-5 h-5 text-xs flex items-center justify-center leading-none"
+                        aria-label={t('photoDeleteAlt')}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))
+                : existingPhotoUrls.map((url, i) => (
+                    <div key={url} className="relative">
+                      <img src={url} alt="" className="w-14 h-14 object-cover rounded-lg border border-[rgba(0,0,0,0.07)]" />
+                      <button
+                        type="button"
+                        onClick={() => setExistingPhotoUrls(prev => prev.filter((_, idx) => idx !== i))}
+                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#111111] text-white text-[10px] flex items-center justify-center leading-none"
+                        aria-label="Poista kuva"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
             </div>
           )}
         </div>
 
-        {/* Upload progress bar */}
-        <UploadProgressBar pct={uploadProgress} />
+        {/* Upload progress bar (onboarding mode only) */}
+        {!editMode && <UploadProgressBar pct={uploadProgress} />}
 
-        {/* Error message */}
+        {/* Error message (onboarding mode) */}
         <AnimatePresence>
-          {error && (
+          {error && !editMode && (
             <motion.p
               key="error"
               initial={{ opacity: 0 }}
@@ -253,27 +410,71 @@ export default function StepMediat({
           )}
         </AnimatePresence>
 
+        {/* Edit mode success/error feedback */}
+        <AnimatePresence>
+          {saveSuccessVisible && (
+            <motion.p
+              key="save-success"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="text-sm text-green-700"
+              role="status"
+              aria-live="polite"
+            >
+              {t('saveSuccess')}
+            </motion.p>
+          )}
+          {saveError && (
+            <motion.p
+              key="save-error"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="text-sm text-red-600"
+              role="alert"
+              aria-live="polite"
+            >
+              {saveError}
+            </motion.p>
+          )}
+        </AnimatePresence>
+
         {/* Step footer */}
         <footer className="flex justify-between items-center pt-4 border-t border-[rgba(0,0,0,0.07)]">
           <motion.button
             type="button"
             whileTap={{ scale: 0.95 }}
             onClick={onPrev}
-            disabled={isUploading}
+            disabled={isUploading || saving}
             className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)] flex items-center gap-1"
           >
             {t('prevCta')}
           </motion.button>
 
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.95 }}
-            disabled={isUploading}
-            onClick={handleNext}
-            className={submitButtonClass}
-          >
-            {isUploading ? t('uploadingLabel') : t('nextCta')}
-          </motion.button>
+          {editMode ? (
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.95 }}
+              disabled={saving}
+              onClick={handleSave}
+              className={submitButtonClass}
+            >
+              {saving ? t('saving') : t('saveCta')}
+            </motion.button>
+          ) : (
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.95 }}
+              disabled={isUploading}
+              onClick={handleNext}
+              className={submitButtonClass}
+            >
+              {isUploading ? t('uploadingLabel') : t('nextCta')}
+            </motion.button>
+          )}
         </footer>
       </div>
     </motion.div>

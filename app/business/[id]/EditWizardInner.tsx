@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { Liikuntapaikka } from '@/lib/types'
+import StepMediat from '../onboarding/StepMediat'
 
 interface EditWizardInnerProps {
   paikka: Liikuntapaikka
@@ -71,7 +72,14 @@ export default function EditWizardInner({ paikka, paikkaId }: EditWizardInnerPro
           </div>
         )}
         {currentStep === '2' && (
-          <div className="text-sm text-[rgba(17,17,17,0.45)] p-6">{/* TODO: wire StepMediat editMode in 36-05 */}Lataa...</div>
+          <StepMediat
+            paikkaId={paikkaId}
+            initialPaikka={paikka}
+            editMode={true}
+            onNext={() => router.push('/business/' + paikkaId + '?step=3')}
+            onPrev={() => router.push('/business/' + paikkaId + '?step=1')}
+            onSaveSuccess={() => {}}
+          />
         )}
         {currentStep === '3' && (
           <div className="text-sm text-[rgba(17,17,17,0.45)] p-6">{/* TODO: wire StepHinnasto editMode in 36-06 */}Lataa...</div>

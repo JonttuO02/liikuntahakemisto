@@ -12,6 +12,7 @@ interface UploadDropZoneProps {
   selectedFiles: File[]
   onFilesSelected: (files: File[]) => void
   onRemove?: (index: number) => void
+  disabled?: boolean
 }
 
 export default function UploadDropZone({
@@ -22,6 +23,7 @@ export default function UploadDropZone({
   selectedFiles,
   onFilesSelected,
   onRemove,
+  disabled = false,
 }: UploadDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -89,7 +91,7 @@ export default function UploadDropZone({
     'border-[rgba(0,0,0,0.12)] hover:border-[rgba(0,0,0,0.25)]'
 
   return (
-    <div>
+    <div className={disabled ? 'pointer-events-none opacity-60' : ''}>
       {/* Clickable drop target — always shows upload prompt */}
       <div
         role="button"
