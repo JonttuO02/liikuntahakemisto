@@ -108,6 +108,7 @@ export function buildDraftAsPaikka(draft: OnboardingDraft, paikka: PaikkaBase): 
     hinta_kuvaus: hinnastaToHintaKuvaus(draft.hinnasto ?? []),
     aukioloajat: draft.aukioloajat ?? paikka.aukioloajat ?? null,
     image_url: draft.media_urls?.photos?.[0] ?? null,
+    logo_url: draft.media_urls?.logo ?? null,
     featured: false,
   }
 }
