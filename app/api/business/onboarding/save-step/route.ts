@@ -6,6 +6,21 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
 const ALLOWED_FIELDS = ['media_urls', 'hinnasto', 'aukioloajat', 'yhteystiedot'] as const
 type AllowedField = (typeof ALLOWED_FIELDS)[number]
 
+// Validate aukioloajat shape: object with valid day keys and HH:MM time strings.
+// Prevents arbitrary JSONB content from reaching the database.
+function isValidAukioloajat(v: unknown): boolean {
+  const VALID_DAYS = new Set(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])
+  const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return false
+  for (const [k, slot] of Object.entries(v as Record<string, unknown>)) {
+    if (!VALID_DAYS.has(k)) return false
+    if (typeof slot !== 'object' || slot === null) return false
+    const { open, close } = slot as Record<string, unknown>
+    if (!TIME_RE.test(String(open)) || !TIME_RE.test(String(close))) return false
+  }
+  return true
+}
+
 export async function POST(request: Request) {
   // Security: verify JWT from Authorization header before accepting any wizard data.
   // This prevents T-34-05-02 (Tampering): attacker cannot spoof business_account_id
@@ -48,11 +63,21 @@ export async function POST(request: Request) {
     }
     step = parsedStep
 
-    // value is the JSONB data for the field — no further server-side validation;
-    // Supabase enforces 8KB row limit (T-34-05-04 accepted).
+    // value is the JSONB data for the field.
     value = body.value
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  // Field-specific validation (WR-01, WR-02)
+  if (field === 'aukioloajat' && !isValidAukioloajat(value)) {
+    return NextResponse.json({ error: 'aukioloajat: invalid shape or time format' }, { status: 400 })
+  }
+  if (field === 'hinnasto') {
+    const rows = value as unknown[]
+    if (!Array.isArray(rows) || rows.length > 20) {
+      return NextResponse.json({ error: 'hinnasto: max 20 rows' }, { status: 400 })
+    }
   }
 
   // Security: verify the authenticated user actually owns this venue before accepting data.
