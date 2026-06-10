@@ -17,11 +17,12 @@ interface Props {
   paikka: Liikuntapaikka
   todo: boolean
   distanceKm?: number
-  onClose: () => void
+  onClose?: () => void
   onToggleTodo: (id: number) => void
+  preview?: boolean
 }
 
-export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggleTodo }: Props) {
+export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => {}, onToggleTodo, preview = false }: Props) {
   const t = useTranslations('PaikkaSheet')
   const tKortti = useTranslations('PaikkaKortti')
   const [reviews, setReviews] = useState<ReviewRow[] | null>(null)
@@ -38,13 +39,14 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
   }, [paikka.id])
 
   useEffect(() => {
+    if (preview) { setReviews([]); return }
     const sb = createBrowserSupabase()
     sb.from('reviews')
       .select('id, rating, teksti, is_anonymous, reviewer_name, created_at')
       .eq('paikka_id', paikka.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => setReviews(data ?? []))
-  }, [paikka.id])
+  }, [paikka.id, preview])
 
   const hoursGroups = formatGroupedHours(paikka.aukioloajat ?? null)
   const openStatus = getOpenStatus(paikka.aukioloajat)
@@ -59,7 +61,7 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="glass rounded-t-3xl"
-      style={{
+      style={preview ? { position: 'relative', height: 'auto', maxHeight: '600px', overflow: 'hidden', borderRadius: '1rem' } : {
         position: 'fixed',
         left: 0, right: 0, bottom: 0,
         height: 'calc(100dvh - 116px)',
@@ -67,12 +69,14 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
         overflow: 'hidden',
       }}
       transition={{ type: 'spring', damping: 32, stiffness: 260 }}
-      drag="y"
-      dragConstraints={{ top: 0, bottom: 0 }}
-      dragElastic={{ top: 0, bottom: 0.15 }}
-      onDragEnd={(_, info) => {
-        if (info.velocity.y > 400 || info.offset.y > 100) onClose()
-      }}
+      drag={preview ? false : ('y' as const)}
+      {... (preview ? {} : {
+        dragConstraints: { top: 0, bottom: 0 },
+        dragElastic: { top: 0, bottom: 0.15 },
+        onDragEnd: (_: unknown, info: { velocity: { y: number }; offset: { y: number } }) => {
+          if (info.velocity.y > 400 || info.offset.y > 100) onClose()
+        },
+      })}
       onClick={e => e.stopPropagation()}
     >
       {/* Scrollable content — hero extends to sheet top; drag-to-close via outer motion.div drag="y" */}
@@ -81,7 +85,7 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
         {/* Hero carousel — first child of scrollable area */}
         <div className="relative aspect-video w-full overflow-hidden">
           {/* Floating drag indicator (visual only — outer div handles height accounting) */}
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 w-10 h-1 bg-[rgba(255,255,255,0.5)] rounded-full" />
+          {!preview && <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 w-10 h-1 bg-[rgba(255,255,255,0.5)] rounded-full" />}
 
           {/* Close + bookmark — absolute top-right */}
           <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
@@ -96,13 +100,15 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
                 : <Bookmark className={cn('w-4 h-4 text-[rgba(17,17,17,0.35)]')} />
               }
             </motion.button>
-            <button
-              onClick={onClose}
-              aria-label={t('close')}
-              className="glass-btn w-8 h-8 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            {!preview && (
+              <button
+                onClick={onClose}
+                aria-label={t('close')}
+                className="glass-btn w-8 h-8 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Carousel slides — CSS scroll-snap, stop pointer events from bubbling to drag="y" */}
