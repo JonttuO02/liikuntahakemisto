@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
@@ -26,10 +26,17 @@ export default function StepEsikatselu({
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [loadTimedOut, setLoadTimedOut] = useState(false)
 
   // Build preview object when both draft and paikkaInfo are available
   const draftAsPaikka =
     draft && paikkaInfo ? buildDraftAsPaikka(draft, paikkaInfo) : null
+
+  useEffect(() => {
+    if (draftAsPaikka) return
+    const timer = setTimeout(() => setLoadTimedOut(true), 8000)
+    return () => clearTimeout(timer)
+  }, [draftAsPaikka])
 
   async function handleSubmit() {
     if (loading) return
@@ -78,7 +85,11 @@ export default function StepEsikatselu({
     <div className="glass rounded-2xl p-6 w-full max-w-xl mx-auto">
       <h2 className="text-xl font-bold text-[#111111] mb-4">{t('stepPreview')}</h2>
 
-      {!draftAsPaikka ? (
+      {loadTimedOut && !draftAsPaikka ? (
+        <p className="text-sm text-red-600 text-center py-8">
+          Esikatselu ei latautunut. Palaa takaisin ja yritä uudelleen.
+        </p>
+      ) : !draftAsPaikka ? (
         <div className="flex justify-center py-8">
           <div className="w-6 h-6 rounded-full border-2 border-[rgba(17,17,17,0.12)] border-t-[#111111] animate-spin" />
         </div>

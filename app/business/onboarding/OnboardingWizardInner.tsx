@@ -72,8 +72,6 @@ export default function OnboardingWizardInner() {
         }
       }
 
-      setPaikkaId(resolvedPaikkaId)
-
       // Load existing draft
       const { data: existingDraft } = await supabase
         .from('onboarding_draft')
@@ -88,6 +86,10 @@ export default function OnboardingWizardInner() {
           goToStep(existingDraft.current_step)
         }
       }
+
+      // Apply draft fallback: use draft.paikka_id when URL and links both yield nothing
+      resolvedPaikkaId = resolvedPaikkaId ?? existingDraft?.paikka_id ?? null
+      setPaikkaId(resolvedPaikkaId)
 
       // Load paikka info if we have a paikka_id
       if (resolvedPaikkaId) {
