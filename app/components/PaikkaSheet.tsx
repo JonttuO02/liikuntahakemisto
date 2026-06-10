@@ -54,6 +54,13 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => 
   const priceDisplay = paikka.hinta_kuvaus || priceStr || null
   const avgRating = reviews ? computeAvgRating(reviews.map(r => r.rating)) : null
 
+  // Carousel slides: slide 0 shows paikka.image_url when available; slides 1 and 2 are placeholders
+  const carouselSlides: (string | null)[] = [
+    paikka.image_url ?? null,
+    null,
+    null,
+  ]
+
   return (
     <motion.div
       layoutId={preview ? undefined : `vc-${paikka.id}`}
@@ -123,12 +130,21 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => 
               setActiveSlide(idx)
             }}
           >
-            {[0, 1, 2].map(i => (
+            {carouselSlides.map((src, i) => (
               <div
                 key={i}
-                className="snap-start shrink-0 w-full h-full bg-[rgba(0,0,0,0.08)] flex items-center justify-center"
+                className="snap-start shrink-0 w-full h-full bg-[rgba(0,0,0,0.08)] flex items-center justify-center relative overflow-hidden"
               >
-                <Camera size={32} className="text-[rgba(255,255,255,0.4)]" />
+                {src ? (
+                  <img
+                    src={src}
+                    alt=""
+                    aria-hidden
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : (
+                  <Camera size={32} className="text-[rgba(255,255,255,0.4)]" />
+                )}
               </div>
             ))}
           </div>
@@ -140,7 +156,16 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => 
           >
             <div className="flex items-end gap-2.5">
               <div className="w-9 h-9 rounded-lg bg-[rgba(255,255,255,0.15)] flex items-center justify-center shrink-0">
-                <Building2 size={18} className="text-white opacity-60" />
+                {paikka.logo_url ? (
+                  <img
+                    src={paikka.logo_url}
+                    alt=""
+                    aria-hidden
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                ) : (
+                  <Building2 size={18} className="text-white opacity-60" />
+                )}
               </div>
               <div className="min-w-0">
                 <h2 className="font-bold text-white text-lg leading-tight">{paikka.nimi}</h2>
