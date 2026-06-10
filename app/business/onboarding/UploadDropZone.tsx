@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Upload } from 'lucide-react'
 
@@ -23,6 +23,17 @@ export default function UploadDropZone({
 }: UploadDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Create object URLs once per selectedFiles reference; revoke on change/unmount to prevent leaks.
+  const previewUrls = useMemo(
+    () => selectedFiles.map((f) => URL.createObjectURL(f)),
+    [selectedFiles]
+  )
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [previewUrls])
 
   function validateAndSelect(rawFiles: File[]) {
     const maxBytes = maxFileSizeMB * 1024 * 1024
@@ -97,13 +108,13 @@ export default function UploadDropZone({
           </>
         ) : (
           <div className="flex flex-row gap-2 flex-wrap justify-center">
-            {selectedFiles.map((file) => (
+            {selectedFiles.map((file, index) => (
               <motion.img
                 key={file.name}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.15 }}
-                src={URL.createObjectURL(file)}
+                src={previewUrls[index]}
                 alt={file.name}
                 className="w-16 h-16 object-cover rounded-lg"
               />
