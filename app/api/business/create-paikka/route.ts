@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
+import { sendAdminNotificationEmail } from '@/lib/email'
 
 export async function POST(request: Request) {
   // Security: verify JWT from Authorization header before accepting any user data.
@@ -77,6 +78,38 @@ export async function POST(request: Request) {
 
   if (updateError) {
     console.error('[create-paikka] is_claimed UPDATE failed (non-critical):', updateError.message)
+  }
+
+  // Non-critical: send admin notification — failure does not rollback the create
+  try {
+    const { data: biz } = await supabaseAdmin
+      .from('business_accounts')
+      .select('company_name')
+      .eq('user_id', user.id)
+      .single()
+    const { data: paikka } = await supabaseAdmin
+      .from('liikuntapaikat')
+      .select('nimi')
+      .eq('id', newPaikkaId)
+      .single()
+    // Get link id for deep link in email
+    const { data: link } = await supabaseAdmin
+      .from('business_paikka_links')
+      .select('id')
+      .eq('business_account_id', user.id)
+      .eq('paikka_id', newPaikkaId)
+      .single()
+    if (biz && paikka && link) {
+      await sendAdminNotificationEmail({
+        companyName: biz.company_name,
+        venueName: paikka.nimi,
+        linkType: 'created',
+        applicationId: link.id,
+        submittedAt: new Date().toISOString(),
+      })
+    }
+  } catch (emailErr) {
+    console.error('[create-paikka] Admin notification email failed (non-critical):', emailErr)
   }
 
   // Return paikka_id for Phase 34 onboarding wizard to redirect user to onboarding flow.

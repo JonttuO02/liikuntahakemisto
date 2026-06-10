@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
 import { hinnastaToHintaKuvaus } from '@/lib/onboardingUtils'
+import { sendAdminNotificationEmail } from '@/lib/email'
 
 export async function POST(request: Request) {
   // Security: verify JWT from Authorization header before any mutation.
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
   // supabaseAdmin bypasses RLS, so this explicit ownership check is mandatory.
   const { data: link, error: linkError } = await supabaseAdmin
     .from('business_paikka_links')
-    .select('id')
+    .select('id, link_type')
     .eq('business_account_id', user.id)
     .eq('paikka_id', draft.paikka_id)
     .maybeSingle()
@@ -102,6 +103,31 @@ export async function POST(request: Request) {
 
   if (deleteError) {
     console.error('[onboarding/submit] Draft DELETE failed (non-critical):', deleteError.message)
+  }
+
+  // Non-critical: send admin notification — failure does not rollback the onboarding submit
+  try {
+    const { data: biz } = await supabaseAdmin
+      .from('business_accounts')
+      .select('company_name')
+      .eq('user_id', user.id)
+      .single()
+    const { data: paikka } = await supabaseAdmin
+      .from('liikuntapaikat')
+      .select('nimi')
+      .eq('id', draft.paikka_id)
+      .single()
+    if (biz && paikka && link) {
+      await sendAdminNotificationEmail({
+        companyName: biz.company_name,
+        venueName: paikka.nimi,
+        linkType: link.link_type as 'claim' | 'created',
+        applicationId: link.id,
+        submittedAt: new Date().toISOString(),
+      })
+    }
+  } catch (emailErr) {
+    console.error('[onboarding/submit] Admin notification email failed (non-critical):', emailErr)
   }
 
   return NextResponse.json({ ok: true })

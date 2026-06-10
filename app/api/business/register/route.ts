@@ -14,6 +14,7 @@ export async function POST(request: Request) {
 
   // Parse and validate request body
   let company_name: string
+  let role_in_company: string | null
   try {
     const body = await request.json()
     company_name = typeof body.company_name === 'string'
@@ -22,6 +23,9 @@ export async function POST(request: Request) {
     if (!company_name) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
+    role_in_company = typeof body.role_in_company === 'string'
+      ? body.role_in_company.trim().slice(0, 100) || null
+      : null
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
@@ -29,7 +33,7 @@ export async function POST(request: Request) {
   // Insert into business_accounts using verified user.id — never body.user_id
   const { error } = await supabaseAdmin
     .from('business_accounts')
-    .insert({ user_id: user.id, company_name })
+    .insert({ user_id: user.id, company_name, role_in_company })
 
   if (error) {
     // Atomicity rollback (D-10): delete the orphaned auth user so the user can retry
