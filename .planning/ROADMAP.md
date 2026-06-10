@@ -107,7 +107,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
 - [x] **Phase 32: Yritysrekisteröinti & auth** — Rekisteröintilomake, kirjautuminen, automaattinen ohjaus /business-sivulle
  (completed 2026-06-05)
 - [x] **Phase 33: Claim & paikan luonti** — Olemassa olevan paikan haku + claim-pyyntö; uuden paikan luonti; näkyvyyssäännöt (completed 2026-06-06)
-- [ ] **Phase 34: Onboarding-velhou** — 6-vaiheinen ohjattu wizard (paikka → mediat → hinnasto → aukioloajat → yhteystiedot → esikatselu) *(9 plans, 5 waves)*
+- [x] **Phase 34: Onboarding-velhou** — 6-vaiheinen ohjattu wizard (paikka → mediat → hinnasto → aukioloajat → yhteystiedot → esikatselu) *(10 plans, 6 waves)* (completed 2026-06-10)
 - [ ] **Phase 35: Admin-hyväksyntäjärjestelmä** — Email-ilmoitukset, /admin-sivu, hyväksy/hylkää toiminto, vahvistussähköpostit, is_admin-suojaus
 - [ ] **Phase 36: Hallintapaneeli** — /business-sivu: paikkalistaus tiloineen, kaikkien tietojen muokkaus, esikatselu
 
@@ -190,26 +190,29 @@ Plans:
   3. Vaihe 3 (Hinnasto) vaatii vähintään yhden hintarivin ennen kuin voi jatkaa; vaihe 4 (Aukioloajat) esitäyttää Google Places -datan jos saatavilla
   4. Vaihe 5 (Yhteystiedot) kerää puhelimen, sähköpostin, websiten ja kuvauksen (max 300 merkkiä); vaihe 6 (Esikatselu) näyttää PaikkaKortin, DiagonaalKortin ja PaikkaSheetin yrityksen syöttämillä tiedoilla
   5. Velhousta ei voi hypätä yli pakollisten vaiheiden — edistymispalkki ja navigointi kertovat missä vaiheessa ollaan
-**Plans**: 9 plans in 5 waves
+**Plans**: 10 plans in 6 waves
 
 **Wave 0** (prerequisite — tests and utilities):
-- [ ] 34-01-PLAN.md — lib/onboardingUtils.ts + unit tests + vitest.config update (ONBOARD-04, -05, -06, -07)
+- [x] 34-01-PLAN.md — lib/onboardingUtils.ts + unit tests + vitest.config update (ONBOARD-04, -05, -06, -07)
 
 **Wave 1** (parallel):
-- [ ] 34-02-PLAN.md — DB migration: onboarding_draft table + onboarding_completed column + RLS (ONBOARD-01, -03, -04, -05, -06, -07)
-- [ ] 34-03-PLAN.md — i18n wizard keys (fi.json + en.json) + ClaimSearchForm redirect fix + business/page.tsx onboarding gate (ONBOARD-01, -02)
+- [x] 34-02-PLAN.md — DB migration: onboarding_draft table + onboarding_completed column + RLS (ONBOARD-01, -03, -04, -05, -06, -07)
+- [x] 34-03-PLAN.md — i18n wizard keys (fi.json + en.json) + ClaimSearchForm redirect fix + business/page.tsx onboarding gate (ONBOARD-01, -02)
 
 **Wave 2** (after Wave 1 — migration must be applied before Route Handlers):
-- [ ] 34-04-PLAN.md — [BLOCKING] supabase db push + dashboard checkpoint (ONBOARD-01, -03, -04, -05, -06, -07)
-- [ ] 34-05-PLAN.md — Route Handlers: save-step + submit (atomic commit) (ONBOARD-01, -04, -05, -06, -07)
+- [x] 34-04-PLAN.md — [BLOCKING] supabase db push + dashboard checkpoint (ONBOARD-01, -03, -04, -05, -06, -07)
+- [x] 34-05-PLAN.md — Route Handlers: save-step + submit (atomic commit) (ONBOARD-01, -04, -05, -06, -07)
 
 **Wave 3** (parallel — after Route Handlers):
-- [ ] 34-06-PLAN.md — Wizard page shell + OnboardingWizardInner + ProgressBar + StepPaikka (ONBOARD-01, -02)
-- [ ] 34-07-PLAN.md — UploadDropZone + UploadProgressBar + StepMediat (ONBOARD-03)
+- [x] 34-06-PLAN.md — Wizard page shell + OnboardingWizardInner + ProgressBar + StepPaikka (ONBOARD-01, -02)
+- [x] 34-07-PLAN.md — UploadDropZone + UploadProgressBar + StepMediat (ONBOARD-03)
 
 **Wave 4** (parallel — after Wave 3 scaffold):
-- [ ] 34-08-PLAN.md — StepHinnasto (Step 3) + StepAukioloajat (Step 4) + wired into wizard (ONBOARD-04, -05)
-- [ ] 34-09-PLAN.md — StepYhteystiedot (Step 5) + StepEsikatselu (Step 6 + submit) + all steps wired (ONBOARD-06, -07)
+- [x] 34-08-PLAN.md — StepHinnasto (Step 3) + StepAukioloajat (Step 4) + wired into wizard (ONBOARD-04, -05)
+- [x] 34-09-PLAN.md — StepYhteystiedot (Step 5) + StepEsikatselu (Step 6 + submit) + all steps wired (ONBOARD-06, -07)
+
+**Wave 10** (gap closure — after Wave 4):
+- [x] 34-10-PLAN.md — PaikkaSheet preview prop + StepEsikatselu wire-up (ONBOARD-07)
 
 **UI hint**: yes
 
@@ -276,6 +279,6 @@ Plans:
 | 31. DB-skeema & Storage-perusta | v1.7 | 4/4 | ✅ Complete | 2026-06-05 |
 | 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | Complete    | 2026-06-05 |
 | 33. Claim & paikan luonti | v1.7 | 7/7 | ✅ Complete | 2026-06-06 |
-| 34. Onboarding-velhou | v1.7 | 0/9 | Planned     | - |
+| 34. Onboarding-velhou | v1.7 | 10/10 | ✅ Complete | 2026-06-10 |
 | 35. Admin-hyväksyntäjärjestelmä | v1.7 | 0/? | Not started | - |
 | 36. Hallintapaneeli | v1.7 | 0/? | Not started | - |
