@@ -56,12 +56,12 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => 
 
   return (
     <motion.div
-      layoutId={`vc-${paikka.id}`}
+      layoutId={preview ? undefined : `vc-${paikka.id}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="glass rounded-t-3xl"
-      style={preview ? { position: 'relative', height: 'auto', maxHeight: '600px', overflow: 'hidden', borderRadius: '1rem' } : {
+      style={preview ? { position: 'relative', height: '600px', maxHeight: '600px', overflow: 'hidden', borderRadius: '1rem' } : {
         position: 'fixed',
         left: 0, right: 0, bottom: 0,
         height: 'calc(100dvh - 116px)',
@@ -88,19 +88,19 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => 
           {!preview && <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 w-10 h-1 bg-[rgba(255,255,255,0.5)] rounded-full" />}
 
           {/* Close + bookmark — absolute top-right */}
-          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
-            <motion.button
-              whileTap={{ scale: 0.85, transition: { duration: 0.12 } }}
-              onClick={() => onToggleTodo(paikka.id)}
-              aria-label={todo ? tKortti('removeFromTodo') : tKortti('addToTodo')}
-              className="glass-btn w-8 h-8 rounded-full flex items-center justify-center"
-            >
-              {todo
-                ? <BookmarkCheck className={cn('w-4 h-4 fill-[#111111] text-[#111111]')} />
-                : <Bookmark className={cn('w-4 h-4 text-[rgba(17,17,17,0.35)]')} />
-              }
-            </motion.button>
-            {!preview && (
+          {!preview && (
+            <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+              <motion.button
+                whileTap={{ scale: 0.85, transition: { duration: 0.12 } }}
+                onClick={() => onToggleTodo(paikka.id)}
+                aria-label={todo ? tKortti('removeFromTodo') : tKortti('addToTodo')}
+                className="glass-btn w-8 h-8 rounded-full flex items-center justify-center"
+              >
+                {todo
+                  ? <BookmarkCheck className={cn('w-4 h-4 fill-[#111111] text-[#111111]')} />
+                  : <Bookmark className={cn('w-4 h-4 text-[rgba(17,17,17,0.35)]')} />
+                }
+              </motion.button>
               <button
                 onClick={onClose}
                 aria-label={t('close')}
@@ -108,8 +108,8 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => 
               >
                 <X className="w-4 h-4" />
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Carousel slides — CSS scroll-snap, stop pointer events from bubbling to drag="y" */}
           <div
