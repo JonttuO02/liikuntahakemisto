@@ -83,6 +83,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Update failed', detail: updateError.message }, { status: 500 })
   }
 
+  // Step 5a: Reset claim_status to 'pending' so the admin sees a fresh actionable item
+  // with all venue data filled in. This handles the case where the admin acted on the
+  // initial claim/create submission before onboarding was complete (premature approval).
+  // Non-critical: failure does not block onboarding completion.
+  const { error: claimStatusError } = await supabaseAdmin
+    .from('business_paikka_links')
+    .update({ claim_status: 'pending' })
+    .eq('business_account_id', user.id)
+    .eq('paikka_id', draft.paikka_id)
+
+  if (claimStatusError) {
+    console.error('[onboarding/submit] claim_status reset to pending failed (non-critical):', claimStatusError.message)
+  }
+
   // Step 5: Set onboarding_completed = true so /business page shows management panel (D-03).
   // Non-critical: if this fails after the liikuntapaikat update succeeded, log but continue —
   // the venue data is already live. The onboarding gate will re-run on next /business visit.
