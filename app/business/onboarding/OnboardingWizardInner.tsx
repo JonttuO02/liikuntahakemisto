@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl'
 import type { OnboardingDraft } from '@/lib/onboardingUtils'
 import ProgressBar from './ProgressBar'
 import StepPaikka from './StepPaikka'
+import StepMediat from './StepMediat'
 import StepHinnasto from './StepHinnasto'
 import StepAukioloajat from './StepAukioloajat'
 import StepYhteystiedot from './StepYhteystiedot'
@@ -144,8 +145,13 @@ export default function OnboardingWizardInner() {
                 onNext={() => saveAndAdvance(1)}
               />
             )}
-            {/* Step 2 implemented in Plan 07 */}
-            {step === 2 && null}
+            {step === 2 && paikkaId !== null && (
+              <StepMediat
+                paikkaId={paikkaId}
+                onNext={() => saveAndAdvance(2)}
+                onPrev={() => goToStep(1)}
+              />
+            )}
             {step === 3 && paikkaId !== null && (
               <StepHinnasto
                 paikkaId={paikkaId}
