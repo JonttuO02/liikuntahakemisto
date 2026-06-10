@@ -8,6 +8,8 @@ import { useTranslations } from 'next-intl'
 import type { OnboardingDraft } from '@/lib/onboardingUtils'
 import ProgressBar from './ProgressBar'
 import StepPaikka from './StepPaikka'
+import StepHinnasto from './StepHinnasto'
+import StepAukioloajat from './StepAukioloajat'
 
 type PaikkaInfo = {
   nimi: string
@@ -140,8 +142,25 @@ export default function OnboardingWizardInner() {
                 onNext={() => saveAndAdvance(1)}
               />
             )}
-            {/* Steps 2-6 implemented in Plans 07-09 */}
-            {step >= 2 && null}
+            {/* Step 2 implemented in Plan 07 */}
+            {step === 2 && null}
+            {step === 3 && paikkaId !== null && (
+              <StepHinnasto
+                paikkaId={paikkaId}
+                onNext={() => saveAndAdvance(3)}
+                onPrev={() => goToStep(2)}
+              />
+            )}
+            {step === 4 && paikkaId !== null && (
+              <StepAukioloajat
+                paikkaId={paikkaId}
+                existingAukioloajat={paikkaInfo?.aukioloajat}
+                onNext={() => saveAndAdvance(4)}
+                onPrev={() => goToStep(3)}
+              />
+            )}
+            {/* Steps 5-6 implemented in Plan 09 */}
+            {step >= 5 && null}
           </motion.div>
         </AnimatePresence>
       </div>
