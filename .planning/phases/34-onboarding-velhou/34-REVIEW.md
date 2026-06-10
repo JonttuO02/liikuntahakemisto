@@ -2,277 +2,187 @@
 phase: 34-onboarding-velhou
 reviewed: 2026-06-10T00:00:00Z
 depth: standard
-files_reviewed: 21
+files_reviewed: 7
 files_reviewed_list:
-  - app/api/business/onboarding/save-step/route.ts
-  - app/api/business/onboarding/submit/route.ts
   - app/business/onboarding/OnboardingWizardInner.tsx
-  - app/business/onboarding/page.tsx
-  - app/business/onboarding/ProgressBar.tsx
-  - app/business/onboarding/StepAukioloajat.tsx
   - app/business/onboarding/StepEsikatselu.tsx
-  - app/business/onboarding/StepHinnasto.tsx
-  - app/business/onboarding/StepMediat.tsx
-  - app/business/onboarding/StepPaikka.tsx
   - app/business/onboarding/StepYhteystiedot.tsx
+  - app/business/onboarding/StepHinnasto.tsx
+  - app/business/onboarding/StepAukioloajat.tsx
   - app/business/onboarding/UploadDropZone.tsx
-  - app/business/onboarding/UploadProgressBar.tsx
-  - app/business/page.tsx
-  - app/components/ClaimSearchForm.tsx
-  - lib/onboardingUtils.test.ts
-  - lib/onboardingUtils.ts
-  - messages/en.json
-  - messages/fi.json
-  - supabase/migrations/20260606000000_onboarding.sql
-  - vitest.config.ts
+  - app/business/onboarding/StepMediat.tsx
 findings:
-  critical: 5
-  warning: 6
+  critical: 2
+  warning: 5
   info: 4
-  total: 15
+  total: 11
 status: issues_found
 ---
 
-# Phase 34: Code Review Report
+# Phase 34 (Plan 34-11 Gap-Closure): Code Review Report
 
-**Reviewed:** 2026-06-10T00:00:00Z
+**Reviewed:** 2026-06-10
 **Depth:** standard
-**Files Reviewed:** 21
+**Files Reviewed:** 7
 **Status:** issues_found
 
 ## Summary
 
-This phase implements the business onboarding wizard: a six-step flow covering venue selection, media upload, pricing, hours, contact details, and a preview/submit step. The API surface is reasonably locked down — JWT is extracted from the `Authorization` header and verified against `supabaseAdmin`, `business_account_id` is never read from the body, and the submit route does an explicit ownership check against `business_paikka_links`. Those structural decisions are correct.
+Review of the 7 onboarding wizard files changed in plan 34-11 (UAT gap-closure). The four targeted UAT fixes are present and mechanically correct: the `paikka_id` draft fallback and 8-second spinner timeout in `StepEsikatselu` resolves the infinite spinner, the ICU interpolation (`t('contactDescCount', { n: descCount })`) fixes the raw translation key display, `initialValues` props in steps 3–5 restore back-navigation data, and `onRemove` with thumbnails outside the clickable zone fixes the thumbnail UX. The API routes (`save-step`, `submit`) reviewed in the previous pass have their ownership and validation fixes already in place.
 
-However, five blockers exist: the `save-step` route accepts arbitrary `paikka_id` values from the request body without verifying that the authenticated user actually owns that venue, the file upload path is built from a client-supplied `businessAccountId` prop that the wizard never resolves (the step is dead in the current wizard), `URL.createObjectURL` leaks object URLs on every render, the `submit` route's draft query uses `.single()` which throws a 406 when no draft row exists rather than returning a clean 404, and `StepMediat` is wired as `{step === 2 && null}` so uploads never run while the save-step route and DB schema still accept `media_urls`.
-
-Six warnings cover: unvalidated time-string values stored verbatim in JSONB, unbounded `hinnasto` array size accepted by the API, missing `setLoading(false)` in the early-return path of `StepMediat`, a race between the `loadDraft` effect and the `completedSteps` derivation, the `paikka_id` URL param being accepted from anonymous/unauthenticated visitors without sanitising NaN, and the `business_accounts` ownership check in `submit` querying by `user_id` while the UPSERT in `save-step` ties the draft to `business_account_id` — correct only because they are the same column, but no comment or test confirms this invariant.
+Two blockers were found in the gap-closure changes: the submit button in `StepEsikatselu` is not gated when preview data failed to load (a user can submit an incomplete draft through the timeout error state), and `setUploadProgress(0)` is missing from the auth-failure early-return path in `StepMediat`, leaving the progress bar stuck at 10% after an auth error. Five warnings cover inconsistent session-null handling, unguarded "Prev" navigation during saves, a React key collision on duplicate filenames, a misleading `maxFiles` contract in `UploadDropZone`, and back-populated pricing rows losing their `isFixed` status. Four info items cover hardcoded Finnish strings that will break the English locale.
 
 ---
 
 ## Critical Issues
 
-### CR-01: save-step does not verify the authenticated user owns the paikka_id
+### CR-01: Submit button active when preview data failed to load
 
-**File:** `app/api/business/onboarding/save-step/route.ts:61-72`
-**Issue:** The route parses `paikka_id` from the request body (line 29) and UPSERTs directly with that value. There is no check against `business_paikka_links` to confirm `user.id` is the owner of that venue. Any authenticated business user can overwrite the draft of any other venue they do not own by supplying an arbitrary `paikka_id`. The `submit` route does perform this ownership check, but by that point the attacker's draft already contains malicious data.
+**File:** `app/business/onboarding/StepEsikatselu.tsx:153`
 
-The `submit` route's ownership check on line 32–40 is not sufficient mitigation: the draft `paikka_id` was already set in the UPSERT conflict key, so the attacker first calls `save-step` with a victim's `paikka_id` which creates or merges a draft row keyed to `(attacker_uid, victim_paikka_id)`. That draft is then blocked by the `business_paikka_links` check in `submit` — but the attacker has still polluted a draft row linked to a venue they don't own.
+**Issue:** The "Lähetä hyväksyttäväksi" button is rendered and enabled even when `loadTimedOut` is `true` and `draftAsPaikka` is `null` (lines 88–91 show the timeout error UI, but lines 142–162 render the footer unconditionally). A user who hits the 8-second timeout — meaning `draft` or `paikkaInfo` could not be assembled into a preview — can still click Submit and fire the API call. The `submit` route will process whatever partial data exists in the draft, potentially committing an incomplete venue profile (missing pricing, hours, or contact data) to `liikuntapaikat`. The preview step exists precisely to block submission until the user can verify the assembled data.
 
 **Fix:**
-```typescript
-// After parsing paikkaId, verify ownership before accepting data
-const { data: link } = await supabaseAdmin
-  .from('business_paikka_links')
-  .select('id')
-  .eq('business_account_id', user.id)
-  .eq('paikka_id', paikkaId)
-  .maybeSingle()
 
-if (!link) {
-  return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+```tsx
+<motion.button
+  type="button"
+  onClick={handleSubmit}
+  // Gate on draftAsPaikka: prevents submitting when preview data could not be assembled
+  disabled={loading || !draftAsPaikka}
+  whileTap={{ scale: 0.95 }}
+  className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
+>
+  {loading ? t('submitting') : t('submitCta')}
+</motion.button>
+```
+
+---
+
+### CR-02: `setUploadProgress(0)` missing on auth-failure path in StepMediat
+
+**File:** `app/business/onboarding/StepMediat.tsx:63–66`
+
+**Issue:** When `getSession()` returns no session, the code calls `setError(t('errorUploadFailed'))` and `return`s from within the `try` block (line 65). The `finally` block at line 151 executes correctly and calls `setIsUploading(false)`. However, `setUploadProgress(0)` is present on every other error-return path (lines 88–90, 113–115, 142–144) but is absent on the auth-failure path. When a session-expired user clicks "Next", the progress bar advances to 10% (set on line 52), then stays at 10% after the error is shown, because the auth path never resets it. All other error paths reset the progress bar to 0; this one does not.
+
+**Fix:**
+
+```tsx
+if (!session) {
+  setError(t('errorUploadFailed'))
+  setUploadProgress(0)   // matches all other error paths
+  return
 }
 ```
-
----
-
-### CR-02: StepMediat uses client-supplied businessAccountId as Storage path prefix
-
-**File:** `app/business/onboarding/StepMediat.tsx:62,88`
-**Issue:** The storage path is constructed as:
-```ts
-const path = `${businessAccountId}/${paikkaId}/logo/${filename}`
-```
-`businessAccountId` is a prop passed from the parent. In `OnboardingWizardInner.tsx` step 2 is rendered as `{step === 2 && null}` — `StepMediat` is never mounted. But the component's interface accepts `businessAccountId: string` from the caller without ever validating that it matches the session user. If this prop were ever passed from a future caller with an incorrect or attacker-controlled value, files would be uploaded under another account's path.
-
-More critically: the session token used for the storage upload is fetched on line 52-54 as `supabase.auth.getSession()` but the upload is done with `supabase.storage` (anon key client), not with `supabaseAdmin`. The storage bucket `business-media` must allow the anon/authenticated client to write — if its RLS is path-scoped to `auth.uid()`, the path prefix must match `user.id`, not an arbitrary prop. Using `businessAccountId` from a prop instead of `session.user.id` breaks this constraint.
-
-**Fix:** Derive the path prefix from the session inside the component, not from a prop:
-```typescript
-const { data: { session } } = await supabase.auth.getSession()
-if (!session) { setError(t('errorUploadFailed')); return }
-const path = `${session.user.id}/${paikkaId}/logo/${filename}`
-```
-Remove `businessAccountId` from the `StepMediatProps` interface entirely.
-
----
-
-### CR-03: submit route uses .single() on draft fetch — throws 406 when no draft exists
-
-**File:** `app/api/business/onboarding/submit/route.ts:20-28`
-**Issue:** The query on line 20–24 uses `.single()`. Supabase/PostgREST returns a 406 error object (not null data) when `.single()` finds zero rows. The existing guard `if (draftError || !draft)` on line 26 does catch this, but the error response returns a generic 404 rather than the actual PostgREST error code. More importantly, a user who navigates directly to the submit endpoint without any draft will receive a misleading 404 response and the server logs `PGRST116` noise. The correct pattern for "fetch or null" is `.maybeSingle()`.
-
-**Fix:**
-```typescript
-const { data: draft, error: draftError } = await supabaseAdmin
-  .from('onboarding_draft')
-  .select('*, liikuntapaikat(nimi, osoite, kaupunki, laji, latitude, longitude, aukioloajat)')
-  .eq('business_account_id', user.id)
-  .maybeSingle()  // returns null when no row, not an error
-```
-
----
-
-### CR-04: URL.createObjectURL called in render without cleanup — object URL leak
-
-**File:** `app/business/onboarding/UploadDropZone.tsx:106`
-**Issue:** `URL.createObjectURL(file)` is called directly inside the JSX render function on every render cycle. Each call allocates a new Blob URL. There is no corresponding `URL.revokeObjectURL` anywhere in the codebase. With up to 5 photo files, each re-render of the component (e.g., from parent state changes) creates 5 new uncollected Blob URLs. These persist for the lifetime of the document.
-
-**Fix:** Use a `useMemo` or `useEffect` with cleanup to create/revoke object URLs:
-```typescript
-// At top of component, replace the inline createObjectURL call:
-const previewUrls = useMemo(() => {
-  return selectedFiles.map(f => URL.createObjectURL(f))
-}, [selectedFiles])
-
-useEffect(() => {
-  return () => { previewUrls.forEach(url => URL.revokeObjectURL(url)) }
-}, [previewUrls])
-
-// In JSX:
-src={previewUrls[index]}
-```
-
----
-
-### CR-05: StepMediat is permanently dead code — step 2 renders null, media never saved
-
-**File:** `app/business/onboarding/OnboardingWizardInner.tsx:148`
-**Issue:** Line 148 reads:
-```tsx
-{/* Step 2 implemented in Plan 07 */}
-{step === 2 && null}
-```
-`StepMediat` is imported at line 13 but never rendered. The wizard advances from step 1 to step 3 with no media collection. When the user reaches `StepEsikatselu`, `draft.media_urls` is always null, so `image_url` in the preview is always null, and the submitted `liikuntapaikat.image_url` is always null. The `ALLOWED_FIELDS` list in `save-step` includes `media_urls` but it can never be set through the wizard.
-
-This is not a "TODO" — `StepMediat` exists with full implementation and the migration includes the `media_urls` column. The wizard component simply never mounts the step. This is a functional regression: the advertised media upload feature does not work.
-
-**Fix:** Replace `{step === 2 && null}` with the actual `StepMediat` invocation, passing the resolved user ID and paikka ID:
-```tsx
-{step === 2 && paikkaId !== null && userId !== null && (
-  <StepMediat
-    paikkaId={paikkaId}
-    businessAccountId={userId}  // from supabase.auth.getSession()
-    onNext={() => saveAndAdvance(2)}
-    onPrev={() => goToStep(1)}
-  />
-)}
-```
-Note: after fixing CR-02, `businessAccountId` prop should be removed and `StepMediat` should derive the ID from its own session call.
 
 ---
 
 ## Warnings
 
-### WR-01: Time string values from StepAukioloajat are stored verbatim with no server-side validation
+### WR-01: StepHinnasto and StepAukioloajat make API calls with empty token when session is null
 
-**File:** `app/api/business/onboarding/save-step/route.ts:52-53`
-**Issue:** The `value` field for `aukioloajat` is accepted as-is (`value = body.value`, line 53) without any server-side schema check. An attacker can POST `{"aukioloajat": {"monday": {"open": "<script>", "close": "../../etc"}}}`. The comment on line 51-52 says "Supabase enforces 8KB row limit (T-34-05-04 accepted)" but this only limits size, not content. The JSONB is later read and displayed in `StepEsikatselu` via `draftAsPaikka.aukioloajat` and eventually written to `liikuntapaikat.aukioloajat`. Values are rendered via React (which auto-escapes) so XSS is not the primary concern, but the shape contract is entirely unenforced on the server.
+**File:** `app/business/onboarding/StepHinnasto.tsx:82–89`, `app/business/onboarding/StepAukioloajat.tsx:108–116`
 
-**Fix:** Add a server-side validator for the `aukioloajat` shape:
-```typescript
-function isValidAukioloajat(v: unknown): boolean {
-  const VALID_DAYS = new Set(['monday','tuesday','wednesday','thursday','friday','saturday','sunday'])
-  const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
-  if (typeof v !== 'object' || v === null || Array.isArray(v)) return false
-  for (const [k, slot] of Object.entries(v as Record<string, unknown>)) {
-    if (!VALID_DAYS.has(k)) return false
-    if (typeof slot !== 'object' || slot === null) return false
-    const { open, close } = slot as Record<string, unknown>
-    if (!TIME_RE.test(String(open)) || !TIME_RE.test(String(close))) return false
-  }
-  return true
-}
-```
+**Issue:** Both steps use `session?.access_token ?? ''` and proceed to call `/api/business/onboarding/save-step` regardless of whether `session` is `null`. This fires a full `fetch()` round-trip with an empty `Bearer ` token that the server rejects with 401, at which point the generic error is shown. The error UX is the same as a proper early return, but unnecessary latency is added. By contrast, `StepYhteystiedot` (line 49–53) and `StepEsikatselu` (lines 48–55) both early-return with an error message when session is null before making any network call.
 
----
+**Fix:** Add a session null-guard before the fetch in both steps, matching the pattern in `StepYhteystiedot`:
 
-### WR-02: Unbounded hinnasto array — no limit on the number of price rows
-
-**File:** `app/api/business/onboarding/save-step/route.ts:52-53`
-**Issue:** The `hinnasto` JSONB value is accepted with no count or per-field length constraints. A client can POST an array with thousands of pricing rows. The comment on line 51 defers to "Supabase 8KB row limit" but that limit applies to the entire row including all columns. A large `hinnasto` array can fill the 8KB budget and prevent other columns from being updated, effectively DoS-ing the draft for that user. Beyond DoS, `hinnastaToHintaKuvaus` in the submit route joins all rows with `\n`, so a 100-row `hinnasto` would produce a very long `hinta_kuvaus` string that may exceed the `liikuntapaikat.hinta_kuvaus` column capacity.
-
-**Fix:** Enforce a max row count and per-field max length in the route before upserting:
-```typescript
-if (field === 'hinnasto') {
-  const rows = value as unknown[]
-  if (!Array.isArray(rows) || rows.length > 20) {
-    return NextResponse.json({ error: 'hinnasto: max 20 rows' }, { status: 400 })
-  }
-}
-```
-
----
-
-### WR-03: StepMediat handleNext does not call setLoading(false) on early-return error paths
-
-**File:** `app/business/onboarding/StepMediat.tsx:71-77, 97-103`
-**Issue:** When `uploadErr` is truthy inside the logo (line 71-76) or photo loop (line 97-101), the function sets the error and returns early with a plain `return` statement. `setIsUploading(true)` was called at line 45 but `setIsUploading(false)` is only in the `finally` block on line 136. Early `return` inside a `try` block does reach the `finally` block — so `setIsUploading(false)` is called correctly. However, `setUploadProgress(0)` is called inside the early-return block (line 73, 99) and `setIsUploading(false)` runs in `finally`, leaving a window where progress is 0 but `isUploading` is still `true` between those two state updates. The button remains disabled with "Uploading..." text until the second state update. This is not a crash but produces a momentarily broken UI state.
-
-More materially: `setLoading` is never declared in `StepMediat` — the component uses `isUploading`, not `loading`. But the `onPrev` button has no `disabled={isUploading}` guard (line 198-204), so the user can navigate away during an active upload, abandoning partially uploaded files in storage with no matching draft entry.
-
-**Fix:** Disable the prev button during upload:
 ```tsx
-<motion.button
+const { data: { session } } = await supabase.auth.getSession()
+if (!session) {
+  setError(t('errorGeneric'))
+  return
+}
+const token = session.access_token
+```
+
+---
+
+### WR-02: "Prev" button not disabled during save in StepHinnasto and StepAukioloajat
+
+**File:** `app/business/onboarding/StepHinnasto.tsx:205–211`, `app/business/onboarding/StepAukioloajat.tsx:238–244`
+
+**Issue:** In both steps the "Edellinen" (prev) button lacks `disabled={loading}`. If the user clicks it while the save API call is in flight, the router navigates away mid-request. The `finally` block fires `setLoading(false)` on an unmounted component, producing a React warning in development. More concretely, the save result is indeterminate: if the upsert succeeds after navigation, `current_step` in the draft DB row advances to step 3 or 4 while the user is now back at step 2 or 3, causing progress bar state to diverge from URL state on subsequent loads. `StepYhteystiedot` and `StepEsikatselu` correctly disable their Prev buttons during loading.
+
+**Fix:** Add `disabled={loading}` to the Prev button in both files:
+
+```tsx
+<button
   type="button"
-  whileTap={{ scale: 0.95 }}
   onClick={onPrev}
-  disabled={isUploading}  // add this
-  className="..."
+  disabled={loading}
+  className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)] flex items-center gap-1 disabled:opacity-60"
 >
 ```
 
 ---
 
-### WR-04: loadDraft effect in OnboardingWizardInner navigates to step if user is already past step 1, but completedSteps derivation reads stale draft state
+### WR-03: React key collision when two files share the same filename in UploadDropZone
 
-**File:** `app/business/onboarding/OnboardingWizardInner.tsx:44-46, 86-88`
-**Issue:** On line 86-88, when an existing draft is found with `current_step > 1` and the URL is at `step=1`, `goToStep(existingDraft.current_step)` is called. This push happens before `setDraft(existingDraft)` has caused a re-render. The `completedSteps` derivation on line 44 reads from `draft` state, which is still `null` during the initial render. So when the router navigates to the saved step, the ProgressBar renders with `completedSteps = []` on the first frame (zero visual steps completed). This resolves on the next render cycle once React processes the `setDraft` call, but it produces a flash of incorrect progress bar state.
+**File:** `app/business/onboarding/UploadDropZone.tsx:120`
 
-The `goToStep` call on line 88 is also inside the `loadDraft` async effect, which is not in the effect dependency array (line 107: `// eslint-disable-next-line react-hooks/exhaustive-deps`). If `searchParams` changes between mount and when `loadDraft` resolves (which it can if the router push from line 88 itself triggers a re-render), the closure captures stale `step`.
+**Issue:** Thumbnail items use `key={file.name}`. A user can select two images from different directories with the same filename (e.g., `photo.jpg` from two separate imports). React sees duplicate keys, silently skips rendering one thumbnail, and the remove buttons target indexes that no longer correspond to the visual positions. `StepMediat.removePhotoFile` uses index-based removal (`prev.filter((_, idx) => idx !== i)`), which is correct; the fault is only in the unstable key.
 
-**Fix:** Call `setDraft` before `goToStep` and derive `completedSteps` from `existingDraft` directly on the navigation branch, or accept the flash as a cosmetic artifact. The suppressed eslint warning should be documented:
-```typescript
-if (existingDraft) {
-  setDraft(existingDraft as OnboardingDraft)
-  if (existingDraft.current_step && existingDraft.current_step > 1 && step === 1) {
-    goToStep(existingDraft.current_step)
+**Fix:** Use the array index as key. This is safe because the list is append-only (new files are added at the end, removed by index without sorting):
+
+```tsx
+{selectedFiles.map((file, index) => (
+  <div key={index} className="relative">
+```
+
+---
+
+### WR-04: UploadDropZone `maxFiles` slices the incoming batch, not the combined total
+
+**File:** `app/business/onboarding/UploadDropZone.tsx:45–48`
+
+**Issue:** `validateAndSelect` slices `valid.slice(0, maxFiles)`, where `maxFiles` is the absolute ceiling, not the remaining capacity (`maxFiles - selectedFiles.length`). If 3 photos are already selected and the user drops 5 new files with `maxFiles=5`, the drop zone passes all 5 to `onFilesSelected`. `StepMediat.handlePhotoFilesSelected` applies the combined cap correctly in this case, but the component's own contract is wrong: any other caller of `UploadDropZone` that relies on `onFilesSelected` receiving at most `maxFiles` items will exceed the limit silently.
+
+**Fix:** Calculate remaining capacity inside `validateAndSelect`:
+
+```tsx
+function validateAndSelect(rawFiles: File[]) {
+  const maxBytes = maxFileSizeMB * 1024 * 1024
+  const valid = rawFiles.filter(
+    (f) => f.type.startsWith('image/') && f.size <= maxBytes
+  )
+  if (maxFiles !== undefined) {
+    const remaining = Math.max(0, maxFiles - selectedFiles.length)
+    onFilesSelected(valid.slice(0, remaining))
+  } else {
+    onFilesSelected(valid)
   }
 }
 ```
-(This is the existing order — it is correct. The real fix is to not suppress the exhaustive-deps warning without justification.)
 
 ---
 
-### WR-05: business/page.tsx — redirect to onboarding triggered for accounts without a business_account row
+### WR-05: Back-populated pricing rows lose `isFixed` — all rows become deletable after back-navigation
 
-**File:** `app/business/page.tsx:22-30`
-**Issue:** The `checkLinks` function on line 22 queries `business_accounts` for `onboarding_completed`. If the user is authenticated but has no row in `business_accounts` (e.g., a regular consumer account visiting `/business`), `account` is `null`. The condition on line 28 is `if (account && !account.onboarding_completed)` — when `account` is `null`, this block is skipped. Execution falls through to the `business_paikka_links` query. If `links` is also empty (expected for a non-business user), `hasLinks` stays `false` and the page renders the `ClaimSearchForm`. A consumer user arriving at `/business` directly sees the venue claim UI with no authentication gate. This may be intentional, but there is no guard that ensures the user is a registered business account before allowing them to claim or create a venue. The downstream `claim-paikka` API enforces auth, but the UI silently presents the form.
+**File:** `app/business/onboarding/StepHinnasto.tsx:38–45`
 
-**Fix:** Add an explicit check: if `account` is null, redirect to a business registration page or show an appropriate "not a business account" message rather than the claim form.
+**Issue:** When `initialHinnasto` is provided (back-navigation from step 4), every restored row is created with `isFixed: false` (line 44). The four standard category rows (Kertakäynti, Kuukausijäsenyys, 10-kerran kortti, Vuosijäsenyys) are normally non-deletable (`isFixed: true`, lines 48–52) to anchor the pricing structure. After a round-trip through step 4 and back to step 3, all four default rows show delete buttons and the user can remove them — breaking the expected non-deletable-defaults UX that the pricing step is designed around.
 
----
+**Fix:** Re-identify standard categories when restoring from draft:
 
-### WR-06: StepYhteystiedot — website field accepts any string, stored as varauslinkki with no URL validation
+```tsx
+const FIXED_CATEGORY_KEYS = [
+  'pricingCategoryDrop',
+  'pricingCategoryMonthly',
+  'pricingCategory10x',
+  'pricingCategoryAnnual',
+] as const
 
-**File:** `app/business/onboarding/StepYhteystiedot.tsx:108-115`
-**Issue:** The `website` input uses `type="url"` which provides browser-level validation, but this constraint is entirely client-side. The route handler (`save-step`) stores the value verbatim. In `submit/route.ts` line 59, this is written directly to `liikuntapaikat.varauslinkki`:
-```typescript
-varauslinkki: draft.yhteystiedot?.website?.trim() ?? null,
-```
-A user who bypasses the form can submit `javascript:alert(1)` or a relative path as `varauslinkki`. If downstream code renders this as an `<a href={varauslinkki}>`, it creates an XSS vector (open redirect / JS injection). Check for existing usage of `varauslinkki` in the codebase to confirm exposure.
+const fixedLabels = new Set(FIXED_CATEGORY_KEYS.map(k => t(k)))
 
-**Fix:** Validate URL scheme server-side before writing to liikuntapaikat:
-```typescript
-const rawWebsite = draft.yhteystiedot?.website?.trim() ?? null
-let varauslinkki: string | null = null
-if (rawWebsite) {
-  try {
-    const u = new URL(rawWebsite)
-    if (u.protocol === 'https:' || u.protocol === 'http:') {
-      varauslinkki = rawWebsite
-    }
-  } catch { /* invalid URL — leave null */ }
+if (initialHinnasto && initialHinnasto.length > 0) {
+  return initialHinnasto.map((row, i) => ({
+    id: `saved-${i}`,
+    kategoria: row.kategoria,
+    hinta: row.hinta,
+    lisatieto: row.lisatieto ?? '',
+    isFixed: fixedLabels.has(row.kategoria),
+  }))
 }
 ```
 
@@ -280,61 +190,54 @@ if (rawWebsite) {
 
 ## Info
 
-### IN-01: Hardcoded Finnish strings in UploadDropZone and StepHinnasto bypass i18n
+### IN-01: Hardcoded Finnish timeout error in StepEsikatselu not covered by i18n
 
-**File:** `app/business/onboarding/UploadDropZone.tsx:95`, `app/business/onboarding/StepHinnasto.tsx:110`, `app/business/onboarding/StepAukioloajat.tsx:186,197`
-**Issue:** Three UI strings are hardcoded in Finnish and not routed through `next-intl`:
-- `UploadDropZone.tsx:95` — `'Pudota tiedosto tähän'` (drag hint; the i18n key `dropActiveHint` exists in both `fi.json` and `en.json` but is not used)
-- `StepHinnasto.tsx:110` — `'Kategoria'` (table header; not using `t()`)
-- `StepAukioloajat.tsx:186,197` — `'Aloitusaika'` / `'Lopetusaika'` (sr-only labels)
-- `app/components/ClaimSearchForm.tsx` line 270 — `'JO HALLITTU'` hardcoded (Finnish only; `resultAlreadyClaimed` key exists)
+**File:** `app/business/onboarding/StepEsikatselu.tsx:90`
 
-**Fix:** Replace each with the matching i18n key via `t('...')`.
+**Issue:** `"Esikatselu ei latautunut. Palaa takaisin ja yritä uudelleen."` is hardcoded Finnish with no translation key. The project has an active English locale (`messages/en.json`). This is the string introduced by the plan 34-11 spinner timeout fix.
+
+**Fix:** Add `previewLoadFailed` to both `messages/fi.json` and `messages/en.json`, then use `{t('previewLoadFailed')}`.
 
 ---
 
-### IN-02: StepMediat imported but never rendered — dead import
+### IN-02: Two hardcoded Finnish strings in UploadDropZone not routed through i18n
 
-**File:** `app/business/onboarding/OnboardingWizardInner.tsx:13`
-**Issue:** `import StepMediat from './StepMediat'` is present on line 13 but the component is never used (line 148 renders `null`). This is linked to CR-05 but warrants a separate note: the dead import means bundlers may not tree-shake the component, and it will appear in the module graph even though it contributes nothing.
+**File:** `app/business/onboarding/UploadDropZone.tsx:107`, `app/business/onboarding/UploadDropZone.tsx:133`
 
-**Fix:** Either mount the component (fixing CR-05) or remove the import until it is ready.
+**Issue:** The drag-active hint `"Pudota tiedosto tähän"` (line 107) and remove-button aria-label `"Poista kuva"` (line 133) are hardcoded Finnish. `messages/en.json` already contains `dropActiveHint: "Drop file here"` but it is not used. English users will see untranslated strings.
 
----
+**Fix:**
 
-### IN-03: file.name used as React key in UploadDropZone — not unique if user selects same filename twice
-
-**File:** `app/business/onboarding/UploadDropZone.tsx:102`
-**Issue:** `key={file.name}` is used in the image preview list. If a user drops two files with the same name, React's reconciler will warn about duplicate keys and the DOM may not update correctly for the second file.
-
-**Fix:** Use the index or a combination of name and size:
 ```tsx
-key={`${file.name}-${file.size}`}
+// Line 107 — use the existing i18n key:
+{isDragging ? t('dropActiveHint') : label}
+
+// Line 133 — add removeFileLabel to both message files:
+aria-label={t('removeFileLabel')}
 ```
 
 ---
 
-### IN-04: onboarding_draft RLS policies permit INSERT without business_paikka_links ownership check
+### IN-03: Hardcoded Finnish "Kategoria" table header in StepHinnasto
 
-**File:** `supabase/migrations/20260606000000_onboarding.sql:69-71`
-**Issue:** The INSERT RLS policy (`Business inserts own draft`) only checks `auth.uid() = business_account_id`. An authenticated business user can insert a draft row for any `paikka_id`, including venues they have not claimed. This aligns with CR-01 at the DB level: the schema itself does not enforce the `business_paikka_links` ownership relationship. The defence-in-depth fix belongs both in the route handler (CR-01) and ideally in the RLS policy.
+**File:** `app/business/onboarding/StepHinnasto.tsx:122`
 
-**Fix (advisory):** Add a `WITH CHECK` subquery to the INSERT policy:
-```sql
-CREATE POLICY "Business inserts own draft"
-  ON onboarding_draft FOR INSERT
-  WITH CHECK (
-    auth.uid() = business_account_id
-    AND EXISTS (
-      SELECT 1 FROM business_paikka_links
-      WHERE business_paikka_links.business_account_id = auth.uid()
-        AND business_paikka_links.paikka_id = onboarding_draft.paikka_id
-    )
-  );
-```
+**Issue:** `<th className="text-left pb-2">Kategoria</th>` is hardcoded while the two adjacent headers use `t('pricingHeaderPrice')` and `t('pricingHeaderNotes')`. Inconsistent localisation within the same `<tr>`.
+
+**Fix:** Add `pricingHeaderCategory: "Kategoria"` / `"Category"` to both message files, then use `{t('pricingHeaderCategory')}`.
 
 ---
 
-_Reviewed: 2026-06-10T00:00:00Z_
+### IN-04: Screen-reader time input labels hardcoded Finnish in StepAukioloajat
+
+**File:** `app/business/onboarding/StepAukioloajat.tsx:189`, `app/business/onboarding/StepAukioloajat.tsx:200`
+
+**Issue:** `sr-only` labels `"Aloitusaika"` (start time) and `"Lopetusaika"` (end time) are hardcoded Finnish. Screen reader users on the English locale will hear Finnish labels.
+
+**Fix:** Add `hoursOpenLabel` / `hoursCloseLabel` keys to both message files and use `t('hoursOpenLabel')` / `t('hoursCloseLabel')`.
+
+---
+
+_Reviewed: 2026-06-10_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
