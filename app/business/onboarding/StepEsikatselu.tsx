@@ -153,7 +153,7 @@ export default function StepEsikatselu({
         <motion.button
           type="button"
           onClick={handleSubmit}
-          disabled={loading}
+          disabled={loading || !draftAsPaikka}
           whileTap={{ scale: 0.95 }}
           className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
         >

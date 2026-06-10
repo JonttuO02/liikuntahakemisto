@@ -62,6 +62,7 @@ export default function StepMediat({
 
       if (!session) {
         setError(t('errorUploadFailed'))
+        setUploadProgress(0)
         return
       }
 
