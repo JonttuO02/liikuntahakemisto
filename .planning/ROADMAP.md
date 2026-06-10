@@ -237,7 +237,7 @@ Plans:
 - [x] 35-03-PLAN.md — npm install resend + lib/email.ts email helpers (ADMIN-01, ADMIN-04)
 
 **Wave 2** *(blocked on Wave 1 completion)*:
-- [ ] 35-04-PLAN.md — [BLOCKING] supabase db push + RESEND_API_KEY env + smoke test
+- [x] 35-04-PLAN.md — [BLOCKING] supabase db push + RESEND_API_KEY env + smoke test
 
 **Wave 3** (parallel — after Wave 2):
 - [ ] 35-05-PLAN.md — Extend Route Handlers with email notifications + register role_in_company (ADMIN-01, D-04)

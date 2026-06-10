@@ -17,9 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 35 (admin-hyväksyntäjärjestelmä) — IN PROGRESS, Wave 2 checkpoint
-Status: Wave 1 complete (35-01, 35-02, 35-03). Awaiting manual steps for 35-04 (supabase db push + env vars). Then Wave 3 can proceed.
-Last activity: 2026-06-10 -- Wave 1 complete (3/9 plans done)
+Phase: 35 (admin-hyväksyntäjärjestelmä) — IN PROGRESS, Wave 3 executing
+Status: Waves 1+2 complete (4/9 plans done). Wave 3 running: 35-05, 35-06, 35-07 in parallel.
+Last activity: 2026-06-10 -- Wave 2 checkpoint cleared, Wave 3 started
 
 ## Project Reference
 
