@@ -12,6 +12,7 @@ export default function BusinessPage() {
   const [hasLinks, setHasLinks] = useState(false)
   const [venueName, setVenueName] = useState('')
   const [loading, setLoading] = useState(true)
+  const [isNotBusinessAccount, setIsNotBusinessAccount] = useState(false)
 
   useEffect(() => {
     async function checkLinks() {
@@ -25,7 +26,15 @@ export default function BusinessPage() {
         .eq('user_id', user.id)
         .maybeSingle()
 
-      if (account && !account.onboarding_completed) {
+      // Guard: authenticated user with no business_accounts row is a consumer, not a business.
+      // Show a registration prompt rather than the venue claim form (WR-05).
+      if (!account) {
+        setIsNotBusinessAccount(true)
+        setLoading(false)
+        return
+      }
+
+      if (!account.onboarding_completed) {
         router.push('/business/onboarding')
         return
       }
@@ -49,6 +58,23 @@ export default function BusinessPage() {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center">
         <div className="w-6 h-6 rounded-full border-2 border-[rgba(17,17,17,0.12)] border-t-[#111111] animate-spin" />
+      </main>
+    )
+  }
+
+  if (isNotBusinessAccount) {
+    return (
+      <main className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-16">
+        <div className="glass rounded-2xl p-6 w-full max-w-sm flex flex-col items-center gap-4 text-center">
+          <h1 className="text-xl font-bold text-[#111111]">{t('registerTitle')}</h1>
+          <p className="text-sm text-[rgba(17,17,17,0.45)]">{t('errorGeneric')}</p>
+          <a
+            href="/business/rekisteroidy"
+            className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 flex items-center [transition:background-color_150ms_var(--ease-out)]"
+          >
+            {t('registerCta')}
+          </a>
+        </div>
       </main>
     )
   }
