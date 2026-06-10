@@ -30,14 +30,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  // Step 4: fetch link to get paikka_id + business_account_id + link_type
+  // Step 4: fetch link to get paikka_id + business_account_id + link_type + claim_status
   const { data: link, error: linkFetchError } = await supabaseAdmin
     .from('business_paikka_links')
-    .select('paikka_id, business_account_id, link_type')
+    .select('paikka_id, business_account_id, link_type, claim_status')
     .eq('id', linkId)
     .maybeSingle()
   if (linkFetchError || !link) {
     return NextResponse.json({ error: 'Link not found' }, { status: 404 })
+  }
+
+  // Step 4a: guard against approving a non-pending application
+  if (link.claim_status !== 'pending') {
+    return NextResponse.json({ error: 'Application is not pending' }, { status: 409 })
   }
 
   // Step 5: set claim_status = 'approved'
