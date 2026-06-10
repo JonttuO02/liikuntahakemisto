@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Yritysportaali
 status: verifying
-last_updated: "2026-06-10T20:35:53.862Z"
+last_updated: "2026-06-10T20:41:02.838Z"
 last_activity: 2026-06-10 -- Wave 4 gap plans (35-10, 35-11) executed — Phase 35 all 11 plans complete
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 35
-  completed_plans: 42
+  completed_plans: 43
   percent: 67
 ---
 
@@ -17,9 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 35 (admin-hyväksyntäjärjestelmä) — COMPLETE (11/11 plans)
-Status: All gap-closure plans executed. Run /gsd:verify-work 35 to verify phase goal.
-Last activity: 2026-06-10 -- Wave 4 gap plans (35-10, 35-11) executed — Phase 35 all 11 plans complete
+Phase: 36 (hallintapaneeli) — IN PROGRESS (6/7 plans)
+Status: Wave 4 complete. 36-06 executed — steps 3-5 editMode wired. Plan 36-07 (final integration) remaining.
+Last activity: 2026-06-10 -- Plan 36-06 executed — editMode for StepHinnasto, StepAukioloajat, StepYhteystiedot wired into EditWizardInner
 
 ## Project Reference
 
@@ -54,7 +54,7 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 | 33 | Claim & paikan luonti | CLAIM-01, CLAIM-02, CLAIM-03 | Complete |
 | 34 | Onboarding-velhou | ONBOARD-01–07 | Planned (9 plans) |
 | 35 | Admin-hyväksyntäjärjestelmä | ADMIN-01–05 | Complete |
-| 36 | Hallintapaneeli | BIZPANEL-01–03 | Not started |
+| 36 | Hallintapaneeli | BIZPANEL-01–03 | In progress (6/7 plans) |
 
 ## Blockers/Concerns
 
@@ -62,5 +62,5 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-10T20:35:53.856Z
-Resume: `/gsd:verify-work 35` — Verify phase 35 goal achievement
+Last session: 2026-06-10T20:40:53.463Z
+Resume: `/gsd:execute-phase 36` — Execute plan 36-07 (final wiring + smoke test)

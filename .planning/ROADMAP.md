@@ -304,4 +304,4 @@ Plans:
 | 33. Claim & paikan luonti | v1.7 | 7/7 | ✅ Complete | 2026-06-06 |
 | 34. Onboarding-velhou | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
 | 35. Admin-hyväksyntäjärjestelmä | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
-| 36. Hallintapaneeli | v1.7 | 5/1 | Complete   | 2026-06-10 |
+| 36. Hallintapaneeli | v1.7 | 6/1 | Complete   | 2026-06-10 |
