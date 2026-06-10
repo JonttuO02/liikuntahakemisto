@@ -1,19 +1,11 @@
 ---
-status: resolved
+status: diagnosed
 phase: 34-onboarding-velhou
 source:
-  - 34-01-SUMMARY.md
-  - 34-02-SUMMARY.md
-  - 34-03-SUMMARY.md
-  - 34-04-SUMMARY.md
-  - 34-05-SUMMARY.md
-  - 34-06-SUMMARY.md
-  - 34-07-SUMMARY.md
-  - 34-08-SUMMARY.md
-  - 34-09-SUMMARY.md
-  - 34-10-SUMMARY.md
-started: "2026-06-10T00:00:00Z"
-updated: "2026-06-10T18:00:00Z"
+  - 34-11-SUMMARY.md
+started: "2026-06-10T18:30:00Z"
+updated: "2026-06-10T18:30:00Z"
+note: "Targeted re-test of the 4 gaps closed by plan 34-11 + previously blocked test 9"
 ---
 
 ## Current Test
@@ -22,132 +14,127 @@ updated: "2026-06-10T18:00:00Z"
 
 ## Tests
 
-### 1. Onboarding gate — first login redirects to wizard
-expected: Business user with onboarding_completed=false visiting /business is redirected to /business/onboarding automatically. Cannot skip to /business panel until onboarding is done.
+### 1. Media upload — multiple thumbnails + delete
+expected: |
+  Go to Step 2 (Mediat) in the onboarding wizard.
+  Upload 2–3 images via the drop zone.
+  Expected: all uploaded thumbnails appear in a strip below the drop zone (not just the most recent one).
+  Each thumbnail has a visible X button. Clicking an X removes that specific image.
+  The drop zone itself remains clickable for adding more images.
 result: pass
 
-### 2. Progress bar renders — 6 steps
-expected: At /business/onboarding the ProgressBar shows 6 step circles. Step 1 circle is filled black (active). Steps 2-6 are unfilled (future). Step labels appear below circles.
+### 2. Character counter shows "N/300"
+expected: |
+  Go to Step 5 (Yhteystiedot). Click into the Kuvaus (description) textarea.
+  Type a few characters.
+  Expected: a counter like "12/300" appears below the textarea and updates with each keystroke.
+  When the text reaches 300 characters the counter turns red.
+  No raw translation key (e.g. "Business.contactDescCount") is visible anywhere.
 result: pass
 
-### 3. Step 1 — Paikka shows linked venue
-expected: Step 1 shows the name and address of the claimed/created venue (pre-filled from claim). A "Seuraava" (Next) button is present. The Back button is absent (it's step 1).
-result: pass
-
-### 4. Step 2 — Mediat upload
-expected: Step 2 shows a file upload area (UploadDropZone). Selecting 1–5 images shows an upload progress bar while uploading to Supabase Storage. After upload completes, thumbnails or filenames appear. "Seuraava" becomes enabled.
+### 3. Step 6 preview loads within a few seconds
+expected: |
+  Advance to Step 6 (Esikatselu).
+  Expected: all three preview sections load within a few seconds —
+  (1) LISTAKORTTI with a PaikkaKortti card,
+  (2) DIAGONAALIKORTTI with a DiagonaalKortti card,
+  (3) PROFIILISIVU with an inline PaikkaSheet.
+  No infinite spinner. If data cannot be fetched, a Finnish error message appears instead of a forever-spinning loader.
 result: issue
-reported: "each drop area only shows one thumbnail, the recently uploaded photo. So I dont know if it takes only one photo or takes multiple but only shows the recent one. Also theres no x-button in thumbnails so they cannot be deleted after uploading."
+reported: "it works well except the using of uploaded photos doesnt work. Uploaded logo doesnt show in cards at all, one of the rest uploaded photos is used in diagonaalkortti right side, but we must create system to choose the photo used in there. venue page doesnt show logo or any photos in hero section. Also when going backwards on steps and changing the contents, the preview page doesnt update automaticly but needs an manual refresh"
 severity: major
 
-### 5. Step 3 — Hinnasto price entry
-expected: Step 3 shows a price table. You can add a row with category (e.g. "Kertakäynti") and price. "Seuraava" is disabled until at least 1 price row exists. Adding a row enables it.
-result: pass
-
-### 6. Step 4 — Aukioloajat hours
-expected: Step 4 shows opening hours fields. If Google Places data was available it's pre-filled. You can edit or enter hours manually. "Seuraava" advances to step 5.
-result: pass
-
-### 7. Step 5 — Yhteystiedot contact form
-expected: Step 5 shows fields for phone, email, website, and description. The description textarea shows a character counter (e.g. "0/300") that updates as you type. At 300 characters the counter turns red. "Seuraava" saves and advances.
+### 4. Submit from step 6 redirects to /business
+expected: |
+  On Step 6 (Esikatselu), click "Lähetä hyväksyttäväksi".
+  Expected: the application is submitted without an error. You are redirected to /business (the business panel).
 result: issue
-reported: "works well but instead of characters counter theres text: Business.contactDescCount under the textfield and it turns red when character limit is hit."
+reported: "it shows text: Submission failed. Check your information and try again."
 severity: major
 
-### 8. Step 6 — Esikatselu shows all 3 preview formats
-expected: Step 6 shows three preview sections: (1) "LISTAKORTTI" with a PaikkaKortti card, (2) "DIAGONAALIKORTTI" with a DiagonaalKortti card, (3) "PROFIILISIVU" with a PaikkaSheet rendered inline (not as an overlay). All three use the data you entered. A "Lähetä hyväksyttäväksi" submit button is present.
+### 5. Back navigation preserves entered data
+expected: |
+  Fill in Step 3 (Hinnasto) with at least one price row, advance to step 4, then click Edellinen (back).
+  Expected: Step 3 shows the price rows you entered — they are not cleared.
+  Do the same for Steps 4 and 5: enter data, advance, go back, data is still visible.
 result: issue
-reported: "waited more than 5 minutes for those previews but its still loading — never completes"
-severity: blocker
-
-### 9. Submit → redirect to /business
-expected: Clicking "Lähetä hyväksyttäväksi" on step 6 sends the application. After success you're redirected to /business (the business panel). No error is shown.
-result: blocked
-blocked_by: prior-phase
-reason: "Step 6 preview never finishes loading — submit button unreachable"
-
-### 10. Back navigation works
-expected: From any step 2–6, clicking the back button (← Edellinen or similar) goes to the previous step. The ProgressBar updates to show the new current step. Data entered is preserved (not cleared).
-result: issue
-reported: "when advancing in the onboarding and using the previous-button the previous step and site it enters doesnt show the previously entered contents. So I dont know if its still saved and it only doesnt show them or is it completely lost."
+reported: "only pricing and contact details -steps keep their contents. Also I can see that step5 contact details never gets done-status on the uprow icons"
 severity: major
 
 ## Summary
 
-total: 10
-passed: 5
-issues: 4
+total: 5
+passed: 2
+issues: 3
 pending: 0
 skipped: 0
-blocked: 1
-skipped: 0
+blocked: 0
 
 ## Gaps
 
-- truth: "Upload area shows all uploaded files and allows deleting individual uploads"
-  status: resolved
-  reason: "User reported: only the most recent thumbnail is shown per drop zone (unclear if multiple accepted); no delete (X) button on thumbnails"
+- truth: "Step 6 preview shows uploaded logo in cards, lets user choose which photo appears in DiagonaalKortti, and shows logo + photos in venue page hero section. Preview auto-updates when user changes data on a previous step."
+  status: failed
+  reason: "User reported: uploaded logo doesn't show in cards; only one photo used in DiagonaalKortti with no way to choose; venue page hero shows no logo or photos; preview doesn't auto-update after back navigation + edits (needs manual refresh)"
+  severity: major
+  test: 3
+  root_cause: |
+    Four converging issues: (1) Liikuntapaikka type has no logo_url field; buildDraftAsPaikka maps only photos[0] to image_url and drops logo entirely. (2) DiagonaalKortti left panel is hardcoded <Building2> placeholder — never reads any logo field. (3) PaikkaSheet hero carousel renders 3 static placeholder divs; never reads paikka.image_url or photo arrays. (4) OnboardingWizardInner loads draft once on mount with empty useEffect deps — draft state is never refreshed after step saves, so StepEsikatselu receives a stale draftAsPaikka when user returns to step 6 after editing.
+  artifacts:
+    - path: "lib/onboardingUtils.ts"
+      issue: "buildDraftAsPaikka line 110 maps photos[0] to image_url only; logo from media_urls silently dropped"
+    - path: "lib/types.ts"
+      issue: "Liikuntapaikka has no logo_url field — no way to carry logo through preview pipeline"
+    - path: "app/components/DiagonaalKortti.tsx"
+      issue: "Lines 86-90: logo slot always renders hardcoded <Building2>; no read of logo_url"
+    - path: "app/components/PaikkaSheet.tsx"
+      issue: "Lines 126-133: hero carousel renders 3 static placeholder divs; never reads image_url or photo array"
+    - path: "app/business/onboarding/OnboardingWizardInner.tsx"
+      issue: "useEffect at line 111 has empty deps []; draft state never refreshed after step saves; StepEsikatselu receives stale draft on re-visit"
+  missing:
+    - "Add logo_url?: string | null to Liikuntapaikka in lib/types.ts"
+    - "Map logo_url: draft.media_urls?.logo ?? null in buildDraftAsPaikka"
+    - "In DiagonaalKortti: replace hardcoded <Building2> with conditional <img> when paikka.logo_url is set"
+    - "In PaikkaSheet: replace 3 static placeholder slides with real slides driven by paikka.image_url (and photo array if available)"
+    - "In OnboardingWizardInner: add draft refresh on step 6 entry, or merge saved fields into draft state after each saveAndAdvance call"
+  debug_session: ""
+
+- truth: "Clicking Lähetä hyväksyttäväksi on step 6 submits the application and redirects to /business"
+  status: failed
+  reason: "User reported: it shows text: Submission failed. Check your information and try again."
   severity: major
   test: 4
-  root_cause: "UploadDropZone.tsx has no X/delete button in its JSX and no onRemove prop. Thumbnail clicks lack stopPropagation so clicking a thumbnail re-triggers the file picker, replacing the visible selection."
+  root_cause: |
+    Migration 20260530000000_add_image_url_to_paikat.sql runs ALTER TABLE paikat but the actual table is liikuntapaikat. The column image_url was therefore never added. The submit route's UPDATE includes image_url: draft.media_urls?.photos?.[0] ?? null, which causes Postgres error "column image_url of relation liikuntapaikat does not exist" → HTTP 500 → StepEsikatselu shows generic "Submission failed" (swallowing the real error).
   artifacts:
-    - path: "app/business/onboarding/UploadDropZone.tsx"
-      issue: "No onRemove prop, no X button rendered on thumbnails (lines 110–123), thumbnails wrapped inside clickable drop zone with no stopPropagation"
-    - path: "app/business/onboarding/StepMediat.tsx"
-      issue: "No removePhotoFile handler exists, none passed to UploadDropZone"
-  missing:
-    - "Add onRemove prop to UploadDropZone and render absolute X button on each thumbnail with stopPropagation"
-    - "Add removePhotoFile handler in StepMediat, pass as onRemove to photos zone"
-  debug_session: ""
-
-- truth: "Character counter below description textarea shows e.g. '0/300' and updates as user types"
-  status: resolved
-  reason: "User reported: text 'Business.contactDescCount' shows instead of the counter; it turns red at limit but the translation key is raw/unresolved"
-  severity: major
-  test: 7
-  root_cause: "StepYhteystiedot.tsx line 138 calls t('contactDescCount').replace('{n}', String(descCount)) — next-intl v4 uses ICU interpolation and returns the raw key fallback when no values object is passed to t()."
-  artifacts:
-    - path: "app/business/onboarding/StepYhteystiedot.tsx"
-      issue: "Line 138: t('contactDescCount').replace('{n}', ...) — should be t('contactDescCount', { n: descCount })"
-  missing:
-    - "Replace .replace() call with correct next-intl interpolation: t('contactDescCount', { n: descCount })"
-  debug_session: ""
-
-- truth: "Step 6 preview renders all 3 card formats immediately (or within a few seconds)"
-  status: resolved
-  reason: "User reported: waited more than 5 minutes for those previews but still loading — never completes"
-  severity: blocker
-  test: 8
-  root_cause: "paikkaInfo stays null permanently because the business_paikka_links lookup fails/returns empty and draft.paikka_id is never used as fallback. StepEsikatselu shows an infinite spinner with no timeout or error path when paikkaInfo is null."
-  artifacts:
-    - path: "app/business/onboarding/OnboardingWizardInner.tsx"
-      issue: "Lines 63–100: resolvedPaikkaId from business_paikka_links lookup; if null, paikkaInfo is never fetched. draft.paikka_id is never used as fallback."
+    - path: "supabase/migrations/20260530000000_add_image_url_to_paikat.sql"
+      issue: "ALTER TABLE paikat — wrong table name; should be liikuntapaikat; column was never added to the actual table"
+    - path: "app/api/business/onboarding/submit/route.ts"
+      issue: "Line 73: writes image_url in the UPDATE payload; column does not exist on liikuntapaikat → Postgres error → HTTP 500"
     - path: "app/business/onboarding/StepEsikatselu.tsx"
-      issue: "Lines 31–32 and 81–84: draftAsPaikka null guard shows infinite spinner with no timeout or error state"
+      issue: "Lines 66-68/77: error handler shows generic Finnish error string and never logs the actual Postgres error detail"
   missing:
-    - "In loadDraft(): use draft.paikka_id as fallback — resolvedPaikkaId = resolvedPaikkaId ?? existingDraft.paikka_id"
-    - "In StepEsikatselu: replace infinite spinner with error state after timeout or when paikkaInfo missing"
+    - "Create new corrective migration: ALTER TABLE liikuntapaikat ADD COLUMN IF NOT EXISTS image_url TEXT"
+    - "In StepEsikatselu error handler: log res.json() before showing user-facing error so real errors surface during QA"
   debug_session: ""
 
-- truth: "Back navigation preserves previously entered data in each step"
-  status: resolved
-  reason: "User reported: going back does not show previously entered contents — unclear if data is lost or just not rendered"
+- truth: "Back navigation preserves data in all steps (hinnasto, aukioloajat, yhteystiedot); step 5 progress icon shows done-state after completing yhteystiedot"
+  status: failed
+  reason: "User reported: only pricing and contact details steps keep their contents (aukioloajat/hours is lost); step 5 contact details never gets done-status on the progress bar icons"
   severity: major
-  test: 10
-  root_cause: "All step components (StepMediat, StepHinnasto, StepAukioloajat, StepYhteystiedot) initialize exclusively from empty useState defaults. draft is loaded in OnboardingWizardInner but never passed as props to steps 2–5. AnimatePresence key={step} destroys and remounts each step on navigation, wiping local state."
+  test: 5
+  root_cause: |
+    Two sub-issues sharing one root cause. (B1) saveAndAdvance only calls goToStep — it never merges the saved step data back into local draft state. So when user goes back to StepAukioloajat, initialDraftAukioloajat={draft?.aukioloajat} is still the stale mount-time value (null or old data), not the hours just saved. (B2) completedSteps formula = Array.from({ length: draft.current_step - 1 }) so step 5 only appears complete when current_step >= 6. The API sets current_step = 5 when step 5 saves. Step 6 has no save call, only a submit — so current_step never reaches 6 and step 5 never enters completedSteps.
   artifacts:
     - path: "app/business/onboarding/OnboardingWizardInner.tsx"
-      issue: "draft loaded from Supabase but step-specific slices (hinnasto, yhteystiedot, media_urls, aukioloajat) never forwarded as props to step components 2–5"
-    - path: "app/business/onboarding/StepHinnasto.tsx"
-      issue: "useState initialized with empty defaults, no initialValues prop"
+      issue: "saveAndAdvance (line 114) only calls goToStep; never merges saved data into draft state; useEffect loadDraft has empty deps — draft perpetually stale"
+    - path: "app/business/onboarding/OnboardingWizardInner.tsx"
+      issue: "Lines 45-47: completedSteps = steps 1..(current_step-1); step 5 requires current_step=6 but step 6 has no save call so it never advances"
+    - path: "app/api/business/onboarding/save-step/route.ts"
+      issue: "Line 107: sets current_step = step (the step that saved), so completing step 5 sets current_step=5, not 6"
     - path: "app/business/onboarding/StepYhteystiedot.tsx"
-      issue: "useState initialized with empty defaults, no initialValues prop"
-    - path: "app/business/onboarding/StepMediat.tsx"
-      issue: "useState initialized with empty file array, no initialValues prop"
-    - path: "app/business/onboarding/StepAukioloajat.tsx"
-      issue: "Partially hydrates from existingAukioloajat (Google Places) but not from draft's previously submitted data"
+      issue: "Sends step: 5 — API sets current_step=5; completedSteps formula means step 5 needs current_step=6 to appear done"
   missing:
-    - "Pass relevant draft slice as initialValues prop to each step component in OnboardingWizardInner"
-    - "Each step's useState initializer should read initialValues ?? empty default"
-    - "For StepAukioloajat: pass draft?.aukioloajat ?? paikkaInfo?.aukioloajat so user-entered hours win"
+    - "In saveAndAdvance: after API call succeeds, merge the saved field into local draft state (setDraft(prev => ({ ...prev, [field]: value, current_step: step + 1 }))) OR re-fetch draft from Supabase"
+    - "Fix off-by-one: change API to write current_step = step + 1, OR change completedSteps formula to include current_step itself"
+    - "StepYhteystiedot should send step: 6 (or API uses step+1 consistently)"
   debug_session: ""
