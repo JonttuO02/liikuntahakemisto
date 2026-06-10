@@ -9,6 +9,12 @@ interface StepYhteystiedotProps {
   paikkaId: number
   onNext: () => void
   onPrev: () => void
+  initialYhteystiedot?: {
+    puhelin?: string
+    email?: string
+    website?: string
+    kuvaus?: string
+  } | null
 }
 
 const inputClass =
@@ -18,13 +24,14 @@ export default function StepYhteystiedot({
   paikkaId,
   onNext,
   onPrev,
+  initialYhteystiedot,
 }: StepYhteystiedotProps) {
   const t = useTranslations('Business')
 
-  const [puhelin, setPuhelin] = useState('')
-  const [email, setEmail] = useState('')
-  const [website, setWebsite] = useState('')
-  const [kuvaus, setKuvaus] = useState('')
+  const [puhelin, setPuhelin] = useState(initialYhteystiedot?.puhelin ?? '')
+  const [email, setEmail] = useState(initialYhteystiedot?.email ?? '')
+  const [website, setWebsite] = useState(initialYhteystiedot?.website ?? '')
+  const [kuvaus, setKuvaus] = useState(initialYhteystiedot?.kuvaus ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -135,7 +142,7 @@ export default function StepYhteystiedot({
                 : 'text-[10px] font-bold text-[rgba(17,17,17,0.45)]'
             }
           >
-            {t('contactDescCount').replace('{n}', String(descCount))}
+            {t('contactDescCount', { n: descCount })}
           </span>
         </div>
 

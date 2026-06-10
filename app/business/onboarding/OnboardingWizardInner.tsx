@@ -157,6 +157,7 @@ export default function OnboardingWizardInner() {
             {step === 3 && paikkaId !== null && (
               <StepHinnasto
                 paikkaId={paikkaId}
+                initialHinnasto={draft?.hinnasto}
                 onNext={() => saveAndAdvance(3)}
                 onPrev={() => goToStep(2)}
               />
@@ -165,6 +166,7 @@ export default function OnboardingWizardInner() {
               <StepAukioloajat
                 paikkaId={paikkaId}
                 existingAukioloajat={paikkaInfo?.aukioloajat}
+                initialDraftAukioloajat={draft?.aukioloajat}
                 onNext={() => saveAndAdvance(4)}
                 onPrev={() => goToStep(3)}
               />
@@ -172,6 +174,7 @@ export default function OnboardingWizardInner() {
             {step === 5 && paikkaId !== null && (
               <StepYhteystiedot
                 paikkaId={paikkaId}
+                initialYhteystiedot={draft?.yhteystiedot}
                 onNext={() => saveAndAdvance(5)}
                 onPrev={() => goToStep(4)}
               />

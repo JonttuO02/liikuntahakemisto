@@ -18,6 +18,7 @@ type Props = {
   paikkaId: number
   onNext: () => void
   onPrev: () => void
+  initialHinnasto?: Array<{ kategoria: string; hinta: string; lisatieto?: string }> | null
 }
 
 const inputClass =
@@ -30,15 +31,26 @@ const cellInputClass =
   'border border-[rgba(0,0,0,0.12)] focus:border-[rgba(0,0,0,0.25)] rounded-lg h-9 px-2 ' +
   'text-sm outline-none [transition:border-color_150ms_var(--ease-out)]'
 
-export default function StepHinnasto({ paikkaId, onNext, onPrev }: Props) {
+export default function StepHinnasto({ paikkaId, onNext, onPrev, initialHinnasto }: Props) {
   const t = useTranslations('Business')
 
-  const [rows, setRows] = useState<PricingRow[]>([
-    { id: 'fixed-1', kategoria: t('pricingCategoryDrop'),    hinta: '', lisatieto: '', isFixed: true },
-    { id: 'fixed-2', kategoria: t('pricingCategoryMonthly'), hinta: '', lisatieto: '', isFixed: true },
-    { id: 'fixed-3', kategoria: t('pricingCategory10x'),     hinta: '', lisatieto: '', isFixed: true },
-    { id: 'fixed-4', kategoria: t('pricingCategoryAnnual'),  hinta: '', lisatieto: '', isFixed: true },
-  ])
+  const [rows, setRows] = useState<PricingRow[]>(() => {
+    if (initialHinnasto && initialHinnasto.length > 0) {
+      return initialHinnasto.map((row, i) => ({
+        id: `saved-${i}`,
+        kategoria: row.kategoria,
+        hinta: row.hinta,
+        lisatieto: row.lisatieto ?? '',
+        isFixed: false,
+      }))
+    }
+    return [
+      { id: 'fixed-1', kategoria: t('pricingCategoryDrop'),    hinta: '', lisatieto: '', isFixed: true },
+      { id: 'fixed-2', kategoria: t('pricingCategoryMonthly'), hinta: '', lisatieto: '', isFixed: true },
+      { id: 'fixed-3', kategoria: t('pricingCategory10x'),     hinta: '', lisatieto: '', isFixed: true },
+      { id: 'fixed-4', kategoria: t('pricingCategoryAnnual'),  hinta: '', lisatieto: '', isFixed: true },
+    ]
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

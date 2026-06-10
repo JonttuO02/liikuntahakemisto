@@ -28,6 +28,7 @@ type HoursState = Record<string, DayState>
 type Props = {
   paikkaId: number
   existingAukioloajat: Record<string, { open: string; close: string }> | null | undefined
+  initialDraftAukioloajat?: Record<string, { open: string; close: string }> | null
   onNext: () => void
   onPrev: () => void
 }
@@ -40,6 +41,7 @@ const defaultHours = (): HoursState =>
 export default function StepAukioloajat({
   paikkaId,
   existingAukioloajat,
+  initialDraftAukioloajat,
   onNext,
   onPrev,
 }: Props) {
@@ -50,26 +52,27 @@ export default function StepAukioloajat({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Pre-fill from existingAukioloajat (Google Places data or previous draft)
-  // CRITICAL: existingAukioloajat uses English day keys (monday, tuesday, ...)
+  // Pre-fill from draft (priority) or Google Places data
+  // CRITICAL: both sources use English day keys (monday, tuesday, ...)
   useEffect(() => {
-    if (!existingAukioloajat) return
-    const keys = Object.keys(existingAukioloajat)
+    const source = initialDraftAukioloajat ?? existingAukioloajat
+    if (!source) return
+    const keys = Object.keys(source)
     if (keys.length === 0) return
 
     const filled = defaultHours()
     for (const dayKey of ORDERED_DAYS) {
-      if (existingAukioloajat[dayKey]) {
+      if (source[dayKey]) {
         filled[dayKey] = {
           isOpen: true,
-          open: existingAukioloajat[dayKey].open,
-          close: existingAukioloajat[dayKey].close,
+          open: source[dayKey].open,
+          close: source[dayKey].close,
         }
       }
     }
     setHours(filled)
     setWasPreFilled(true)
-  }, [existingAukioloajat])
+  }, [initialDraftAukioloajat, existingAukioloajat])
 
   function toggleDay(dayKey: string) {
     setHours(prev => ({
