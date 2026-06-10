@@ -8,10 +8,7 @@ import { useTranslations } from 'next-intl'
 import { buildDraftAsPaikka, type OnboardingDraft, type PaikkaBase } from '@/lib/onboardingUtils'
 import PaikkaKortti from '@/app/components/PaikkaKortti'
 import DiagonaalKortti from '@/app/components/DiagonaalKortti'
-
-// NOTE: The full profile sheet component is intentionally NOT imported — it uses position:fixed
-// and height:calc(100dvh) which would overlay the entire wizard screen.
-// A simplified inline card is rendered instead (see PROFIILISIVU section below).
+import PaikkaSheet from '@/app/components/PaikkaSheet'
 
 interface StepEsikatseluProps {
   draft: OnboardingDraft | null
@@ -103,27 +100,12 @@ export default function StepEsikatselu({
             <DiagonaalKortti paikka={draftAsPaikka} />
           </div>
 
-          {/* PROFIILISIVU — simplified inline card (full profile sheet omitted; uses fixed positioning) */}
+          {/* PROFIILISIVU */}
           <div className="flex flex-col gap-2">
             <span className="text-[10px] font-bold uppercase tracking-widest text-[rgba(17,17,17,0.45)]">
               {t('previewLabelSheet')}
             </span>
-            <div className="glass rounded-2xl p-4 flex flex-col gap-3">
-              <h3 className="text-xl font-bold text-[#111111]">{draftAsPaikka.nimi}</h3>
-              {draftAsPaikka.hinta_kuvaus && (
-                <p className="text-sm text-[#111111] whitespace-pre-line">
-                  {draftAsPaikka.hinta_kuvaus}
-                </p>
-              )}
-              {draftAsPaikka.kuvaus && (
-                <p className="text-sm text-[rgba(17,17,17,0.45)] line-clamp-4">
-                  {draftAsPaikka.kuvaus}
-                </p>
-              )}
-              {draftAsPaikka.puhelin && (
-                <p className="text-sm text-[#111111]">{draftAsPaikka.puhelin}</p>
-              )}
-            </div>
+            <PaikkaSheet paikka={draftAsPaikka} preview={true} todo={false} onClose={() => {}} onToggleTodo={() => {}} />
           </div>
 
           {/* Virheviesti */}
