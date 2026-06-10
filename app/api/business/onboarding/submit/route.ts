@@ -49,6 +49,19 @@ export async function POST(request: Request) {
   // Step 4: Update liikuntapaikat with all business-supplied data from the draft.
   // CRITICAL: if this update fails, we return 500 WITHOUT deleting the draft —
   // the draft is preserved so the user can retry without losing their work.
+
+  // Validate varauslinkki: only accept http/https URLs to prevent XSS via javascript: scheme (WR-06).
+  const rawWebsite = draft.yhteystiedot?.website?.trim() ?? null
+  let varauslinkki: string | null = null
+  if (rawWebsite) {
+    try {
+      const u = new URL(rawWebsite)
+      if (u.protocol === 'https:' || u.protocol === 'http:') {
+        varauslinkki = rawWebsite
+      }
+    } catch { /* invalid URL — leave null */ }
+  }
+
   const { error: updateError } = await supabaseAdmin
     .from('liikuntapaikat')
     .update({
@@ -56,7 +69,7 @@ export async function POST(request: Request) {
       aukioloajat: draft.aukioloajat ?? null,
       kuvaus: draft.yhteystiedot?.kuvaus?.trim() ?? null,
       puhelin: draft.yhteystiedot?.puhelin?.trim() ?? null,
-      varauslinkki: draft.yhteystiedot?.website?.trim() ?? null,
+      varauslinkki,
       image_url: draft.media_urls?.photos?.[0] ?? null,
       business_managed: true,
     })
