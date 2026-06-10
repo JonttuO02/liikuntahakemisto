@@ -15,6 +15,8 @@ interface StepYhteystiedotProps {
     website?: string
     kuvaus?: string
   } | null
+  editMode?: boolean
+  onSaveSuccess?: () => void
 }
 
 const inputClass =
@@ -25,6 +27,8 @@ export default function StepYhteystiedot({
   onNext,
   onPrev,
   initialYhteystiedot,
+  editMode = false,
+  onSaveSuccess,
 }: StepYhteystiedotProps) {
   const t = useTranslations('Business')
 
@@ -35,8 +39,57 @@ export default function StepYhteystiedot({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Edit-mode specific state
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveSuccessVisible, setSaveSuccessVisible] = useState(false)
+
   const descCount = kuvaus.length
   const isAtLimit = descCount >= 300
+
+  async function handleSave() {
+    if (saving) return
+    setSaving(true)
+    setSaveError(null)
+
+    try {
+      const supabase = createBrowserSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token ?? ''
+
+      const res = await fetch('/api/business/update-paikka', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          paikka_id: paikkaId,
+          section: 'yhteystiedot',
+          data: {
+            puhelin: puhelin.trim(),
+            varauslinkki: website.trim(),
+            kuvaus: kuvaus.trim(),
+          },
+        }),
+      })
+
+      if (!res.ok) {
+        setSaveError(t('errorGeneric'))
+        return
+      }
+
+      setSaveSuccessVisible(true)
+      setTimeout(() => {
+        setSaveSuccessVisible(false)
+        onSaveSuccess?.()
+      }, 2000)
+    } catch {
+      setSaveError(t('errorGeneric'))
+    } finally {
+      setSaving(false)
+    }
+  }
 
   async function handleNext() {
     if (loading) return
@@ -146,9 +199,23 @@ export default function StepYhteystiedot({
           </span>
         </div>
 
-        {/* Virheviesti */}
+        {/* Virheviesti / tallennettu */}
         <AnimatePresence>
-          {error && (
+          {editMode && saveSuccessVisible && (
+            <motion.p
+              key="contact-save-success"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              role="status"
+              aria-live="polite"
+              className="text-sm text-green-600"
+            >
+              {t('saveSuccess')}
+            </motion.p>
+          )}
+          {(editMode ? saveError : error) && (
             <motion.p
               key="contact-error"
               initial={{ opacity: 0 }}
@@ -159,7 +226,7 @@ export default function StepYhteystiedot({
               aria-live="polite"
               className="text-sm text-red-600"
             >
-              {error}
+              {editMode ? saveError : error}
             </motion.p>
           )}
         </AnimatePresence>
@@ -170,21 +237,37 @@ export default function StepYhteystiedot({
         <button
           type="button"
           onClick={onPrev}
-          disabled={loading}
+          disabled={loading || saving}
           className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)] flex items-center gap-1 disabled:opacity-60"
         >
           {t('prevCta')}
         </button>
 
-        <motion.button
-          type="button"
-          onClick={handleNext}
-          disabled={loading}
-          whileTap={{ scale: 0.95 }}
-          className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
-        >
-          {t('nextCta')}
-        </motion.button>
+        {editMode ? (
+          <motion.button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            whileTap={{ scale: 0.95 }}
+            className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
+          >
+            {saving ? (
+              <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+            ) : (
+              t('saveCta')
+            )}
+          </motion.button>
+        ) : (
+          <motion.button
+            type="button"
+            onClick={handleNext}
+            disabled={loading}
+            whileTap={{ scale: 0.95 }}
+            className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
+          >
+            {t('nextCta')}
+          </motion.button>
+        )}
       </footer>
     </div>
   )

@@ -19,6 +19,9 @@ type Props = {
   onNext: () => void
   onPrev: () => void
   initialHinnasto?: Array<{ kategoria: string; hinta: string; lisatieto?: string }> | null
+  initialPaikkaHinnasto?: Array<{ kategoria: string; hinta: string; lisatieto?: string }> | null
+  editMode?: boolean
+  onSaveSuccess?: () => void
 }
 
 const inputClass =
@@ -31,12 +34,22 @@ const cellInputClass =
   'border border-[rgba(0,0,0,0.12)] focus:border-[rgba(0,0,0,0.25)] rounded-lg h-9 px-2 ' +
   'text-sm outline-none [transition:border-color_150ms_var(--ease-out)]'
 
-export default function StepHinnasto({ paikkaId, onNext, onPrev, initialHinnasto }: Props) {
+export default function StepHinnasto({
+  paikkaId,
+  onNext,
+  onPrev,
+  initialHinnasto,
+  initialPaikkaHinnasto,
+  editMode = false,
+  onSaveSuccess,
+}: Props) {
   const t = useTranslations('Business')
 
   const [rows, setRows] = useState<PricingRow[]>(() => {
-    if (initialHinnasto && initialHinnasto.length > 0) {
-      return initialHinnasto.map((row, i) => ({
+    // In edit mode, prefer initialPaikkaHinnasto if provided
+    const source = editMode ? (initialPaikkaHinnasto ?? initialHinnasto) : initialHinnasto
+    if (source && source.length > 0) {
+      return source.map((row, i) => ({
         id: `saved-${i}`,
         kategoria: row.kategoria,
         hinta: row.hinta,
@@ -54,6 +67,11 @@ export default function StepHinnasto({ paikkaId, onNext, onPrev, initialHinnasto
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Edit-mode specific state
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveSuccessVisible, setSaveSuccessVisible] = useState(false)
+
   // ONBOARD-04: gate — Next disabled until at least one row has a non-empty hinta
   const hasAnyPrice = rows.some(r => r.hinta.trim() !== '')
 
@@ -70,6 +88,65 @@ export default function StepHinnasto({ paikkaId, onNext, onPrev, initialHinnasto
 
   function updateRow(id: string, field: keyof PricingRow, value: string) {
     setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r))
+  }
+
+  async function handleSave() {
+    if (!hasAnyPrice || saving) return
+    setSaving(true)
+    setSaveError(null)
+
+    try {
+      const supabase = createBrowserSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token ?? ''
+
+      // Derive hinta_min / hinta_max from rows
+      const numericPrices = rows
+        .filter(r => r.hinta.trim() !== '')
+        .map(r => parseFloat(r.hinta.replace(',', '.')))
+        .filter(n => !isNaN(n))
+
+      const hinta_min = numericPrices.length > 0 ? Math.min(...numericPrices) : null
+      const hinta_max = numericPrices.length > 0 ? Math.max(...numericPrices) : null
+
+      // Derive hinta_kuvaus: compact string from non-empty rows
+      const hinta_kuvaus = rows
+        .filter(r => r.hinta.trim() !== '')
+        .map(r => {
+          const base = `${r.kategoria}: €${r.hinta}`
+          return r.lisatieto.trim() ? `${base} (${r.lisatieto.trim()})` : base
+        })
+        .join('; ')
+        .slice(0, 200) || null
+
+      const res = await fetch('/api/business/update-paikka', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          paikka_id: paikkaId,
+          section: 'hinnasto',
+          data: { hinta_min, hinta_max, hinta_kuvaus },
+        }),
+      })
+
+      if (!res.ok) {
+        setSaveError(t('errorGeneric'))
+        return
+      }
+
+      setSaveSuccessVisible(true)
+      setTimeout(() => {
+        setSaveSuccessVisible(false)
+        onSaveSuccess?.()
+      }, 2000)
+    } catch {
+      setSaveError(t('errorGeneric'))
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleNext() {
@@ -185,7 +262,21 @@ export default function StepHinnasto({ paikkaId, onNext, onPrev, initialHinnasto
       </div>
 
       <AnimatePresence>
-        {error && (
+        {(editMode ? saveSuccessVisible : false) && (
+          <motion.p
+            key="price-save-success"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="text-sm text-green-600"
+            role="status"
+            aria-live="polite"
+          >
+            {t('saveSuccess')}
+          </motion.p>
+        )}
+        {(editMode ? saveError : error) && (
           <motion.p
             key="price-error"
             initial={{ opacity: 0 }}
@@ -196,7 +287,7 @@ export default function StepHinnasto({ paikkaId, onNext, onPrev, initialHinnasto
             role="alert"
             aria-live="polite"
           >
-            {error}
+            {editMode ? saveError : error}
           </motion.p>
         )}
       </AnimatePresence>
@@ -209,19 +300,35 @@ export default function StepHinnasto({ paikkaId, onNext, onPrev, initialHinnasto
         >
           {t('prevCta')}
         </button>
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.95 }}
-          onClick={handleNext}
-          disabled={!hasAnyPrice || loading}
-          className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
-        >
-          {loading ? (
-            <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
-          ) : (
-            t('nextCta')
-          )}
-        </motion.button>
+        {editMode ? (
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.95 }}
+            onClick={handleSave}
+            disabled={!hasAnyPrice || saving}
+            className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
+          >
+            {saving ? (
+              <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+            ) : (
+              t('saveCta')
+            )}
+          </motion.button>
+        ) : (
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.95 }}
+            onClick={handleNext}
+            disabled={!hasAnyPrice || loading}
+            className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
+          >
+            {loading ? (
+              <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+            ) : (
+              t('nextCta')
+            )}
+          </motion.button>
+        )}
       </footer>
     </div>
   )

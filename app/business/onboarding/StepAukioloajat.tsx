@@ -31,6 +31,8 @@ type Props = {
   initialDraftAukioloajat?: Record<string, { open: string; close: string }> | null
   onNext: () => void
   onPrev: () => void
+  editMode?: boolean
+  onSaveSuccess?: () => void
 }
 
 const defaultHours = (): HoursState =>
@@ -44,6 +46,8 @@ export default function StepAukioloajat({
   initialDraftAukioloajat,
   onNext,
   onPrev,
+  editMode = false,
+  onSaveSuccess,
 }: Props) {
   const t = useTranslations('Business')
 
@@ -51,6 +55,11 @@ export default function StepAukioloajat({
   const [wasPreFilled, setWasPreFilled] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Edit-mode specific state
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveSuccessVisible, setSaveSuccessVisible] = useState(false)
 
   // Pre-fill from draft (priority) or Google Places data
   // CRITICAL: both sources use English day keys (monday, tuesday, ...)
@@ -88,6 +97,61 @@ export default function StepAukioloajat({
     }))
   }
 
+  function buildOpenDaysObject(): Record<string, { open: string; close: string }> {
+    const openDaysObject: Record<string, { open: string; close: string }> = {}
+    for (const dayKey of ORDERED_DAYS) {
+      if (hours[dayKey]?.isOpen) {
+        openDaysObject[dayKey] = {
+          open: hours[dayKey].open,
+          close: hours[dayKey].close,
+        }
+      }
+    }
+    return openDaysObject
+  }
+
+  async function handleSave() {
+    if (saving) return
+    setSaving(true)
+    setSaveError(null)
+
+    try {
+      const supabase = createBrowserSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token ?? ''
+
+      const openDaysObject = buildOpenDaysObject()
+
+      const res = await fetch('/api/business/update-paikka', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          paikka_id: paikkaId,
+          section: 'aukioloajat',
+          data: openDaysObject,
+        }),
+      })
+
+      if (!res.ok) {
+        setSaveError(t('errorGeneric'))
+        return
+      }
+
+      setSaveSuccessVisible(true)
+      setTimeout(() => {
+        setSaveSuccessVisible(false)
+        onSaveSuccess?.()
+      }, 2000)
+    } catch {
+      setSaveError(t('errorGeneric'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function handleNext() {
     if (loading) return
     setLoading(true)
@@ -95,15 +159,7 @@ export default function StepAukioloajat({
 
     try {
       // Build value: only include open days; ORDERED_DAYS whitelist prevents key injection
-      const openDaysObject: Record<string, { open: string; close: string }> = {}
-      for (const dayKey of ORDERED_DAYS) {
-        if (hours[dayKey]?.isOpen) {
-          openDaysObject[dayKey] = {
-            open: hours[dayKey].open,
-            close: hours[dayKey].close,
-          }
-        }
-      }
+      const openDaysObject = buildOpenDaysObject()
 
       const supabase = createBrowserSupabase()
       const { data: { session } } = await supabase.auth.getSession()
@@ -218,7 +274,21 @@ export default function StepAukioloajat({
       </div>
 
       <AnimatePresence>
-        {error && (
+        {editMode && saveSuccessVisible && (
+          <motion.p
+            key="hours-save-success"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="text-sm text-green-600"
+            role="status"
+            aria-live="polite"
+          >
+            {t('saveSuccess')}
+          </motion.p>
+        )}
+        {(editMode ? saveError : error) && (
           <motion.p
             key="hours-error"
             initial={{ opacity: 0 }}
@@ -229,7 +299,7 @@ export default function StepAukioloajat({
             role="alert"
             aria-live="polite"
           >
-            {error}
+            {editMode ? saveError : error}
           </motion.p>
         )}
       </AnimatePresence>
@@ -242,19 +312,35 @@ export default function StepAukioloajat({
         >
           {t('prevCta')}
         </button>
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.95 }}
-          onClick={handleNext}
-          disabled={loading}
-          className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
-        >
-          {loading ? (
-            <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
-          ) : (
-            t('nextCta')
-          )}
-        </motion.button>
+        {editMode ? (
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.95 }}
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
+          >
+            {saving ? (
+              <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+            ) : (
+              t('saveCta')
+            )}
+          </motion.button>
+        ) : (
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.95 }}
+            onClick={handleNext}
+            disabled={loading}
+            className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
+          >
+            {loading ? (
+              <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+            ) : (
+              t('nextCta')
+            )}
+          </motion.button>
+        )}
       </footer>
     </div>
   )
