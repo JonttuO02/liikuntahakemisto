@@ -214,6 +214,9 @@ Plans:
 **Wave 10** (gap closure — after Wave 4):
 - [x] 34-10-PLAN.md — PaikkaSheet preview prop + StepEsikatselu wire-up (ONBOARD-07)
 
+**Wave 11** (UAT gap closure — after Wave 10):
+- [x] 34-11-PLAN.md — Fix Step 6 spinner, ICU counter, back-nav data loss, thumbnail UX (ONBOARD-02, -04, -05, -06)
+
 **UI hint**: yes
 
 ### Phase 35: Admin-hyväksyntäjärjestelmä
@@ -279,6 +282,6 @@ Plans:
 | 31. DB-skeema & Storage-perusta | v1.7 | 4/4 | ✅ Complete | 2026-06-05 |
 | 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | Complete    | 2026-06-05 |
 | 33. Claim & paikan luonti | v1.7 | 7/7 | ✅ Complete | 2026-06-06 |
-| 34. Onboarding-velhou | v1.7 | 10/10 | ✅ Complete | 2026-06-10 |
+| 34. Onboarding-velhou | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
 | 35. Admin-hyväksyntäjärjestelmä | v1.7 | 0/? | Not started | - |
 | 36. Hallintapaneeli | v1.7 | 0/? | Not started | - |
