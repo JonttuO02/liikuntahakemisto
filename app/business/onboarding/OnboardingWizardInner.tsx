@@ -10,6 +10,8 @@ import ProgressBar from './ProgressBar'
 import StepPaikka from './StepPaikka'
 import StepHinnasto from './StepHinnasto'
 import StepAukioloajat from './StepAukioloajat'
+import StepYhteystiedot from './StepYhteystiedot'
+import StepEsikatselu from './StepEsikatselu'
 
 type PaikkaInfo = {
   nimi: string
@@ -159,8 +161,20 @@ export default function OnboardingWizardInner() {
                 onPrev={() => goToStep(3)}
               />
             )}
-            {/* Steps 5-6 implemented in Plan 09 */}
-            {step >= 5 && null}
+            {step === 5 && paikkaId !== null && (
+              <StepYhteystiedot
+                paikkaId={paikkaId}
+                onNext={() => saveAndAdvance(5)}
+                onPrev={() => goToStep(4)}
+              />
+            )}
+            {step === 6 && (
+              <StepEsikatselu
+                draft={draft}
+                paikkaInfo={paikkaInfo}
+                onPrev={() => goToStep(5)}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
