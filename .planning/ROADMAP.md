@@ -240,9 +240,9 @@ Plans:
 - [x] 35-04-PLAN.md — [BLOCKING] supabase db push + RESEND_API_KEY env + smoke test
 
 **Wave 3** (parallel — after Wave 2):
-- [ ] 35-05-PLAN.md — Extend Route Handlers with email notifications + register role_in_company (ADMIN-01, D-04)
-- [ ] 35-06-PLAN.md — /api/admin/approve + /api/admin/reject Route Handlers (ADMIN-03, ADMIN-04, ADMIN-05)
-- [ ] 35-07-PLAN.md — UI: rekisteroidy role_in_company + business/page.tsx rejection display (D-04, D-08)
+- [x] 35-05-PLAN.md — Extend Route Handlers with email notifications + register role_in_company (ADMIN-01, D-04)
+- [x] 35-06-PLAN.md — /api/admin/approve + /api/admin/reject Route Handlers (ADMIN-03, ADMIN-04, ADMIN-05)
+- [x] 35-07-PLAN.md — UI: rekisteroidy role_in_company + business/page.tsx rejection display (D-04, D-08)
 
 **Wave 4** (parallel — after Wave 3):
 - [ ] 35-08-PLAN.md — /admin/page.tsx Server Component + AdminApplicationList client (ADMIN-02, ADMIN-05)

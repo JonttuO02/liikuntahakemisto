@@ -17,9 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 35 (admin-hyväksyntäjärjestelmä) — IN PROGRESS, Wave 3 executing
-Status: Waves 1+2 complete (4/9 plans done). Wave 3 running: 35-05, 35-06, 35-07 in parallel.
-Last activity: 2026-06-10 -- Wave 2 checkpoint cleared, Wave 3 started
+Phase: 35 (admin-hyväksyntäjärjestelmä) — IN PROGRESS, Wave 4 executing
+Status: Waves 1-3 complete (7/9 plans done). Wave 4 running: 35-08, 35-09 in parallel.
+Last activity: 2026-06-10 -- Wave 3 complete, Wave 4 started
 
 ## Project Reference
 
