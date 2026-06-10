@@ -112,7 +112,7 @@ export default function ClaimSearchForm() {
       })
 
       if (res.ok) {
-        router.push('/business/onboarding')
+        router.push(`/business/onboarding?paikka_id=${selectedVenue.id}`)
         return
       }
 
