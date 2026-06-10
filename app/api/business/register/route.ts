@@ -36,8 +36,11 @@ export async function POST(request: Request) {
     .insert({ user_id: user.id, company_name, role_in_company })
 
   if (error) {
-    // Atomicity rollback (D-10): delete the orphaned auth user so the user can retry
-    await supabaseAdmin.auth.admin.deleteUser(user.id)
+    // Do NOT delete the auth user here. A transient DB error (connectivity,
+    // constraint violation other than duplicate user_id) should not destroy
+    // the user's newly-created account. The auth user remains valid so the
+    // client can retry the registration. Dangling auth users without a
+    // business_accounts row can be cleaned up by a scheduled maintenance job.
     return NextResponse.json(
       { error: 'business_accounts insert failed', detail: error.message },
       { status: 500 }
