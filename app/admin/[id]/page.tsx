@@ -1,63 +1,101 @@
-import { cookies } from 'next/headers'
-import { notFound, redirect } from 'next/navigation'
-import { createServerSupabase } from '@/lib/supabaseSSR'
-import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
-import Image from 'next/image'
+'use client'
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-function storageUrl(path: string) {
-  return `${SUPABASE_URL}/storage/v1/object/public/business-media/${path}`
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import PaikkaKortti from '@/app/components/PaikkaKortti'
+import DiagonaalKortti from '@/app/components/DiagonaalKortti'
+import PaikkaSheet from '@/app/components/PaikkaSheet'
+import type { Liikuntapaikka } from '@/lib/types'
+
+type LinkData = {
+  id: number
+  link_type: string
+  claim_status: string
+  created_at: string
+  rejection_reason: string | null
+  businessEmail: string | null
+  business_accounts: { company_name: string; role_in_company: string | null } | null
+  liikuntapaikat: Liikuntapaikka | null
 }
 
-export default async function AdminDetailPage({ params }: { params: { id: string } }) {
-  const cookieStore = cookies()
-  const supabase = createServerSupabase(cookieStore)
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/')
+export default function AdminDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter()
+  const [link, setLink] = useState<LinkData | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('is_admin')
-    .eq('user_id', user.id)
-    .maybeSingle()
-  if (!profile?.is_admin) notFound()
+  // Approve/reject action state
+  const [actionLoading, setActionLoading] = useState(false)
+  const [rejectingOpen, setRejectingOpen] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [actionDone, setActionDone] = useState(false)
 
-  const linkId = parseInt(params.id, 10)
-  if (isNaN(linkId)) notFound()
+  useEffect(() => {
+    async function load() {
+      const supabase = createBrowserSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { router.replace('/'); return }
 
-  const { data: link } = await supabaseAdmin
-    .from('business_paikka_links')
-    .select(`
-      id,
-      link_type,
-      claim_status,
-      created_at,
-      rejection_reason,
-      business_accounts(company_name, role_in_company, user_id),
-      liikuntapaikat(
-        nimi, osoite, kaupunki, laji,
-        kuvaus, puhelin, varauslinkki,
-        hinta_kuvaus, aukioloajat,
-        image_url, photo_urls
-      )
-    `)
-    .eq('id', linkId)
-    .maybeSingle()
+      const res = await fetch(`/api/admin/applications/${params.id}`, {
+        headers: { Authorization: 'Bearer ' + session.access_token },
+      })
+      if (!res.ok) { router.replace('/admin'); return }
+      setLink(await res.json())
+      setLoading(false)
+    }
+    load()
+  }, [router, params.id])
 
-  if (!link) notFound()
-
-  const businessUserId = (link.business_accounts as { user_id: string } | null)?.user_id
-  let businessEmail: string | null = null
-  if (businessUserId) {
-    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(businessUserId)
-    businessEmail = authUser?.user?.email ?? null
+  async function getToken() {
+    const supabase = createBrowserSupabase()
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token ?? ''
   }
 
-  const paikka = link.liikuntapaikat as Record<string, unknown> | null
-  const business = link.business_accounts as { company_name: string; role_in_company: string | null } | null
-  const photoUrls: string[] = Array.isArray(paikka?.photo_urls)
-    ? (paikka.photo_urls as string[]).map(storageUrl)
-    : []
+  async function handleApprove() {
+    if (!link) return
+    setActionLoading(true)
+    setActionError(null)
+    const token = await getToken()
+    const res = await fetch('/api/admin/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ link_id: link.id }),
+    })
+    setActionLoading(false)
+    if (res.ok) {
+      setActionDone(true)
+      setLink(prev => prev ? { ...prev, claim_status: 'approved' } : prev)
+    } else {
+      setActionError('Toiminto epäonnistui. Yritä uudelleen.')
+    }
+  }
+
+  async function handleRejectConfirm() {
+    if (!link || !rejectReason.trim()) return
+    setActionLoading(true)
+    setActionError(null)
+    const token = await getToken()
+    const res = await fetch('/api/admin/reject', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ link_id: link.id, reason: rejectReason.trim() }),
+    })
+    setActionLoading(false)
+    if (res.ok) {
+      setActionDone(true)
+      setLink(prev => prev ? { ...prev, claim_status: 'rejected' } : prev)
+      setRejectingOpen(false)
+    } else {
+      setActionError('Toiminto epäonnistui. Yritä uudelleen.')
+    }
+  }
+
+  if (loading || !link) return null
+
+  const paikka = link.liikuntapaikat
+  const business = link.business_accounts
 
   return (
     <main className="min-h-screen bg-white px-4 py-16">
@@ -67,50 +105,97 @@ export default async function AdminDetailPage({ params }: { params: { id: string
         </a>
         <h1 className="text-xl font-bold text-[#111111]">Hakemuksen tiedot</h1>
 
+        {/* Applicant info */}
         <div className="glass rounded-2xl p-5 flex flex-col gap-3">
           <SectionLabel>Hakija</SectionLabel>
           <Field label="Yritys">{business?.company_name ?? '—'}</Field>
           <Field label="Rooli">{business?.role_in_company ?? '—'}</Field>
-          <Field label="Sähköposti">{businessEmail ?? '—'}</Field>
+          <Field label="Sähköposti">{link.businessEmail ?? '—'}</Field>
           <Field label="Tyyppi">{link.link_type === 'claim' ? 'Haltuunotto' : 'Uusi paikka'}</Field>
           <Field label="Lähetetty">{new Date(link.created_at).toLocaleString('fi-FI')}</Field>
           <Field label="Tila">{link.claim_status}</Field>
         </div>
 
-        <div className="glass rounded-2xl p-5 flex flex-col gap-3">
-          <SectionLabel>Paikka</SectionLabel>
-          <Field label="Nimi">{String(paikka?.nimi ?? '—')}</Field>
-          <Field label="Osoite">{String(paikka?.osoite ?? '—')}</Field>
-          <Field label="Kaupunki">{String(paikka?.kaupunki ?? '—')}</Field>
-          <Field label="Laji">{String(paikka?.laji ?? '—')}</Field>
-        </div>
-
-        {photoUrls.length > 0 && (
+        {/* Approve / Reject actions — only shown when status is pending */}
+        {link.claim_status === 'pending' && !actionDone && (
           <div className="glass rounded-2xl p-5 flex flex-col gap-3">
-            <SectionLabel>Kuvat</SectionLabel>
-            <div className="flex flex-wrap gap-2">
-              {photoUrls.map((url, i) => (
-                <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-[rgba(0,0,0,0.07)]">
-                  <Image src={url} alt={`Kuva ${i + 1}`} fill className="object-cover" unoptimized />
+            <SectionLabel>Toiminnot</SectionLabel>
+            {actionError && <p className="text-sm text-red-600">{actionError}</p>}
+            {rejectingOpen ? (
+              <div className="flex flex-col gap-2">
+                <input
+                  type="text"
+                  placeholder="Syy hylkäykselle (pakollinen)"
+                  value={rejectReason}
+                  onChange={e => setRejectReason(e.target.value)}
+                  className="border border-[rgba(0,0,0,0.12)] rounded-lg h-10 px-3 text-sm text-[#111111] placeholder:text-[rgba(17,17,17,0.35)] bg-white focus:outline-none focus:border-[rgba(0,0,0,0.25)] w-full"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleRejectConfirm}
+                    disabled={!rejectReason.trim() || actionLoading}
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-full h-9 px-4 disabled:opacity-60 [transition:background-color_150ms]"
+                  >
+                    {actionLoading ? 'Hylätään...' : 'Vahvista hylkäys'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setRejectingOpen(false); setRejectReason('') }}
+                    className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms]"
+                  >
+                    Peruuta
+                  </button>
                 </div>
-              ))}
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleApprove}
+                  disabled={actionLoading}
+                  className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-9 px-4 disabled:opacity-60 [transition:background-color_150ms]"
+                >
+                  {actionLoading ? 'Hyväksytään...' : 'Hyväksy'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRejectingOpen(true)}
+                  disabled={actionLoading}
+                  className="text-sm font-bold text-red-600 border border-red-200 hover:border-red-400 rounded-full h-9 px-4 disabled:opacity-60 [transition:border-color_150ms]"
+                >
+                  Hylkää
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Venue preview — same components as onboarding StepEsikatselu */}
+        {paikka && (
+          <>
+            <div className="flex flex-col gap-2">
+              <SectionLabel>Listakortti</SectionLabel>
+              <PaikkaKortti paikka={paikka} />
             </div>
-          </div>
-        )}
 
-        {paikka?.hinta_kuvaus && (
-          <div className="glass rounded-2xl p-5 flex flex-col gap-3">
-            <SectionLabel>Hinnasto</SectionLabel>
-            <pre className="text-sm text-[#111111] whitespace-pre-wrap font-sans">{String(paikka.hinta_kuvaus)}</pre>
-          </div>
-        )}
+            <div className="flex flex-col gap-2">
+              <SectionLabel>Diagonaalikortti</SectionLabel>
+              <DiagonaalKortti paikka={paikka} />
+            </div>
 
-        <div className="glass rounded-2xl p-5 flex flex-col gap-3">
-          <SectionLabel>Yhteystiedot</SectionLabel>
-          {paikka?.puhelin && <Field label="Puhelin">{String(paikka.puhelin)}</Field>}
-          {paikka?.varauslinkki && <Field label="Website">{String(paikka.varauslinkki)}</Field>}
-          {paikka?.kuvaus && <Field label="Kuvaus">{String(paikka.kuvaus)}</Field>}
-        </div>
+            <div className="flex flex-col gap-2">
+              <SectionLabel>Profiilisivu</SectionLabel>
+              <PaikkaSheet
+                paikka={paikka}
+                preview={true}
+                todo={false}
+                onClose={() => {}}
+                onToggleTodo={() => {}}
+              />
+            </div>
+          </>
+        )}
       </div>
     </main>
   )
