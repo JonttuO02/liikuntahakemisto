@@ -55,6 +55,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
+  // Security: verify the authenticated user actually owns this venue before accepting data.
+  // Without this check, any authenticated business user could overwrite another venue's draft
+  // by supplying an arbitrary paikka_id in the request body (T-34-05-02 mitigation).
+  const { data: link } = await supabaseAdmin
+    .from('business_paikka_links')
+    .select('id')
+    .eq('business_account_id', user.id)
+    .eq('paikka_id', paikkaId)
+    .maybeSingle()
+
+  if (!link) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
   // UPSERT into onboarding_draft.
   // business_account_id is always set to user.id from the verified JWT — never from the request body.
   // Conflict target (business_account_id, paikka_id) ensures one draft row per business per venue.
