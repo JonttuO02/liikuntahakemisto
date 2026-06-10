@@ -64,6 +64,7 @@ export default function StepEsikatselu({
       })
 
       if (!res.ok) {
+        try { console.error('[submit] server error:', await res.clone().json()) } catch {}
         setError(t('errorSubmitFailed'))
         return
       }

@@ -83,9 +83,18 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
           style={{ clipPath: 'polygon(0 0, 62% 0, 57% 100%, 0 100%)' }}
         >
           <div className="flex items-start gap-2 self-start">
-            {/* Logo placeholder — 40×40px rounded box */}
+            {/* Logo slot — shows uploaded logo when available, falls back to Building2 */}
             <div className="w-10 h-10 rounded-lg bg-[rgba(0,0,0,0.06)] flex items-center justify-center shrink-0">
-              <Building2 size={20} className="text-[rgba(0,0,0,0.25)]" />
+              {paikka.logo_url ? (
+                <img
+                  src={paikka.logo_url}
+                  alt=""
+                  aria-hidden
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              ) : (
+                <Building2 size={20} className="text-[rgba(0,0,0,0.25)]" />
+              )}
             </div>
             {/* Sport pill */}
             <span

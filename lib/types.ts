@@ -17,6 +17,7 @@ export type Liikuntapaikka = {
   lajit_lista?: string[] | null
   featured?: boolean | null
   image_url?: string | null
+  logo_url?: string | null
 }
 
 export type Suosikki = {
