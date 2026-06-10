@@ -26,10 +26,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  // Find the existing rejected row for this user + venue combination
+  // Find the existing rejected row for this user + venue combination.
+  // Select updated_at to enforce minimum cooldown between reapplies.
   const { data: rejectedLink, error: findError } = await supabaseAdmin
     .from('business_paikka_links')
-    .select('id')
+    .select('id, updated_at')
     .eq('business_account_id', user.id)
     .eq('paikka_id', paikkaId)
     .eq('claim_status', 'rejected')
@@ -46,11 +47,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No rejected application found' }, { status: 404 })
   }
 
-  // UPDATE the found row: reset claim_status to pending and clear rejection_reason
+  // Cooldown guard: require at least 24 hours since the last rejection before
+  // allowing a reapply. This prevents flooding the admin queue with repeated
+  // re-submissions. updated_at is set by PostgreSQL on every UPDATE.
+  const COOLDOWN_MS = 24 * 60 * 60 * 1000 // 24 hours
+  const lastUpdated = new Date(rejectedLink.updated_at).getTime()
+  const msSinceRejection = Date.now() - lastUpdated
+  if (msSinceRejection < COOLDOWN_MS) {
+    const hoursRemaining = Math.ceil((COOLDOWN_MS - msSinceRejection) / (60 * 60 * 1000))
+    return NextResponse.json(
+      { error: 'Cooldown active', hoursRemaining },
+      { status: 429 }
+    )
+  }
+
+  // UPDATE the found row: reset claim_status to pending and clear rejection_reason.
+  // The WHERE clause includes claim_status = 'rejected' to guard against concurrent
+  // duplicate reapply requests that both passed the SELECT above.
   const { error: updateError } = await supabaseAdmin
     .from('business_paikka_links')
     .update({ claim_status: 'pending', rejection_reason: null })
     .eq('id', rejectedLink.id)
+    .eq('claim_status', 'rejected')
 
   if (updateError) {
     return NextResponse.json(
