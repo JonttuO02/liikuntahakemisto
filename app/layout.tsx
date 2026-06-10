@@ -3,6 +3,8 @@ import { Outfit, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import MapProvider from './components/MapProvider'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale } from 'next-intl/server'
 
 const outfit   = Outfit({ subsets: ['latin'], variable: '--font-sans' })
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-serif' })
@@ -17,12 +19,15 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: '#4F46E5' }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale()
   return (
-    <html lang="fi" className={cn('font-sans', outfit.variable, playfair.variable)}>
+    <html lang={locale} className={cn('font-sans', outfit.variable, playfair.variable)}>
       <body className="antialiased bg-white text-[#111111]">
         <MapProvider>
-          <main>{children}</main>
+          <NextIntlClientProvider>
+            <main>{children}</main>
+          </NextIntlClientProvider>
         </MapProvider>
       </body>
     </html>

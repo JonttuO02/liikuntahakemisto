@@ -1,9 +1,12 @@
 import { spawnSync } from "node:child_process";
 import withSerwistInit from "@serwist/next";
+import createNextIntlPlugin from 'next-intl/plugin'
 
 const revision =
   spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf-8" }).stdout?.trim() ||
   crypto.randomUUID();
+
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 
 const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
@@ -13,7 +16,7 @@ const withSerwist = withSerwistInit({
   additionalPrecacheEntries: [{ url: "/offline", revision }],
 });
 
-export default withSerwist({
+export default withNextIntl(withSerwist({
   async redirects() {
     return [
       {
@@ -24,4 +27,4 @@ export default withSerwist({
       },
     ]
   },
-});
+}));

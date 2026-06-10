@@ -1,98 +1,92 @@
-# Requirements — Liikuntahakemisto v1.6
+# Requirements — Liikuntahakemisto v1.7
 
-**Milestone:** v1.6 Kielituki, Ikonit & Sheet-redesign
+**Milestone:** v1.7 Yritysportaali
 **Status:** Active
-**Last updated:** 2026-06-03
+**Last updated:** 2026-06-05
 
-## v1.6 Requirements
+## v1.7 Requirements
 
-### i18n — Kielituki
+### Yritystili & Auth (BIZ)
 
-- [ ] **I18N-01**: Käyttäjä voi vaihtaa käyttöliittymäkielen suomeksi tai englanniksi profiilisivulla
-- [ ] **I18N-02**: Valittu kieli tallennetaan `NEXT_LOCALE`-cookieen ja säilyy sivulatausten välillä
-- [ ] **I18N-03**: Kaikki UI-tekstitykset näytetään valitulla kielellä; kartan tila ja filtterivalinnat säilyvät kieltä vaihdettaessa
+- [x] **BIZ-01**: Yritys voi rekisteröityä palveluun erillisellä lomakkeella (yritysnimi, sähköposti, salasana)
+- [ ] **BIZ-02**: `business_accounts`-taulu linkittää Supabase Auth -käyttäjän yritykseen; `business_paikka_links` yhdistää useita paikkoja yhteen tiliin
+- [x] **BIZ-03**: Kirjautunut yritys ohjataan automaattisesti `/business`-hallintapaneeliin
 
-### Laji-ikonit
+### Paikan haltuunotto & luonti (CLAIM)
 
-- [ ] **ICON-01**: Uudet SVG-ikonit kaikille lajeille (zip-tiedostosta) korvaavat Lucide-ikonit `lib/sportIcons.ts`-rekisteristä
-- [ ] **ICON-02**: Uudet ikonit käytössä kaikissa konteksteissa: filtteripilli, korttibadget, karttapinnit, CalloutCard
+- [ ] **CLAIM-01**: Yritys voi hakea olemassa olevaa paikkaa nimellä tai osoitteella ja lähettää claim-pyynnön
+- [ ] **CLAIM-02**: Jos paikkaa ei löydy hakemistosta, yritys voi luoda uuden paikan
+- [ ] **CLAIM-03**: Claim-paikka pysyy näkyvänä käyttäjille; uusi paikka piilotettu (`published = false`) kunnes admin hyväksyy
 
-### Haku & filtteri — korjaukset
+### Ohjattu onboarding-velhou (ONBOARD)
 
-- [ ] **FILTER-04**: FilterCarouselPill-pillin taustaväri hieman harmaa (`rgba(0,0,0,0.04)`) valkoisen sijaan
-- [ ] **FILTER-05**: Piilotettu hakukenttä ei jätä kummituselementtiä pillin alle — kartta reagoi kosketukseen koko alueella
-- [ ] **SEARCH-01**: Tekstihausta poistetaan "Ei tuloksia" ja "Tyhjennä haku" -elementit kokonaan
+- [ ] **ONBOARD-01**: Ensimmäisellä kirjautumisella käynnistyy automaattisesti vaiheistettu onboarding-velhoui — ei voi ohittaa ennen kuin kaikki pakolliset vaiheet on täytetty
+- [ ] **ONBOARD-02**: Vaihe 1 — Paikka: hae olemassa oleva tai luo uusi; paikan nimi ja osoite esitäytetty haun perusteella
+- [ ] **ONBOARD-03**: Vaihe 2 — Mediat: ladataan 1–5 kuvaa ja logo Supabase Storageen (`business-media`-bucket); edistymispalkki latauksen ajan
+- [ ] **ONBOARD-04**: Vaihe 3 — Hinnasto: hinnat kategorioittain (kertakäynti, jäsenyys, kuukausihinta jne.); vähintään yksi hintarivi pakollinen
+- [ ] **ONBOARD-05**: Vaihe 4 — Aukioloajat: Google Places -data esitäytettynä (jos saatavilla), yritys voi muokata tai syöttää manuaalisesti
+- [ ] **ONBOARD-06**: Vaihe 5 — Yhteystiedot: puhelin, sähköposti, website, lyhyt kuvaus palvelusta (max 300 merkkiä)
+- [ ] **ONBOARD-07**: Vaihe 6 — Esikatselu: näyttää miltä paikka näyttää sovelluksessa (PaikkaKortti, DiagonaalKortti, PaikkaSheet) yrityksen syöttämillä tiedoilla
 
-### Korttilistaus
+### Admin-hyväksyntä (ADMIN)
 
-- [ ] **UI-24**: Korttilistauksen alareunaan fade-häivytys (kortit eivät leikkaannu karkeasti)
-- [ ] **UI-25**: PaikkaKortti (pienikortti) alareunassa rullaava hinnastokaruselli (sama animaatio kuin FilterCarouselPill)
+- [ ] **ADMIN-01**: Uusi rekisteröityminen ja claim-pyyntö lähettää sähköposti-ilmoituksen admin-osoitteeseen (joona.orava@gmail.com)
+- [ ] **ADMIN-02**: `/admin`-sivu listaa odottavat hakemukset; admin näkee yrityksen tiedot, pyydetyn paikan ja ladatut kuvat
+- [ ] **ADMIN-03**: Admin voi hyväksyä tai hylätä hakemuksen; hylkäykseen kirjoitetaan syy
+- [ ] **ADMIN-04**: Hyväksytty yritys saa vahvistussähköpostin; hylätty yritys saa ilmoituksen syyllä
+- [ ] **ADMIN-05**: `/admin`-sivu on suojattu: näkyy vain Supabase Auth -käyttäjälle jolla `is_admin = true` profiles-taulussa
 
-### DiagonaalKortti
+### Hallintapaneeli (BIZPANEL)
 
-- [ ] **UI-26**: DiagonaalKortin vasempaan yläkulmaan yrityksen logopaikka (placeholder: harmaa neliö kamerakuvakkeella)
-- [ ] **UI-27**: DiagonaalKortin oikealle puolelle yksi stabiili kuva laji-ikonin/värin sijaan (placeholder)
+- [ ] **BIZPANEL-01**: `/business`-sivu näyttää listan yrityksen paikoista ja niiden tilan (pending / approved)
+- [ ] **BIZPANEL-02**: Yritys voi muokata kaikkia onboarding-tietoja (kuvat, logo, hinnasto, aukioloajat, yhteystiedot) — muutokset julkaistaan heti ilman erillistä hyväksyntää
+- [ ] **BIZPANEL-03**: Hallintapaneelissa on esikatselu-näkymä joka näyttää miten paikka näyttää sovelluksen käyttäjille
 
-### Kartta — klusterit
+### Data & tietoturva (DATA)
 
-- [ ] **MAP-16**: Koordinaattiryhmittely-klusterien klikkaus zoomaa lähemmäksi (hajottaa klusterin) — paitsi täysin sama-sijaintisille klustereille, jotka näyttävät edelleen listan
-
-### PaikkaSheet redesign
-
-- [ ] **SHEET-01**: PaikkaSheet-sheetin yläosassa hero-osio: kuvien karuselli (placeholder: harmaa + kamerakuvake) + paikan nimi & osoite kuvien päälle
-- [ ] **SHEET-02**: Hero-osion alle hinnasto-osio
-- [ ] **SHEET-03**: Arvosteluwidget oletuksena pienessä tilassa, klikkaamalla aukeaa kokonaan
-- [ ] **SHEET-04**: Poistetaan "Avaa paikkasivu selaimessa" -linkki sheetistä
-- [ ] **SHEET-05**: Sheet siirretään alemmaksi niin että TO DO -painike taustalla näkyy kokonaan
-- [ ] **SHEET-06**: Korjataan sheetin avaamisen viive kun pientä korttia klikataan
-
-### Siivous & navigaatio
-
-- [ ] **NAV-06**: `/suosikit`-sivu poistetaan kokonaan (route, komponentit, navigointilinkit)
-- [ ] **NAV-07**: TO DO -painike toolbarista poistetaan (uusi painike on sen alapuolella)
+- [ ] **DATA-09**: `business_managed`-boolean paikat-taulussa; Google Places sync-skripti ohittaa managed-paikat kokonaan
+- [ ] **DATA-10**: Supabase Storage `business-media`-bucket; RLS-politiikka: vain paikan omistava yritys (`business_paikka_links`) voi kirjoittaa omaan hakemistoonsa
 
 ## Future Requirements (deferred)
 
-- Lisää kieliä (ruotsi, englanti täydellinen kattavuus profiilisivun ulkopuolelle)
-- Browser language auto-detection ensiladauksella
-- ICU-muotoilu (monikot, päivämäärät)
-- Kartta: etäisyyspohjainen suodatus
-- Käyttäjäprofiili ja asetukset (laaja)
-- Logo-API (yritysten logot) — odottaa website_domain-kenttää Supabasessa
-- Oikeat kuvat paikoille (image_url → hero-karuselli, DiagonaalKortti)
+- Automaattinen väriteemat kuvista (dominant color extraction → teksti-/taustaväri korteille)
+- Maksullisuus: sponsored-paketti yrityksille (näkyvyysnosto, Sponsoroitu-badge)
+- Ketjuadmin: yksi yritystili, useita toimipisteitä eri omistajilla
+- Yritysanalytiikka: näyttökerrat, klikkaukset, suosikki-lisäykset per paikka
+- Yrityksen vastaus arvosteluihin
+- Lisäkielet hallintapaneelissa (FI/EN)
 
 ## Out of Scope
 
-- URL-pohjainen locale-routing — rikkoo URL-sopimuksen (`/` ja `/?nakyma=lista`)
-- `@svgr/webpack` — Turbopack-yhteensopivuusongelma + tarpeeton path-string-lähestymistavan rinnalla
-- Varausjärjestelmä
-- Reaaliaikainen paikkatieto
-- Mobiiliappi (iOS/Android)
-- Maksujärjestelmä
-- Push-ilmoitukset
+- Maksuintegraatio (Stripe tms.) — ei osteta sovelluksessa v1.7:ssä
+- Erillinen Supabase-projekti yrityksille — sama Auth kuin tavallisilla käyttäjillä
+- URL-pohjainen locale-routing — säilytetään nykyinen URL-sopimus
+- Automaattinen yritysverifikaatio (Y-tunnus-tarkistus tms.) — manuaalinen admin-hyväksyntä riittää
 
 ## Traceability
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| NAV-06 | Phase 27 | Pending |
-| NAV-07 | Phase 27 | Pending |
-| FILTER-04 | Phase 27 | Pending |
-| FILTER-05 | Phase 27 | Pending |
-| SEARCH-01 | Phase 27 | Pending |
-| UI-24 | Phase 27 | Pending |
-| MAP-16 | Phase 27 | Pending |
-| SHEET-04 | Phase 27 | Pending |
-| SHEET-05 | Phase 27 | Pending |
-| SHEET-06 | Phase 27 | Pending |
-| ICON-01 | Phase 28 | Pending |
-| ICON-02 | Phase 28 | Pending |
-| UI-25 | Phase 29 | Pending |
-| UI-26 | Phase 29 | Pending |
-| UI-27 | Phase 29 | Pending |
-| SHEET-01 | Phase 29 | Pending |
-| SHEET-02 | Phase 29 | Pending |
-| SHEET-03 | Phase 29 | Pending |
-| I18N-01 | Phase 30 | Pending |
-| I18N-02 | Phase 30 | Pending |
-| I18N-03 | Phase 30 | Pending |
+| BIZ-01 | Phase 32 | Complete |
+| BIZ-02 | Phase 31 | Pending |
+| BIZ-03 | Phase 32 | Complete |
+| CLAIM-01 | Phase 33 | Pending |
+| CLAIM-02 | Phase 33 | Pending |
+| CLAIM-03 | Phase 33 | Pending |
+| ONBOARD-01 | Phase 34 | Pending |
+| ONBOARD-02 | Phase 34 | Pending |
+| ONBOARD-03 | Phase 34 | Pending |
+| ONBOARD-04 | Phase 34 | Pending |
+| ONBOARD-05 | Phase 34 | Pending |
+| ONBOARD-06 | Phase 34 | Pending |
+| ONBOARD-07 | Phase 34 | Pending |
+| ADMIN-01 | Phase 35 | Pending |
+| ADMIN-02 | Phase 35 | Pending |
+| ADMIN-03 | Phase 35 | Pending |
+| ADMIN-04 | Phase 35 | Pending |
+| ADMIN-05 | Phase 35 | Pending |
+| BIZPANEL-01 | Phase 36 | Pending |
+| BIZPANEL-02 | Phase 36 | Pending |
+| BIZPANEL-03 | Phase 36 | Pending |
+| DATA-09 | Phase 31 | Pending |
+| DATA-10 | Phase 31 | Pending |

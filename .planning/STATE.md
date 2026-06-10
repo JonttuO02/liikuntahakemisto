@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.6
-milestone_name: Kielituki, Ikonit & Sheet-redesign
-status: in_progress
-stopped_at: Phase 28 complete
-last_updated: "2026-06-03T20:00:00.000Z"
-last_activity: 2026-06-03 — Phase 28 complete (2/2 plans executed)
+milestone: v1.7
+milestone_name: Yritysportaali
+status: executing
+last_updated: "2026-06-06T00:00:00.000Z"
+last_activity: 2026-06-06 -- Phase 34 planned (9 plans in 5 waves)
 progress:
-  total_phases: 4
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
+  total_phases: 6
+  completed_phases: 3
+  total_plans: 30
+  completed_plans: 21
   percent: 50
 ---
 
@@ -18,47 +17,50 @@ progress:
 
 ## Current Position
 
-Phase: 28 of 30 (SVG-ikonit) — COMPLETE
-Status: Phase 28 executed (2/2 plans done) — ready to verify, then Phase 29
-Last activity: 2026-06-03 — Phase 28 complete (2/2 plans executed)
-
-Progress: [██░░░░░░░░] 25%
+Phase: 34 (onboarding-velhou) — PLANNED (9 plans, ready to execute)
+Status: Ready to execute Phase 34
+Last activity: 2026-06-06 -- Phase 34 planned (9 plans in 5 waves)
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-03)
+See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 29 — Kortit & sheet redesign (Phase 28 complete)
+**Current focus:** Phase 34 — onboarding-velhou
 
-## Active Decisions (carried to v1.6)
+## Active Decisions (carried to v1.7)
 
 - URL routing: `/` and `/?nakyma=kartta` both render Etusivu — `?nakyma=kartta` is a dead parameter
 - GPS: client-side only, never URL params
 - AI widget: never SSR, use `/api/saasuositus` Route Handler
 - Supabase writes: service role key only; anon key is read-only after RLS
 - CSS animations on AdvancedMarker: transform/opacity ONLY — no box-shadow, background, filter
-- sessionStorage key 'etusivu-scroll-state' _v: 2 SHIPPED — old sessions rejected
-- SVG icons: path-string approach in lib/sportIcons.ts, no @svgr/webpack (Phase 28)
+- SVG icons: path-string approach in lib/sportIcons.tsx, no @svgr/webpack (Phase 28)
 - i18n: next-intl without-routing + NEXT_LOCALE cookie, not localStorage (Phase 30)
-- Language toggle location: /profiili only — NOT NavBar
-- Images: placeholders in v1.6 (gray box + camera icon)
+- Business auth: same Supabase Auth as regular users; role differentiated via business_accounts table
+- Business media: Supabase Storage bucket `business-media`; RLS per yritys via business_paikka_links
+- Business data priority: yrityksen data ylikirjoittaa Google Places -datan; business_managed-flag suojaa sync-skriptiltä
+- Admin approval: required for initial registration; edits after approval are instant (no re-approval)
+- Claim visibility: claim-paikka pysyy näkyvänä; uusi paikka hidden (published=false) until approved
+- URLs: /business for panel, /business/onboarding for wizard, /admin for admin
+- No payments in v1.7; no separate Supabase project
 
 ## Phase Sequence
 
-| Phase | Name | Requirements | Depends on |
-|-------|------|--------------|------------|
-| 27 | Siivous & pienet korjaukset | NAV-06, NAV-07, FILTER-04, FILTER-05, SEARCH-01, UI-24, MAP-16, SHEET-04, SHEET-05, SHEET-06 | Phase 26 |
-| 28 | SVG-ikonit | ICON-01, ICON-02 | Phase 27 |
-| 29 | Kortit & sheet redesign | UI-25, UI-26, UI-27, SHEET-01, SHEET-02, SHEET-03 | Phase 28 |
-| 30 | i18n FI/EN | I18N-01, I18N-02, I18N-03 | Phase 29 |
+| Phase | Name | Requirements | Status |
+|-------|------|--------------|--------|
+| 31 | DB-skeema & Storage-perusta | BIZ-02, DATA-09, DATA-10 | Complete |
+| 32 | Yritysrekisteröinti & auth | BIZ-01, BIZ-03 | Planned (3 plans) |
+| 33 | Claim & paikan luonti | CLAIM-01, CLAIM-02, CLAIM-03 | Complete |
+| 34 | Onboarding-velhou | ONBOARD-01–07 | Planned (9 plans) |
+| 35 | Admin-hyväksyntäjärjestelmä | ADMIN-01–05 | Not started |
+| 36 | Hallintapaneeli | BIZPANEL-01–03 | Not started |
 
 ## Blockers/Concerns
 
-- Phase 28: SPORT_ICONS-tyyppi muuttuu 5+ tiedostossa samanaikaisesti — tsc --noEmit ennen commit (plan handles this)
+None.
 
 ## Session Continuity
 
-Last session: 2026-06-03T17:30:00.000Z
-Stopped at: Phase 28 planned
-Resume: `/gsd:execute-phase 29` (after `/gsd:verify-work 28` if needed)
+Last session: 2026-06-06
+Resume: `/gsd:execute-phase 34` — Phase 34 (Onboarding-velhou) has 9 plans ready

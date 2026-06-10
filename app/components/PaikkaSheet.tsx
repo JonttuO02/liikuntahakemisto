@@ -1,8 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { X, MapPin, Phone, ExternalLink, Clock, CircleDollarSign, Info, Bookmark, BookmarkCheck } from 'lucide-react'
-import { lajiKonfig } from '@/lib/lajit'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, Phone, ExternalLink, Clock, CircleDollarSign, Info, Bookmark, BookmarkCheck, Camera, ChevronDown, Building2 } from 'lucide-react'
 import { hintateksti, cn } from '@/lib/utils'
 import { formatGroupedHours, getOpenStatus } from '@/lib/aukiolo'
 import { isSafeUrl } from '@/lib/urlUtils'
@@ -12,6 +11,7 @@ import type { Liikuntapaikka } from '@/lib/types'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import { computeAvgRating } from '@/lib/reviewUtils'
 import { formatDistance } from '@/lib/geo'
+import { useTranslations } from 'next-intl'
 
 interface Props {
   paikka: Liikuntapaikka
@@ -22,12 +22,19 @@ interface Props {
 }
 
 export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggleTodo }: Props) {
+  const t = useTranslations('PaikkaSheet')
+  const tKortti = useTranslations('PaikkaKortti')
   const [reviews, setReviews] = useState<ReviewRow[] | null>(null)
+  const [activeSlide, setActiveSlide] = useState(0)
+  const [reviewOpen, setReviewOpen] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const carouselRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     scrollRef.current?.scrollTo(0, 0)
     setReviews(null)
+    setActiveSlide(0)
+    setReviewOpen(false)
   }, [paikka.id])
 
   useEffect(() => {
@@ -68,77 +75,99 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
       }}
       onClick={e => e.stopPropagation()}
     >
-      {/* Drag handle */}
-      <div className="flex justify-center pt-3 pb-1 shrink-0">
-        <div className="w-10 h-1 bg-[rgba(0,0,0,0.12)] rounded-full" />
-      </div>
+      {/* Scrollable content — hero extends to sheet top; drag-to-close via outer motion.div drag="y" */}
+      <div ref={scrollRef} className="overflow-y-auto" style={{ height: '100%' }}>
 
-      {/* Scrollable content — separate from drag target to avoid scroll/drag conflict */}
-      <div ref={scrollRef} className="overflow-y-auto" style={{ height: 'calc(100% - 32px)' }}>
-        <div className="px-4 pb-8 flex flex-col gap-4">
-          {/* Header row */}
-          <div className="flex items-center justify-between gap-2 pt-1">
-            <span
-              className="inline-flex text-[10px] font-bold px-2 py-1 rounded-full text-white"
-              style={{ backgroundColor: lajiKonfig[paikka.laji]?.color ?? '#6b7280' }}
+        {/* Hero carousel — first child of scrollable area */}
+        <div className="relative aspect-video w-full overflow-hidden">
+          {/* Floating drag indicator (visual only — outer div handles height accounting) */}
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 w-10 h-1 bg-[rgba(255,255,255,0.5)] rounded-full" />
+
+          {/* Close + bookmark — absolute top-right */}
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+            <motion.button
+              whileTap={{ scale: 0.85, transition: { duration: 0.12 } }}
+              onClick={() => onToggleTodo(paikka.id)}
+              aria-label={todo ? tKortti('removeFromTodo') : tKortti('addToTodo')}
+              className="glass-btn w-8 h-8 rounded-full flex items-center justify-center"
             >
-              {lajiKonfig[paikka.laji]?.label ?? paikka.laji}
-            </span>
-            <div className="flex items-center gap-1.5">
-              <motion.button
-                whileTap={{ scale: 0.85, transition: { duration: 0.12 } }}
-                onClick={() => onToggleTodo(paikka.id)}
-                aria-label={todo ? 'Poista TO DO -listalta' : 'Lisää TO DO -listalle'}
-                className="glass-btn w-8 h-8 rounded-full flex items-center justify-center"
+              {todo
+                ? <BookmarkCheck className={cn('w-4 h-4 fill-[#111111] text-[#111111]')} />
+                : <Bookmark className={cn('w-4 h-4 text-[rgba(17,17,17,0.35)]')} />
+              }
+            </motion.button>
+            <button
+              onClick={onClose}
+              aria-label={t('close')}
+              className="glass-btn w-8 h-8 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Carousel slides — CSS scroll-snap, stop pointer events from bubbling to drag="y" */}
+          <div
+            ref={carouselRef}
+            className="flex overflow-x-auto snap-x snap-mandatory w-full h-full"
+            style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+            onPointerDown={e => e.stopPropagation()}
+            onScroll={() => {
+              if (!carouselRef.current) return
+              const idx = Math.round(carouselRef.current.scrollLeft / carouselRef.current.offsetWidth)
+              setActiveSlide(idx)
+            }}
+          >
+            {[0, 1, 2].map(i => (
+              <div
+                key={i}
+                className="snap-start shrink-0 w-full h-full bg-[rgba(0,0,0,0.08)] flex items-center justify-center"
               >
-                {todo
-                  ? <BookmarkCheck className={cn('w-4 h-4 fill-[#111111] text-[#111111]')} />
-                  : <Bookmark className={cn('w-4 h-4 text-[rgba(17,17,17,0.35)]')} />
-                }
-              </motion.button>
-              <button
-                onClick={onClose}
-                className="glass-btn w-8 h-8 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
-              >
-                <X className="w-4 h-4" />
-              </button>
+                <Camera size={32} className="text-[rgba(255,255,255,0.4)]" />
+              </div>
+            ))}
+          </div>
+
+          {/* Gradient overlay with logo placeholder + name + address */}
+          <div
+            className="absolute bottom-0 inset-x-0 px-3 pb-3 pt-8"
+            style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 60%)' }}
+          >
+            <div className="flex items-end gap-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[rgba(255,255,255,0.15)] flex items-center justify-center shrink-0">
+                <Building2 size={18} className="text-white opacity-60" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="font-bold text-white text-lg leading-tight">{paikka.nimi}</h2>
+                {(paikka.osoite || paikka.kaupunki) && (
+                  <p className="text-sm text-white/70 mt-0.5">
+                    {[paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')}
+                    {distanceKm != null && (
+                      <span className="tabular-nums">{' · '}{formatDistance(distanceKm)}</span>
+                    )}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Name + address */}
-          <div>
-            <h2 className="font-serif text-2xl font-bold text-[#111111] leading-tight">{paikka.nimi}</h2>
-            {(paikka.osoite || paikka.kaupunki) && (
-              <p className="mt-1 text-sm text-[rgba(17,17,17,0.45)] flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 shrink-0" />
-                {[paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')}
-                {distanceKm != null && (
-                  <span className="tabular-nums">{' · '}{formatDistance(distanceKm)}</span>
-                )}
-              </p>
-            )}
-          </div>
+        {/* Dot indicators — below hero, outside image */}
+        <div className="flex justify-center gap-1.5 py-2">
+          {[0, 1, 2].map(i => (
+            <span
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition-colors duration-150 ${
+                activeSlide === i ? 'bg-[#111111]' : 'bg-[rgba(0,0,0,0.15)]'
+              }`}
+            />
+          ))}
+        </div>
 
-          {/* Open status */}
-          {openStatus.status !== 'no-data' && (
-            <p className="text-sm">
-              {openStatus.status === 'open'
-                ? <span className="text-green-700 font-bold">● Auki nyt{openStatus.hours ? ` · ${openStatus.hours}` : ''}</span>
-                : <span className="text-[rgba(17,17,17,0.45)]">Suljettu{openStatus.hours ? ` · ${openStatus.hours}` : ''}</span>
-              }
-            </p>
-          )}
+        <div className="px-4 pb-8 flex flex-col gap-4">
 
-          {/* Hours */}
-          {hoursGroups.length > 0 && (
-            <SheetRow icon={<Clock className="w-4 h-4" />} label="Aukioloajat">
-              <HoursTable groups={hoursGroups} />
-            </SheetRow>
-          )}
-
-          {/* Price */}
+          {/* Price — immediately below hero + dots */}
           {priceDisplay && (
-            <SheetRow icon={<CircleDollarSign className="w-4 h-4" />} label="Hinta">
+            <SheetRow icon={<CircleDollarSign className="w-4 h-4" />} label={t('price')}>
               {paikka.hinta_kuvaus
                 ? <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed">{paikka.hinta_kuvaus}</p>
                 : <span className="font-serif text-xl font-bold text-[#111111]">{priceDisplay}</span>
@@ -146,9 +175,26 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
             </SheetRow>
           )}
 
+          {/* Open status */}
+          {openStatus.status !== 'no-data' && (
+            <p className="text-sm">
+              {openStatus.status === 'open'
+                ? <span className="text-green-700 font-bold">● {tKortti('openNow')}{openStatus.hours ? ` · ${openStatus.hours}` : ''}</span>
+                : <span className="text-[rgba(17,17,17,0.45)]">{tKortti('closed')}{openStatus.hours ? ` · ${openStatus.hours}` : ''}</span>
+              }
+            </p>
+          )}
+
+          {/* Hours */}
+          {hoursGroups.length > 0 && (
+            <SheetRow icon={<Clock className="w-4 h-4" />} label={t('hours')}>
+              <HoursTable groups={hoursGroups} />
+            </SheetRow>
+          )}
+
           {/* Phone */}
           {paikka.puhelin && (
-            <SheetRow icon={<Phone className="w-4 h-4" />} label="Puhelin">
+            <SheetRow icon={<Phone className="w-4 h-4" />} label={t('phone')}>
               <a
                 href={`tel:${paikka.puhelin}`}
                 className="text-sm font-bold text-[#111111] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]"
@@ -167,25 +213,67 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose, onToggl
               className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm [transition:background-color_150ms_var(--ease-out)]"
             >
               <ExternalLink className="w-4 h-4" />
-              Varaa aika
+              {t('bookNow')}
             </a>
           )}
 
           {/* Description */}
           {paikka.kuvaus && (
-            <SheetRow icon={<Info className="w-4 h-4" />} label="Kuvaus">
+            <SheetRow icon={<Info className="w-4 h-4" />} label={t('description')}>
               <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed">{paikka.kuvaus}</p>
             </SheetRow>
           )}
 
-          {/* Reviews — load after mount */}
+          {/* Reviews — collapsible, load after mount */}
           {reviews !== null && (
-            <ReviewSection
-              paikkaId={paikka.id}
-              initialReviews={reviews}
-              avgRating={avgRating}
-              reviewCount={reviews.length}
-            />
+            <>
+              {/* Collapsed header */}
+              <div
+                className="flex items-center gap-3 border-t border-[rgba(0,0,0,0.07)] pt-4 cursor-pointer"
+                onClick={() => reviews.length > 0 && setReviewOpen(prev => !prev)}
+              >
+                <div className="w-8 h-8 rounded-lg glass flex items-center justify-center shrink-0 text-[rgba(17,17,17,0.5)]">
+                  <span className="text-sm">★</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold text-[rgba(17,17,17,0.4)] uppercase tracking-widest mb-1">{t('reviews')}</p>
+                  {reviews.length === 0 ? (
+                    <span className="text-sm text-[rgba(17,17,17,0.45)]">☆ {t('noReviews')}</span>
+                  ) : (
+                    <span className="text-sm text-[#111111]">
+                      {'★'.repeat(Math.round(avgRating ?? 0))}{'☆'.repeat(5 - Math.round(avgRating ?? 0))}
+                      {' '}{(avgRating ?? 0).toFixed(1)} · {reviews.length === 1 ? t('reviewCountSingular', { count: 1 }) : t('reviewCountPlural', { count: reviews.length })}
+                    </span>
+                  )}
+                </div>
+                {reviews.length > 0 && (
+                  <ChevronDown
+                    className={cn('w-4 h-4 text-[rgba(17,17,17,0.4)] transition-transform duration-200', reviewOpen && 'rotate-180')}
+                  />
+                )}
+              </div>
+
+              {/* Expandable content */}
+              <AnimatePresence initial={false}>
+                {reviewOpen && (
+                  <motion.div
+                    key="reviews"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <ReviewSection
+                      paikkaId={paikka.id}
+                      initialReviews={reviews}
+                      avgRating={avgRating}
+                      reviewCount={reviews.length}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
           )}
 
         </div>

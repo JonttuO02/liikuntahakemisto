@@ -4,17 +4,26 @@
 
 Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
 
-## Current Milestone: v1.6 Kielituki, Ikonit & Sheet-redesign
+## Current Milestone: v1.7 Yritysportaali
 
-**Goal:** Lisätään englanninkielinen käyttöliittymä (kielivalitsin profiilisivulla), vaihdetaan kaikki laji-ikonit uusiin SVG-tiedostoihin, uudistetaan PaikkaSheet hero-osiolla ja hinnastolla, sekä korjataan joukko bugeja ja tehdään UI-parannuksia.
+**Goal:** Yritykset voivat rekisteröityä, käydä ohjatun onboarding-velhon (kuvat, logo, hinnasto, aukioloajat, yhteystiedot), nähdä esikatselun, ja saada admin-hyväksynnän — jonka jälkeen heillä on hallintapaneeli (/business) oman paikkatietonsa ylläpitoon.
 
 **Target features:**
-- i18n FI/EN toggle profiilisivulla (`NEXT_LOCALE`-cookie, next-intl without-routing)
-- Uudet SVG-ikonit kaikille lajeille (`lib/sportIcons.ts`), käytössä kaikkialla
-- PaikkaSheet redesign: hero-karuselli + hinnasto + arvosteluwidget collapsed
-- DiagonaalKortti: logo-placeholder vasemmalle, kuva-placeholder oikealle
-- PaikkaKortti: rullaava hinnastokaruselli alareunaan
-- Bugifixit: kummituselementti pillin alla, klusterizoomi, sheet-viive, suosikit-siivous
+- Business Auth: Supabase Auth + `business_accounts` + `business_paikka_links`; useita paikkoja per tili
+- Claim tai luo paikka: hae olemassa oleva tai luo uusi; claim-paikka pysyy näkyvänä, uusi paikka pending
+- Ohjattu onboarding-velhou (6 vaihetta): paikka → kuvat+logo → hinnasto → aukioloajat → yhteystiedot → esikatselu
+- Admin-hyväksyntä: email-ilmoitus + `/admin`-sivu; pending/approved/rejected per paikka
+- Hallintapaneeli (`/business`): muokkaa kaikkia tietoja, esikatselu, useamman paikan lista
+- Yrityksen data ylikirjoittaa Google Places -datan; `business_managed`-flag suojaa sync-skriptiltä
+- Kuvat Supabase Storageen (bucket: `business-media`); RLS-suojaus per yritys
+
+## Shipped: Phase 32 — Yritysrekisteröinti & auth (2026-06-05)
+
+**Delivered:** Business i18n namespace (15 keys, FI+EN), /business stub Server Component, POST /api/business/register Route Handler (JWT-verified via supabaseAdmin.auth.getUser, atomicity rollback via deleteUser), /business/rekisteroidy registration form (signUp + JWT-authenticated Route Handler call), AuthModal SIGNED_IN useEffect extended with async business_accounts query + conditional router.push('/business') for business users. BIZ-01 and BIZ-03 complete.
+
+## Shipped: v1.6 Kielituki, Ikonit & Sheet-redesign (2026-06-04)
+
+**Delivered:** next-intl FI/EN kielituki (NEXT_LOCALE-cookie, kielivalitsin profiilisivulla), `lib/sportIcons.tsx` SVG-ikonit kaikille lajeille (Lucide poistettu), PaikkaSheet hero-karuselli + hinnasto + collapsible arvostelut, DiagonaalKortti & PaikkaKortti placeholderit ja marquee-hinnastokaruselli, navigaatio/filtteri/sheet-bugifixit.
 
 ## Shipped: v1.5 Visuaalinen elävöitys & UX-hienosäätö (2026-06-02)
 
@@ -150,32 +159,49 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ FILTER-02: searchKertakaynti/searchAukinyt poistettu, searchLaji string[], sessionStorage _v:2 — v1.5
 - ✓ FILTER-03: FilterCarouselPill karuselli-animaatiolla aktiivisille valinnoille — v1.5
 
-### Active (v1.6)
+### Validated (v1.6)
 
-- [ ] **I18N-01**: Käyttäjä voi vaihtaa käyttöliittymäkielen profiilisivulla
-- [ ] **I18N-02**: Valittu kieli tallennetaan `NEXT_LOCALE`-cookieen ja säilyy sivulatausten välillä
-- [ ] **I18N-03**: Kaikki UI-tekstitykset näytetään valitulla kielellä; kartta/filtterivalinnat säilyvät
-- [ ] **ICON-01**: Uudet SVG-ikonit kaikille lajeille (`lib/sportIcons.ts`)
-- [ ] **ICON-02**: Uudet ikonit käytössä kaikkialla: filtteripilli, kortit, karttapinnit, CalloutCard
-- [ ] **FILTER-04**: FilterCarouselPill hieman harmaa tausta
-- [ ] **FILTER-05**: Kummituselementti pillin alla korjattu
-- [ ] **SEARCH-01**: "Ei tuloksia" ja "Tyhjennä haku" poistettu tekstihausta
-- [ ] **UI-24**: Korttilistauksen alareunaan fade-häivytys
-- [ ] **UI-25**: PaikkaKortti: rullaava hinnastokaruselli alareunaan
-- [ ] **UI-26**: DiagonaalKortti: logo-placeholder vasempaan yläkulmaan
-- [ ] **UI-27**: DiagonaalKortti: kuva-placeholder oikealle
-- [ ] **MAP-16**: Klusterin klikkaus → zoom (paitsi sama-sijaintisille)
-- [ ] **SHEET-01**: PaikkaSheet hero-osio: kuvien karuselli + nimi/osoite päälle
-- [ ] **SHEET-02**: Hinnasto hero-osion alle
-- [ ] **SHEET-03**: Arvosteluwidget collapsed oletuksena
-- [ ] **SHEET-04**: "Avaa paikkasivu selaimessa" poistettu
-- [ ] **SHEET-05**: Sheet alemmaksi, TO DO -painike näkyy taustalla
-- [ ] **SHEET-06**: Sheetin avaamisen viive korjattu
-- [ ] **NAV-06**: `/suosikit`-sivu poistettu kokonaan
-- [ ] **NAV-07**: TO DO -painike toolbarista poistettu
+- ✓ NAV-06: `/suosikit`-sivu poistettu kokonaan (route, komponentit, navigointilinkit) — v1.6
+- ✓ NAV-07: TO DO -painike toolbarista poistettu — v1.6
+- ✓ FILTER-04: FilterCarouselPill hieman harmaa tausta — v1.6
+- ✓ FILTER-05: Kummituselementti pillin alla korjattu — v1.6
+- ✓ SEARCH-01: "Ei tuloksia" ja "Tyhjennä haku" poistettu tekstihausta — v1.6
+- ✓ UI-24: Korttilistauksen alareunaan fade-häivytys — v1.6
+- ✓ MAP-16: Klusterin klikkaus → zoom (paitsi sama-sijaintisille) — v1.6
+- ✓ SHEET-04: "Avaa paikkasivu selaimessa" poistettu — v1.6
+- ✓ SHEET-05: Sheet alemmaksi, TO DO -painike näkyy taustalla — v1.6
+- ✓ SHEET-06: Sheetin avaamisen viive korjattu — v1.6
+- ✓ ICON-01: Uudet SVG-ikonit kaikille lajeille (`lib/sportIcons.tsx`) — v1.6
+- ✓ ICON-02: Uudet ikonit käytössä kaikkialla: filtteripilli, kortit, karttapinnit, CalloutCard — v1.6
+- ✓ UI-25: PaikkaKortti: rullaava hinnastokaruselli alareunaan — v1.6
+- ✓ UI-26: DiagonaalKortti: logo-placeholder vasempaan yläkulmaan — v1.6
+- ✓ UI-27: DiagonaalKortti: kuva-placeholder oikealle — v1.6
+- ✓ SHEET-01: PaikkaSheet hero-osio: kuvien karuselli + nimi/osoite päälle — v1.6
+- ✓ SHEET-02: Hinnasto hero-osion alle — v1.6
+- ✓ SHEET-03: Arvosteluwidget collapsed oletuksena — v1.6
+- ✓ I18N-01: Käyttäjä voi vaihtaa käyttöliittymäkielen profiilisivulla — v1.6
+- ✓ I18N-02: Valittu kieli tallennetaan `NEXT_LOCALE`-cookieen ja säilyy sivulatausten välillä — v1.6
+- ✓ I18N-03: Kaikki UI-tekstitykset näytetään valitulla kielellä; kartta/filtterivalinnat säilyvät — v1.6
 
-### Future (deferred from v1.1)
+### Active (v1.7)
 
+- [ ] **BIZ-01**: Yritys voi rekisteröityä palveluun erillisellä lomakkeella (yritysnimi, sähköposti, salasana)
+- [ ] **BIZ-02**: `business_accounts` + `business_paikka_links` -taulut; yksi tili hallitsee useita paikkoja
+- [ ] **BIZ-03**: Kirjautunut yritys ohjataan automaattisesti `/business`-hallintapaneeliin
+- [ ] **CLAIM-01**: Yritys hakee olemassa olevan paikan nimellä/osoitteella ja lähettää claim-pyynnön
+- [ ] **CLAIM-02**: Jos paikkaa ei löydy, yritys luo uuden paikan
+- [ ] **CLAIM-03**: Claim-paikka pysyy näkyvänä; uusi paikka piilotettu kunnes admin hyväksyy
+- [ ] **ONBOARD-01–07**: Vaiheistettu 6-vaiheen onboarding-velhou (paikka → mediat → hinnasto → aukioloajat → yhteystiedot → esikatselu)
+- [ ] **ADMIN-01–05**: Admin-hyväksyntä email + /admin-sivu; is_admin-suojaus
+- [ ] **BIZPANEL-01–03**: Hallintapaneeli /business: paikkalistaus, muokkaus, esikatselu
+- [ ] **DATA-09**: `business_managed`-boolean; sync-skripti ohittaa managed-paikat
+- [ ] **DATA-10**: Supabase Storage `business-media`-bucket; RLS per yritys
+
+### Future (deferred from v1.1 + v1.7)
+
+- Automaattinen väriteemat kuvista (color extraction Hero + kortit)
+- Maksullisuus / sponsored-paketti yrityksille
+- Ketjuadmin (yksi tili, useita toimipisteitä eri omistajilla)
 - Suosikkipaikat-sivu kirjautuneelle käyttäjälle (/suosikit)
 - Kartta: etäisyyspohjainen suodatus
 - Käyttäjäprofiili ja asetukset (laaja)
@@ -192,7 +218,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ## Context
 
-**Nykytila:** v1.5 toimitettu 2026-06-02. Kaikki 14 v1.5-vaatimusta toteutettu (MAP-15 osittainen: DiagonaalKortti ei saanut laji-ikoni-päivitystä). Sovelluksen visuaalinen ilme uudistettu: siniset sporttipinnit orbit-kiiltoanimaatiolla, CalloutCard 160px pystysuuntainen kirjainanimaatio, AktiiviLogo sweep-animaatio, Outfit-fontti. TO DO -lista siirtyi erilliseltä sivulta etusivun overlay-paneeliin animoituna + arvosteluprompt poiston yhteydessä. Filtterit karsittu: vain kaupunki + laji, FilterCarouselPill karuselli-animaatiolla. Kaupungin valinta filttereistä kohdistaa kartan automaattisesti (zoom 11).
+**Nykytila:** v1.6 toimitettu 2026-06-04. Kaikki 21 v1.6-vaatimusta toteutettu. Sovellus tukee nyt FI/EN kielitukea (next-intl, NEXT_LOCALE-cookie); kielivalitsin profiilisivulla. Kaikki laji-ikonit tulevat yhdestä `lib/sportIcons.tsx` -rekisteristä (Lucide poistettu). PaikkaSheet uudistettu hero-karusellilla ja hinnastolla; kortit saivat placeholderit oikeille kuville. Milestone siivosi navigaation (/suosikit poistettu, TO DO toolbarista pois) ja korjasi useita filtteri/sheet-bugeja.
 
 **Data-arkkitehtuuri:** Google Places API hakee automaattisesti aukioloajat → upsertit Supabaseen. Kertakäyntihinnat manuaalisesti top 20 palvelulle. AI-widget: Claude Haiku + Open-Meteo, sessionStorage-cache per kalenteripäivä + per kaupunki. Supabase Auth käyttäjätaulut + suosikit (user_id → paikka_id). Sync-skripti tukee ?kaupunki= parametria Helsinki/Turku/Tampere-datalle.
 
@@ -238,6 +264,12 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 | Record<string,T[]> klusteroinnissa | TS 5.9.3 Map<K,V> generic regression workaround | ✓ Phase 18 |
 | CalloutCard clip-path: path() spike | ResizeObserver mittaa korkeus, laskee polun — ei erillisiä elementtejä | ✓ Phase 18 |
 | translateX(-50%) erilliseen wrapper-diviin | layoutId-elementti ei saa omistaa conflictoivaa CSS-transformia | ✓ Phase 18 |
+| next-intl without-routing | Säilyttää URL-sopimuksen; ei URL-pohjaista locale-routingia | ✓ Phase 30 |
+| NEXT_LOCALE-cookie (httpOnly, sameSite:lax) | SSR-yhteensopiva; middleware lukee ennen renderöintiä; ei localStorage | ✓ Phase 30 |
+| SVG path-string (lib/sportIcons.tsx, ei @svgr/webpack) | Turbopack-yhteensopiva; lib/lajit.ts puhdas SPORT_ICONS:sta | ✓ Phase 28 |
+| Kielivalitsin profiilisivulla ainoastaan | Eksplisiittinen vaihto — ei auto-detection; vähemmän kompleksisuutta | ✓ Phase 30 |
+| Math.min(fullH*0.82, fullH-108) sheet height | 108px gap pitää TODO-painikkeen (100px + 8px safety) aina näkyvissä | ✓ Phase 27 |
+| Compile-time key coverage assertion (IN-05) | en.json kattaa kaikki fi.json-avaimet — löytyy build-ajassa, ei runtime | ✓ Phase 30 |
 
 ---
 
@@ -260,4 +292,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-03 — v1.6 milestone started (Kielituki, Ikonit & Sheet-redesign)*
+*Last updated: 2026-06-05 — v1.7 milestone started (Yritysportaali)*

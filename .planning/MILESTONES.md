@@ -135,6 +135,33 @@
 
 ---
 
+## v1.6 Kielituki, Ikonit & Sheet-redesign — 2026-06-04
+
+**Shipped:** 2026-06-04
+**Phases:** 4 (phases 27–30) | **Plans:** 15
+**Timeline:** 2026-06-03 → 2026-06-04 (2 days)
+**Commits:** ~126 | **Files changed:** 108 | **Lines:** +13,608 / -2,255
+
+### What Shipped
+
+1. **Navigaatio & bugifixit (Phase 27)** — `/suosikit`-reitti poistettu, TO DO -painike toolbarista pois, filtteripillin kummituselementti korjattu, klusterin klikkaus zoomaa, sheet-viive korjattu, fade-overlay korttilistaan
+2. **SVG-ikonit (Phase 28)** — `lib/sportIcons.tsx` yksi rekisteri kaikille lajeille, Lucide poistettu `lib/lajit.ts`:stä, ikonit käytössä 5 eri kontekstissa (filtteripilli, kortit, karttapinnit, CalloutCard)
+3. **Kortit & sheet redesign (Phase 29)** — PaikkaSheet 16:9 hero-karuselli + floating controls + gradient overlay, hinnasto-osio, arvosteluwidget collapsed oletuksena; DiagonaalKortti logo- ja kuvaplaceholderit; PaikkaKortti marquee-hinnastokaruselli
+4. **i18n FI/EN (Phase 30)** — next-intl without-routing, NEXT_LOCALE-cookie, LanguageToggle profiilisivulla, kaikki UI-tekstit käännetty; UAT 8/8 läpäisty
+
+### Known Deferred Items at Close
+
+- Kuvat ovat placeholdereja — oikeat kuvat paikoille myöhemmin
+- Logo-API (yritysten logot) odottaa `website_domain`-kenttää
+- Lisäkielet (ruotsi, auto-detection) deferred
+
+### Archives
+
+- `.planning/milestones/v1.6-ROADMAP.md`
+- `.planning/milestones/v1.6-REQUIREMENTS.md`
+
+---
+
 ## v1.5 Visuaalinen elävöitys & UX-hienosäätö — 2026-06-02
 
 **Shipped:** 2026-06-02

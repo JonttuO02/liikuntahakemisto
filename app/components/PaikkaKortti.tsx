@@ -6,9 +6,11 @@ import { MapPin, Bookmark, BookmarkCheck } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti, cn } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
-import { isMembershipOnly } from '@/lib/priceUtils'
+import { isMembershipOnly, priceItemList } from '@/lib/priceUtils'
+import { useOverflowMarquee } from '@/lib/useOverflowMarquee'
 import type { Liikuntapaikka } from '@/lib/types'
 import { SportIcon } from '@/lib/sportIcons'
+import { useTranslations } from 'next-intl'
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
 
@@ -30,17 +32,15 @@ interface PaikkaKorttiProps {
 }
 
 export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isTodo, onToggleTodo }: PaikkaKorttiProps) {
+  const t = useTranslations('PaikkaKortti')
+  const tLajit = useTranslations('Lajit')
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
   const openStatus   = getOpenStatus(paikka.aukioloajat)
   const hasDropIn    = paikka.hinta_kuvaus?.toLowerCase().includes('kertakäynti') ?? false
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
   const membershipOnly = isMembershipOnly(paikka)
-  const priceLines   = !membershipOnly && paikka.hinta_kuvaus?.includes('\n')
-    ? paikka.hinta_kuvaus.split('\n')
-    : null
-  const priceText    = !membershipOnly
-    ? (paikka.hinta_kuvaus ?? (hintaTeksti !== '' ? hintaTeksti : null))
-    : null
+  const priceItems   = priceItemList(paikka.hinta_kuvaus, membershipOnly, hintaTeksti)
+  const { containerRef, measureRef, shouldMarquee } = useOverflowMarquee(priceItems?.join('\n') ?? null)
   const osoite       = [paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')
 
   return (
@@ -54,7 +54,7 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
           whileTap={{ scale: 0.85, transition: { duration: 0.12, ease: 'easeOut' } }}
           onClick={e => { e.preventDefault(); e.stopPropagation(); onToggleTodo(paikka.id) }}
           className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full glass-btn flex items-center justify-center"
-          aria-label={isTodo ? 'Poista TO DO -listalta' : 'Lisää TO DO -listalle'}
+          aria-label={isTodo ? t('removeFromTodo') : t('addToTodo')}
         >
           {isTodo
             ? <BookmarkCheck className="w-4 h-4 fill-[#111111] text-[#111111]" />
@@ -71,16 +71,16 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
             style={{ backgroundColor: laji.color }}
           >
             <SportIcon laji={paikka.laji} size={12} className="shrink-0" />
-            {laji.label}
+            {tLajit(paikka.laji as any)}
           </span>
           {paikka.featured && (
             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
-              Sponsoroitu
+              {t('sponsored')}
             </span>
           )}
           {hasDropIn && (
             <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full bg-[rgba(17,17,17,0.06)] text-[rgba(17,17,17,0.55)]">
-              Kertakäynti OK
+              {t('dropIn')}
             </span>
           )}
         </div>
@@ -97,37 +97,69 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
           <div className="inline-flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
             <span className="text-xs font-bold text-green-700">
-              Auki nyt · {openStatus.hours}
+              {t('openNow')} · {openStatus.hours}
             </span>
           </div>
         )}
         {openStatus.status === 'closed' && (
           <div className="inline-flex items-center gap-2">
-            <span className="text-xs text-[rgba(17,17,17,0.45)]">Suljettu</span>
+            <span className="text-xs text-[rgba(17,17,17,0.45)]">{t('closed')}</span>
           </div>
         )}
         {openStatus.status === 'no-data' && (
           <span className="text-xs text-[rgba(17,17,17,0.35)]">
-            {aukinyt ? 'Aukioloajat tuntematon' : 'Aukioloajat lisätään pian'}
+            {aukinyt ? t('hoursUnknown') : t('hoursComingSoon')}
           </span>
         )}
 
-        {/* Price block (position 4 — between open-status and address) */}
-        <div>
-          {membershipOnly ? (
-            <span className="text-sm text-[rgba(17,17,17,0.5)]">vain jäsenyys</span>
-          ) : priceLines ? (
-            <span className="text-sm font-bold text-[#111111] tabular-nums">
-              {priceLines.map((line, i) => (
-                <span key={i} className="block">{line}</span>
+        {/* Price / Marquee — aktivoituu DOM-ylivuodon perusteella */}
+        {membershipOnly ? (
+          <span className="text-sm text-[rgba(17,17,17,0.5)]">{t('membershipOnly')}</span>
+        ) : priceItems ? (
+          <div
+            ref={containerRef}
+            className="border-t border-[rgba(0,0,0,0.07)] overflow-hidden pt-2 relative"
+            style={shouldMarquee ? {
+              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 82%, transparent 100%)',
+              maskImage: 'linear-gradient(to right, transparent 0%, black 8%, black 82%, transparent 100%)',
+            } : undefined}
+          >
+            {/* Piilotettu mittausdiv — oikea pillileveys arviota varten */}
+            <div
+              ref={measureRef}
+              className="absolute invisible flex items-center gap-2 pointer-events-none"
+              aria-hidden="true"
+            >
+              {priceItems.map((item, i) => (
+                <span key={i} className="text-sm font-bold tabular-nums bg-[rgba(0,0,0,0.05)] px-2 py-0.5 rounded-md whitespace-nowrap">
+                  {item}
+                </span>
               ))}
-            </span>
-          ) : priceText ? (
-            <span className="text-sm font-bold text-[#111111] tabular-nums">{priceText}</span>
-          ) : (
-            <span className="text-xs text-[rgba(17,17,17,0.35)]">Lisätään pian</span>
-          )}
-        </div>
+            </div>
+            {shouldMarquee ? (
+              <div
+                className="flex items-center gap-4 whitespace-nowrap"
+                style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
+              >
+                {[...priceItems, ...priceItems].map((item, i) => (
+                  <span key={i} className="shrink-0 text-sm font-bold text-[#111111] tabular-nums bg-[rgba(0,0,0,0.05)] px-2 py-0.5 rounded-md">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {priceItems.map((item, i) => (
+                  <span key={i} className="text-sm font-bold text-[#111111] tabular-nums bg-[rgba(0,0,0,0.05)] px-2 py-0.5 rounded-md whitespace-nowrap">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <span className="text-xs text-[rgba(17,17,17,0.35)]">{t('priceComingSoon')}</span>
+        )}
 
         {/* Address */}
         {osoite && (
@@ -149,7 +181,7 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
               href={`/paikat/${paikka.id}`}
               className="border border-[rgba(0,0,0,0.12)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.25)] text-sm font-bold py-2 px-4 rounded-full [transition:color_150ms_var(--ease-out),border-color_150ms_var(--ease-out)]"
             >
-              Näytä tiedot
+              {t('showDetails')}
             </Link>
           </motion.div>
 

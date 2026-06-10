@@ -24,10 +24,15 @@ function parseAukioloajat(
   const result: Record<string, { open: string; close: string }> = {}
   const fmt = (t: string) => `${t.slice(0, 2)}:${t.slice(2)}`
   for (const p of periods) {
-    if (!p.open || !p.close) continue
+    if (!p.open) continue
     const day = DAY_NAMES[p.open.day]
     if (!day || result[day]) continue
-    result[day] = { open: fmt(p.open.time), close: fmt(p.close.time) }
+    if (!p.close) {
+      // 24/7 open: Google encodes all-day as a period with no close field
+      result[day] = { open: '00:00', close: '23:59' }
+    } else {
+      result[day] = { open: fmt(p.open.time), close: fmt(p.close.time) }
+    }
   }
   return Object.keys(result).length > 0 ? result : null
 }
@@ -41,12 +46,12 @@ function parseOsoite(name: string, formattedAddress: string, kaupunki: string): 
   return filtered[0]?.trim() ?? null
 }
 
-async function fetchPlaceDetails(placeId: string): Promise<PlaceDetailsResult> {
+async function fetchPlaceDetails(placeId: string, apiKey: string): Promise<PlaceDetailsResult> {
   const url = new URL('https://maps.googleapis.com/maps/api/place/details/json')
   url.searchParams.set('place_id', placeId)
   url.searchParams.set('fields', 'website,formatted_phone_number,opening_hours')
   url.searchParams.set('language', 'fi')
-  url.searchParams.set('key', API_KEY!)
+  url.searchParams.set('key', apiKey)
 
   try {
     const res = await fetch(url.toString())
@@ -150,10 +155,24 @@ export async function GET(req: Request) {
     return NextResponse.json({ loydetty: 0, tallennettu: 0, website_loydetty: 0 })
   }
 
-  // Fetch Place Details for all results in parallel
-  const details = await Promise.all(allResults.map(p => fetchPlaceDetails(p.place_id)))
+  // Pre-filter: exclude venues managed by businesses (business_managed = true)
+  // Note: upsert() cannot be WHERE-filtered — must exclude in TypeScript before building rivit
+  const { data: managedRows } = await supabaseAdmin
+    .from('liikuntapaikat')
+    .select('place_id')
+    .eq('business_managed', true)
 
-  const rivit = allResults.map((p, i) => ({
+  const managedSet = new Set((managedRows ?? []).map(r => r.place_id))
+  const syncResults = allResults.filter(r => !managedSet.has(r.place_id))
+
+  if (syncResults.length === 0) {
+    return NextResponse.json({ loydetty: allResults.length, tallennettu: 0, website_loydetty: 0 })
+  }
+
+  // Fetch Place Details for all results in parallel
+  const details = await Promise.all(syncResults.map(p => fetchPlaceDetails(p.place_id, API_KEY)))
+
+  const rivit = syncResults.map((p, i) => ({
     place_id:     p.place_id,
     nimi:         p.name,
     laji:         p.assignedLaji,

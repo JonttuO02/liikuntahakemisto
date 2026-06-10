@@ -12,6 +12,7 @@ import BookmarkButton from '@/app/components/BookmarkButton'
 import NavPill from '@/app/components/NavPill'
 import ReviewSection from '@/app/components/ReviewSection'
 import { computeAvgRating } from '@/lib/reviewUtils'
+import { getTranslations } from 'next-intl/server'
 
 export default async function PaikkaPage({ params }: { params: { id: string } }) {
   const supabase = createServerSupabase(cookies())
@@ -34,6 +35,8 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
   const reviewList = reviewsData ?? []
   const avgRating = computeAvgRating(reviewList.map(r => r.rating))
 
+  const t = await getTranslations('PaikkaPage')
+
   const laji        = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
   const hoursGroups = formatGroupedHours(paikka.aukioloajat ?? null)
   const hintaTeksti = hintateksti(paikka.hinta_min, paikka.hinta_max)
@@ -52,7 +55,7 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
             className="inline-flex items-center gap-1.5 text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)]"
           >
             <ChevronLeft className="w-4 h-4" />
-            Takaisin hakemistoon
+            {t('backToDirectory')}
           </Link>
 
           <div className="mt-6">
@@ -85,24 +88,24 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
           <div className="p-6 sm:p-8 flex flex-col gap-5">
 
             {paikka.latitude != null && paikka.longitude != null && (
-              <Row icon={<MapPin className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Sijainti">
+              <Row icon={<MapPin className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label={t('location')}>
                 <Link
                   href={`/?id=${paikka.id}`}
                   className="text-[#111111] hover:text-[rgba(17,17,17,0.6)] text-sm font-bold underline underline-offset-2 [transition:color_150ms_var(--ease-out)]"
                 >
-                  Näytä kartalla →
+                  {t('showOnMap')}
                 </Link>
               </Row>
             )}
 
             {hoursGroups.length > 0 && (
-              <Row icon={<Clock className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Aukioloajat">
+              <Row icon={<Clock className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label={t('hours')}>
                 <HoursTable groups={hoursGroups} />
               </Row>
             )}
 
             {paikka.puhelin && (
-              <Row icon={<Phone className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Puhelin">
+              <Row icon={<Phone className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label={t('phone')}>
                 <a href={`tel:${paikka.puhelin}`}
                   className="text-[#111111] hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)] font-bold">
                   {paikka.puhelin}
@@ -111,7 +114,7 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
             )}
 
             {priceToShow && (
-              <Row icon={<CircleDollarSign className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Hinta">
+              <Row icon={<CircleDollarSign className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label={t('price')}>
                 {paikka.hinta_kuvaus ? (
                   <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed">{paikka.hinta_kuvaus}</p>
                 ) : (
@@ -121,7 +124,7 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
             )}
 
             {isSafeUrl(paikka.varauslinkki) && (
-              <Row icon={<ExternalLink className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Varaussivu">
+              <Row icon={<ExternalLink className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label={t('bookNow')}>
                 <a
                   href={paikka.varauslinkki}
                   target="_blank"
@@ -134,7 +137,7 @@ export default async function PaikkaPage({ params }: { params: { id: string } })
             )}
 
             {paikka.kuvaus && (
-              <Row icon={<Info className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label="Kuvaus">
+              <Row icon={<Info className="w-5 h-5 text-[rgba(17,17,17,0.5)]" />} label={t('description')}>
                 <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed">{paikka.kuvaus}</p>
               </Row>
             )}

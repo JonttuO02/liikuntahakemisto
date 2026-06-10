@@ -1,11 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { User } from 'lucide-react'
 import Link from 'next/link'
 import AuthModal from '@/app/components/AuthModal'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import { lajiKonfig } from '@/lib/lajit'
+import { useTranslations, useLocale } from 'next-intl'
+import { useRouter } from 'next/navigation'
+import { changeLocaleAction } from '@/app/actions/locale'
 
 type AuthState = 'loading' | 'unauthenticated' | 'authenticated'
 
@@ -20,6 +23,11 @@ export default function ProfiiliClient() {
   const [savedKiinnostukset, setSavedKiinnostukset] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveKiinnostuksetError, setSaveKiinnostuksetError] = useState<string | null>(null)
+
+  const t = useTranslations('Profiili')
+  const locale = useLocale()
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
@@ -65,7 +73,7 @@ export default function ProfiiliClient() {
       setSaveError(null)
       setTimeout(() => setSaved(false), 2500)
     } else {
-      setSaveError('Tallennus epäonnistui. Yritä uudelleen.')
+      setSaveError(t('saveError'))
     }
   }
 
@@ -87,8 +95,16 @@ export default function ProfiiliClient() {
       setSaveKiinnostuksetError(null)
       setTimeout(() => setSavedKiinnostukset(false), 2500)
     } else {
-      setSaveKiinnostuksetError('Tallennus epäonnistui. Yritä uudelleen.')
+      setSaveKiinnostuksetError(t('saveError'))
     }
+  }
+
+  function toggle() {
+    const next = locale === 'fi' ? 'en' : 'fi'
+    startTransition(async () => {
+      await changeLocaleAction(next)
+      router.refresh()
+    })
   }
 
   // Still loading session from cookies
@@ -103,22 +119,22 @@ export default function ProfiiliClient() {
           <User className="w-7 h-7 text-[rgba(17,17,17,0.35)]" />
         </div>
         <h1 className="font-serif text-2xl font-bold text-[#111111] mb-2 text-center">
-          Profiili vaatii kirjautumisen
+          {t('requiresAuth')}
         </h1>
         <p className="text-[rgba(17,17,17,0.45)] text-center mb-8 max-w-xs text-sm">
-          Kirjaudu sisään nähdäksesi ja muokataksesi profiiliasi.
+          {t('requiresAuthDesc')}
         </p>
         <button
           onClick={() => setAuthModalOpen(true)}
           className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-6 py-2.5 rounded-full [transition:background-color_150ms_var(--ease-out)]"
         >
-          Kirjaudu sisään
+          {t('signInButton')}
         </button>
         <Link
           href="/"
           className="mt-4 text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)] underline underline-offset-2"
         >
-          Takaisin hakemistoon
+          {t('backToDirectory')}
         </Link>
         <AuthModal
           open={authModalOpen}
@@ -131,31 +147,31 @@ export default function ProfiiliClient() {
   // Authenticated state — show profile form
   return (
     <div className="min-h-screen bg-white px-4 py-8 max-w-2xl mx-auto">
-      <h1 className="font-serif text-2xl font-bold text-[#111111] mb-2">Profiili</h1>
+      <h1 className="font-serif text-2xl font-bold text-[#111111] mb-2">{t('title')}</h1>
       <p className="text-sm text-[rgba(17,17,17,0.45)] mb-6">{userEmail}</p>
       <div className="glass rounded-2xl p-4 flex flex-col gap-3">
         <label className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">
-          Kotipaikkakunta
+          {t('homeCity')}
         </label>
         <input
           type="text"
           value={kotikaupunki}
           onChange={e => setKotikaupunki(e.target.value)}
-          placeholder="esim. Tampere"
+          placeholder={t('homeCityPlaceholder')}
           className="border border-[rgba(0,0,0,0.12)] rounded-xl px-3 py-2 text-sm text-[#111111] bg-white focus:outline-none focus:border-[rgba(0,0,0,0.3)]"
         />
         <button
           onClick={handleSave}
           className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-5 py-2 rounded-full self-start [transition:background-color_150ms_var(--ease-out)]"
         >
-          Tallenna
+          {t('save')}
         </button>
-        {saved && <p className="text-sm text-green-700">Kotikaupunki tallennettu</p>}
+        {saved && <p className="text-sm text-green-700">{t('homeCitySaved')}</p>}
         {saveError && <p className="text-sm text-red-600">{saveError}</p>}
       </div>
       <div className="glass rounded-2xl p-4 flex flex-col gap-3 mt-4">
         <label className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">
-          Kiinnostuksen kohteet
+          {t('interests')}
         </label>
         <div className="flex flex-wrap gap-2">
           {Object.entries(lajiKonfig).map(([key, konfig]) => (
@@ -177,16 +193,28 @@ export default function ProfiiliClient() {
           onClick={handleSaveKiinnostukset}
           className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-5 py-2 rounded-full self-start [transition:background-color_150ms_var(--ease-out)]"
         >
-          Tallenna
+          {t('save')}
         </button>
-        {savedKiinnostukset && <p className="text-sm text-green-700">Kiinnostukset tallennettu</p>}
+        {savedKiinnostukset && <p className="text-sm text-green-700">{t('interestsSaved')}</p>}
         {saveKiinnostuksetError && <p className="text-sm text-red-600">{saveKiinnostuksetError}</p>}
+      </div>
+      <div className="glass rounded-2xl p-4 flex flex-col gap-3 mt-4">
+        <label className="text-[10px] font-bold text-[#111111] uppercase tracking-widest">
+          {t('language')}
+        </label>
+        <button
+          onClick={toggle}
+          disabled={isPending}
+          className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm px-5 py-2 rounded-full self-start [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60"
+        >
+          {locale === 'fi' ? t('switchToEnglish') : t('switchToFinnish')}
+        </button>
       </div>
       <Link
         href="/"
         className="mt-8 inline-block text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms_var(--ease-out)] underline underline-offset-2"
       >
-        Takaisin hakemistoon
+        {t('backToDirectory')}
       </Link>
     </div>
   )
