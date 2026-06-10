@@ -108,7 +108,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
  (completed 2026-06-05)
 - [x] **Phase 33: Claim & paikan luonti** — Olemassa olevan paikan haku + claim-pyyntö; uuden paikan luonti; näkyvyyssäännöt (completed 2026-06-06)
 - [x] **Phase 34: Onboarding-velhou** — 6-vaiheinen ohjattu wizard (paikka → mediat → hinnasto → aukioloajat → yhteystiedot → esikatselu) *(10 plans, 6 waves)* (completed 2026-06-10)
-- [ ] **Phase 35: Admin-hyväksyntäjärjestelmä** — Email-ilmoitukset, /admin-sivu, hyväksy/hylkää toiminto, vahvistussähköpostit, is_admin-suojaus *(9 plans, 4 waves)*
+- [x] **Phase 35: Admin-hyväksyntäjärjestelmä** — Email-ilmoitukset, /admin-sivu, hyväksy/hylkää toiminto, vahvistussähköpostit, is_admin-suojaus *(11 plans, 4 waves)* (completed 2026-06-10)
 - [ ] **Phase 36: Hallintapaneeli** — /business-sivu: paikkalistaus tiloineen, kaikkien tietojen muokkaus, esikatselu
 
 ---
@@ -229,7 +229,7 @@ Plans:
   3. Admin voi hyväksyä hakemuksen yhdellä klikkauksella tai hylätä sen syy-tekstillä — molemmat toiminnot päivittävät hakemuksen tilan välittömästi
   4. Hyväksytty yritys saa vahvistussähköpostin; hylätty yritys saa sähköpostin jossa kerrotaan syy — molemmissa tapauksissa yritys tietää päätöksestä
   5. `/admin`-sivu näkyy vain käyttäjälle jonka `profiles`-taulussa on `is_admin = true` — kaikki muut saavat 404 tai unauthorized-vastauksen
-**Plans**: 9 plans in 4 waves
+**Plans**: 11 plans in 4 waves (9 original + 2 gap-closure)
 
 **Wave 1** (parallel):
 - [x] 35-01-PLAN.md — DB migration: rejection_reason + role_in_company (D-07, D-04)
@@ -247,6 +247,8 @@ Plans:
 **Wave 4** (parallel — after Wave 3):
 - [x] 35-08-PLAN.md — /admin/page.tsx Server Component + AdminApplicationList client (ADMIN-02, ADMIN-05)
 - [x] 35-09-PLAN.md — /admin/[id]/page.tsx detail view with venue data + photos (ADMIN-02)
+- [x] 35-10-PLAN.md — GAP A: logo_url migration + write in onboarding/submit + select in admin/[id] (ADMIN-02)
+- [x] 35-11-PLAN.md — GAP B: POST /api/business/reapply + Hae uudelleen button rewire (ADMIN-03)
 
 **UI hint**: yes
 
@@ -301,5 +303,5 @@ Plans:
 | 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | Complete    | 2026-06-05 |
 | 33. Claim & paikan luonti | v1.7 | 7/7 | ✅ Complete | 2026-06-06 |
 | 34. Onboarding-velhou | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
-| 35. Admin-hyväksyntäjärjestelmä | v1.7 | 0/9 | Not started | - |
+| 35. Admin-hyväksyntäjärjestelmä | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
 | 36. Hallintapaneeli | v1.7 | 0/? | Not started | - |

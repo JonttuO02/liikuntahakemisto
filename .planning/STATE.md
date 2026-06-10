@@ -2,24 +2,24 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Yritysportaali
-status: completed
-last_updated: "2026-06-10T14:46:21.798Z"
-last_activity: 2026-06-10 -- Wave 3 complete, Wave 4 started
+status: verifying
+last_updated: "2026-06-10T18:00:00.000Z"
+last_activity: 2026-06-10 -- Wave 4 gap plans (35-10, 35-11) executed — Phase 35 all 11 plans complete
 progress:
   total_phases: 6
-  completed_phases: 4
-  total_plans: 36
-  completed_plans: 33
-  percent: 67
+  completed_phases: 5
+  total_plans: 40
+  completed_plans: 37
+  percent: 93
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 35 (admin-hyväksyntäjärjestelmä) — EXECUTED, READY TO VERIFY
-Status: All 9 plans complete. Run /gsd:verify-work 35 to verify phase goal achievement.
-Last activity: 2026-06-10 -- All 4 waves complete (9/9 plans done)
+Phase: 35 (admin-hyväksyntäjärjestelmä) — COMPLETE (11/11 plans)
+Status: All gap-closure plans executed. Run /gsd:verify-work 35 to verify phase goal.
+Last activity: 2026-06-10 -- Wave 4 gap plans (35-10, 35-11) executed — Phase 35 all 11 plans complete
 
 ## Project Reference
 
@@ -53,7 +53,7 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 | 32 | Yritysrekisteröinti & auth | BIZ-01, BIZ-03 | Planned (3 plans) |
 | 33 | Claim & paikan luonti | CLAIM-01, CLAIM-02, CLAIM-03 | Complete |
 | 34 | Onboarding-velhou | ONBOARD-01–07 | Planned (9 plans) |
-| 35 | Admin-hyväksyntäjärjestelmä | ADMIN-01–05 | Not started |
+| 35 | Admin-hyväksyntäjärjestelmä | ADMIN-01–05 | Complete |
 | 36 | Hallintapaneeli | BIZPANEL-01–03 | Not started |
 
 ## Blockers/Concerns
@@ -62,5 +62,5 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-10T14:46:21.794Z
-Resume: `/gsd:execute-phase 35` — Phase 35 admin approval system (9 plans ready)
+Last session: 2026-06-10T18:00:00.000Z
+Resume: `/gsd:verify-work 35` — Verify phase 35 goal achievement
