@@ -3,31 +3,30 @@ gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Yritysportaali
 status: executing
-last_updated: "2026-06-06T03:46:04.870Z"
-last_activity: 2026-06-10 -- Phase 34 plan 34-11 complete (11/11 plans)
+last_updated: "2026-06-10T19:00:00Z"
+last_activity: 2026-06-10 -- Phase 34 UAT complete (4/4 pass), Phase 35 next
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 4
   total_plans: 19
-  completed_plans: 15
-  percent: 33
+  completed_plans: 19
+  percent: 67
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 34 (onboarding-velhou) — ALL PLANS COMPLETE
-Plan: 11 of 11
-Status: Phase 34 execution complete — UAT gaps resolved, ready for verification
-Last activity: 2026-06-10 -- Phase 34 plan 34-11 complete (11/11 plans)
+Phase: 35 (admin-hyväksyntäjärjestelmä) — NOT STARTED
+Status: Phase 34 verified and complete. Phase 35 is next.
+Last activity: 2026-06-10 -- Phase 34 UAT complete (4/4 pass, thumbnail bug fixed)
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 34 — onboarding-velhou
+**Current focus:** Phase 35 — admin-hyväksyntäjärjestelmä
 
 ## Active Decisions (carried to v1.7)
 
@@ -64,4 +63,4 @@ None.
 ## Session Continuity
 
 Last session: 2026-06-06
-Resume: `/gsd:verify-work 34` — Phase 34 complete, all 10 plans done
+Resume: `/gsd:plan-phase 35` — Phase 35 admin approval system
