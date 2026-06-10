@@ -25,7 +25,10 @@ findings:
   warning: 5
   info: 3
   total: 13
-status: issues_found
+  fixed: 5
+  fixed_ids: [CR-01, CR-02, CR-03, CR-05, WR-01]
+  remaining_open: [WR-02, WR-03, WR-04, WR-05]
+status: partially_fixed
 ---
 
 # Phase 35: Code Review Report
