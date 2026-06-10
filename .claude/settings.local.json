@@ -4,7 +4,23 @@
       "Skill(claude-api)",
       "Skill(emil-design-eng)",
       "Skill(gsd-plan-phase)",
-      "WebSearch"
+      "WebSearch",
+      "PowerShell(git symbolic-ref *)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 10)",
+      "PowerShell(Select-String -Path \".\\\\app\\\\api\\\\admin\\\\sync-paikat\\\\route.ts\" -Pattern \"ADMIN_SECRET|Unauthorized|Authorization\" | ForEach-Object { $_.Line.Trim\\(\\) })",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 20)",
+      "PowerShell(git *)",
+      "Skill(gsd-code-review)",
+      "PowerShell(cd \"C:\\\\ClaudeCodeTestit\\\\liikuntahakemisto\"; \\(Get-Content app\\\\components\\\\DiagonaalKortti.tsx | Measure-Object -Line\\).Lines)",
+      "PowerShell(Stop-Process *)",
+      "Skill(gsd-execute-phase)",
+      "Skill(gsd-verify-work)",
+      "Skill(gsd-discuss-phase)",
+      "Skill(gsd-new-milestone)",
+      "WebFetch(domain:next-intl.dev)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Skill(gsd-ui-phase)"
     ]
   }
 }
