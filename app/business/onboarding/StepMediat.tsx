@@ -179,8 +179,17 @@ export default function StepMediat({
 
         {/* Logo drop zone */}
         <div className="flex flex-col gap-2">
+          <UploadDropZone
+            label={existingLogoUrl && logoFiles.length === 0 ? 'Vaihda logo' : t('logoDropLabel')}
+            allowMultiple={false}
+            maxFileSizeMB={2}
+            maxFiles={1}
+            selectedFiles={logoFiles}
+            onFilesSelected={handleLogoFilesSelected}
+            onRemove={removeLogoFile}
+          />
           {existingLogoUrl && logoFiles.length === 0 && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mt-2">
               <img src={existingLogoUrl} alt="" className="w-14 h-14 object-cover rounded-lg border border-[rgba(0,0,0,0.07)]" />
               <button
                 type="button"
@@ -191,21 +200,21 @@ export default function StepMediat({
               </button>
             </div>
           )}
-          <UploadDropZone
-            label={existingLogoUrl && logoFiles.length === 0 ? 'Vaihda logo' : t('logoDropLabel')}
-            allowMultiple={false}
-            maxFileSizeMB={2}
-            maxFiles={1}
-            selectedFiles={logoFiles}
-            onFilesSelected={handleLogoFilesSelected}
-            onRemove={removeLogoFile}
-          />
         </div>
 
         {/* Images drop zone */}
         <div className="flex flex-col gap-2">
+          <UploadDropZone
+            label={t('imagesDropLabel')}
+            allowMultiple={true}
+            maxFileSizeMB={5}
+            maxFiles={5}
+            selectedFiles={photoFiles}
+            onFilesSelected={handlePhotoFilesSelected}
+            onRemove={removePhotoFile}
+          />
           {existingPhotoUrls.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mt-2">
               {existingPhotoUrls.map((url, i) => (
                 <div key={url} className="relative">
                   <img src={url} alt="" className="w-14 h-14 object-cover rounded-lg border border-[rgba(0,0,0,0.07)]" />
@@ -221,15 +230,6 @@ export default function StepMediat({
               ))}
             </div>
           )}
-          <UploadDropZone
-            label={t('imagesDropLabel')}
-            allowMultiple={true}
-            maxFileSizeMB={5}
-            maxFiles={5}
-            selectedFiles={photoFiles}
-            onFilesSelected={handlePhotoFilesSelected}
-            onRemove={removePhotoFile}
-          />
         </div>
 
         {/* Upload progress bar */}
