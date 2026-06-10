@@ -39,6 +39,14 @@ export default function StepMediat({
     })
   }
 
+  function removeLogoFile(_i: number) {
+    setLogoFiles([])
+  }
+
+  function removePhotoFile(i: number) {
+    setPhotoFiles((prev) => prev.filter((_, idx) => idx !== i))
+  }
+
   async function handleNext() {
     setIsUploading(true)
     setUploadProgress(10)
@@ -167,6 +175,7 @@ export default function StepMediat({
           maxFiles={1}
           selectedFiles={logoFiles}
           onFilesSelected={handleLogoFilesSelected}
+          onRemove={removeLogoFile}
         />
 
         {/* Images drop zone */}
@@ -177,6 +186,7 @@ export default function StepMediat({
           maxFiles={5}
           selectedFiles={photoFiles}
           onFilesSelected={handlePhotoFilesSelected}
+          onRemove={removePhotoFile}
         />
 
         {/* Upload progress bar */}
