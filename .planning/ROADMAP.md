@@ -108,7 +108,7 @@ Full archive: `.planning/milestones/v1.6-ROADMAP.md`
  (completed 2026-06-05)
 - [x] **Phase 33: Claim & paikan luonti** — Olemassa olevan paikan haku + claim-pyyntö; uuden paikan luonti; näkyvyyssäännöt (completed 2026-06-06)
 - [x] **Phase 34: Onboarding-velhou** — 6-vaiheinen ohjattu wizard (paikka → mediat → hinnasto → aukioloajat → yhteystiedot → esikatselu) *(10 plans, 6 waves)* (completed 2026-06-10)
-- [ ] **Phase 35: Admin-hyväksyntäjärjestelmä** — Email-ilmoitukset, /admin-sivu, hyväksy/hylkää toiminto, vahvistussähköpostit, is_admin-suojaus
+- [ ] **Phase 35: Admin-hyväksyntäjärjestelmä** — Email-ilmoitukset, /admin-sivu, hyväksy/hylkää toiminto, vahvistussähköpostit, is_admin-suojaus *(9 plans, 4 waves)*
 - [ ] **Phase 36: Hallintapaneeli** — /business-sivu: paikkalistaus tiloineen, kaikkien tietojen muokkaus, esikatselu
 
 ---
@@ -229,7 +229,25 @@ Plans:
   3. Admin voi hyväksyä hakemuksen yhdellä klikkauksella tai hylätä sen syy-tekstillä — molemmat toiminnot päivittävät hakemuksen tilan välittömästi
   4. Hyväksytty yritys saa vahvistussähköpostin; hylätty yritys saa sähköpostin jossa kerrotaan syy — molemmissa tapauksissa yritys tietää päätöksestä
   5. `/admin`-sivu näkyy vain käyttäjälle jonka `profiles`-taulussa on `is_admin = true` — kaikki muut saavat 404 tai unauthorized-vastauksen
-**Plans**: TBD
+**Plans**: 9 plans in 4 waves
+
+**Wave 1** (parallel):
+- [x] 35-01-PLAN.md — DB migration: rejection_reason + role_in_company (D-07, D-04)
+- [x] 35-02-PLAN.md — i18n: Admin namespace + Business role keys (fi.json + en.json)
+- [x] 35-03-PLAN.md — npm install resend + lib/email.ts email helpers (ADMIN-01, ADMIN-04)
+
+**Wave 2** *(blocked on Wave 1 completion)*:
+- [ ] 35-04-PLAN.md — [BLOCKING] supabase db push + RESEND_API_KEY env + smoke test
+
+**Wave 3** (parallel — after Wave 2):
+- [ ] 35-05-PLAN.md — Extend Route Handlers with email notifications + register role_in_company (ADMIN-01, D-04)
+- [ ] 35-06-PLAN.md — /api/admin/approve + /api/admin/reject Route Handlers (ADMIN-03, ADMIN-04, ADMIN-05)
+- [ ] 35-07-PLAN.md — UI: rekisteroidy role_in_company + business/page.tsx rejection display (D-04, D-08)
+
+**Wave 4** (parallel — after Wave 3):
+- [ ] 35-08-PLAN.md — /admin/page.tsx Server Component + AdminApplicationList client (ADMIN-02, ADMIN-05)
+- [ ] 35-09-PLAN.md — /admin/[id]/page.tsx detail view with venue data + photos (ADMIN-02)
+
 **UI hint**: yes
 
 ### Phase 36: Hallintapaneeli
@@ -283,5 +301,5 @@ Plans:
 | 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | Complete    | 2026-06-05 |
 | 33. Claim & paikan luonti | v1.7 | 7/7 | ✅ Complete | 2026-06-06 |
 | 34. Onboarding-velhou | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
-| 35. Admin-hyväksyntäjärjestelmä | v1.7 | 0/? | Not started | - |
+| 35. Admin-hyväksyntäjärjestelmä | v1.7 | 0/9 | Not started | - |
 | 36. Hallintapaneeli | v1.7 | 0/? | Not started | - |

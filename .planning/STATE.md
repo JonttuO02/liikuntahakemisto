@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Yritysportaali
-status: executing
-last_updated: "2026-06-10T19:00:00Z"
-last_activity: 2026-06-10 -- Phase 34 UAT complete (4/4 pass), Phase 35 next
+status: planned
+last_updated: "2026-06-10T11:15:00.000Z"
+last_activity: 2026-06-10 -- Phase 35 planned (9 plans, 4 waves)
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 19
-  completed_plans: 19
+  total_plans: 35
+  completed_plans: 26
   percent: 67
 ---
 
@@ -17,9 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 35 (admin-hyväksyntäjärjestelmä) — NOT STARTED
-Status: Phase 34 verified and complete. Phase 35 is next.
-Last activity: 2026-06-10 -- Phase 34 UAT complete (4/4 pass, thumbnail bug fixed)
+Phase: 35 (admin-hyväksyntäjärjestelmä) — IN PROGRESS, Wave 2 checkpoint
+Status: Wave 1 complete (35-01, 35-02, 35-03). Awaiting manual steps for 35-04 (supabase db push + env vars). Then Wave 3 can proceed.
+Last activity: 2026-06-10 -- Wave 1 complete (3/9 plans done)
 
 ## Project Reference
 
@@ -62,5 +62,5 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-06
-Resume: `/gsd:plan-phase 35` — Phase 35 admin approval system
+Last session: 2026-06-10T10:38:35.321Z
+Resume: `/gsd:execute-phase 35` — Phase 35 admin approval system (9 plans ready)
