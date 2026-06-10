@@ -9,6 +9,7 @@ import ClaimSearchForm from '@/app/components/ClaimSearchForm'
 type VenueLink = {
   paikka_id: number
   claim_status: string
+  rejection_reason: string | null
   liikuntapaikat: { nimi: string } | null
 }
 
@@ -51,10 +52,10 @@ export default function BusinessPage() {
         return
       }
 
-      // Fetch all linked venues with their approval status
+      // Fetch all linked venues with their approval status and rejection reason
       const { data: links } = await supabase
         .from('business_paikka_links')
-        .select('paikka_id, claim_status, liikuntapaikat(nimi)')
+        .select('paikka_id, claim_status, rejection_reason, liikuntapaikat(nimi)')
         .eq('business_account_id', user.id)
         .order('created_at', { ascending: true })
 
@@ -99,23 +100,39 @@ export default function BusinessPage() {
           {/* Venue list */}
           <div className="flex flex-col gap-3">
             {venueLinks.map(link => (
-              <div key={link.paikka_id} className="flex items-center justify-between gap-2">
-                <span className="text-sm font-bold text-[#111111] truncate">
-                  {link.liikuntapaikat?.nimi ?? `Paikka ${link.paikka_id}`}
-                </span>
-                <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full shrink-0 ${
-                  link.claim_status === 'approved'
-                    ? 'bg-green-100 text-green-700'
-                    : link.claim_status === 'rejected'
-                    ? 'bg-red-50 text-red-600'
-                    : 'bg-amber-100 text-amber-700'
-                }`}>
-                  {link.claim_status === 'approved'
-                    ? t('statusApproved')
-                    : link.claim_status === 'rejected'
-                    ? t('statusRejected')
-                    : t('statusPending')}
-                </span>
+              <div key={link.paikka_id} className="flex flex-col gap-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-bold text-[#111111] truncate">
+                    {link.liikuntapaikat?.nimi ?? `Paikka ${link.paikka_id}`}
+                  </span>
+                  <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full shrink-0 ${
+                    link.claim_status === 'approved'
+                      ? 'bg-green-100 text-green-700'
+                      : link.claim_status === 'rejected'
+                      ? 'bg-red-50 text-red-600'
+                      : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {link.claim_status === 'approved'
+                      ? t('statusApproved')
+                      : link.claim_status === 'rejected'
+                      ? t('statusRejected')
+                      : t('statusPending')}
+                  </span>
+                </div>
+                {link.claim_status === 'rejected' && (
+                  <div className="flex flex-col gap-2 mt-1">
+                    {link.rejection_reason && (
+                      <p className="text-xs text-[rgba(17,17,17,0.45)]">{t('rejectionReasonLabel')}: {link.rejection_reason}</p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowAddVenue(true)}
+                      className="text-xs font-bold text-[#111111] underline hover:no-underline text-left"
+                    >
+                      {t('reapplyCta')} →
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

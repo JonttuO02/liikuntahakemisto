@@ -31,6 +31,7 @@ export default function BusinessRekisteroidyPage() {
   const router = useRouter()
 
   const [companyName, setCompanyName] = useState('')
+  const [roleInCompany, setRoleInCompany] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -70,7 +71,7 @@ export default function BusinessRekisteroidyPage() {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + data.session.access_token,
         },
-        body: JSON.stringify({ company_name: companyName.trim() }),
+        body: JSON.stringify({ company_name: companyName.trim(), role_in_company: roleInCompany }),
       })
 
       if (!response.ok) {
@@ -116,6 +117,19 @@ export default function BusinessRekisteroidyPage() {
               disabled={loading}
               className={inputClass}
             />
+            <select
+              value={roleInCompany}
+              onChange={e => setRoleInCompany(e.target.value)}
+              required
+              disabled={loading}
+              className={inputClass + ' cursor-pointer'}
+            >
+              <option value="" disabled>{t('roleInCompanyLabel')}</option>
+              <option value="Omistaja">{t('roleOwner')}</option>
+              <option value="Johtaja">{t('roleManager')}</option>
+              <option value="Markkinointi">{t('roleMarketing')}</option>
+              <option value="Muu">{t('roleOther')}</option>
+            </select>
             <input
               type="email"
               autoComplete="email"
