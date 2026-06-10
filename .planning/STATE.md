@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Yritysportaali
-status: planned
-last_updated: "2026-06-10T11:15:00.000Z"
-last_activity: 2026-06-10 -- Phase 35 planned (9 plans, 4 waves)
+status: completed
+last_updated: "2026-06-10T14:46:21.798Z"
+last_activity: 2026-06-10 -- Wave 3 complete, Wave 4 started
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 35
-  completed_plans: 26
+  total_plans: 36
+  completed_plans: 33
   percent: 67
 ---
 
@@ -17,9 +17,9 @@ progress:
 
 ## Current Position
 
-Phase: 35 (admin-hyväksyntäjärjestelmä) — IN PROGRESS, Wave 4 executing
-Status: Waves 1-3 complete (7/9 plans done). Wave 4 running: 35-08, 35-09 in parallel.
-Last activity: 2026-06-10 -- Wave 3 complete, Wave 4 started
+Phase: 35 (admin-hyväksyntäjärjestelmä) — EXECUTED, READY TO VERIFY
+Status: All 9 plans complete. Run /gsd:verify-work 35 to verify phase goal achievement.
+Last activity: 2026-06-10 -- All 4 waves complete (9/9 plans done)
 
 ## Project Reference
 
@@ -62,5 +62,5 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-10T10:38:35.321Z
+Last session: 2026-06-10T14:46:21.794Z
 Resume: `/gsd:execute-phase 35` — Phase 35 admin approval system (9 plans ready)

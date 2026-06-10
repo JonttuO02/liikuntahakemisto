@@ -245,8 +245,8 @@ Plans:
 - [x] 35-07-PLAN.md — UI: rekisteroidy role_in_company + business/page.tsx rejection display (D-04, D-08)
 
 **Wave 4** (parallel — after Wave 3):
-- [ ] 35-08-PLAN.md — /admin/page.tsx Server Component + AdminApplicationList client (ADMIN-02, ADMIN-05)
-- [ ] 35-09-PLAN.md — /admin/[id]/page.tsx detail view with venue data + photos (ADMIN-02)
+- [x] 35-08-PLAN.md — /admin/page.tsx Server Component + AdminApplicationList client (ADMIN-02, ADMIN-05)
+- [x] 35-09-PLAN.md — /admin/[id]/page.tsx detail view with venue data + photos (ADMIN-02)
 
 **UI hint**: yes
 
