@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     .from('onboarding_draft')
     .select('*, liikuntapaikat(nimi, osoite, kaupunki, laji, latitude, longitude, aukioloajat)')
     .eq('business_account_id', user.id)
-    .single()
+    .maybeSingle()  // returns null when no row, not a PGRST116 error
 
   if (draftError || !draft) {
     return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
