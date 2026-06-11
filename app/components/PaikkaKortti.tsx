@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { MapPin, Bookmark, BookmarkCheck } from 'lucide-react'
+import { MapPin, Bookmark, BookmarkCheck, BadgeCheck } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti, cn } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
@@ -89,6 +89,9 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
         <Link href={`/paikat/${paikka.id}`}>
           <h3 className="font-bold text-[#111111] text-sm leading-snug hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]">
             {paikka.nimi}
+            {paikka.business_managed && (
+              <BadgeCheck className="w-3.5 h-3.5 ml-1 inline-block align-middle" />
+            )}
           </h3>
         </Link>
 

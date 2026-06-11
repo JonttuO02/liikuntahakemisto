@@ -54,18 +54,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Update failed', detail: updateLinkError.message }, { status: 500 })
   }
 
-  // Step 6: for link_type = 'created', set published = true (claim venues are already published)
-  if (link.link_type === 'created') {
-    const { error: publishError } = await supabaseAdmin
-      .from('liikuntapaikat')
-      .update({ published: true })
-      .eq('id', link.paikka_id)
-    if (publishError) {
-      console.error('[admin/approve] published UPDATE failed (non-critical):', publishError.message)
-    }
-  }
-
-  // Step 7: send confirmation email to business (non-critical)
+  // Step 6: send confirmation email to business (non-critical)
   try {
     const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(link.business_account_id)
     const { data: biz } = await supabaseAdmin
