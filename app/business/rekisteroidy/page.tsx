@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
-import AuthModal from '@/app/components/AuthModal'
+import Link from 'next/link'
 
 function mapBusinessError(
   message: string
@@ -36,7 +36,6 @@ export default function BusinessRekisteroidyPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [authModalOpen, setAuthModalOpen] = useState(false)
 
   // Recovery mode: user already has a valid auth session (from a previous
   // signUp) but no business_accounts row (registration was interrupted
@@ -47,7 +46,7 @@ export default function BusinessRekisteroidyPage() {
 
   useEffect(() => {
     async function detectRecovery() {
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         setRecoveryChecked(true)
@@ -79,7 +78,7 @@ export default function BusinessRekisteroidyPage() {
     setLoading(true)
 
     try {
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       let accessToken: string
 
       if (isRecovery) {
@@ -251,19 +250,14 @@ export default function BusinessRekisteroidyPage() {
           {!isRecovery && (
             <p className="text-sm text-[rgba(17,17,17,0.45)] text-center">
               {t('alreadyHaveAccount')}{' '}
-              <button
-                type="button"
-                className="font-bold text-[#111111] hover:underline"
-                onClick={() => setAuthModalOpen(true)}
-              >
+              <Link href="/business/kirjaudu" className="font-bold text-[#111111] hover:underline">
                 {t('signInLink')}
-              </button>
+              </Link>
             </p>
           )}
         </div>
       </motion.div>
 
-      <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   )
 }
