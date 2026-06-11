@@ -131,7 +131,6 @@ export default function OnboardingWizardInner() {
   }
 
   // Re-fetch draft when user navigates to step 6 so the preview is always up to date.
-  // If no draft exists (e.g. after a completed submit), redirect back to step 1.
   useEffect(() => {
     if (step !== 6) return
     async function refreshDraftForPreview() {
@@ -144,12 +143,7 @@ export default function OnboardingWizardInner() {
           .select('*')
           .eq('business_account_id', user.id)
           .maybeSingle()
-        if (freshDraft) {
-          setDraft(freshDraft as OnboardingDraft)
-        } else {
-          // No draft means steps haven't been saved — send user back to step 1
-          goToStep(1)
-        }
+        if (freshDraft) setDraft(freshDraft as OnboardingDraft)
       } catch { /* ignore */ }
     }
     refreshDraftForPreview()

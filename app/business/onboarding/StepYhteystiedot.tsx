@@ -17,6 +17,7 @@ interface StepYhteystiedotProps {
   } | null
   editMode?: boolean
   onSaveSuccess?: () => void
+  onSaveComplete?: (data: { puhelin: string; email: string; website: string; kuvaus: string }) => void
 }
 
 const inputClass =
@@ -29,6 +30,7 @@ export default function StepYhteystiedot({
   initialYhteystiedot,
   editMode = false,
   onSaveSuccess,
+  onSaveComplete,
 }: StepYhteystiedotProps) {
   const t = useTranslations('Business')
 
@@ -79,6 +81,7 @@ export default function StepYhteystiedot({
         return
       }
 
+      onSaveComplete?.({ puhelin: puhelin.trim(), email: email.trim(), website: website.trim(), kuvaus: kuvaus.trim() })
       setSaveSuccessVisible(true)
       setTimeout(() => {
         setSaveSuccessVisible(false)

@@ -16,7 +16,7 @@ interface StepMediatProps {
   editMode?: boolean
   onNext: () => void
   onPrev: () => void
-  onSaveSuccess?: () => void
+  onSaveSuccess?: (logoUrl: string | null, photoUrls: string[]) => void
 }
 
 export default function StepMediat({
@@ -285,10 +285,11 @@ export default function StepMediat({
 
       if (!res.ok) throw new Error('Save failed')
 
-      // Show success feedback
+      setExistingLogoUrl(finalLogoUrl)
+      setExistingPhotoUrls(finalPhotoUrls)
       setSaveSuccessVisible(true)
       setTimeout(() => setSaveSuccessVisible(false), 2000)
-      onSaveSuccess?.()
+      onSaveSuccess?.(finalLogoUrl, finalPhotoUrls)
     } catch {
       setSaveError('Tallennus epäonnistui')
     } finally {

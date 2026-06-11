@@ -22,6 +22,7 @@ type Props = {
   initialPaikkaHinnasto?: Array<{ kategoria: string; hinta: string; lisatieto?: string }> | null
   editMode?: boolean
   onSaveSuccess?: () => void
+  onSaveComplete?: (rows: Array<{ kategoria: string; hinta: string; lisatieto: string }>) => void
 }
 
 const inputClass =
@@ -42,6 +43,7 @@ export default function StepHinnasto({
   initialPaikkaHinnasto,
   editMode = false,
   onSaveSuccess,
+  onSaveComplete,
 }: Props) {
   const t = useTranslations('Business')
 
@@ -137,6 +139,7 @@ export default function StepHinnasto({
         return
       }
 
+      onSaveComplete?.(rows.filter(r => r.hinta.trim() !== '').map(({ kategoria, hinta, lisatieto }) => ({ kategoria, hinta, lisatieto })))
       setSaveSuccessVisible(true)
       setTimeout(() => {
         setSaveSuccessVisible(false)

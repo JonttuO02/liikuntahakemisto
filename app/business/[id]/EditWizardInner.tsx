@@ -22,6 +22,21 @@ export default function EditWizardInner({ paikka, paikkaId }: EditWizardInnerPro
   const router = useRouter()
   const [previewOpen, setPreviewOpen] = useState(false)
 
+  // Local state that persists step data across tab-bar navigation.
+  // Initialized from paikka (server snapshot); updated via onSaveComplete after each save.
+  const [localHinnasto, setLocalHinnasto] = useState<Array<{ kategoria: string; hinta: string; lisatieto: string }> | null>(null)
+  const [localAukioloajat, setLocalAukioloajat] = useState<Record<string, { open: string; close: string }> | null>(
+    (paikka.aukioloajat as Record<string, { open: string; close: string }> | null) ?? null
+  )
+  const [localYhteystiedot, setLocalYhteystiedot] = useState({
+    puhelin: paikka.puhelin ?? '',
+    email: '',
+    website: paikka.varauslinkki ?? '',
+    kuvaus: paikka.kuvaus ?? '',
+  })
+  const [localLogoUrl, setLocalLogoUrl] = useState<string | null>(paikka.logo_url ?? null)
+  const [localPhotoUrls, setLocalPhotoUrls] = useState<string[]>(paikka.photo_urls ?? [])
+
   const currentStep = searchParams.get('step') ?? '1'
 
   function tabLabel(n: number): string {
@@ -99,39 +114,42 @@ export default function EditWizardInner({ paikka, paikkaId }: EditWizardInnerPro
           {currentStep === '2' && (
             <StepMediat
               paikkaId={paikkaId}
-              initialPaikka={paikka}
+              initialPaikka={{ ...paikka, logo_url: localLogoUrl, photo_urls: localPhotoUrls }}
               editMode={true}
               onNext={() => router.push('/business/' + paikkaId + '?step=3')}
               onPrev={() => router.push('/business/' + paikkaId + '?step=1')}
-              onSaveSuccess={() => {}}
+              onSaveSuccess={(logoUrl, photoUrls) => { setLocalLogoUrl(logoUrl); setLocalPhotoUrls(photoUrls) }}
             />
           )}
           {currentStep === '3' && (
             <StepHinnasto
               paikkaId={paikkaId}
               editMode={true}
-              initialHinnasto={null}
+              initialPaikkaHinnasto={localHinnasto}
               onNext={() => router.push('/business/' + paikkaId + '?step=4')}
               onPrev={() => router.push('/business/' + paikkaId + '?step=2')}
+              onSaveComplete={setLocalHinnasto}
             />
           )}
           {currentStep === '4' && (
             <StepAukioloajat
               paikkaId={paikkaId}
               editMode={true}
-              existingAukioloajat={(paikka.aukioloajat as Record<string, { open: string; close: string }> | null) ?? null}
-              initialDraftAukioloajat={null}
+              existingAukioloajat={localAukioloajat}
+              initialDraftAukioloajat={localAukioloajat}
               onNext={() => router.push('/business/' + paikkaId + '?step=5')}
               onPrev={() => router.push('/business/' + paikkaId + '?step=3')}
+              onSaveComplete={setLocalAukioloajat}
             />
           )}
           {currentStep === '5' && (
             <StepYhteystiedot
               paikkaId={paikkaId}
               editMode={true}
-              initialYhteystiedot={{ puhelin: paikka.puhelin ?? '', website: paikka.varauslinkki ?? '', kuvaus: paikka.kuvaus ?? '' }}
+              initialYhteystiedot={localYhteystiedot}
               onNext={() => router.push('/business/' + paikkaId + '?step=1')}
               onPrev={() => router.push('/business/' + paikkaId + '?step=4')}
+              onSaveComplete={setLocalYhteystiedot}
             />
           )}
         </div>

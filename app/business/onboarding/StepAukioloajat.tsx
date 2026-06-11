@@ -33,6 +33,7 @@ type Props = {
   onPrev: () => void
   editMode?: boolean
   onSaveSuccess?: () => void
+  onSaveComplete?: (aukioloajat: Record<string, { open: string; close: string }>) => void
 }
 
 const defaultHours = (): HoursState =>
@@ -48,6 +49,7 @@ export default function StepAukioloajat({
   onPrev,
   editMode = false,
   onSaveSuccess,
+  onSaveComplete,
 }: Props) {
   const t = useTranslations('Business')
 
@@ -140,6 +142,7 @@ export default function StepAukioloajat({
         return
       }
 
+      onSaveComplete?.(openDaysObject)
       setSaveSuccessVisible(true)
       setTimeout(() => {
         setSaveSuccessVisible(false)
