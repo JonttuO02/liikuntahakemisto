@@ -32,10 +32,10 @@ export async function POST(request: Request) {
 
   // Step 1 of 3: INSERT into liikuntapaikat.
   // published=false: new venue hidden from users until admin approves (D-09, T-33-03-05).
-  // business_managed=true: protects from overwrite by Google Places sync script.
+  // business_managed is set to true by the approval trigger (PUB-01) when claim_status='approved'.
   const { data: newPaikka, error: paikkaError } = await supabaseAdmin
     .from('liikuntapaikat')
-    .insert({ nimi, osoite, kaupunki, laji: 'Muu', published: false, business_managed: true })
+    .insert({ nimi, osoite, kaupunki, laji: 'Muu', published: false })
     .select('id')
     .single()
 
