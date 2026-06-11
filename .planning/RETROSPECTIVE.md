@@ -238,6 +238,53 @@
 
 ---
 
+## Milestone: v1.7 — Yritysportaali
+
+**Shipped:** 2026-06-11
+**Phases:** 6 (phases 31–36) | **Plans:** 44 | **Timeline:** 7 days
+
+### What Was Built
+- Complete Supabase DB schema: business_accounts, business_paikka_links, business-media Storage bucket + SECURITY DEFINER RLS
+- Business registration flow: /business/rekisteroidy + JWT-verified /api/business/register + AuthModal business redirect
+- Claim & create venue: search or create; published=false until admin approval; is_claimed flag
+- 6-step onboarding wizard with draft persistence, image/logo upload to Supabase Storage, step-forward URL guard
+- Admin approval system: Resend email notifications, /admin panel list + detail, approve/reject with emails, reapply flow
+- Full business control panel: venue list with status badges, complete edit wizard for all data, per-step preview modal
+
+### What Worked
+- Resend for transactional email: simple API, fast to set up, zero infrastructure
+- Draft-based wizard architecture: onboarding_draft table as source of truth survives page reloads and tab closes
+- Per-request supabaseAdmin.auth.getUser(token) pattern: JWT verification at every Route Handler boundary
+- Gap-closure plan approach: inserting 34-11, 34-12, 35-10, 35-11 mid-phase caught UAT issues without disrupting original phase numbering
+- Audit-before-close workflow: the pre-merge audit surfaced the two blockers (update-paikka 403, URL step-skip) that would have affected real users
+
+### What Was Inefficient
+- Two wizard orchestrators (OnboardingWizardInner + EditWizardInner) duplicated all routing/guard/draft-fetch logic — every bug needed two fixes
+- REQUIREMENTS.md checkboxes still not updated during execution (recurring pattern — now 7 milestones in a row)
+- Phase 33 and Phase 36 completed without running gsd-verifier — missing VERIFICATION.md discovered at audit time
+- Supabase Storage RLS research: SECURITY DEFINER approach only discovered after initial direct policy attempts failed
+
+### Patterns Established
+- JWT verification at Route Handler boundary: `supabaseAdmin.auth.getUser(token)` before trusting any client-supplied user_id
+- Storage RLS on hosted Supabase requires SECURITY DEFINER function in public schema (storage schema is forbidden)
+- Draft table as wizard state: `onboarding_draft` rows scoped by `business_account_id + paikka_id` — supports multi-venue accounts
+- paikka_id in URL for wizard routing: enables resuming and prevents cross-venue contamination when querying drafts
+- Reapply pattern: UPDATE existing rejected row to pending (not INSERT new row — avoids composite UNIQUE constraint violation)
+
+### Key Lessons
+1. Two orchestrators for one flow is a maintenance debt trap — the second time you fix a bug in both is the time to merge them
+2. Run gsd-verifier immediately after UAT, not at milestone close — missing VERIFICATION.md creates audit gaps
+3. Hosted Supabase Storage RLS: you cannot write policies that reference the storage schema directly; SECURITY DEFINER in public schema is the required pattern
+4. Audit-before-close is worth the time: both blockers found (URL step-skip + update-paikka 403) were silent failures visible to users, not just dev-only edge cases
+5. REQUIREMENTS.md checkboxes: at 7 milestones of non-compliance, accept that the archive + VERIFICATION.md are the canonical "done" records — not worth fixing the workflow
+
+### Cost Observations
+- Model mix: Sonnet 4.6 (execution and this session), Opus used for heavier planning phases
+- Sessions: ~7 days, multiple sessions per day during execution
+- Notable: 6 parallel phases with many cross-phase dependencies; gap-closure plans kept execution clean without disrupting phase numbering
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -251,6 +298,7 @@
 | v1.4 | 4 | 11 | 1 day | Kertakäynti filter, scroll restore, TODO list, profile interests + AI personalization |
 | v1.5 | 4 | 9 | 2 days | Outfit font, blue sport pins + orbit glow, CalloutCard letter animation, TODO overlay, FilterCarouselPill |
 | v1.6 | 4 | 15 | 2 days | i18n FI/EN, SVG icon registry, PaikkaSheet hero redesign, nav/filter/sheet bugfixes |
+| v1.7 | 6 | 44 | 7 days | Full business portal: DB schema, registration, claim/create, 6-step wizard, admin approval, control panel |
 
 ### Cumulative Quality
 
@@ -261,6 +309,7 @@
 | v1.2 | lib/reviewUtils 9 tests (TDD) | reviewUtils (resolveDisplayName, computeAvgRating) | 0 major |
 | v1.3–v1.5 | no new lib tests | — | framer-motion patterns only |
 | v1.6 | lib/i18nUtils tests, compile-time key coverage assertion | i18nUtils | next-intl |
+| v1.7 | lib/onboardingUtils tests (Wave 0) | onboardingUtils | resend |
 
 ### Top Lessons (Verified Across Milestones)
 

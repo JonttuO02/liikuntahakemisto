@@ -1,5 +1,36 @@
 # Milestones — Liikuntahakemisto
 
+## v1.7 Yritysportaali — 2026-06-11
+
+**Shipped:** 2026-06-11
+**Phases:** 6 (phases 31–36) | **Plans:** 44
+**Timeline:** 2026-06-04 → 2026-06-11 (7 days)
+**Commits:** 297 | **Files changed:** 63 | **Lines:** +7978 / -315
+
+### What Shipped
+
+1. **DB-skeema & Storage-perusta** — `business_accounts`, `business_paikka_links`, `business_managed`, `is_admin`, `business-media` Storage-bucket RLS:llä; Storage SECURITY DEFINER -funktiopaterni hosted Supabaselle
+2. **Yritysrekisteröinti & auth** — `/business/rekisteroidy` rekisteröintilomake, JWT-varmennettu `/api/business/register`, AuthModal-ohjaus `/business`-sivulle kirjautuneille yrityksille
+3. **Claim & paikan luonti** — Hae olemassa oleva paikka tai luo uusi; `published=false` uusille paikoille admin-hyväksyntään asti; `is_claimed`-kenttä; smoke-testi läpäisty
+4. **6-vaiheinen onboarding-velhou** — Paikka → Mediat (S3-kuvat + logo) → Hinnasto → Aukioloajat → Yhteystiedot → Esikatselu; draft-persistointi Supabasessa; step-forward URL-suoja; image_url + logo_url pipeline
+5. **Admin-hyväksyntäjärjestelmä** — Resend-sähköposti-ilmoitukset adminille ja yritykselle; `/admin`-sivu hakemuksineen; hyväksy/hylkää syyllä; Hae uudelleen -toiminto; is_admin-suojaus
+6. **Hallintapaneeli** — `/business` paikkalistaus tilamerkein; koko edit-velhou kaikille paikkatiedoille; PreviewModal PaikkaKortti+DiagonaalKortti+PaikkaSheet esikatselulla
+
+### Known Deferred Items at Close
+
+- Phase 33 ja 36: puuttuu VERIFICATION.md (toteutus vahvistettu smoke test / UAT -testeillä)
+- `claim-paikka`-reitti ei aseta `business_managed=true` — sync-ikkuna olemassa kunnes onboarding-submit ajaa
+- Wizard-orkestraattorien duplikaatio (OnboardingWizardInner + EditWizardInner) — v1.8 siivous
+- `/admin` ei server-side middlewarea — pelkkä client-side + API 403 -suojaus
+
+### Archives
+
+- `.planning/milestones/v1.7-ROADMAP.md`
+- `.planning/milestones/v1.7-REQUIREMENTS.md`
+- `.planning/v1.7-MILESTONE-AUDIT.md`
+
+---
+
 ## v1.0 MVP — 2026-05-21
 
 **Shipped:** 2026-05-21

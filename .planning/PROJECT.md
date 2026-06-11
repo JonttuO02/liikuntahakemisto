@@ -4,22 +4,9 @@
 
 Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
 
-## Current Milestone: v1.7 Yritysportaali
+## Shipped: v1.7 Yritysportaali (2026-06-11)
 
-**Goal:** Yritykset voivat rekisteröityä, käydä ohjatun onboarding-velhon (kuvat, logo, hinnasto, aukioloajat, yhteystiedot), nähdä esikatselun, ja saada admin-hyväksynnän — jonka jälkeen heillä on hallintapaneeli (/business) oman paikkatietonsa ylläpitoon.
-
-**Target features:**
-- Business Auth: Supabase Auth + `business_accounts` + `business_paikka_links`; useita paikkoja per tili
-- Claim tai luo paikka: hae olemassa oleva tai luo uusi; claim-paikka pysyy näkyvänä, uusi paikka pending
-- Ohjattu onboarding-velhou (6 vaihetta): paikka → kuvat+logo → hinnasto → aukioloajat → yhteystiedot → esikatselu
-- Admin-hyväksyntä: email-ilmoitus + `/admin`-sivu; pending/approved/rejected per paikka
-- Hallintapaneeli (`/business`): muokkaa kaikkia tietoja, esikatselu, useamman paikan lista
-- Yrityksen data ylikirjoittaa Google Places -datan; `business_managed`-flag suojaa sync-skriptiltä
-- Kuvat Supabase Storageen (bucket: `business-media`); RLS-suojaus per yritys
-
-## Shipped: Phase 32 — Yritysrekisteröinti & auth (2026-06-05)
-
-**Delivered:** Business i18n namespace (15 keys, FI+EN), /business stub Server Component, POST /api/business/register Route Handler (JWT-verified via supabaseAdmin.auth.getUser, atomicity rollback via deleteUser), /business/rekisteroidy registration form (signUp + JWT-authenticated Route Handler call), AuthModal SIGNED_IN useEffect extended with async business_accounts query + conditional router.push('/business') for business users. BIZ-01 and BIZ-03 complete.
+**Delivered:** Täysi yritysportaali — business_accounts + business_paikka_links + business-media Storage; rekisteröintilomake + JWT-varmennettu API + AuthModal-ohjaus; claim/create-paikka + published=false gating; 6-vaiheinen onboarding-velhou draft-persistoinnilla + kuva/logo-uploadilla + step-forward URL-suojalla; Resend-sähköposti-ilmoitukset + /admin-panel + approve/reject/reapply; /business hallintapaneeli paikkalistauksineen, muokkausvelhoineen ja esikatselulla.
 
 ## Shipped: v1.6 Kielituki, Ikonit & Sheet-redesign (2026-06-04)
 
@@ -183,19 +170,35 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ I18N-02: Valittu kieli tallennetaan `NEXT_LOCALE`-cookieen ja säilyy sivulatausten välillä — v1.6
 - ✓ I18N-03: Kaikki UI-tekstitykset näytetään valitulla kielellä; kartta/filtterivalinnat säilyvät — v1.6
 
-### Active (v1.7)
+### Validated (v1.7)
 
-- [ ] **BIZ-01**: Yritys voi rekisteröityä palveluun erillisellä lomakkeella (yritysnimi, sähköposti, salasana)
-- [ ] **BIZ-02**: `business_accounts` + `business_paikka_links` -taulut; yksi tili hallitsee useita paikkoja
-- [ ] **BIZ-03**: Kirjautunut yritys ohjataan automaattisesti `/business`-hallintapaneeliin
-- [ ] **CLAIM-01**: Yritys hakee olemassa olevan paikan nimellä/osoitteella ja lähettää claim-pyynnön
-- [ ] **CLAIM-02**: Jos paikkaa ei löydy, yritys luo uuden paikan
-- [ ] **CLAIM-03**: Claim-paikka pysyy näkyvänä; uusi paikka piilotettu kunnes admin hyväksyy
-- [ ] **ONBOARD-01–07**: Vaiheistettu 6-vaiheen onboarding-velhou (paikka → mediat → hinnasto → aukioloajat → yhteystiedot → esikatselu)
-- [ ] **ADMIN-01–05**: Admin-hyväksyntä email + /admin-sivu; is_admin-suojaus
-- [ ] **BIZPANEL-01–03**: Hallintapaneeli /business: paikkalistaus, muokkaus, esikatselu
-- [ ] **DATA-09**: `business_managed`-boolean; sync-skripti ohittaa managed-paikat
-- [ ] **DATA-10**: Supabase Storage `business-media`-bucket; RLS per yritys
+- ✓ **BIZ-01**: Yritys voi rekisteröityä palveluun erillisellä lomakkeella — v1.7
+- ✓ **BIZ-02**: `business_accounts` + `business_paikka_links`; yksi tili, useita paikkoja — v1.7
+- ✓ **BIZ-03**: Kirjautunut yritys ohjataan automaattisesti `/business`-hallintapaneeliin — v1.7
+- ✓ **CLAIM-01**: Yritys hakee olemassa olevan paikan nimellä/osoitteella ja lähettää claim-pyynnön — v1.7
+- ✓ **CLAIM-02**: Jos paikkaa ei löydy, yritys luo uuden paikan — v1.7
+- ✓ **CLAIM-03**: Claim-paikka pysyy näkyvänä; uusi paikka piilotettu kunnes admin hyväksyy — v1.7
+- ✓ **ONBOARD-01**: Automaattinen onboarding-velhou ensimmäisellä kirjautumisella; ei voi ohittaa — v1.7
+- ✓ **ONBOARD-02**: Vaihe 1 — Paikka: hae tai luo; esitäytetty nimi/osoite — v1.7
+- ✓ **ONBOARD-03**: Vaihe 2 — Mediat: 1–5 kuvaa + logo Supabase Storageen; edistymispalkki — v1.7
+- ✓ **ONBOARD-04**: Vaihe 3 — Hinnasto kategorioittain; vähintään yksi hintarivi pakollinen — v1.7
+- ✓ **ONBOARD-05**: Vaihe 4 — Aukioloajat; Google Places -data esitäytettynä — v1.7
+- ✓ **ONBOARD-06**: Vaihe 5 — Yhteystiedot: puhelin, sähköposti, website, kuvaus (max 300 merkkiä) — v1.7
+- ✓ **ONBOARD-07**: Vaihe 6 — Esikatselu: PaikkaKortti, DiagonaalKortti, PaikkaSheet — v1.7
+- ✓ **ADMIN-01**: Rekisteröityminen + claim-pyyntö lähettää sähköposti-ilmoituksen adminille — v1.7
+- ✓ **ADMIN-02**: `/admin`-sivu listaa odottavat hakemukset: tiedot + paikka + kuvat — v1.7
+- ✓ **ADMIN-03**: Admin hyväksyy tai hylkää syyllä; yritys voi hakea uudelleen — v1.7
+- ✓ **ADMIN-04**: Hyväksytty/hylätty yritys saa vahvistussähköpostin — v1.7
+- ✓ **ADMIN-05**: `/admin` näkyy vain `is_admin = true` -käyttäjälle — v1.7
+- ✓ **BIZPANEL-01**: `/business` näyttää yrityksen paikat ja niiden tilan — v1.7
+- ✓ **BIZPANEL-02**: Yritys muokkaa kaikkia onboarding-tietoja hallintapaneelista; muutokset heti — v1.7
+- ✓ **BIZPANEL-03**: Hallintapaneelissa esikatselu-näkymä: PaikkaKortti, DiagonaalKortti, PaikkaSheet — v1.7
+- ✓ **DATA-09**: `business_managed`-boolean; sync-skripti ohittaa managed-paikat — v1.7
+- ✓ **DATA-10**: Supabase Storage `business-media`-bucket; RLS per yritys — v1.7
+
+### Active (v1.8)
+
+*(Määritellään `/gsd:new-milestone` -komennolla)*
 
 ### Future (deferred from v1.1 + v1.7)
 
@@ -218,7 +221,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ## Context
 
-**Nykytila:** v1.6 toimitettu 2026-06-04. Kaikki 21 v1.6-vaatimusta toteutettu. Sovellus tukee nyt FI/EN kielitukea (next-intl, NEXT_LOCALE-cookie); kielivalitsin profiilisivulla. Kaikki laji-ikonit tulevat yhdestä `lib/sportIcons.tsx` -rekisteristä (Lucide poistettu). PaikkaSheet uudistettu hero-karusellilla ja hinnastolla; kortit saivat placeholderit oikeille kuville. Milestone siivosi navigaation (/suosikit poistettu, TO DO toolbarista pois) ja korjasi useita filtteri/sheet-bugeja.
+**Nykytila:** v1.7 Yritysportaali toimitettu 2026-06-11. Kaikki 23 v1.7-vaatimusta toteutettu. Sovellus on nyt täydellinen yritysportaali: yritys voi rekisteröityä, ottaa paikan haltuunsa tai luoda uuden, käydä 6-vaiheisen onboarding-velhon, odottaa admin-hyväksyntää, ja ylläpitää tietojaan hallintapaneelista. 44 plania, 297 committia, 7 päivää.
 
 **Data-arkkitehtuuri:** Google Places API hakee automaattisesti aukioloajat → upsertit Supabaseen. Kertakäyntihinnat manuaalisesti top 20 palvelulle. AI-widget: Claude Haiku + Open-Meteo, sessionStorage-cache per kalenteripäivä + per kaupunki. Supabase Auth käyttäjätaulut + suosikit (user_id → paikka_id). Sync-skripti tukee ?kaupunki= parametria Helsinki/Turku/Tampere-datalle.
 
@@ -270,6 +273,13 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 | Kielivalitsin profiilisivulla ainoastaan | Eksplisiittinen vaihto — ei auto-detection; vähemmän kompleksisuutta | ✓ Phase 30 |
 | Math.min(fullH*0.82, fullH-108) sheet height | 108px gap pitää TODO-painikkeen (100px + 8px safety) aina näkyvissä | ✓ Phase 27 |
 | Compile-time key coverage assertion (IN-05) | en.json kattaa kaikki fi.json-avaimet — löytyy build-ajassa, ei runtime | ✓ Phase 30 |
+| Business auth sama Supabase Auth | Ei erillistä Supabase-projektia; rooli `business_accounts`-taulusta, ei auth.users.metadata | ✓ Phase 31 |
+| Storage RLS: SECURITY DEFINER julkisessa skeemassa | Hosted Supabase ei salli storage-skeeman suoraa viittausta politiikoissa | ✓ Phase 31 |
+| JWT verify ennen Route Handler -logiikkaa | `supabaseAdmin.auth.getUser(token)` — ei luoteta client-supplied user_id:hen | ✓ Phase 32 |
+| Draft table wizard-tilaksi | `onboarding_draft` paikka_id-scopettuna — tukee multi-venue-tilejä, kestää sivulataukset | ✓ Phase 34 |
+| Admin-hyväksyntä ensimmäiseen rekisteröintiin; muokkaukset heti | Ei re-approval -vaatimusta tavallisille muutoksille — vähemmän kitkaaa | ✓ Phase 35 |
+| Reapply: UPDATE rejected → pending (ei INSERT) | Composite UNIQUE rajoite business_paikka_links:ssä — uusi INSERT rikkoisi sen | ✓ Phase 35 |
+| paikka_id URL-parametrina edit/onboarding-velhossa | Estää cross-venue draft -kontaminaation; mahdollistaa suoran linkityksen | ✓ Phase 36 |
 
 ---
 
@@ -292,4 +302,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-05 — v1.7 milestone started (Yritysportaali)*
+*Last updated: 2026-06-11 — v1.7 milestone complete (Yritysportaali shipped)*

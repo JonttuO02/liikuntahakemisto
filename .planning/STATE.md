@@ -2,59 +2,69 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Yritysportaali
-status: completed
-last_updated: "2026-06-11T00:00:00Z"
-last_activity: 2026-06-11 -- Phase 36 UAT complete — 9/9 passed, 3 bugs fixed (auth guard, media grid, preview state)
+status: archived
+last_updated: "2026-06-11T13:45:00.000Z"
+last_activity: 2026-06-11 -- v1.7 Yritysportaali milestone complete and archived
 progress:
   total_phases: 6
-  completed_phases: 5
-  total_plans: 39
+  completed_phases: 6
+  total_plans: 44
   completed_plans: 44
-  percent: 83
+  percent: 100
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 36 (hallintapaneeli) — COMPLETE (7/7 plans)
-Status: All plans complete. Phase 36 done — v1.7 Yritysportaali milestone achieved.
-Last activity: 2026-06-10 -- Phase 36 (Hallintapaneeli) all 7 plans complete
+Milestone: v1.7 Yritysportaali — **ARCHIVED**
+Status: Milestone complete. All 6 phases (31–36), 44 plans done. Ready for next milestone.
+Last activity: 2026-06-11 — v1.7 milestone archived, git tag v1.7 created
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-05)
+See: .planning/PROJECT.md (updated 2026-06-11)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 35 — admin-hyväksyntäjärjestelmä
+**Current focus:** Planning next milestone (v1.8) — run `/gsd:new-milestone`
 
-## Active Decisions (carried to v1.7)
+## Active Decisions (carried forward)
 
 - URL routing: `/` and `/?nakyma=kartta` both render Etusivu — `?nakyma=kartta` is a dead parameter
 - GPS: client-side only, never URL params
 - AI widget: never SSR, use `/api/saasuositus` Route Handler
 - Supabase writes: service role key only; anon key is read-only after RLS
-- CSS animations on AdvancedMarker: transform/opacity ONLY — no box-shadow, background, filter
-- SVG icons: path-string approach in lib/sportIcons.tsx, no @svgr/webpack (Phase 28)
-- i18n: next-intl without-routing + NEXT_LOCALE cookie, not localStorage (Phase 30)
+- CSS animations on AdvancedMarker: transform/opacity ONLY
+- SVG icons: path-string approach in lib/sportIcons.tsx
+- i18n: next-intl without-routing + NEXT_LOCALE cookie
 - Business auth: same Supabase Auth as regular users; role differentiated via business_accounts table
 - Business media: Supabase Storage bucket `business-media`; RLS per yritys via business_paikka_links
 - Business data priority: yrityksen data ylikirjoittaa Google Places -datan; business_managed-flag suojaa sync-skriptiltä
-- Admin approval: required for initial registration; edits after approval are instant (no re-approval)
-- Claim visibility: claim-paikka pysyy näkyvänä; uusi paikka hidden (published=false) until approved
+- Admin approval: required for initial registration; edits after approval are instant
+- Claim visibility: claim-paikka pysyy näkyvänä; uusi paikka hidden until approved
 - URLs: /business for panel, /business/onboarding for wizard, /admin for admin
-- No payments in v1.7; no separate Supabase project
+- JWT verification: supabaseAdmin.auth.getUser(token) at every Route Handler boundary
+- Storage RLS: SECURITY DEFINER function in public schema (storage schema forbidden on hosted Supabase)
 
-## Phase Sequence
+## Phase Sequence (v1.7 — all complete)
 
-| Phase | Name | Requirements | Status |
-|-------|------|--------------|--------|
-| 31 | DB-skeema & Storage-perusta | BIZ-02, DATA-09, DATA-10 | Complete |
-| 32 | Yritysrekisteröinti & auth | BIZ-01, BIZ-03 | Planned (3 plans) |
-| 33 | Claim & paikan luonti | CLAIM-01, CLAIM-02, CLAIM-03 | Complete |
-| 34 | Onboarding-velhou | ONBOARD-01–07 | Planned (9 plans) |
-| 35 | Admin-hyväksyntäjärjestelmä | ADMIN-01–05 | Complete |
-| 36 | Hallintapaneeli | BIZPANEL-01–03 | Complete |
+| Phase | Name | Status |
+|-------|------|--------|
+| 31 | DB-skeema & Storage-perusta | ✅ Complete |
+| 32 | Yritysrekisteröinti & auth | ✅ Complete |
+| 33 | Claim & paikan luonti | ✅ Complete |
+| 34 | Onboarding-velhou | ✅ Complete |
+| 35 | Admin-hyväksyntäjärjestelmä | ✅ Complete |
+| 36 | Hallintapaneeli | ✅ Complete |
+
+## Known Tech Debt (v1.8 backlog)
+
+- Phase 33: no VERIFICATION.md (smoke-tested only)
+- Phase 36: no VERIFICATION.md (UAT passed only)
+- claim-paikka route missing business_managed=true UPDATE (sync window)
+- Wizard orchestrator duplication: OnboardingWizardInner + EditWizardInner share steps but duplicate routing/guard/draft-fetch logic
+- onboarding_completed column written but never read (dead data)
+- /admin no server-side middleware
 
 ## Blockers/Concerns
 
@@ -62,5 +72,5 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-11
-Resume: Phase 36 UAT complete, v1.7 Yritysportaali milestone achieved. Ready for /gsd:complete-milestone or next project.
+Last session: 2026-06-11T13:45:00.000Z
+Resume: v1.7 archived. Run `/gsd:new-milestone` to start v1.8 planning.
