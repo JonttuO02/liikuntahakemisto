@@ -411,26 +411,55 @@ export default function StepMediat({
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <UploadDropZone
-              label={t('imagesDropLabel')}
-              allowMultiple={true}
-              maxFileSizeMB={5}
-              maxFiles={5}
-              selectedFiles={photoFiles}
-              onFilesSelected={handlePhotoFilesSelected}
-              onRemove={removePhotoFile}
+            {/* Hidden file input — triggered by the button below */}
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="sr-only"
+              onChange={(e) => {
+                if (e.target.files) handlePhotoFilesSelected(Array.from(e.target.files))
+                e.target.value = ''
+              }}
             />
 
-            {/* Onboarding mode: existing photo thumbnails */}
-            {existingPhotoUrls.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
+            {/* Add photos button */}
+            {!photosAtMax ? (
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                className="border-2 border-dashed border-[rgba(0,0,0,0.12)] hover:border-[rgba(0,0,0,0.25)] rounded-xl px-4 py-3 text-sm text-[rgba(17,17,17,0.45)] [transition:border-color_150ms_var(--ease-out)]"
+              >
+                {t('imagesDropLabel')}
+              </button>
+            ) : (
+              <p className="text-sm text-[rgba(17,17,17,0.45)]">{t('photoMaxReached')}</p>
+            )}
+
+            {/* Unified photo grid — existing draft photos + staged files, same size, all deletable */}
+            {(existingPhotoUrls.length > 0 || photoFiles.length > 0) && (
+              <div className="flex flex-wrap gap-2">
                 {existingPhotoUrls.map((url, i) => (
                   <div key={url} className="relative">
-                    <img src={url} alt="" className="w-14 h-14 object-cover rounded-lg border border-[rgba(0,0,0,0.07)]" />
+                    <img src={url} alt="" className="w-16 h-16 object-cover rounded-lg" />
                     <button
                       type="button"
                       onClick={() => setExistingPhotoUrls(prev => prev.filter((_, idx) => idx !== i))}
-                      className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#111111] text-white text-[10px] flex items-center justify-center leading-none"
+                      className="absolute -top-1 -right-1 bg-[#111111] text-white rounded-full w-5 h-5 text-xs flex items-center justify-center leading-none"
+                      aria-label="Poista kuva"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {photoFiles.map((file, i) => (
+                  <div key={file.name + i} className="relative">
+                    <img src={stagedPreviewUrls[i]} alt={file.name} className="w-16 h-16 object-cover rounded-lg" />
+                    <button
+                      type="button"
+                      onClick={() => removePhotoFile(i)}
+                      className="absolute -top-1 -right-1 bg-[#111111] text-white rounded-full w-5 h-5 text-xs flex items-center justify-center leading-none"
                       aria-label="Poista kuva"
                     >
                       ×
