@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
 
 export async function POST(request: Request) {
+  // D-02: Reject oversized bodies (64 KB cap — valid aukioloajat is ~200 bytes)
+  const contentLength = request.headers.get('content-length')
+  if (contentLength && parseInt(contentLength, 10) > 65536) {
+    return NextResponse.json({ error: 'Request body too large' }, { status: 413 })
+  }
+
   // Auth: verify JWT from Authorization header — mirrors register/route.ts exactly.
   // supabaseAdmin bypasses RLS, so we must verify ownership explicitly below.
   const authHeader = request.headers.get('Authorization')
@@ -29,12 +35,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid paikka_id' }, { status: 400 })
   }
 
-  // Ownership check: verify the authenticated user owns this paikka
+  // E-01: Ownership check — only approved claimants may edit live venue data.
+  // Pending and rejected claimants are blocked here even if a link row exists.
   const { data: linkRow, error: linkError } = await supabaseAdmin
     .from('business_paikka_links')
     .select('paikka_id')
     .eq('business_account_id', user.id)
     .eq('paikka_id', paikka_id)
+    .eq('claim_status', 'approved')
     .maybeSingle()
 
   if (linkError) {
@@ -52,6 +60,10 @@ export async function POST(request: Request) {
     if (d.photo_urls !== undefined) {
       if (!Array.isArray(d.photo_urls) || d.photo_urls.length > 5) {
         return NextResponse.json({ error: 'photo_urls must be an array with max 5 items' }, { status: 400 })
+      }
+      // T-03: validate each item is a string (prevents non-string injection into photo_urls array)
+      if (d.photo_urls.some(url => typeof url !== 'string')) {
+        return NextResponse.json({ error: 'photo_urls items must be strings' }, { status: 400 })
       }
     }
     updatePayload = {
@@ -79,12 +91,46 @@ export async function POST(request: Request) {
       hinta_kuvaus: hinta_kuvaus ?? null,
     }
   } else if (section === 'aukioloajat') {
-    // Accept data as a JSONB-compatible object (Record of day keys to { open, close })
-    updatePayload = { aukioloajat: data }
+    // T-02: validate aukioloajat structure — must be an object whose values each
+    // have { open: string, close: string } shape. Reject arrays and primitives.
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      return NextResponse.json({ error: 'aukioloajat must be an object' }, { status: 400 })
+    }
+    const entries = Object.entries(data as Record<string, unknown>)
+    if (entries.length > 14) {
+      return NextResponse.json({ error: 'aukioloajat has too many keys' }, { status: 400 })
+    }
+    const validated: Record<string, { open: string; close: string }> = {}
+    for (const [key, val] of entries) {
+      if (typeof val !== 'object' || val === null || Array.isArray(val)) {
+        return NextResponse.json({ error: `aukioloajat.${key} must be an object` }, { status: 400 })
+      }
+      const entry = val as Record<string, unknown>
+      if (typeof entry.open !== 'string' || typeof entry.close !== 'string') {
+        return NextResponse.json({ error: `aukioloajat.${key} must have open and close string fields` }, { status: 400 })
+      }
+      validated[key] = { open: entry.open.slice(0, 10), close: entry.close.slice(0, 10) }
+    }
+    updatePayload = { aukioloajat: validated }
   } else if (section === 'yhteystiedot') {
     const d = data as { puhelin?: string; varauslinkki?: string; kuvaus?: string }
     const puhelin = typeof d.puhelin === 'string' ? d.puhelin.trim() : undefined
-    const varauslinkki = typeof d.varauslinkki === 'string' ? d.varauslinkki.trim() : undefined
+    // T-04: Validate varauslinkki is http/https only — prevents javascript: XSS on public profile page.
+    let varauslinkki: string | undefined
+    if (typeof d.varauslinkki === 'string') {
+      const trimmed = d.varauslinkki.trim()
+      if (trimmed) {
+        try {
+          const parsed = new URL(trimmed)
+          if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return NextResponse.json({ error: 'varauslinkki must use http or https' }, { status: 400 })
+          }
+          varauslinkki = trimmed
+        } catch {
+          return NextResponse.json({ error: 'varauslinkki must be a valid URL' }, { status: 400 })
+        }
+      }
+    }
     // Cap kuvaus at 300 chars server-side
     const kuvaus = typeof d.kuvaus === 'string' ? d.kuvaus.trim().slice(0, 300) : undefined
     updatePayload = { puhelin, varauslinkki, kuvaus }
