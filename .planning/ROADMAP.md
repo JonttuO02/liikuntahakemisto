@@ -118,13 +118,13 @@ Full archive: `.planning/milestones/v1.7-ROADMAP.md`
 
 ---
 
-### 🚧 v1.8 Yritysportaali v2 — Julkistaminen & UX (In Progress)
+### ✅ v1.8 Yritysportaali v2 — Julkistaminen & UX (shipped 2026-06-11)
 
 **Milestone Goal:** Viimeistellään yritysportaali — business-paikat julkisiksi hyväksynnän jälkeen, erillinen business-käyttäjäkokemus, ja v1.7 tech debt siivotaan.
 
 - [x] **Phase 37: Tech Debt Foundation** — Data-integriteetti ja turvallisuusaukot korjataan; RSC guard kaikille /business-reiteille *(6 plans, Wave 1×4 + Wave 2×2)* (completed 2026-06-11)
 - [x] **Phase 38: Business Data Publication** — Postgres-triggeri atomiselle hyväksynnälle; verifikaatio-tikki kaikissa korteissa *(3 plans, Wave 1×2 + Wave 2×1)* (completed 2026-06-11)
-- [ ] **Phase 39: Business User UX** — Yritysprofiilille oma etusivu, karttanäkymä ja profiilisivu ilman consumer-featureja
+- [~] **Phase 39: Business User UX** — DEFERRED to v1.9. Business/consumer separation requires a full architectural redesign (separate auth flows) rather than incremental UX patches on the current single-auth structure.
 
 ## Phase Details
 
