@@ -25,9 +25,8 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser() // refreshes session, updates cookie
 
   const isProtectedPath =
-    (request.nextUrl.pathname.startsWith('/business') &&
-     !request.nextUrl.pathname.startsWith('/business/rekisteroidy')) ||
-    request.nextUrl.pathname.startsWith('/admin')
+    request.nextUrl.pathname.startsWith('/business') &&
+    !request.nextUrl.pathname.startsWith('/business/rekisteroidy')
   if (isProtectedPath && !user) {
     return NextResponse.redirect(new URL('/', request.url))
   }

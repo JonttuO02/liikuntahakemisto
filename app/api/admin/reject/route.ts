@@ -58,6 +58,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Update failed', detail: updateError.message }, { status: 500 })
   }
 
+  // Reset is_claimed so the venue can be claimed by another business (non-critical — log but don't rollback)
+  const { error: resetError } = await supabaseAdmin
+    .from('liikuntapaikat')
+    .update({ is_claimed: false })
+    .eq('id', link.paikka_id)
+  if (resetError) {
+    console.error('[admin/reject] is_claimed reset failed (non-critical):', resetError.message)
+  }
+
   // Step 6: send rejection email to business (non-critical)
   try {
     const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(link.business_account_id)

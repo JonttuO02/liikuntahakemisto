@@ -45,13 +45,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Application is not pending' }, { status: 409 })
   }
 
-  // Step 5: set claim_status = 'approved'
-  const { error: updateLinkError } = await supabaseAdmin
+  // Step 5: set claim_status = 'approved' — filter on pending prevents double-approval under concurrent requests
+  const { error: updateLinkError, count } = await supabaseAdmin
     .from('business_paikka_links')
-    .update({ claim_status: 'approved' })
+    .update({ claim_status: 'approved' }, { count: 'exact' })
     .eq('id', linkId)
+    .eq('claim_status', 'pending')
   if (updateLinkError) {
     return NextResponse.json({ error: 'Update failed', detail: updateLinkError.message }, { status: 500 })
+  }
+  if (!count) {
+    return NextResponse.json({ error: 'Application already processed' }, { status: 409 })
   }
 
   // Step 6: send confirmation email to business (non-critical)

@@ -13,6 +13,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Verify caller has a business_accounts row — prevents confusing FK errors for non-business users
+  const { data: bizAccount } = await supabaseAdmin
+    .from('business_accounts')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (!bizAccount) {
+    return NextResponse.json({ error: 'No business account' }, { status: 403 })
+  }
+
   // Parse and validate request body
   let paikkaId: number
   try {

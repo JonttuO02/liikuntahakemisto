@@ -5,6 +5,11 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM = process.env.EMAIL_FROM ?? 'onboarding@resend.dev'
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'joona.orava@gmail.com'
 
+// Strip CR/LF from strings used in email Subject headers to prevent header injection.
+function sub(s: string): string {
+  return s.replace(/[\r\n]/g, ' ')
+}
+
 // Escape user-supplied strings before interpolating into HTML to prevent XSS.
 function esc(s: string): string {
   return s
@@ -23,7 +28,7 @@ export async function sendAdminNotificationEmail(params: {
   applicationId: number
   submittedAt: string
 }) {
-  const subject = `[Aktiivi] Uusi hakemus: ${params.companyName} — ${params.venueName}`
+  const subject = `[Aktiivi] Uusi hakemus: ${sub(params.companyName)} — ${sub(params.venueName)}`
   const html = `
     <h2>Uusi ${params.linkType === 'claim' ? 'haltuunottopyyntö' : 'uusi paikka -hakemus'}</h2>
     <p><strong>Yritys:</strong> ${esc(params.companyName)}</p>
@@ -41,7 +46,7 @@ export async function sendApprovalEmail(to: string, params: {
   companyName: string
   venueName: string
 }) {
-  const subject = `[Aktiivi] Hakemuksesi on hyväksytty — ${params.venueName}`
+  const subject = `[Aktiivi] Hakemuksesi on hyväksytty — ${sub(params.venueName)}`
   const html = `
     <h2>Hakemuksesi on hyväksytty!</h2>
     <p>Hei ${esc(params.companyName)},</p>
@@ -57,7 +62,7 @@ export async function sendRejectionEmail(to: string, params: {
   venueName: string
   reason: string
 }) {
-  const subject = `[Aktiivi] Hakemuksesi on hylätty — ${params.venueName}`
+  const subject = `[Aktiivi] Hakemuksesi on hylätty — ${sub(params.venueName)}`
   const html = `
     <h2>Hakemuksesi on hylätty</h2>
     <p>Hei ${esc(params.companyName)},</p>
