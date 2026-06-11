@@ -56,10 +56,7 @@ export default function OnboardingWizardInner() {
     async function loadDraft() {
       const supabase = createBrowserSupabase()
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        setLoading(false)
-        return
-      }
+      if (!user) return // layout.tsx RSC guard prevents this; guard here for TypeScript narrowing
 
       // Try to get paikka_id from URL param first
       const urlPaikkaId = searchParams.get('paikka_id')
