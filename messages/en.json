@@ -207,7 +207,14 @@
     "muokkaaCta": "Edit",
     "esikatseluCta": "Preview",
     "photoDeleteAlt": "Delete photo",
-    "photoMaxReached": "Max 5 images added"
+    "photoMaxReached": "Max 5 images added",
+    "loginTitle": "Sign in to business account",
+    "loginCta": "Sign in",
+    "loggingIn": "Signing in...",
+    "loginEmailPlaceholder": "Email address",
+    "loginPasswordPlaceholder": "Password",
+    "noAccountLink": "No account? Register",
+    "errorInvalidCredentials": "Invalid email or password."
   },
   "Admin": {
     "pageTitle": "Admin — Pending applications",
