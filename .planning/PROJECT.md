@@ -1,13 +1,14 @@
 # Liikuntahakemisto
 
-## Current Milestone: v1.8 Yritysportaali v2 — Julkistaminen & UX
+## Current Milestone: v1.9 Auth-Separaatio & Cleanup
 
-**Goal:** Viimeistellään yritysportaali — business-paikat julkisiksi hyväksynnän jälkeen, erillinen business-käyttäjäkokemus, ja v1.7 tech debt siivotaan.
+**Goal:** Eriytetään consumer- ja business-puolen auth-sessiot täysin toisistaan cookie-nimiavaruuksilla ja siistitään v1.7–v1.8 tech debt.
 
 **Target features:**
-- Tech debt: wizard-orkestrointi refaktorointi, claim business_managed=true, /admin server-side middleware, onboarding_completed siivous
-- Julkistaminen: admin-hyväksynnän jälkeen published=true + business data ylikirjoittaa Google Places -datan; verifikaatio-tikki paikan nimen vieressä kaikissa korteissa
-- Business UX: dashboard-etusivu kirjautuneelle yritykselle, "Avaa kartta" -nappi ilman consumer-featureja, /profiili ilman kiinnostuksenkohteita/kotikaupunkia business-käyttäjälle
+- Auth session -eristys: /business/* käyttää sb-biz-* cookieta, consumer-puoli käyttää normaalia sb-* cookieta; sessiot ovat täysin riippumattomia
+- Wizard-konsolidointi: OnboardingWizardInner + EditWizardInner yhdistetään yhdeksi WizardInner(mode: 'onboarding' | 'edit')
+- API-bugifixit: update-paikka 403-bugi (pending/rejected-muokkaus estetty virheellisesti), onboarding step-skip URL-bypass
+- Cleanup: onboarding_completed-kirjoitukset poistetaan, testitilit poistetaan
 
 ---
 
@@ -207,9 +208,9 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **DATA-09**: `business_managed`-boolean; sync-skripti ohittaa managed-paikat — v1.7
 - ✓ **DATA-10**: Supabase Storage `business-media`-bucket; RLS per yritys — v1.7
 
-### Active (v1.8)
+### Active (v1.9)
 
-*(Määritellään `/gsd:new-milestone` -komennolla)*
+*(Määritellään `REQUIREMENTS.md`:ssä)*
 
 ### Future (deferred from v1.1 + v1.7)
 
@@ -313,4 +314,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-11 — v1.8 milestone started (Yritysportaali v2 — Julkistaminen & UX)*
+*Last updated: 2026-06-11 — v1.9 milestone started (Auth-Separaatio & Cleanup)*

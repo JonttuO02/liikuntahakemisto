@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.9
-milestone_name: TBD — Business/Consumer Architecture Separation
-status: idle
-stopped_at: v1.8 closed; v1.9 not yet planned
+milestone_name: Auth-Separaatio & Cleanup
+status: planning
+stopped_at: Requirements defined; roadmap pending
 last_updated: "2026-06-11T00:00:00.000Z"
-last_activity: 2026-06-11 -- v1.8 closed; Phase 39 deferred to v1.9
+last_activity: 2026-06-11 -- v1.9 milestone started
 progress:
   total_phases: 0
   completed_phases: 0
@@ -18,30 +18,23 @@ progress:
 
 ## Current Position
 
-Milestone v1.8 complete (Phases 37 + 38 shipped). Phase 39 deferred.
-
-Ready to plan v1.9.
-
-## v1.8 Outcome
-
-- Phase 37: Tech debt + RSC auth guard ✅
-- Phase 38: Atomic approval trigger + verification badge ✅
-- Phase 38 review fixes: 7 code review findings fixed (CR-01..WR-04) ✅
-- Phase 39: DEFERRED — business/consumer UX patches skipped in favour of a full architectural redesign in v1.9
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-11 — Milestone v1.9 started
 
 ## v1.9 Direction
 
-**Core decision (2026-06-11):** Business and consumer sides should be fully separated applications with distinct login flows. The current architecture (same Supabase Auth, role via `business_accounts` table) was a v1.7 pragmatic choice. v1.9 will redesign this properly.
+**Core decision (2026-06-11):** Consumer- ja business-puolen auth-sessiot eriytetään cookie-nimiavaruuksilla. `/business/*`-reitit käyttävät `sb-biz-*`-cookiea, consumer-reitit käyttävät normaalia `sb-*`-cookiea. Sessiot ovat täysin riippumattomia — molempiin vaaditaan oma kirjautuminen.
 
-Key open questions for v1.9 planning:
-- Separate Supabase Auth users for business vs consumer, or same auth with hard UI separation?
-- Does `/` ever show content to business-account users, or is it consumer-only?
-- What happens to existing business accounts registered under the current single-auth model?
-- BIZUX-02, BIZUX-03, BIZUX-04, BIZUX-05 all fold into this redesign
+- Ei uusia ominaisuuksia — puhdas arkkitehtuuri- ja siivousmilestone
+- Testitilit poistetaan (ne ovat kaikki testitilejä, ei tuotantotietoja)
+- Phase 39 on seuraava numero (v1.8 päättyi 38:aan)
+- Ennen execution: committamattomat v1.8 review fixit pitää commitoida ensin
 
 ## Active Decisions (carried forward)
 
-- URL routing: `/` and `/?nakyma=kartta` both render Etusivu — `?nakyma=kartta` is a dead parameter
+- URL routing: `/` ja `/?nakyma=kartta` molemmat renderöivät Etusivun — `?nakyma=kartta` on kuollut parametri
 - GPS: client-side only, never URL params
 - AI widget: never SSR, use `/api/saasuositus` Route Handler
 - Supabase writes: service role key only; anon key is read-only after RLS
@@ -49,8 +42,9 @@ Key open questions for v1.9 planning:
 - JWT verification: supabaseAdmin.auth.getUser(token) at every Route Handler boundary
 - Admin approval: required for initial registration; edits after approval are instant
 - Middleware: never query DB from middleware (Edge Runtime); use RSC layout for auth checks
+- **NEW v1.9**: Business routes use sb-biz-* cookie namespace; consumer routes use default sb-* namespace
 
 ## Session Continuity
 
 Last session: 2026-06-11
-Stopped at: v1.8 closed; ready for /gsd:new-milestone v1.9
+Stopped at: v1.9 requirements defined; roadmapper pending

@@ -1,49 +1,48 @@
-# Requirements — v1.8 Yritysportaali v2 — Julkistaminen & UX
+# Requirements — v1.9 Auth-Separaatio & Cleanup
 
-**Milestone:** v1.8
+**Milestone:** v1.9
 **Status:** Active
 **Defined:** 2026-06-11
 
 ## Overview
 
-Kolme teemaa: (1) v1.7 tech debt siivotaan — data-integriteetti- ja turvallisuusaukot korjataan ennen uusia ominaisuuksia; (2) yritysprofiilien julkistaminen — admin-hyväksynnän jälkeen paikka tulee julkiseksi ja business-data ylikirjoittaa Google Places -datan, verifikaatio-tikki kaikissa korteissa; (3) erillinen business-käyttäjäkokemus — dashboard-etusivu, stripped karttanäkymä, profiilin siivous.
+Kaksi teemaa: (1) Consumer- ja business-puolen auth-sessiot eriytetään täysin toisistaan cookie-nimiavaruuksilla — `/business/*`-reitit saavat oman `sb-biz-*`-cookien, consumer-puoli käyttää normaalia `sb-*`-cookiea, sessiot ovat täysin riippumattomia; (2) v1.7–v1.8 tech debt siistitään — wizard-duplikaattien yhdistäminen, update-paikka API-bugi, step-skip-bypass, onboarding_completed kuollut koodi ja testitilit.
 
 ---
 
-## v1.8 Requirements
+## v1.9 Requirements
 
-### Tech Debt (DEBT)
+### Auth Session Separation (AUTHSEP)
 
-- [x] **DEBT-01**: Yritys-wizard (OnboardingWizardInner + EditWizardInner) ei enää sisällä auth useEffect -logiikkaa — business/layout.tsx RSC guard hoitaa suojauksen
-- [x] **DEBT-02**: claim-paikka-reitti asettaa `business_managed=true` liikuntapaikat-tauluun claim-hetkellä
-- [x] **DEBT-03**: middleware.ts suojaa `/admin`- ja `/business`-reitit kirjautumattomalta käyttäjältä session-tarkistuksella (ei DB-kyselyä)
-- [x] **DEBT-04**: `onboarding_completed`-kolumni poistetaan business_accounts-taulusta (tai kolumnin kirjoitukset poistetaan)
-- [x] **DEBT-05**: onboarding/submit-reitin draft-delete-kutsu scopettuu `paikka_id`:llä multi-venue-turvallisuuden vuoksi
+- [ ] **AUTHSEP-01**: Luodaan `lib/supabase-business.ts` joka eksportoi `createBusinessServerClient()` ja `createBusinessBrowserClient()` — molemmat käyttävät `sb-biz-*`-cookie-nimiavaruutta (erillinen `cookieName`-konfiguraatio)
+- [ ] **AUTHSEP-02**: Kaikki `/business/*`-sivut ja `/api/business/*`-reitit käyttävät `createBusinessServerClient()`-helpperiä — consumer-sessio (`sb-*`-cookie) ei vaikuta niihin
+- [ ] **AUTHSEP-03**: `/api/admin/*`-reitit käyttävät `createBusinessServerClient()`-helpperiä (admin on business-puolta) — consumer-sessio ei vaikuta niihin
+- [ ] **AUTHSEP-04**: Consumer-sivut ja `/api/*`-reitit (pl. `/api/business/*` ja `/api/admin/*`) käyttävät oletussessio-cookieta — business-sessio (`sb-biz-*`) ei vaikuta niihin
+- [ ] **AUTHSEP-05**: `middleware.ts` refreshaa `/business/*`-reiteillä business-session ja muilla reiteillä consumer-session — session refresh ei vaikuta väärään cookie-nimiavaruuteen
+- [ ] **AUTHSEP-06**: `/business/kirjaudu` (business login) käyttää business-asiakasta — token tallennetaan `sb-biz-*`-cookieen, ei consumer-cookieen
+- [ ] **AUTHSEP-07**: Käyttäjä voi olla samanaikaisesti kirjautuneena consumer-tilillä (`/`) ja business-tilillä (`/business`) — sessiot ovat toisistaan riippumattomia
 
-### Julkistaminen (PUB)
+### Cleanup (CLEAN)
 
-- [ ] **PUB-01**: Admin-hyväksyntä asettaa `published=true` JA `business_managed=true` atomisesti kaikille venue-tyypeille (claim + created) — Postgres-triggeri business_paikka_links AFTER UPDATE
-- [ ] **PUB-02**: `Liikuntapaikka`-tyyppi (lib/types.ts) sisältää `is_claimed`- ja `business_managed`-kentät
-- [ ] **PUB-03**: app/page.tsx SELECT hakee `is_claimed`- ja `business_managed`-kentät kaikilta paikoilta
-- [ ] **PUB-04**: Verifikaatio-tikki (checkmark) näytetään paikan nimen vieressä PaikkaKortissa, DiagonaalKortissa ja PaikkaSheetissä kun `business_managed=true`
-
-### Business User UX (BIZUX)
-
-- [x] **BIZUX-01**: `app/business/layout.tsx` on async Server Component auth guard — kaikki `/business/*`-reitit suojattu palvelinpuolella ilman client-side `useEffect`-tarkistuksia
-- [ ] **BIZUX-02**: Kirjautunut yritysprofiili ohjataan `/business`-dashboardille kun käyttäjä lataa etusivun `/`
-- [ ] **BIZUX-03**: `/business`-dashboard-etusivu näyttää paikkojen tilabadget (approved/pending/rejected), "Avaa kartta" -napin ja pikaohjaukset muokkaus- ja esikatselutoimintoihin
-- [ ] **BIZUX-04**: `/business/map` on erillinen karttareitti ilman consumer-featureja (ei bottomsheet, ei AI-widget, ei säätieto, ei TODO-overlay)
-- [ ] **BIZUX-05**: `/profiili`-sivu piilottaa kiinnostuksenkohteet- ja kotipaikkakunta-osiot yritysprofiilille
+- [ ] **CLEAN-01**: Vanhat testitilit poistetaan — `business_accounts`-taulun testitiedot ja vastaavat `auth.users`-rivit poistetaan Supabase Dashboardista tai migraatiolla
+- [ ] **CLEAN-02**: `OnboardingWizardInner` ja `EditWizardInner` yhdistetään yhdeksi `WizardInner`-komponentiksi joka hyväksyy `mode: 'onboarding' | 'edit'` prop — duplikoitu draft-fetch-, step-routing-, `paikka_id`-URL-hallinta- ja guard-logiikka poistetaan
+- [ ] **CLEAN-03**: `POST /api/business/update-paikka` hyväksyy muokkaukset kaikille yrityksen linkitetyille paikoille `claim_status`-arvosta riippumatta (pending, approved, rejected) — nykyinen `approved`-only-rajoitus poistetaan
+- [ ] **CLEAN-04**: Onboarding-velhoon lisätään step-forward-suoja: `?step=N`-URL-parametri ei voi hypätä ohi tekemättömien vaiheiden (`current_step + 1` on maksimi sallittu askel)
+- [ ] **CLEAN-05**: `onboarding_completed`-kolumnin kirjoitukset poistetaan `/api/business/onboarding/submit`-reitistä (kuollut koodi — kolumni kirjoitetaan mutta sitä ei koskaan lueta)
 
 ---
 
 ## Future Requirements (deferred)
 
-- Yrityksen sähköposti-ilmoitus kun paikka menee julkiseksi (hyväksyntä → "Paikkasi on nyt julkinen")
-- Analytics/metrics business-dashboardille (kävijät, klikkaukset — ei dataa vielä v1.8:ssa)
+- BIZUX-02: Kirjautunut yritysprofiili ohjataan `/business`-dashboardille — deferred (ei tarvita auth-eristyksen myötä)
+- BIZUX-03: `/business`-dashboard-etusivu tilabadgeillä ja pikaohjauksineen — deferred
+- BIZUX-04: `/business/map` erillinen karttareitti ilman consumer-featureja — deferred
+- BIZUX-05: `/profiili` piilottaa consumer-kentät yritysprofiilille — deferred
+- Yrityksen sähköposti-ilmoitus paikan julkaisusta
+- Analytics/metrics business-dashboardille
 - Paid upgrade / sponsored-paketti yrityksille
-- Ketjuadmin (yksi tili, useita toimipisteitä eri omistajilla)
-- Lisäkielet (ruotsi, auto-detection) — i18n-laajennus
+- Ketjuadmin (yksi tili, useita toimipisteitä)
+- Lisäkielet (ruotsi, auto-detection)
 - Suosikkipaikat-sivu kuluttajalle (/suosikit)
 - Kartta: etäisyyspohjainen suodatus
 
@@ -56,24 +55,23 @@ Kolme teemaa: (1) v1.7 tech debt siivotaan — data-integriteetti- ja turvallisu
 - Mobiiliappi (iOS/Android)
 - Maksujärjestelmä sovelluksessa
 - JWT Custom Access Token Hook — DB-lookup on riittävä ja projektin vakiintunut patterni
+- Kaksi erillistä Supabase-projektia — yksi projekti, kaksi cookie-nimiavaruutta riittää
 
 ---
 
 ## Traceability
 
-| REQ-ID | Phase | Plan |
-|--------|-------|------|
-| DEBT-01 | Phase 37 | — |
-| DEBT-02 | Phase 37 | — |
-| DEBT-03 | Phase 37 | — |
-| DEBT-04 | Phase 37 | — |
-| DEBT-05 | Phase 37 | — |
-| BIZUX-01 | Phase 37 | — |
-| PUB-01 | Phase 38 | — |
-| PUB-02 | Phase 38 | — |
-| PUB-03 | Phase 38 | — |
-| PUB-04 | Phase 38 | — |
-| BIZUX-02 | Phase 39 | — |
-| BIZUX-03 | Phase 39 | — |
-| BIZUX-04 | Phase 39 | — |
-| BIZUX-05 | Phase 39 | — |
+| REQ-ID | Phase | Status |
+|--------|-------|--------|
+| AUTHSEP-01 | TBD | Pending |
+| AUTHSEP-02 | TBD | Pending |
+| AUTHSEP-03 | TBD | Pending |
+| AUTHSEP-04 | TBD | Pending |
+| AUTHSEP-05 | TBD | Pending |
+| AUTHSEP-06 | TBD | Pending |
+| AUTHSEP-07 | TBD | Pending |
+| CLEAN-01 | TBD | Pending |
+| CLEAN-02 | TBD | Pending |
+| CLEAN-03 | TBD | Pending |
+| CLEAN-04 | TBD | Pending |
+| CLEAN-05 | TBD | Pending |
