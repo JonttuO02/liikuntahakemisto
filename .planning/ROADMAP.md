@@ -122,7 +122,7 @@ Full archive: `.planning/milestones/v1.7-ROADMAP.md`
 
 **Milestone Goal:** Viimeistellään yritysportaali — business-paikat julkisiksi hyväksynnän jälkeen, erillinen business-käyttäjäkokemus, ja v1.7 tech debt siivotaan.
 
-- [ ] **Phase 37: Tech Debt Foundation** — Data-integriteetti ja turvallisuusaukot korjataan; RSC guard kaikille /business-reiteille
+- [ ] **Phase 37: Tech Debt Foundation** — Data-integriteetti ja turvallisuusaukot korjataan; RSC guard kaikille /business-reiteille *(6 plans, Wave 1×4 + Wave 2×2)*
 - [ ] **Phase 38: Business Data Publication** — Postgres-triggeri atomiselle hyväksynnälle; verifikaatio-tikki kaikissa korteissa
 - [ ] **Phase 39: Business User UX** — Yritysprofiilille oma etusivu, karttanäkymä ja profiilisivu ilman consumer-featureja
 
@@ -207,6 +207,6 @@ Full archive: `.planning/milestones/v1.7-ROADMAP.md`
 | 34. Onboarding-velhou | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
 | 35. Admin-hyväksyntäjärjestelmä | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
 | 36. Hallintapaneeli | v1.7 | 7/7 | ✅ Complete | 2026-06-10 |
-| 37. Tech Debt Foundation | v1.8 | 0/TBD | Not started | - |
+| 37. Tech Debt Foundation | v1.8 | 0/6 | Planned | - |
 | 38. Business Data Publication | v1.8 | 0/TBD | Not started | - |
 | 39. Business User UX | v1.8 | 0/TBD | Not started | - |
