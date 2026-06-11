@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { AnimatePresence } from 'framer-motion'
-import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import ClaimSearchForm from '@/app/components/ClaimSearchForm'
 import PreviewModal from '@/app/components/PreviewModal'
 import type { Liikuntapaikka } from '@/lib/types'
@@ -47,7 +47,7 @@ export default function BusinessPage() {
 
   useEffect(() => {
     async function checkState() {
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
 
@@ -179,7 +179,7 @@ export default function BusinessPage() {
                     <button
                       type="button"
                       onClick={async () => {
-                        const supabase = createBrowserSupabase()
+                        const supabase = createBusinessBrowserClient()
                         const { data: { session } } = await supabase.auth.getSession()
                         const token = session?.access_token ?? ''
                         const res = await fetch('/api/business/reapply', {

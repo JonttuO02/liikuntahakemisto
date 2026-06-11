@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 
 interface StepYhteystiedotProps {
@@ -55,7 +55,7 @@ export default function StepYhteystiedot({
     setSaveError(null)
 
     try {
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token ?? ''
 
@@ -100,7 +100,7 @@ export default function StepYhteystiedot({
     setError(null)
 
     try {
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       const {
         data: { session },
       } = await supabase.auth.getSession()

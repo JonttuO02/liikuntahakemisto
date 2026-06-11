@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import { buildDraftAsPaikka, type OnboardingDraft, type PaikkaBase } from '@/lib/onboardingUtils'
 import PaikkaKortti from '@/app/components/PaikkaKortti'
@@ -44,7 +44,7 @@ export default function StepEsikatselu({
     setError(null)
 
     try {
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       const {
         data: { session },
       } = await supabase.auth.getSession()
