@@ -63,15 +63,15 @@ Kaksi teemaa: (1) Consumer- ja business-puolen auth-sessiot eriytetään täysin
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| AUTHSEP-01 | TBD | Pending |
-| AUTHSEP-02 | TBD | Pending |
-| AUTHSEP-03 | TBD | Pending |
-| AUTHSEP-04 | TBD | Pending |
-| AUTHSEP-05 | TBD | Pending |
-| AUTHSEP-06 | TBD | Pending |
-| AUTHSEP-07 | TBD | Pending |
-| CLEAN-01 | TBD | Pending |
-| CLEAN-02 | TBD | Pending |
-| CLEAN-03 | TBD | Pending |
-| CLEAN-04 | TBD | Pending |
-| CLEAN-05 | TBD | Pending |
+| AUTHSEP-01 | Phase 39 | Pending |
+| AUTHSEP-02 | Phase 39 | Pending |
+| AUTHSEP-03 | Phase 39 | Pending |
+| AUTHSEP-04 | Phase 39 | Pending |
+| AUTHSEP-05 | Phase 39 | Pending |
+| AUTHSEP-06 | Phase 39 | Pending |
+| AUTHSEP-07 | Phase 39 | Pending |
+| CLEAN-01 | Phase 40 | Pending |
+| CLEAN-02 | Phase 40 | Pending |
+| CLEAN-03 | Phase 40 | Pending |
+| CLEAN-04 | Phase 40 | Pending |
+| CLEAN-05 | Phase 40 | Pending |

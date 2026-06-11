@@ -10,7 +10,8 @@
 - ✅ **v1.5 Visuaalinen elävöitys & UX-hienosäätö** — Phases 23–26 (shipped 2026-06-02)
 - ✅ **v1.6 Kielituki, Ikonit & Sheet-redesign** — Phases 27–30 (shipped 2026-06-04)
 - ✅ **v1.7 Yritysportaali** — Phases 31–36 (shipped 2026-06-11)
-- 🚧 **v1.8 Yritysportaali v2 — Julkistaminen & UX** — Phases 37–39 (in progress)
+- ✅ **v1.8 Yritysportaali v2 — Julkistaminen & UX** — Phases 37–38 (shipped 2026-06-11)
+- 🚧 **v1.9 Auth-Separaatio & Cleanup** — Phases 39–40 (in progress)
 
 ---
 
@@ -116,54 +117,49 @@ Full archive: `.planning/milestones/v1.7-ROADMAP.md`
 
 </details>
 
----
-
-### ✅ v1.8 Yritysportaali v2 — Julkistaminen & UX (shipped 2026-06-11)
-
-**Milestone Goal:** Viimeistellään yritysportaali — business-paikat julkisiksi hyväksynnän jälkeen, erillinen business-käyttäjäkokemus, ja v1.7 tech debt siivotaan.
+<details>
+<summary>✅ v1.8 Yritysportaali v2 — Julkistaminen & UX (Phases 37–38) — SHIPPED 2026-06-11</summary>
 
 - [x] **Phase 37: Tech Debt Foundation** — Data-integriteetti ja turvallisuusaukot korjataan; RSC guard kaikille /business-reiteille *(6 plans, Wave 1×4 + Wave 2×2)* (completed 2026-06-11)
 - [x] **Phase 38: Business Data Publication** — Postgres-triggeri atomiselle hyväksynnälle; verifikaatio-tikki kaikissa korteissa *(3 plans, Wave 1×2 + Wave 2×1)* (completed 2026-06-11)
-- [~] **Phase 39: Business User UX** — DEFERRED to v1.9. Business/consumer separation requires a full architectural redesign (separate auth flows) rather than incremental UX patches on the current single-auth structure.
+- [~] **Phase 39 (original): Business User UX** — DEFERRED. Business/consumer separation requires full architectural redesign (auth separation) — scope moved to v1.9 AUTHSEP requirements.
+
+</details>
+
+---
+
+### 🚧 v1.9 Auth-Separaatio & Cleanup (Phases 39–40)
+
+**Milestone Goal:** Consumer- ja business-puolen auth-sessiot eriytetään täysin toisistaan cookie-nimiavaruuksilla, ja v1.7–v1.8 tech debt siistitään — wizard-duplikaattien yhdistäminen, API-bugifixit, kuollut koodi ja testitilit.
+
+- [ ] **Phase 39: Auth-Separaatio** — Eriytetyt auth-sessiot: sb-biz-* business-puolelle, sb-* consumer-puolelle; simultaanisessiot mahdollisia
+- [ ] **Phase 40: Wizard-konsolidointi & Cleanup** — WizardInner-yhdistäminen, update-paikka 403 -bugikorjaus, step-skip-suoja, kuollut koodi ja testitilit poistetaan
 
 ## Phase Details
 
-### Phase 37: Tech Debt Foundation
-**Goal**: Data-integriteetti- ja turvallisuusaukot suljetaan ennen uusien ominaisuuksien rakentamista — business_managed asetetaan claim-hetkellä, wizard-auth siirretään RSC guardiin, /admin suojataan middleware-tasolla, ja kuollut kolumni poistetaan
-**Depends on**: Phase 36 (v1.7 complete)
-**Requirements**: DEBT-01, DEBT-02, DEBT-03, DEBT-04, DEBT-05, BIZUX-01
+### Phase 39: Auth-Separaatio
+**Goal**: Consumer- ja business-puolen auth-sessiot ovat täysin toisistaan riippumattomia — business-reitit käyttävät sb-biz-*-cookieta, consumer-reitit käyttävät normaalia sb-*-cookieta, ja molemmat voivat olla aktiivisina samanaikaisesti
+**Depends on**: Phase 38 (v1.8 complete)
+**Requirements**: AUTHSEP-01, AUTHSEP-02, AUTHSEP-03, AUTHSEP-04, AUTHSEP-05, AUTHSEP-06, AUTHSEP-07
 **Success Criteria** (what must be TRUE):
-  1. Wizard (onboarding + edit) latautuu ilman auth-flashia — kirjautumaton käyttäjä ohjataan kirjautumiseen ennen kuin wizard-UI renderöityy
-  2. Claim-pyynnön jättäneen yrityksen paikka pysyy business_managed=true kun sync-skripti ajetaan claim-hetken jälkeen
-  3. Kirjautumaton käyttäjä, joka navigoi suoraan /admin- tai /business-osoitteeseen, ohjataan kirjautumissivulle ilman että sivun HTML latautuu
-  4. onboarding_completed-kolumni ei enää vaikuta mihinkään routing-päätökseen (kolumni poistettu tai kirjoitukset poistettu)
-  5. Onboarding draft -delete käyttää paikka_id-rajausta, eikä poista väärän paikan drafttia multi-venue-tilanteessa
+  1. Kirjautuminen `/business/kirjaudu`-sivulla asettaa `sb-biz-*`-cookien — `sb-*`-consumer-cookie ei muutu eikä nollaudu
+  2. Consumer-sivulle kirjautunut käyttäjä voi samanaikaisesti olla kirjautuneena business-puolelle eri tunnuksilla — molemmat sessiot pysyvät voimassa selainistunnon ajan
+  3. Kirjautumaton consumer-käyttäjä, joka navigoi `/business`-reiteille, ohjataan business-kirjautumissivulle — consumer-sessio ei vaikuta tähän tarkistukseen
+  4. Kirjautunut business-käyttäjä, joka navigoi consumer-reiteille (`/`, `/profiili`), näkee sivun normaalisti ilman business-session häiriötä — consumer-auth toimii omalla sb-*-cookiellaan
+  5. Middleware refreshaa oikean session oikealla reitillä: `/business/*`-reiteillä refreshataan sb-biz-*-cookie, muilla reiteillä refreshataan sb-*-cookie
 **Plans**: TBD
-**UI hint**: yes
 
-### Phase 38: Business Data Publication
-**Goal**: Admin-hyväksyntä julkaisee paikan atomisesti ja verifikaatio-tikki näkyy kaikkialla missä paikan nimi esitetään
-**Depends on**: Phase 37
-**Requirements**: PUB-01, PUB-02, PUB-03, PUB-04
+### Phase 40: Wizard-konsolidointi & Cleanup
+**Goal**: Wizard-duplikaatti poistetaan, API-bugit korjataan ja kuollut koodi siistitään — codebase on tiiviimpi ja business-käyttäjä voi muokata kaikkia paikkojaan riippumatta claim-statuksesta
+**Depends on**: Phase 39
+**Requirements**: CLEAN-01, CLEAN-02, CLEAN-03, CLEAN-04, CLEAN-05
 **Success Criteria** (what must be TRUE):
-  1. Hyväksytty paikka (claim tai create) ilmestyy julkiseen listaukseen ilman manuaalisia DB-muutoksia heti hyväksynnän jälkeen
-  2. Hyväksytyn paikan tiedot tulevat yrityksen syöttämästä datasta — Google Places -data ei ylikirjoita niitä sync-skriptillä
-  3. Yrityksen hallinnoiman paikan nimen vieressä näkyy checkmark-tikki PaikkaKortissa, DiagonaalKortissa ja PaikkaSheetissä
-  4. Paikan tila (published, business_managed) on haettavissa app/page.tsx SELECTissä ja vastaavissa tyyppimäärittelyissä
+  1. Onboarding- ja edit-velhouissa on yksi yhteinen `WizardInner`-komponentti joka hyväksyy `mode: 'onboarding' | 'edit'` — erilliset `OnboardingWizardInner` ja `EditWizardInner` on poistettu koodikannasta
+  2. Yritys pystyy muokkaamaan paikkansa tietoja hallintapaneelista riippumatta siitä onko paikan `claim_status` pending, approved vai rejected — 403-virhe ei enää tule muokkauksesta
+  3. Onboarding-velhoussa `?step=N`-URL-parametri ei voi hypätä ohi tekemättömien vaiheiden — suoraan `?step=4`-osoitteeseen menevä käyttäjä ohjataan ensimmäiseen tekemättömään vaiheeseen
+  4. `/api/business/onboarding/submit`-reitti ei enää kirjoita `onboarding_completed`-kolumniin — kolumni ei vaikuta mihinkään routing-päätökseen
+  5. Supabase Dashboardissa ei ole testitili-rivejä `business_accounts`- eikä `auth.users`-tauluissa
 **Plans**: TBD
-**UI hint**: yes
-
-### Phase 39: Business User UX
-**Goal**: Kirjautunut yritysprofiili saa oman eriytetyn käyttökokemuksen — automaattinen ohjaus dashboardille, stripped karttanäkymä ilman consumer-featureja, ja /profiili ilman kuluttajakohtaisia kenttiä
-**Depends on**: Phase 38
-**Requirements**: BIZUX-02, BIZUX-03, BIZUX-04, BIZUX-05
-**Success Criteria** (what must be TRUE):
-  1. Kirjautunut yritysprofiili, joka avaa etusivun (/), ohjataan automaattisesti /business-dashboardille ilman consumer-näkymän välähdystä
-  2. /business-dashboard näyttää yrityksen paikat tilabadgeineen (approved/pending/rejected), "Avaa kartta" -napin ja pikaohjaukset muokkaus- ja esikatselutoiminnoille
-  3. /business/map avautuu karttana ilman bottomsheettia, AI-widgettiä, säätieto-osaa tai TODO-overlaytta
-  4. Yritysprofiilille /profiili-sivulla ei näy kiinnostuksenkohteet- eikä kotipaikkakunta-osioita
-**Plans**: TBD
-**UI hint**: yes
 
 ---
 
@@ -171,42 +167,43 @@ Full archive: `.planning/milestones/v1.7-ROADMAP.md`
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1. Foundation & Security | v1.0 | 14/14 | ✅ Complete | 2026-05-19 |
-| 2. Map & GPS | v1.0 | 3/3 | ✅ Complete | 2026-05-21 |
-| 3. Data Enrichment | v1.0 | 2/2 | ✅ Complete | 2026-05-21 |
-| 4. Service Information UI | v1.0 | 4/4 | ✅ Complete | 2026-05-21 |
-| 5. AI Weather Widget | v1.0 | 2/2 | ✅ Complete | 2026-05-21 |
-| 6. UI Polish & Data Foundation | v1.1 | 7/7 | ✅ Complete | 2026-05-22 |
-| 7. Map Infrastructure | v1.1 | 2/2 | ✅ Complete | 2026-05-22 |
-| 8. Map Features | v1.1 | 3/3 | ✅ Complete | 2026-05-22 |
-| 9. Auth & Favorites | v1.1 | 4/4 | ✅ Complete | 2026-05-23 |
-| 10. City Expansion | v1.1 | 4/4 | ✅ Complete | 2026-05-27 |
-| 11. PWA | v1.1 | 3/3 | ✅ Complete | 2026-05-27 |
-| 12. Haku & korttilistaus etusivulle | v1.2 | 3/3 | ✅ Complete | 2026-05-27 |
-| 13. Uusi korttimalli | v1.2 | 2/2 | ✅ Complete | 2026-05-28 |
-| 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 5/5 | ✅ Complete | 2026-05-28 |
-| 15. Arvostelut | v1.2 | 4/4 | ✅ Complete | 2026-05-28 |
-| 16. Brändi & Logo-uloke | v1.3 | 4/4 | ✅ Complete | 2026-05-29 |
-| 17. Toolbar & Haku-UX | v1.3 | 1/1 | ✅ Complete | 2026-05-29 |
-| 18. Kartan pinnit & korttianimaatio | v1.3 | 3/3 | ✅ Complete | 2026-05-30 |
-| 19. Filtteri, lista & paikka-UX | v1.4 | 3/3 | ✅ Complete | 2026-05-30 |
-| 20. Navigaatio-korjaukset | v1.4 | 2/2 | ✅ Complete | 2026-05-30 |
-| 21. TO DO -lista | v1.4 | 2/2 | ✅ Complete | 2026-05-31 |
-| 22. Profiili & AI-kiinnostukset | v1.4 | 4/4 | ✅ Complete | 2026-05-31 |
-| 23. Visuaalinen perusta | v1.5 | 4/4 | ✅ Complete | 2026-06-01 |
-| 24. Callout-kortti & ikonit | v1.5 | 1/1 | ✅ Complete | 2026-06-02 |
-| 25. TO DO overlay | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
-| 26. Filtterit | v1.5 | 2/2 | ✅ Complete | 2026-06-02 |
-| 27. Siivous & pienet korjaukset | v1.6 | 5/5 | ✅ Complete | 2026-06-03 |
-| 28. SVG-ikonit | v1.6 | 2/2 | ✅ Complete | 2026-06-03 |
-| 29. Kortit & sheet redesign | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
-| 30. i18n FI/EN | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
-| 31. DB-skeema & Storage-perusta | v1.7 | 4/4 | ✅ Complete | 2026-06-05 |
-| 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | ✅ Complete | 2026-06-05 |
-| 33. Claim & paikan luonti | v1.7 | 7/7 | ✅ Complete | 2026-06-06 |
-| 34. Onboarding-velhou | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
-| 35. Admin-hyväksyntäjärjestelmä | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
-| 36. Hallintapaneeli | v1.7 | 7/7 | ✅ Complete | 2026-06-10 |
-| 37. Tech Debt Foundation | v1.8 | 1/1 | Complete    | 2026-06-11 |
-| 38. Business Data Publication | v1.8 | 1/1 | Complete   | 2026-06-11 |
-| 39. Business User UX | v1.8 | 0/TBD | Not started | - |
+| 1. Foundation & Security | v1.0 | 14/14 | Complete | 2026-05-19 |
+| 2. Map & GPS | v1.0 | 3/3 | Complete | 2026-05-21 |
+| 3. Data Enrichment | v1.0 | 2/2 | Complete | 2026-05-21 |
+| 4. Service Information UI | v1.0 | 4/4 | Complete | 2026-05-21 |
+| 5. AI Weather Widget | v1.0 | 2/2 | Complete | 2026-05-21 |
+| 6. UI Polish & Data Foundation | v1.1 | 7/7 | Complete | 2026-05-22 |
+| 7. Map Infrastructure | v1.1 | 2/2 | Complete | 2026-05-22 |
+| 8. Map Features | v1.1 | 3/3 | Complete | 2026-05-22 |
+| 9. Auth & Favorites | v1.1 | 4/4 | Complete | 2026-05-23 |
+| 10. City Expansion | v1.1 | 4/4 | Complete | 2026-05-27 |
+| 11. PWA | v1.1 | 3/3 | Complete | 2026-05-27 |
+| 12. Haku & korttilistaus etusivulle | v1.2 | 3/3 | Complete | 2026-05-27 |
+| 13. Uusi korttimalli | v1.2 | 2/2 | Complete | 2026-05-28 |
+| 14. Profiilisivu & AI-kotipaikkakunta | v1.2 | 5/5 | Complete | 2026-05-28 |
+| 15. Arvostelut | v1.2 | 4/4 | Complete | 2026-05-28 |
+| 16. Brändi & Logo-uloke | v1.3 | 4/4 | Complete | 2026-05-29 |
+| 17. Toolbar & Haku-UX | v1.3 | 1/1 | Complete | 2026-05-29 |
+| 18. Kartan pinnit & korttianimaatio | v1.3 | 3/3 | Complete | 2026-05-30 |
+| 19. Filtteri, lista & paikka-UX | v1.4 | 3/3 | Complete | 2026-05-30 |
+| 20. Navigaatio-korjaukset | v1.4 | 2/2 | Complete | 2026-05-30 |
+| 21. TO DO -lista | v1.4 | 2/2 | Complete | 2026-05-31 |
+| 22. Profiili & AI-kiinnostukset | v1.4 | 4/4 | Complete | 2026-05-31 |
+| 23. Visuaalinen perusta | v1.5 | 4/4 | Complete | 2026-06-01 |
+| 24. Callout-kortti & ikonit | v1.5 | 1/1 | Complete | 2026-06-02 |
+| 25. TO DO overlay | v1.5 | 2/2 | Complete | 2026-06-02 |
+| 26. Filtterit | v1.5 | 2/2 | Complete | 2026-06-02 |
+| 27. Siivous & pienet korjaukset | v1.6 | 5/5 | Complete | 2026-06-03 |
+| 28. SVG-ikonit | v1.6 | 2/2 | Complete | 2026-06-03 |
+| 29. Kortit & sheet redesign | v1.6 | 4/4 | Complete | 2026-06-04 |
+| 30. i18n FI/EN | v1.6 | 4/4 | Complete | 2026-06-04 |
+| 31. DB-skeema & Storage-perusta | v1.7 | 4/4 | Complete | 2026-06-05 |
+| 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | Complete | 2026-06-05 |
+| 33. Claim & paikan luonti | v1.7 | 7/7 | Complete | 2026-06-06 |
+| 34. Onboarding-velhou | v1.7 | 11/11 | Complete | 2026-06-10 |
+| 35. Admin-hyväksyntäjärjestelmä | v1.7 | 11/11 | Complete | 2026-06-10 |
+| 36. Hallintapaneeli | v1.7 | 7/7 | Complete | 2026-06-10 |
+| 37. Tech Debt Foundation | v1.8 | 1/1 | Complete | 2026-06-11 |
+| 38. Business Data Publication | v1.8 | 1/1 | Complete | 2026-06-11 |
+| 39. Auth-Separaatio | v1.9 | 0/TBD | Not started | - |
+| 40. Wizard-konsolidointi & Cleanup | v1.9 | 0/TBD | Not started | - |
