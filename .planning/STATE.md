@@ -1,32 +1,33 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.7
-milestone_name: Yritysportaali
-status: archived
-last_updated: "2026-06-11T13:45:00.000Z"
-last_activity: 2026-06-11 -- v1.7 Yritysportaali milestone complete and archived
+milestone: v1.8
+milestone_name: Yritysportaali v2 — Julkistaminen & UX
+status: planning
+last_updated: "2026-06-11T14:00:00.000Z"
+last_activity: 2026-06-11 -- Milestone v1.8 started
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 44
-  completed_plans: 44
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Current Position
 
-Milestone: v1.7 Yritysportaali — **ARCHIVED**
-Status: Milestone complete. All 6 phases (31–36), 44 plans done. Ready for next milestone.
-Last activity: 2026-06-11 — v1.7 milestone archived, git tag v1.7 created
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-11 — Milestone v1.8 started
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-06-11)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Planning next milestone (v1.8) — run `/gsd:new-milestone`
+**Current focus:** v1.8 Yritysportaali v2 — requirements + roadmap
 
 ## Active Decisions (carried forward)
 
@@ -46,18 +47,11 @@ See: .planning/PROJECT.md (updated 2026-06-11)
 - JWT verification: supabaseAdmin.auth.getUser(token) at every Route Handler boundary
 - Storage RLS: SECURITY DEFINER function in public schema (storage schema forbidden on hosted Supabase)
 
-## Phase Sequence (v1.7 — all complete)
+## Phase Sequence (v1.8 — in progress)
 
-| Phase | Name | Status |
-|-------|------|--------|
-| 31 | DB-skeema & Storage-perusta | ✅ Complete |
-| 32 | Yritysrekisteröinti & auth | ✅ Complete |
-| 33 | Claim & paikan luonti | ✅ Complete |
-| 34 | Onboarding-velhou | ✅ Complete |
-| 35 | Admin-hyväksyntäjärjestelmä | ✅ Complete |
-| 36 | Hallintapaneeli | ✅ Complete |
+*(Roadmap will be defined during milestone setup)*
 
-## Known Tech Debt (v1.8 backlog)
+## Known Tech Debt (v1.8 backlog — being addressed)
 
 - Phase 33: no VERIFICATION.md (smoke-tested only)
 - Phase 36: no VERIFICATION.md (UAT passed only)
@@ -72,5 +66,5 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-11T13:45:00.000Z
-Resume: v1.7 archived. Run `/gsd:new-milestone` to start v1.8 planning.
+Last session: 2026-06-11T14:00:00.000Z
+Resume: v1.8 requirements and roadmap being defined.

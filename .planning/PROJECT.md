@@ -1,5 +1,16 @@
 # Liikuntahakemisto
 
+## Current Milestone: v1.8 Yritysportaali v2 — Julkistaminen & UX
+
+**Goal:** Viimeistellään yritysportaali — business-paikat julkisiksi hyväksynnän jälkeen, erillinen business-käyttäjäkokemus, ja v1.7 tech debt siivotaan.
+
+**Target features:**
+- Tech debt: wizard-orkestrointi refaktorointi, claim business_managed=true, /admin server-side middleware, onboarding_completed siivous
+- Julkistaminen: admin-hyväksynnän jälkeen published=true + business data ylikirjoittaa Google Places -datan; verifikaatio-tikki paikan nimen vieressä kaikissa korteissa
+- Business UX: dashboard-etusivu kirjautuneelle yritykselle, "Avaa kartta" -nappi ilman consumer-featureja, /profiili ilman kiinnostuksenkohteita/kotikaupunkia business-käyttäjälle
+
+---
+
 ## What This Is
 
 Suomalainen liikuntapalveluiden hakemisto ja löytämisalusta. Kokoaa suomalaisten kaupunkien liikuntapalvelut yhteen — aukioloajat, hinnat, GPS-pohjainen sijaintihaku, ja sääpohjainen AI-suositus. Käyttäjät voivat luoda tilin, tallentaa suosikkipaikkoja ja saada personoituja AI-suosituksia. Sovellus toimii offline-tilassa ja on asennettavissa kotinäyttöön (PWA). Tarkoitettu sekä paikallisille että matkailijoille jotka etsivät kertakäyntiä läheltä — kolmessa kaupungissa (Tampere, Helsinki, Turku).
@@ -302,4 +313,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-11 — v1.7 milestone complete (Yritysportaali shipped)*
+*Last updated: 2026-06-11 — v1.8 milestone started (Yritysportaali v2 — Julkistaminen & UX)*
