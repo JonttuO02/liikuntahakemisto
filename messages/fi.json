@@ -207,7 +207,14 @@
     "muokkaaCta": "Muokkaa",
     "esikatseluCta": "Esikatselu",
     "photoDeleteAlt": "Poista kuva",
-    "photoMaxReached": "Max 5 kuvaa lisätty"
+    "photoMaxReached": "Max 5 kuvaa lisätty",
+    "loginTitle": "Kirjaudu yritystilille",
+    "loginCta": "Kirjaudu",
+    "loggingIn": "Kirjaudutaan...",
+    "loginEmailPlaceholder": "Sähköpostiosoite",
+    "loginPasswordPlaceholder": "Salasana",
+    "noAccountLink": "Ei tiliä? Rekisteröidy",
+    "errorInvalidCredentials": "Virheellinen sähköposti tai salasana."
   },
   "Admin": {
     "pageTitle": "Admin — Odottavat hakemukset",
