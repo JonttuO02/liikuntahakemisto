@@ -35,14 +35,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid paikka_id' }, { status: 400 })
   }
 
-  // E-01: Ownership check — only approved claimants may edit live venue data.
-  // Pending and rejected claimants are blocked here even if a link row exists.
+  // E-01: Ownership check — any linked claimant (approved, pending, rejected) may save.
   const { data: linkRow, error: linkError } = await supabaseAdmin
     .from('business_paikka_links')
     .select('paikka_id')
     .eq('business_account_id', user.id)
     .eq('paikka_id', paikka_id)
-    .eq('claim_status', 'approved')
     .maybeSingle()
 
   if (linkError) {

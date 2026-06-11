@@ -33,12 +33,18 @@ export default function OnboardingWizardInner() {
   const [draft, setDraft] = useState<OnboardingDraft | null>(null)
   const [paikkaId, setPaikkaId] = useState<number | null>(null)
   const [paikkaInfo, setPaikkaInfo] = useState<PaikkaInfo | null>(null)
+  // Tracks the furthest step reached this session — guards against URL-skipping without
+  // blocking natural forward navigation (draft.current_step alone would block step 2 when
+  // no draft exists yet, since StepPaikka saves nothing).
+  const [maxReachedStep, setMaxReachedStep] = useState(0)
 
   // URL-based step routing (D-02)
   const step = parseInt(searchParams.get('step') ?? '1', 10)
 
   function goToStep(n: number) {
-    router.push('/business/onboarding?step=' + n)
+    const params = new URLSearchParams({ step: String(n) })
+    if (paikkaId !== null) params.set('paikka_id', String(paikkaId))
+    router.push('/business/onboarding?' + params.toString())
   }
 
   // completedSteps: steps 1 through current_step-1
@@ -72,24 +78,45 @@ export default function OnboardingWizardInner() {
         }
       }
 
-      // Load existing draft
-      const { data: existingDraft } = await supabase
-        .from('onboarding_draft')
-        .select('*')
-        .eq('business_account_id', user.id)
-        .maybeSingle()
+      // Load existing draft — filter by paikka_id when known to avoid cross-venue contamination
+      // when a user has multiple draft rows (one per venue). Fall back to unfiltered query
+      // only when paikka_id is still unknown (no URL param, no link row) so we can recover
+      // the paikka_id from the draft itself.
+      let existingDraft: OnboardingDraft | null = null
+      if (resolvedPaikkaId) {
+        const { data } = await supabase
+          .from('onboarding_draft')
+          .select('*')
+          .eq('business_account_id', user.id)
+          .eq('paikka_id', resolvedPaikkaId)
+          .maybeSingle()
+        existingDraft = (data as OnboardingDraft | null) ?? null
+      } else {
+        const { data } = await supabase
+          .from('onboarding_draft')
+          .select('*')
+          .eq('business_account_id', user.id)
+          .maybeSingle()
+        existingDraft = (data as OnboardingDraft | null) ?? null
+      }
 
       if (existingDraft) {
-        setDraft(existingDraft as OnboardingDraft)
-        // Resume from last saved step if further than current URL step
-        if (existingDraft.current_step && existingDraft.current_step > 1 && step === 1) {
-          goToStep(existingDraft.current_step)
-        }
+        setDraft(existingDraft)
       }
 
       // Apply draft fallback: use draft.paikka_id when URL and links both yield nothing
       resolvedPaikkaId = resolvedPaikkaId ?? existingDraft?.paikka_id ?? null
       setPaikkaId(resolvedPaikkaId)
+
+      // Initialize max-reached from draft, then resume to last saved step.
+      // Build the resume URL here (not via goToStep) because paikkaId state isn't set yet.
+      const savedStep = existingDraft?.current_step ?? 0
+      setMaxReachedStep(savedStep)
+      if (savedStep > 1 && step === 1) {
+        const params = new URLSearchParams({ step: String(savedStep) })
+        if (resolvedPaikkaId) params.set('paikka_id', String(resolvedPaikkaId))
+        router.push('/business/onboarding?' + params.toString())
+      }
 
       // Load paikka info if we have a paikka_id
       if (resolvedPaikkaId) {
@@ -113,15 +140,17 @@ export default function OnboardingWizardInner() {
   // Re-fetch draft from Supabase so back-navigation passes fresh initialProps to each step.
   // This also ensures draftAsPaikka on step 6 reflects the latest saved data.
   async function saveAndAdvance(stepNum: number) {
+    setMaxReachedStep(prev => Math.max(prev, stepNum))
     try {
       const supabase = createBrowserSupabase()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data: freshDraft } = await supabase
+        let draftQuery = supabase
           .from('onboarding_draft')
           .select('*')
           .eq('business_account_id', user.id)
-          .maybeSingle()
+        if (paikkaId !== null) draftQuery = draftQuery.eq('paikka_id', paikkaId)
+        const { data: freshDraft } = await draftQuery.maybeSingle()
         if (freshDraft) setDraft(freshDraft as OnboardingDraft)
       }
     } catch {
@@ -129,6 +158,15 @@ export default function OnboardingWizardInner() {
     }
     goToStep(stepNum + 1)
   }
+
+  // Forward-skip guard: prevent URL manipulation from jumping past unfinished steps.
+  // Uses maxReachedStep so natural Next-button navigation is never blocked.
+  useEffect(() => {
+    if (loading) return
+    if (step > maxReachedStep + 1) {
+      router.push('/business/onboarding?step=' + (maxReachedStep + 1))
+    }
+  }, [step, maxReachedStep, loading, router])
 
   // Re-fetch draft when user navigates to step 6 so the preview is always up to date.
   useEffect(() => {
@@ -138,11 +176,12 @@ export default function OnboardingWizardInner() {
         const supabase = createBrowserSupabase()
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
-        const { data: freshDraft } = await supabase
+        let draftQuery = supabase
           .from('onboarding_draft')
           .select('*')
           .eq('business_account_id', user.id)
-          .maybeSingle()
+        if (paikkaId !== null) draftQuery = draftQuery.eq('paikka_id', paikkaId)
+        const { data: freshDraft } = await draftQuery.maybeSingle()
         if (freshDraft) setDraft(freshDraft as OnboardingDraft)
       } catch { /* ignore */ }
     }
