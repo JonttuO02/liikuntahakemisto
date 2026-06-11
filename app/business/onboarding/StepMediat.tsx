@@ -354,10 +354,11 @@ export default function StepMediat({
             allowMultiple={true}
             maxFileSizeMB={5}
             maxFiles={5}
-            selectedFiles={editMode ? [] : photoFiles}
+            selectedFiles={photoFiles}
             onFilesSelected={handlePhotoFilesSelected}
             onRemove={editMode ? undefined : removePhotoFile}
             disabled={editMode ? photosAtMax : false}
+            hideThumbnails={editMode}
           />
           {editMode && photosAtMax && (
             <p className="text-sm text-[rgba(17,17,17,0.45)]">{t('photoMaxReached')}</p>

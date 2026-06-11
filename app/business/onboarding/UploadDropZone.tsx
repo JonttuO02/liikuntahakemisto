@@ -13,6 +13,7 @@ interface UploadDropZoneProps {
   onFilesSelected: (files: File[]) => void
   onRemove?: (index: number) => void
   disabled?: boolean
+  hideThumbnails?: boolean
 }
 
 export default function UploadDropZone({
@@ -24,6 +25,7 @@ export default function UploadDropZone({
   onFilesSelected,
   onRemove,
   disabled = false,
+  hideThumbnails = false,
 }: UploadDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -116,7 +118,7 @@ export default function UploadDropZone({
       </div>
 
       {/* Thumbnail strip — outside the clickable zone */}
-      {selectedFiles.length > 0 && (
+      {!hideThumbnails && selectedFiles.length > 0 && (
         <div className="flex flex-row gap-2 flex-wrap mt-2">
           {selectedFiles.map((file, index) => (
             <div key={file.name} className="relative">
