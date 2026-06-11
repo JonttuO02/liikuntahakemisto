@@ -10,6 +10,7 @@
 - ✅ **v1.5 Visuaalinen elävöitys & UX-hienosäätö** — Phases 23–26 (shipped 2026-06-02)
 - ✅ **v1.6 Kielituki, Ikonit & Sheet-redesign** — Phases 27–30 (shipped 2026-06-04)
 - ✅ **v1.7 Yritysportaali** — Phases 31–36 (shipped 2026-06-11)
+- 🚧 **v1.8 Yritysportaali v2 — Julkistaminen & UX** — Phases 37–39 (in progress)
 
 ---
 
@@ -117,6 +118,55 @@ Full archive: `.planning/milestones/v1.7-ROADMAP.md`
 
 ---
 
+### 🚧 v1.8 Yritysportaali v2 — Julkistaminen & UX (In Progress)
+
+**Milestone Goal:** Viimeistellään yritysportaali — business-paikat julkisiksi hyväksynnän jälkeen, erillinen business-käyttäjäkokemus, ja v1.7 tech debt siivotaan.
+
+- [ ] **Phase 37: Tech Debt Foundation** — Data-integriteetti ja turvallisuusaukot korjataan; RSC guard kaikille /business-reiteille
+- [ ] **Phase 38: Business Data Publication** — Postgres-triggeri atomiselle hyväksynnälle; verifikaatio-tikki kaikissa korteissa
+- [ ] **Phase 39: Business User UX** — Yritysprofiilille oma etusivu, karttanäkymä ja profiilisivu ilman consumer-featureja
+
+## Phase Details
+
+### Phase 37: Tech Debt Foundation
+**Goal**: Data-integriteetti- ja turvallisuusaukot suljetaan ennen uusien ominaisuuksien rakentamista — business_managed asetetaan claim-hetkellä, wizard-auth siirretään RSC guardiin, /admin suojataan middleware-tasolla, ja kuollut kolumni poistetaan
+**Depends on**: Phase 36 (v1.7 complete)
+**Requirements**: DEBT-01, DEBT-02, DEBT-03, DEBT-04, DEBT-05, BIZUX-01
+**Success Criteria** (what must be TRUE):
+  1. Wizard (onboarding + edit) latautuu ilman auth-flashia — kirjautumaton käyttäjä ohjataan kirjautumiseen ennen kuin wizard-UI renderöityy
+  2. Claim-pyynnön jättäneen yrityksen paikka pysyy business_managed=true kun sync-skripti ajetaan claim-hetken jälkeen
+  3. Kirjautumaton käyttäjä, joka navigoi suoraan /admin- tai /business-osoitteeseen, ohjataan kirjautumissivulle ilman että sivun HTML latautuu
+  4. onboarding_completed-kolumni ei enää vaikuta mihinkään routing-päätökseen (kolumni poistettu tai kirjoitukset poistettu)
+  5. Onboarding draft -delete käyttää paikka_id-rajausta, eikä poista väärän paikan drafttia multi-venue-tilanteessa
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 38: Business Data Publication
+**Goal**: Admin-hyväksyntä julkaisee paikan atomisesti ja verifikaatio-tikki näkyy kaikkialla missä paikan nimi esitetään
+**Depends on**: Phase 37
+**Requirements**: PUB-01, PUB-02, PUB-03, PUB-04
+**Success Criteria** (what must be TRUE):
+  1. Hyväksytty paikka (claim tai create) ilmestyy julkiseen listaukseen ilman manuaalisia DB-muutoksia heti hyväksynnän jälkeen
+  2. Hyväksytyn paikan tiedot tulevat yrityksen syöttämästä datasta — Google Places -data ei ylikirjoita niitä sync-skriptillä
+  3. Yrityksen hallinnoiman paikan nimen vieressä näkyy checkmark-tikki PaikkaKortissa, DiagonaalKortissa ja PaikkaSheetissä
+  4. Paikan tila (published, business_managed) on haettavissa app/page.tsx SELECTissä ja vastaavissa tyyppimäärittelyissä
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 39: Business User UX
+**Goal**: Kirjautunut yritysprofiili saa oman eriytetyn käyttökokemuksen — automaattinen ohjaus dashboardille, stripped karttanäkymä ilman consumer-featureja, ja /profiili ilman kuluttajakohtaisia kenttiä
+**Depends on**: Phase 38
+**Requirements**: BIZUX-02, BIZUX-03, BIZUX-04, BIZUX-05
+**Success Criteria** (what must be TRUE):
+  1. Kirjautunut yritysprofiili, joka avaa etusivun (/), ohjataan automaattisesti /business-dashboardille ilman consumer-näkymän välähdystä
+  2. /business-dashboard näyttää yrityksen paikat tilabadgeineen (approved/pending/rejected), "Avaa kartta" -napin ja pikaohjaukset muokkaus- ja esikatselutoiminnoille
+  3. /business/map avautuu karttana ilman bottomsheettia, AI-widgettiä, säätieto-osaa tai TODO-overlaytta
+  4. Yritysprofiilille /profiili-sivulla ei näy kiinnostuksenkohteet- eikä kotipaikkakunta-osioita
+**Plans**: TBD
+**UI hint**: yes
+
+---
+
 ## Progress Table
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -152,8 +202,11 @@ Full archive: `.planning/milestones/v1.7-ROADMAP.md`
 | 29. Kortit & sheet redesign | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 30. i18n FI/EN | v1.6 | 4/4 | ✅ Complete | 2026-06-04 |
 | 31. DB-skeema & Storage-perusta | v1.7 | 4/4 | ✅ Complete | 2026-06-05 |
-| 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | Complete    | 2026-06-05 |
+| 32. Yritysrekisteröinti & auth | v1.7 | 3/3 | ✅ Complete | 2026-06-05 |
 | 33. Claim & paikan luonti | v1.7 | 7/7 | ✅ Complete | 2026-06-06 |
 | 34. Onboarding-velhou | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
 | 35. Admin-hyväksyntäjärjestelmä | v1.7 | 11/11 | ✅ Complete | 2026-06-10 |
 | 36. Hallintapaneeli | v1.7 | 7/7 | ✅ Complete | 2026-06-10 |
+| 37. Tech Debt Foundation | v1.8 | 0/TBD | Not started | - |
+| 38. Business Data Publication | v1.8 | 0/TBD | Not started | - |
+| 39. Business User UX | v1.8 | 0/TBD | Not started | - |

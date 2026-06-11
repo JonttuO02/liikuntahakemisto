@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: Yritysportaali v2 — Julkistaminen & UX
-status: planning
-last_updated: "2026-06-11T14:00:00.000Z"
-last_activity: 2026-06-11 -- Milestone v1.8 started
+status: ready_to_plan
+last_updated: "2026-06-11T14:30:00.000Z"
+last_activity: 2026-06-11 -- Roadmap created for v1.8 (phases 37-39)
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,17 +17,25 @@ progress:
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 37 of 39 (Tech Debt Foundation) — ready to plan
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-11 — Milestone v1.8 started
+Status: Ready to plan
+Last activity: 2026-06-11 — v1.8 roadmap created; phases 37–39 defined
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-06-11)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.8 Yritysportaali v2 — requirements + roadmap
+**Current focus:** Phase 37 — Tech Debt Foundation
+
+## Phase Sequence (v1.8)
+
+- [ ] Phase 37: Tech Debt Foundation — DEBT-01..05 + BIZUX-01
+- [ ] Phase 38: Business Data Publication — PUB-01..04
+- [ ] Phase 39: Business User UX — BIZUX-02..05
 
 ## Active Decisions (carried forward)
 
@@ -35,36 +43,27 @@ See: .planning/PROJECT.md (updated 2026-06-11)
 - GPS: client-side only, never URL params
 - AI widget: never SSR, use `/api/saasuositus` Route Handler
 - Supabase writes: service role key only; anon key is read-only after RLS
-- CSS animations on AdvancedMarker: transform/opacity ONLY
-- SVG icons: path-string approach in lib/sportIcons.tsx
-- i18n: next-intl without-routing + NEXT_LOCALE cookie
-- Business auth: same Supabase Auth as regular users; role differentiated via business_accounts table
-- Business media: Supabase Storage bucket `business-media`; RLS per yritys via business_paikka_links
-- Business data priority: yrityksen data ylikirjoittaa Google Places -datan; business_managed-flag suojaa sync-skriptiltä
-- Admin approval: required for initial registration; edits after approval are instant
-- Claim visibility: claim-paikka pysyy näkyvänä; uusi paikka hidden until approved
-- URLs: /business for panel, /business/onboarding for wizard, /admin for admin
+- Business auth: same Supabase Auth as regular users; role via business_accounts table
+- Storage RLS: SECURITY DEFINER function in public schema (storage schema forbidden)
 - JWT verification: supabaseAdmin.auth.getUser(token) at every Route Handler boundary
-- Storage RLS: SECURITY DEFINER function in public schema (storage schema forbidden on hosted Supabase)
+- Admin approval: required for initial registration; edits after approval are instant
+- Middleware: never query DB from middleware (Edge Runtime); use RSC layout for business role check
 
-## Phase Sequence (v1.8 — in progress)
+## Known Tech Debt Being Addressed in v1.8
 
-*(Roadmap will be defined during milestone setup)*
-
-## Known Tech Debt (v1.8 backlog — being addressed)
-
-- Phase 33: no VERIFICATION.md (smoke-tested only)
-- Phase 36: no VERIFICATION.md (UAT passed only)
-- claim-paikka route missing business_managed=true UPDATE (sync window)
-- Wizard orchestrator duplication: OnboardingWizardInner + EditWizardInner share steps but duplicate routing/guard/draft-fetch logic
-- onboarding_completed column written but never read (dead data)
-- /admin no server-side middleware
+- claim-paikka route missing business_managed=true UPDATE (DEBT-02)
+- Wizard auth useEffect duplication — replaced by RSC guard (DEBT-01 + BIZUX-01)
+- onboarding_completed column written but never read (DEBT-04)
+- /admin no server-side middleware protection (DEBT-03)
+- onboarding draft delete not scoped by paikka_id (DEBT-05)
 
 ## Blockers/Concerns
 
-None.
+- KarttatYdin extraction scope (Phase 39): Etusivu is ~1700 lines. Exact boundary to confirm at planning time. Mitigation: build /business/map/page.tsx as standalone first, then extract.
+- Verification badge timing: is_claimed=true is set at claim submission, not at approval. Badge will show on pending/rejected venues. Confirm intended behavior during Phase 38 planning.
 
 ## Session Continuity
 
-Last session: 2026-06-11T14:00:00.000Z
-Resume: v1.8 requirements and roadmap being defined.
+Last session: 2026-06-11T14:30:00.000Z
+Stopped at: Roadmap written. Next: /gsd:plan-phase 37
+Resume file: None

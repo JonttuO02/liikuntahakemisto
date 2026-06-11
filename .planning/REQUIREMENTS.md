@@ -61,21 +61,19 @@ Kolme teemaa: (1) v1.7 tech debt siivotaan — data-integriteetti- ja turvallisu
 
 ## Traceability
 
-*(Täytetään roadmapper-agentin toimesta)*
-
 | REQ-ID | Phase | Plan |
 |--------|-------|------|
-| DEBT-01 | — | — |
-| DEBT-02 | — | — |
-| DEBT-03 | — | — |
-| DEBT-04 | — | — |
-| DEBT-05 | — | — |
-| PUB-01 | — | — |
-| PUB-02 | — | — |
-| PUB-03 | — | — |
-| PUB-04 | — | — |
-| BIZUX-01 | — | — |
-| BIZUX-02 | — | — |
-| BIZUX-03 | — | — |
-| BIZUX-04 | — | — |
-| BIZUX-05 | — | — |
+| DEBT-01 | Phase 37 | — |
+| DEBT-02 | Phase 37 | — |
+| DEBT-03 | Phase 37 | — |
+| DEBT-04 | Phase 37 | — |
+| DEBT-05 | Phase 37 | — |
+| BIZUX-01 | Phase 37 | — |
+| PUB-01 | Phase 38 | — |
+| PUB-02 | Phase 38 | — |
+| PUB-03 | Phase 38 | — |
+| PUB-04 | Phase 38 | — |
+| BIZUX-02 | Phase 39 | — |
+| BIZUX-03 | Phase 39 | — |
+| BIZUX-04 | Phase 39 | — |
+| BIZUX-05 | Phase 39 | — |
