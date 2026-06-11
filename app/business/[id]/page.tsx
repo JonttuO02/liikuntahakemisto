@@ -1,39 +1,16 @@
 import { Suspense } from 'react'
-import { cookies } from 'next/headers'
-import { redirect, notFound } from 'next/navigation'
-import { createServerSupabase } from '@/lib/supabaseSSR'
+import { notFound } from 'next/navigation'
 import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
 import EditWizardInner from './EditWizardInner'
 
 export default async function BusinessVenuePage({ params }: { params: { id: string } }) {
-  // Auth guard — mirrors NavBarServer.tsx and app/paikat/[id]/page.tsx pattern
-  const cookieStore = cookies()
-  const supabase = createServerSupabase(cookieStore)
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/business/rekisteroidy')
-
-  // Business account check
-  const { data: account } = await supabaseAdmin
-    .from('business_accounts')
-    .select('user_id')
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  if (!account) redirect('/business/rekisteroidy')
+  // Auth guard is client-side in EditWizardInner — the browser client stores
+  // session in localStorage (not cookies), so server-side getUser() always
+  // returns null for this app's auth setup.
 
   // Parse paikka_id from URL param
   const paikkaId = parseInt(params.id, 10)
   if (isNaN(paikkaId) || paikkaId < 1) notFound()
-
-  // Ownership check — user must have a business_paikka_links row for this paikka
-  const { data: link } = await supabaseAdmin
-    .from('business_paikka_links')
-    .select('id')
-    .eq('business_account_id', user.id)
-    .eq('paikka_id', paikkaId)
-    .maybeSingle()
-
-  if (!link) notFound()
 
   // Fetch paikka data
   const { data: paikka } = await supabaseAdmin

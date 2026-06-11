@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { AnimatePresence } from 'framer-motion'
@@ -10,6 +10,7 @@ import StepMediat from '../onboarding/StepMediat'
 import StepHinnasto from '../onboarding/StepHinnasto'
 import StepAukioloajat from '../onboarding/StepAukioloajat'
 import StepYhteystiedot from '../onboarding/StepYhteystiedot'
+import { createBrowserSupabase } from '@/lib/supabaseSSR'
 
 interface EditWizardInnerProps {
   paikka: Liikuntapaikka
@@ -21,6 +22,23 @@ export default function EditWizardInner({ paikka, paikkaId }: EditWizardInnerPro
   const searchParams = useSearchParams()
   const router = useRouter()
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
+
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createBrowserSupabase()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.replace('/business/rekisteroidy'); return }
+      const { data: account } = await supabase
+        .from('business_accounts')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      if (!account) { router.replace('/business/rekisteroidy'); return }
+      setAuthChecked(true)
+    }
+    checkAuth()
+  }, [router])
 
   // Local state that persists step data across tab-bar navigation.
   // Initialized from paikka (server snapshot); updated via onSaveComplete after each save.
@@ -38,6 +56,14 @@ export default function EditWizardInner({ paikka, paikkaId }: EditWizardInnerPro
   const [localPhotoUrls, setLocalPhotoUrls] = useState<string[]>(paikka.photo_urls ?? [])
 
   const currentStep = searchParams.get('step') ?? '1'
+
+  if (!authChecked) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-6 h-6 rounded-full border-2 border-[rgba(17,17,17,0.12)] border-t-[#111111] animate-spin" />
+      </div>
+    )
+  }
 
   function tabLabel(n: number): string {
     switch (n) {
