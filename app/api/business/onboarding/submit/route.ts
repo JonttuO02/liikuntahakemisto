@@ -97,24 +97,13 @@ export async function POST(request: Request) {
     console.error('[onboarding/submit] claim_status reset to pending failed (non-critical):', claimStatusError.message)
   }
 
-  // Step 5: Set onboarding_completed = true so /business page shows management panel (D-03).
-  // Non-critical: if this fails after the liikuntapaikat update succeeded, log but continue —
-  // the venue data is already live. The onboarding gate will re-run on next /business visit.
-  const { error: completedError } = await supabaseAdmin
-    .from('business_accounts')
-    .update({ onboarding_completed: true })
-    .eq('user_id', user.id)
-
-  if (completedError) {
-    console.error('[onboarding/submit] onboarding_completed UPDATE failed (non-critical):', completedError.message)
-  }
-
   // Step 6: Delete the draft now that liikuntapaikat is updated (D-06).
   // Only reached after Step 4 succeeded — draft is not deleted on error paths.
   const { error: deleteError } = await supabaseAdmin
     .from('onboarding_draft')
     .delete()
     .eq('business_account_id', user.id)
+    .eq('paikka_id', draft.paikka_id)
 
   if (deleteError) {
     console.error('[onboarding/submit] Draft DELETE failed (non-critical):', deleteError.message)

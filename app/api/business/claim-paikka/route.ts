@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   // Non-critical: if this UPDATE fails, the claim link still exists — log but do not rollback.
   const { error: updateError } = await supabaseAdmin
     .from('liikuntapaikat')
-    .update({ is_claimed: true })
+    .update({ is_claimed: true, business_managed: true })
     .eq('id', paikkaId)
 
   if (updateError) {
