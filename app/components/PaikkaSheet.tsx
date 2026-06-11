@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Phone, ExternalLink, Clock, CircleDollarSign, Info, Bookmark, BookmarkCheck, Camera, ChevronDown, Building2 } from 'lucide-react'
+import { X, Phone, ExternalLink, Clock, CircleDollarSign, Info, Bookmark, BookmarkCheck, Camera, ChevronDown, Building2, BadgeCheck } from 'lucide-react'
 import { hintateksti, cn } from '@/lib/utils'
 import { formatGroupedHours, getOpenStatus } from '@/lib/aukiolo'
 import { isSafeUrl } from '@/lib/urlUtils'
@@ -169,7 +169,12 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => 
                 )}
               </div>
               <div className="min-w-0">
-                <h2 className="font-bold text-white text-lg leading-tight">{paikka.nimi}</h2>
+                <h2 className="font-bold text-white text-lg leading-tight">
+                  {paikka.nimi}
+                  {paikka.business_managed && (
+                    <BadgeCheck className="w-3.5 h-3.5 ml-1 inline-block align-middle" />
+                  )}
+                </h2>
                 {(paikka.osoite || paikka.kaupunki) && (
                   <p className="text-sm text-white/70 mt-0.5">
                     {[paikka.osoite, paikka.kaupunki].filter(Boolean).join(', ')}

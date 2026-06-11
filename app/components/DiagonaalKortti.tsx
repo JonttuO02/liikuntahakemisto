@@ -3,7 +3,7 @@
 import { useRef, useState, useLayoutEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { MapPin, Check, Building2, Camera } from 'lucide-react'
+import { MapPin, Check, Building2, Camera, BadgeCheck } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
@@ -110,6 +110,9 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
           <div className="flex flex-col gap-0.5 mt-1.5 min-w-0">
             <p className="font-bold text-[#111111] text-sm leading-snug line-clamp-1 overflow-hidden">
               {paikka.nimi}
+              {paikka.business_managed && (
+                <BadgeCheck className="w-3.5 h-3.5 ml-1 inline-block align-middle" />
+              )}
             </p>
             {membershipOnly ? (
               <span className="text-xs text-[rgba(17,17,17,0.5)]">{t('membershipOnly')}</span>

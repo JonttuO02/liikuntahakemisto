@@ -19,6 +19,8 @@ export type Liikuntapaikka = {
   image_url?: string | null
   logo_url?: string | null
   photo_urls?: string[] | null
+  is_claimed?: boolean | null
+  business_managed?: boolean | null
 }
 
 export type Suosikki = {
