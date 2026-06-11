@@ -82,7 +82,7 @@ export default function EditWizardInner({ paikka, paikkaId }: EditWizardInnerPro
       <AnimatePresence>
         {previewOpen && (
           <PreviewModal
-            paikka={paikka}
+            paikka={{ ...paikka, logo_url: localLogoUrl, photo_urls: localPhotoUrls }}
             onClose={() => setPreviewOpen(false)}
           />
         )}

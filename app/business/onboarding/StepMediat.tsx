@@ -287,6 +287,8 @@ export default function StepMediat({
 
       setExistingLogoUrl(finalLogoUrl)
       setExistingPhotoUrls(finalPhotoUrls)
+      setLogoFiles([])
+      setPhotoFiles([])
       setSaveSuccessVisible(true)
       setTimeout(() => setSaveSuccessVisible(false), 2000)
       onSaveSuccess?.(finalLogoUrl, finalPhotoUrls)
