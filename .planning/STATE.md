@@ -2,25 +2,26 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: Yritysportaali v2 — Julkistaminen & UX
-status: ready_to_execute
-last_updated: "2026-06-11T16:00:00.000Z"
+status: ready_to_plan
+last_updated: 2026-06-11T15:42:43.920Z
 last_activity: 2026-06-11 -- Phase 37 planned (6 plans in 2 waves)
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 6
-  completed_plans: 0
+  completed_plans: 102
   percent: 0
+stopped_at: Phase 37 complete (1/1) — ready to discuss Phase 38
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 37 of 39 (Tech Debt Foundation) — ready to execute
-Plan: 37-PLAN.md (6 plans, Wave 1 × 4 + Wave 2 × 2)
-Status: Ready to execute
-Last activity: 2026-06-11 — Phase 37 planned; 6 plans verified ✓
+Phase: 38 of 39 (business data publication)
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-11
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -29,7 +30,7 @@ Progress: [░░░░░░░░░░] 0%
 See: .planning/PROJECT.md (updated 2026-06-11)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 37 — Tech Debt Foundation
+**Current focus:** Phase 38 — business data publication
 
 ## Phase Sequence (v1.8)
 

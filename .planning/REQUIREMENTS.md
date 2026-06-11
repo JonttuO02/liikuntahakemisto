@@ -14,11 +14,11 @@ Kolme teemaa: (1) v1.7 tech debt siivotaan — data-integriteetti- ja turvallisu
 
 ### Tech Debt (DEBT)
 
-- [ ] **DEBT-01**: Yritys-wizard (OnboardingWizardInner + EditWizardInner) ei enää sisällä auth useEffect -logiikkaa — business/layout.tsx RSC guard hoitaa suojauksen
-- [ ] **DEBT-02**: claim-paikka-reitti asettaa `business_managed=true` liikuntapaikat-tauluun claim-hetkellä
-- [ ] **DEBT-03**: middleware.ts suojaa `/admin`- ja `/business`-reitit kirjautumattomalta käyttäjältä session-tarkistuksella (ei DB-kyselyä)
-- [ ] **DEBT-04**: `onboarding_completed`-kolumni poistetaan business_accounts-taulusta (tai kolumnin kirjoitukset poistetaan)
-- [ ] **DEBT-05**: onboarding/submit-reitin draft-delete-kutsu scopettuu `paikka_id`:llä multi-venue-turvallisuuden vuoksi
+- [x] **DEBT-01**: Yritys-wizard (OnboardingWizardInner + EditWizardInner) ei enää sisällä auth useEffect -logiikkaa — business/layout.tsx RSC guard hoitaa suojauksen
+- [x] **DEBT-02**: claim-paikka-reitti asettaa `business_managed=true` liikuntapaikat-tauluun claim-hetkellä
+- [x] **DEBT-03**: middleware.ts suojaa `/admin`- ja `/business`-reitit kirjautumattomalta käyttäjältä session-tarkistuksella (ei DB-kyselyä)
+- [x] **DEBT-04**: `onboarding_completed`-kolumni poistetaan business_accounts-taulusta (tai kolumnin kirjoitukset poistetaan)
+- [x] **DEBT-05**: onboarding/submit-reitin draft-delete-kutsu scopettuu `paikka_id`:llä multi-venue-turvallisuuden vuoksi
 
 ### Julkistaminen (PUB)
 
@@ -29,7 +29,7 @@ Kolme teemaa: (1) v1.7 tech debt siivotaan — data-integriteetti- ja turvallisu
 
 ### Business User UX (BIZUX)
 
-- [ ] **BIZUX-01**: `app/business/layout.tsx` on async Server Component auth guard — kaikki `/business/*`-reitit suojattu palvelinpuolella ilman client-side `useEffect`-tarkistuksia
+- [x] **BIZUX-01**: `app/business/layout.tsx` on async Server Component auth guard — kaikki `/business/*`-reitit suojattu palvelinpuolella ilman client-side `useEffect`-tarkistuksia
 - [ ] **BIZUX-02**: Kirjautunut yritysprofiili ohjataan `/business`-dashboardille kun käyttäjä lataa etusivun `/`
 - [ ] **BIZUX-03**: `/business`-dashboard-etusivu näyttää paikkojen tilabadget (approved/pending/rejected), "Avaa kartta" -napin ja pikaohjaukset muokkaus- ja esikatselutoimintoihin
 - [ ] **BIZUX-04**: `/business/map` on erillinen karttareitti ilman consumer-featureja (ei bottomsheet, ei AI-widget, ei säätieto, ei TODO-overlay)
