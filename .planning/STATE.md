@@ -4,7 +4,7 @@ milestone: v1.8
 milestone_name: Yritysportaali v2 — Julkistaminen & UX
 status: executing
 stopped_at: Phase 38 context gathered
-last_updated: "2026-06-11T16:04:14.404Z"
+last_updated: "2026-06-11T16:21:43.660Z"
 last_activity: 2026-06-11 -- Phase 38 execution started
 progress:
   total_phases: 3
