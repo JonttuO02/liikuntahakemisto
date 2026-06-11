@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Yritysportaali
-status: complete
-last_updated: "2026-06-10T20:43:00.000Z"
-last_activity: 2026-06-10 -- Phase 36 (Hallintapaneeli) all 7 plans complete
+status: completed
+last_updated: "2026-06-11T00:00:00Z"
+last_activity: 2026-06-11 -- Phase 36 UAT complete — 9/9 passed, 3 bugs fixed (auth guard, media grid, preview state)
 progress:
   total_phases: 6
-  completed_phases: 6
-  total_plans: 50
-  completed_plans: 50
-  percent: 100
+  completed_phases: 5
+  total_plans: 39
+  completed_plans: 44
+  percent: 83
 ---
 
 # Project State
@@ -62,5 +62,5 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-10T20:43:00.000Z
-Resume: Phase 36 complete — v1.7 Yritysportaali milestone achieved
+Last session: 2026-06-11
+Resume: Phase 36 UAT complete, v1.7 Yritysportaali milestone achieved. Ready for /gsd:complete-milestone or next project.
