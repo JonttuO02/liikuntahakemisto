@@ -20,7 +20,8 @@
 ALTER TABLE business_paikka_links ENABLE ROW LEVEL SECURITY;
 
 -- Re-assert the SELECT policy with a distinct name to document the Phase 35 audit.
--- Uses IF NOT EXISTS to avoid errors if the exact same policy name already exists.
-CREATE POLICY IF NOT EXISTS "business_paikka_links_select_own"
+-- Drop first so the statement is idempotent on re-runs.
+DROP POLICY IF EXISTS "business_paikka_links_select_own" ON business_paikka_links;
+CREATE POLICY "business_paikka_links_select_own"
   ON business_paikka_links FOR SELECT
   USING (business_account_id = auth.uid());

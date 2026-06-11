@@ -1,40 +1,47 @@
 {
   "version": "1.0",
-  "timestamp": "2026-05-29T00:00:00.000Z",
-  "phase": "16",
-  "phase_name": "brandi-logo-uloke",
-  "phase_dir": ".planning/phases/16-brandi-logo-uloke",
-  "plan": 3,
+  "timestamp": "2026-06-11T00:56:59.030Z",
+  "phase": null,
+  "phase_name": "hotfix — onboarding regressions",
+  "phase_dir": null,
+  "plan": null,
   "task": null,
+  "total_tasks": null,
   "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "Rebrand metadata to AKTIIVI", "status": "done"},
-    {"id": 2, "name": "Create AktiiviLogo.tsx component", "status": "done"},
-    {"id": 3, "name": "Wire AktiiviLogo into Etusivu bump — REVERTED this session", "status": "reverted"}
+    {"id": 1, "name": "supabase db push — applied migrations 000003–000006", "status": "done"},
+    {"id": 2, "name": "fix migration 000006 CREATE POLICY IF NOT EXISTS syntax error", "status": "done"},
+    {"id": 3, "name": "diagnose root cause of preview/submit/save regressions", "status": "done"},
+    {"id": 4, "name": "wizard: redirect step 6 → step 1 when draft is missing", "status": "done"}
   ],
   "remaining_tasks": [
-    {"id": 4, "name": "Redesign uloke approach from scratch — bump+logo integration", "status": "not_started"}
+    {"id": 5, "name": "commit hotfix files", "status": "not_started"},
+    {"id": 6, "name": "user verification: full onboarding flow end-to-end", "status": "not_started"}
   ],
-  "blockers": [
+  "blockers": [],
+  "human_actions_pending": [
     {
-      "description": "The entire bump/uloke implementation (clip-path geometry, AktiiviLogo wiring, shadow experiments) was reverted. Etusivu.tsx is now at commit 3d1cd6c state — pre-bump, pill animation with HANDLE_H, no AktiiviLogo wired in.",
-      "type": "design",
-      "workaround": "Start fresh with a new design approach for how the logo tab should look and feel"
+      "action": "Test full onboarding flow: steps 1→5 (save), step 6 (preview loads), submit (redirects to /business)",
+      "context": "DB side fixed by db push. Wizard guard added for missing draft at step 6.",
+      "blocking": false
     }
   ],
   "decisions": [
     {
-      "decision": "Etusivu.tsx reverted to commit 3d1cd6c (pre-bump state)",
-      "rationale": "Multiple bump/visual integration approaches failed. User wants to start fresh.",
-      "phase": "16"
+      "decision": "Root cause: Phase 36-03 expanded business/page.tsx query to include logo_url before migration 000003 was applied",
+      "rationale": "This caused the query to fail silently, breaking management panel and cascading to submit/preview",
+      "phase": "hotfix"
     },
     {
-      "decision": "box-shadow on inner div at shoulder level WORKS for creating shadow",
-      "rationale": "filter:drop-shadow blocked by backdrop-filter compositing. box-shadow on a non-clipped child div at top:TAB_H with '0 0 40px 20px rgba(0,0,0,0.55)' created visible shadow. Keep this technique.",
-      "phase": "16"
+      "decision": "Added step-6 guard: if refreshDraftForPreview finds no draft, redirect to step 1",
+      "rationale": "Prevents 8s timeout when draft was deleted by a successful prior submit",
+      "phase": "hotfix"
     }
   ],
-  "uncommitted_files": ["app/components/Etusivu.tsx"],
-  "next_action": "Discuss what the new uloke/logo tab design should look like before implementing. The box-shadow technique (inner div at shoulder level) is proven to work for adding shadow.",
-  "context_notes": "Etusivu.tsx is staged (M) — the git checkout 3d1cd6c revert is staged but not committed. Commit this as WIP before resuming. AktiiviLogo.tsx component still exists and works — only the Etusivu wiring was reverted."
+  "uncommitted_files": [
+    "app/business/onboarding/OnboardingWizardInner.tsx",
+    "supabase/migrations/20260610000006_rls_business_paikka_links.sql"
+  ],
+  "next_action": "git commit the two modified files, then test the full onboarding flow",
+  "context_notes": "Phase 36 is complete (v1.7 milestone done). This session was emergency debugging. No new phase is active."
 }
