@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
-import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import type { OnboardingDraft } from '@/lib/onboardingUtils'
 import ProgressBar from './ProgressBar'
@@ -54,7 +54,7 @@ export default function OnboardingWizardInner() {
 
   useEffect(() => {
     async function loadDraft() {
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return // layout.tsx RSC guard prevents null; TypeScript narrowing only
 
@@ -139,7 +139,7 @@ export default function OnboardingWizardInner() {
   async function saveAndAdvance(stepNum: number) {
     setMaxReachedStep(prev => Math.max(prev, stepNum))
     try {
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         let draftQuery = supabase
@@ -170,7 +170,7 @@ export default function OnboardingWizardInner() {
     if (step !== 6) return
     async function refreshDraftForPreview() {
       try {
-        const supabase = createBrowserSupabase()
+        const supabase = createBusinessBrowserClient()
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
         let draftQuery = supabase

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import { ORDERED_DAYS } from '@/lib/onboardingUtils'
 
@@ -118,7 +118,7 @@ export default function StepAukioloajat({
     setSaveError(null)
 
     try {
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token ?? ''
 
@@ -164,7 +164,7 @@ export default function StepAukioloajat({
       // Build value: only include open days; ORDERED_DAYS whitelist prevents key injection
       const openDaysObject = buildOpenDaysObject()
 
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token ?? ''
 

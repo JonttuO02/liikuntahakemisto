@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
-import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import UploadDropZone from './UploadDropZone'
 import UploadProgressBar from './UploadProgressBar'
 import type { OnboardingDraft } from '@/lib/onboardingUtils'
@@ -93,7 +93,7 @@ export default function StepMediat({
 
     // Try to delete from Storage (non-blocking)
     if (storagePath) {
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       await supabase.storage.from('business-media').remove([storagePath])
     }
 
@@ -107,7 +107,7 @@ export default function StepMediat({
     setError(null)
 
     try {
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       // Security: always derive the storage path prefix from the session, never from a prop.
       // Using session.user.id ensures the path matches the RLS policy (auth.uid() = path prefix).
       const {
@@ -212,7 +212,7 @@ export default function StepMediat({
     setSaving(true)
     setSaveError(null)
     try {
-      const supabase = createBrowserSupabase()
+      const supabase = createBusinessBrowserClient()
       const {
         data: { session },
       } = await supabase.auth.getSession()
