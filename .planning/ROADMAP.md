@@ -132,7 +132,7 @@ Full archive: `.planning/milestones/v1.7-ROADMAP.md`
 
 **Milestone Goal:** Consumer- ja business-puolen auth-sessiot eriytetään täysin toisistaan cookie-nimiavaruuksilla, ja v1.7–v1.8 tech debt siistitään — wizard-duplikaattien yhdistäminen, API-bugifixit, kuollut koodi ja testitilit.
 
-- [ ] **Phase 39: Auth-Separaatio** — Eriytetyt auth-sessiot: sb-biz-* business-puolelle, sb-* consumer-puolelle; simultaanisessiot mahdollisia *(4 plans, Wave 1×1 + Wave 2×2 + Wave 3×1)*
+- [x] **Phase 39: Auth-Separaatio** — Eriytetyt auth-sessiot: sb-biz-* business-puolelle, sb-* consumer-puolelle; simultaanisessiot mahdollisia *(4/4 plans)* — 2026-06-12
 - [ ] **Phase 40: Wizard-konsolidointi & Cleanup** — WizardInner-yhdistäminen, update-paikka 403 -bugikorjaus, step-skip-suoja, kuollut koodi ja testitilit poistetaan
 
 ## Phase Details
@@ -149,10 +149,10 @@ Full archive: `.planning/milestones/v1.7-ROADMAP.md`
   5. Middleware refreshaa oikean session oikealla reitillä: `/business/*`-reiteillä refreshataan sb-biz-*-cookie, muilla reiteillä refreshataan sb-*-cookie
 **Plans**: 4 plans (Wave 1 + Wave 2×2 + Wave 3)
 Plans:
-- [ ] 39-01-PLAN.md — Create lib/supabase-business.ts (sb-biz-* namespace clients)
-- [ ] 39-02-PLAN.md — Middleware path-conditional refresh + i18n strings
-- [ ] 39-03-PLAN.md — /business/kirjaudu login page
-- [ ] 39-04-PLAN.md — Migrate all /business/* pages to business client
+- [x] 39-01-PLAN.md — Create lib/supabase-business.ts (sb-biz-* namespace clients)
+- [x] 39-02-PLAN.md — Middleware path-conditional refresh + i18n strings
+- [x] 39-03-PLAN.md — /business/kirjaudu login page
+- [x] 39-04-PLAN.md — Migrate all /business/* pages to business client
 
 ### Phase 40: Wizard-konsolidointi & Cleanup
 **Goal**: Wizard-duplikaatti poistetaan, API-bugit korjataan ja kuollut koodi siistitään — codebase on tiiviimpi ja business-käyttäjä voi muokata kaikkia paikkojaan riippumatta claim-statuksesta
@@ -210,5 +210,5 @@ Plans:
 | 36. Hallintapaneeli | v1.7 | 7/7 | Complete | 2026-06-10 |
 | 37. Tech Debt Foundation | v1.8 | 1/1 | Complete | 2026-06-11 |
 | 38. Business Data Publication | v1.8 | 1/1 | Complete | 2026-06-11 |
-| 39. Auth-Separaatio | v1.9 | 0/4 | Not started | - |
+| 39. Auth-Separaatio | v1.9 | 4/4 | Complete | 2026-06-12 |
 | 40. Wizard-konsolidointi & Cleanup | v1.9 | 0/TBD | Not started | - |

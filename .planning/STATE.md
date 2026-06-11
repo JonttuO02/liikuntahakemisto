@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Auth-Separaatio & Cleanup
-status: ready_to_execute
-stopped_at: Phase 39 planned
+status: phase_complete
+stopped_at: Phase 39 complete
 last_updated: "2026-06-12T00:00:00.000Z"
-last_activity: 2026-06-12 — Phase 39 planned (4 plans, 3 waves)
+last_activity: 2026-06-12 — Phase 39 executed (4/4 plans complete)
 progress:
   total_phases: 2
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 0
-  percent: 0
+  completed_plans: 4
+  percent: 50
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-11)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 39 — Auth-Separaatio
+**Current focus:** Phase 40 — Wizard-konsolidointi & Cleanup (next)
 
 ## Current Position
 
-Phase: 39 of 40 (Auth-Separaatio)
-Plan: 4 plans ready (3 waves)
-Status: Ready to execute
-Last activity: 2026-06-12 — Phase 39 planned
+Phase: 39 of 40 (Auth-Separaatio) — COMPLETE
+Next: Phase 40 (Wizard-konsolidointi & Cleanup)
+Status: Phase 39 complete, Phase 40 not yet planned
+Last activity: 2026-06-12 — Phase 39 executed (4/4 plans)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50%
 
 ## v1.9 Direction
 
@@ -66,7 +66,7 @@ None.
 
 ### Blockers/Concerns
 
-- Uncommitted v1.8 review fixes exist (see git status) — commit these before starting Phase 39 execution
+None.
 
 ## Session Continuity
 
