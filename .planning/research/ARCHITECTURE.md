@@ -1,373 +1,266 @@
-# Architecture: i18n + SVG Icon System Integration
+# Architecture Patterns — v1.8 Yritysportaali v2
 
-**Project:** Liikuntahakemisto (AKTIIVI)
-**Scope:** FI/EN language toggle + custom SVG icon system into existing Next.js 14 App Router app
-**Researched:** 2026-06-03
-
----
-
-## i18n Architecture
-
-### Chosen Pattern: Context/Hook with localStorage Persistence
-
-The existing app uses URL-based state only for view switching (`?nakyma=lista`). Adding locale to the URL (`/en/`, `?lang=en`) would break the `CLAUDE.md` routing constraint that `/` renders `Etusivu`. The correct pattern for this codebase is **client-side React context + localStorage persistence**, mirroring how `useGPS` works as a hook in `hooks/`.
-
-Next.js 14 App Router i18n via `next-intl` or `next-i18next` requires URL prefix routing (`/fi/`, `/en/`) by design. Both libraries are incompatible with the constraint that `/?nakyma=lista` and `/` route identically without locale prefix. Do not use either library. A hand-rolled context is 40 lines and has zero dependencies.
-
-### Core Data Flow
-
-```
-localStorage('locale')
-       |
-       v
-LocaleProvider (app/components/LocaleProvider.tsx)
-  - owns locale: Locale state
-  - hydrates from localStorage on mount (useEffect — avoids SSR mismatch)
-  - writes to localStorage on setLocale()
-  - provides LocaleContext
-       |
-       v
-useLocale() (hooks/useLocale.ts)
-  - reads LocaleContext
-  - returns { locale, t, setLocale }
-       |
-       v
-Every 'use client' component that has translated strings
-```
-
-### Server Component Constraint
-
-`app/paikat/[id]/page.tsx` is a Server Component. It cannot use `useLocale()`. Three options:
-
-1. **Keep it Finnish-only initially** — profile page is deep in the funnel, lowest i18n priority. Recommended for first iteration.
-2. **Pass locale as a searchParam** (`?lang=en`) — allowed because it does not affect routing logic. Add a `lang` searchParam reader to the server component.
-3. **Convert hero/metadata to Client Component** — loses RSC data-fetching benefits, not recommended.
-
-**Recommendation:** Keep the profile page Finnish for the first iteration. The map-based homepage is where first-time English speakers land; the profile page content (hours, prices, descriptions) is data from Supabase in Finnish anyway.
-
-### Hydration Mismatch Prevention
-
-The `LocaleProvider` must render Finnish on the server and on the initial client render, then switch to the stored locale in a `useEffect`. This is the standard pattern for localStorage-hydrated state in Next.js App Router:
-
-```tsx
-// app/components/LocaleProvider.tsx
-'use client'
-const [locale, setLocale] = useState<Locale>('fi')  // always 'fi' on server/initial render
-
-useEffect(() => {
-  try {
-    const stored = localStorage.getItem('locale') as Locale | null
-    if (stored === 'en' || stored === 'fi') setLocale(stored)
-  } catch {}
-}, [])
-```
-
-The initial flash from FI to EN (if stored preference is EN) is acceptable — it is a sub-frame repaint on subsequent visits. For a language toggle feature this is the correct tradeoff.
-
-### Translation Coverage
-
-Components with hardcoded Finnish strings that need `useLocale()`:
-
-| Component | Example strings |
-|---|---|
-| `Etusivu.tsx` | `"Hae liikuntapaikkaa..."`, `"TO DO"`, `"Palaa omalle sijainnille"`, `"Ei tuloksia"`, `"Tyhjennä haku"`, time-based fallback greeting (`"Huomenta"`, `"Hei"`, `"Iltaa"`), `"Lista on tyhjä"`, `"Lisätään pian"`, `"Kirjaudu ulos"`, `"Kirjaudu"`, `"Profiili"`, `"Yö"`, `"Päivä"`, `"Kävikö paikassa?"`, `"Tallennus epäonnistui"`, `"Jätä arvostelu"`, `"Ohita"`, `"TÄHTIARVOSANA"`, `"KOMMENTTI"` |
-| `PaikkaKortti.tsx` | `"Sponsoroitu"`, `"Kertakäynti OK"`, `"Auki nyt"`, `"Suljettu"`, `"vain jäsenyys"`, `"Lisätään pian"`, `"Aukioloajat lisätään pian"`, `"Näytä tiedot"` |
-| `DiagonaalKortti.tsx` | `"Auki"`, `"Suljettu"`, `"vain jäsenyys"`, `"Lisätään pian"`, `"Näytä kartalla"`, `"Lisää TO DO -listaan"`, `"Poista TO DO -listalta"` |
-| `PaikkaSheet.tsx` | All section labels, open status text, price labels, button labels |
-| `NavBar.tsx` | `"Avaa valikko"`, `"Sulje valikko"`, `"Kirjaudu ulos"`, `"Kirjaudu"`, `"Haku"`, `"TO DO"` |
-| `AuthModal.tsx` | All modal text |
-| `ReviewSection.tsx`, `ReviewForm.tsx` | All form labels and messages |
-
-### `lajiKonfig.label` is Finnish
-
-The `label` field in `lib/lajit.ts` (`'Padel'`, `'Kuntosali'`, `'Jooga'`, etc.) is used as display text in sport badges and filter pills. Most sport names are internationally understood, but `'Kuntosali'` (gym), `'Liikuntahalli'` (sports hall), and `'Uinti'` (swimming) need translation.
-
-**Recommended approach:** Add a `labelEn` field to `LajiKonfig`:
-
-```typescript
-export interface LajiKonfig {
-  label: string      // Finnish
-  labelEn: string    // English
-  badgeTw: string
-  accentBg: string
-  color: string
-}
-```
-
-Components read `locale === 'en' ? laji.labelEn : laji.label`. This keeps translations co-located with the sport definition rather than scattering them into `lib/i18n.ts`.
-
-### `LAJIT_FILTTERI` Sentinel Value
-
-`LAJIT_FILTTERI = ['Kaikki', 'Padel', ...]` — `'Kaikki'` (All) is used as both a display string and a sentinel (`searchKaupunki === 'Kaikki'`). Do NOT translate the sentinel value at the data layer. Translate only the display label in the UI. The internal comparison logic stays `=== 'Kaikki'`.
+**Project:** AKTIIVI — liikuntahakemisto
+**Researched:** 2026-06-11
+**Milestone:** v1.8 Julkistaminen & UX
+**Confidence:** HIGH — based on direct codebase inspection
 
 ---
 
-## SVG Icon Architecture
+## 1. Role Detection: Where Should the Business Role Check Live?
 
-### Current State: Two Parallel Systems
+### Current State
 
-There are two separate icon systems that must be consolidated:
+`middleware.ts` calls `supabase.auth.getUser()` to refresh the session cookie but performs no routing. Business role is checked client-side in `app/business/page.tsx` (useEffect → `business_accounts` table lookup) and `app/admin/page.tsx` (useEffect → `/api/admin/applications` which verifies `is_admin`). The admin page does a client-side redirect via `router.replace('/')` when not authorized.
 
-**System 1 — `lib/lajit.ts` `SPORT_ICONS: Record<string, LucideIcon>`**
+### The Tradeoff Matrix
 
-Used as React components: `<Icon className="w-3 h-3" />`. Imported in:
-- `app/components/Etusivu.tsx` — `CalloutCard` and `CombinedFilterPill`
-- `app/components/DiagonaalKortti.tsx` — sport badge and fallback background
-- `app/components/PaikkaKortti.tsx` — has a **duplicated local copy** of the same Lucide mapping (not imported from `lib/lajit.ts`)
+| Layer | Latency | Can read DB | Redirects before render | Caveats |
+|---|---|---|---|---|
+| `middleware.ts` | Fastest (~0ms extra) | No — anon key only, cannot query `business_accounts` | Yes — `NextResponse.redirect()` before any RSC | Cannot query custom tables; session cookie must be set (may not be on first hit) |
+| `app/layout.tsx` (RSC) | Fast — same request | Yes — server-side Supabase client | No — renders then redirects via `redirect()` | Adds DB call to every layout render |
+| Route-specific `page.tsx` (RSC) | Fast | Yes | Yes — `redirect()` before streaming | Most targeted; no layout overhead |
+| Client `useEffect` (current pattern) | Slow — full round trip after paint | Yes | No — spinner shown first | Flash of wrong content; always a bounce |
 
-**System 2 — `app/components/SportPin.tsx` local `SPORT_ICONS: Record<string, string>`**
+### Recommendation: Server Component at `app/business/layout.tsx`
 
-Raw SVG path strings (inner content only, no `<svg>` wrapper). Used only in the Google Maps pin component via `dangerouslySetInnerHTML`. The `lib/sportPins.ts` file is now empty (migration already done in Phase 23).
+Create `app/business/layout.tsx` as an async Server Component. On every request inside `/business/*`:
 
-### Recommended Approach: Single SVG Path Registry
+1. Call `createServerSupabase(cookieStore)` (already in `lib/supabaseSSR.ts`).
+2. `getUser()` — if no session, `redirect('/business/rekisteroidy')`.
+3. Query `business_accounts` for `user_id` — if no row, `redirect('/business/rekisteroidy')`.
+4. Pass the account data down as props or via a `BusinessContext` provider.
 
-Create `lib/sportIcons.ts` as the single source of truth. It holds SVG path content strings and derives both the React component and the Maps string from them.
+**Do not add role detection to `middleware.ts`** — it can only read session cookies, not the `business_accounts` table. You would still need a second DB hop in the layout.
 
-```typescript
-// lib/sportIcons.ts
+**Do not promote admin detection to middleware either** — same constraint. The admin check at `/admin` routes stays as-is (Route Handler JWT + `is_admin` from `profiles`), which is already correct and server-side.
 
-// Inner SVG content only — no <svg> wrapper, no stroke attributes.
-// Paths match Lucide React v1.16.0 (same source as current SportPin.tsx).
-export const SPORT_SVG_PATHS: Record<string, string> = {
-  padel: `<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2..." />`,
-  kuntosali: `<path d="..." />`,
-  jooga: `<path d="..." />`,
-  uinti: `<path d="..." />`,
-  tennis: `<circle cx="12" cy="12" r="10"/>...`,
-  liikuntahalli: `<path d="..." />`,
-  liikunta: `<path d="..." />`,
-  fallback: `<circle cx="12" cy="12" r="4"/>`,
-}
+**Homepage redirect (BIZ-03 "business user away from homepage"):** This is the most contentious piece. Two options:
 
-// React component — replaces LucideIcon usage in JSX
-export function SportIcon({
-  laji,
-  className,
-  style,
-}: {
-  laji: string
-  className?: string
-  style?: React.CSSProperties
-}) {
-  const paths = SPORT_SVG_PATHS[laji.toLowerCase()] ?? SPORT_SVG_PATHS['fallback']
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      style={style}
-      aria-hidden
-    >
-      <g dangerouslySetInnerHTML={{ __html: paths }} />
-    </svg>
-  )
-}
+Option A — Middleware redirect on `/`: After `getUser()` succeeds, make a second `supabaseAdmin` call (service key) in middleware to check `business_accounts`. Works but adds 30–80ms to every homepage load for every user, and requires embedding service key in edge middleware (not recommended — service key must never reach the edge).
 
-// String factory — for Maps DOM injection (SportPin.tsx internal use)
-export function sportIconSvgString(laji: string): string {
-  const paths = SPORT_SVG_PATHS[laji.toLowerCase()] ?? SPORT_SVG_PATHS['fallback']
-  return `<g stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">${paths}</g>`
-}
-```
+Option B — Client-side check in `Etusivu` (recommended): On mount, `subscribeToAuthUser` already runs. Add a single `business_accounts.maybeSingle()` query there. If the user is a business account, `router.replace('/business')`. This matches the existing pattern, costs one extra DB call only for logged-in users, and requires zero middleware changes. The flash is acceptable because the current homepage auto-opens the sheet after 700ms anyway — the redirect fires well before that.
 
-The `dangerouslySetInnerHTML` on the SVG `<g>` element is safe because `SPORT_SVG_PATHS` is a compile-time constant — no user input ever flows into it. This is the identical guarantee stated in the existing `SportPin.tsx` comment.
-
-### Updating `lib/lajit.ts` Without Breaking Consumers
-
-The existing `SPORT_ICONS: Record<string, LucideIcon>` in `lib/lajit.ts` is used by:
-- `Etusivu.tsx` — imports `SPORT_ICONS` from `@/lib/lajit`, uses as `const Icon = SPORT_ICONS[p.laji] ?? Activity`, renders `<Icon className="w-4 h-4" />`
-- `DiagonaalKortti.tsx` — same import and usage pattern
-
-`PaikkaKortti.tsx` does NOT import from `lib/lajit.ts` — it has its own local `const SPORT_ICONS: Record<string, LucideIcon>` duplicate.
-
-**Migration:** Remove `SPORT_ICONS` from `lib/lajit.ts` and the `lucide-react` component imports. The `type { LucideIcon }` import is safe to keep if needed for interface typing, but with the `labelEn` approach it is no longer needed. Update all call sites to use `SportIcon` from `lib/sportIcons.ts`.
-
-The call site change at each component is:
-
-```tsx
-// Before
-const Icon = SPORT_ICONS[p.laji] ?? Activity
-// ...
-<Icon className="w-3 h-3 shrink-0" style={{ color: isSelected ? color : undefined }} />
-
-// After
-<SportIcon laji={p.laji} className="w-3 h-3 shrink-0" style={{ color: isSelected ? color : undefined }} />
-```
-
-`SportIcon` handles its own fallback internally, so `?? Activity` is removed.
-
-### Server Safety of `lib/lajit.ts`
-
-`app/page.tsx` (Server Component) imports `LAJIT_FILTTERI` from `lib/lajit.ts`. This is a plain `string[]` — no React components. After removing `SPORT_ICONS` and the Lucide imports from `lib/lajit.ts`, the file becomes fully server-safe. The `labelEn` string fields are also server-safe. There is no issue.
+**Verdict:** Use `app/business/layout.tsx` (RSC) for all `/business/*` protection. Use a client-side check in `Etusivu` for the homepage → `/business` redirect. Never touch middleware for role routing.
 
 ---
 
-## Google Maps SVG Challenge
+## 2. Dual-Mode Map: Hiding BottomSheet + AI Widget for Business Users
 
-### Current Status: Already Solved
+### Current State
 
-`SportPin.tsx` is a React component that renders into a real React DOM node inside `AdvancedMarker`. It does NOT use string injection into a non-React context. The `AdvancedMarker` from `@vis.gl/react-google-maps` renders its children as normal React DOM — the pin is a `<div>` containing an `<svg>` with React-managed elements.
+`Etusivu` is a single 1700-line client component that owns all state: sheet phase, AI widget, GPS, filters, TODO overlay, auth, weather. The sheet content (AI widget, Karuselli, filter pill, card list) is rendered inside a conditionally visible `motion.div` controlled by `sheetPhase`. The sheet itself auto-opens after 700ms on mount.
 
-The legacy `sportPins.ts` `buildPinSvg()` pattern (which did generate HTML strings for DOM injection) was already migrated to `SportPin.tsx` in Phase 23. `lib/sportPins.ts` now only exports `export {}`.
+### Option Analysis
 
-The only `dangerouslySetInnerHTML` in `SportPin.tsx` is for the inner SVG path string inside an `<svg>` element that is itself a React-managed JSX element. This is a narrow, controlled use.
+**Prop drilling from `app/page.tsx`:** `app/page.tsx` is a server component. It does not know the user's business role (no auth check there currently). Even if it did, passing `isBusinessUser` down through `Etusivu` props would require `Etusivu` to selectively suppress the sheet, the AI effect, Karuselli, and the TODO overlay — all deeply embedded in a 1700-line component. This is high-risk refactor territory.
 
-### Migration of `SportPin.tsx` to Use `lib/sportIcons.ts`
+**Context provider:** A `BusinessContext` providing `{ isBusinessUser: boolean }` solves the prop threading but still requires `Etusivu` to consume the context and add conditional branches. The component already has 20+ useState declarations; adding more conditional render paths increases complexity without a clean seam.
 
-The local `SPORT_ICONS` constant in `SportPin.tsx` (SVG path strings) is the same data that will live in `lib/sportIcons.ts`. The migration is:
+**Separate route (recommended):** Introduce `app/business/map/page.tsx` — a minimal map page that renders the Google Map, GPS recenter, and a single "Avaa kartta" affordance, but no sheet, no AI widget, no Karuselli, no TODO. This page is accessed from the business dashboard and reuses the existing `@vis.gl/react-google-maps` `Map` + `SportPin` + `AdvancedMarker` components directly.
 
-1. Remove the `const SPORT_ICONS: Record<string, string>` block and the `const g = ...` helper from `SportPin.tsx`
-2. Import `sportIconSvgString` from `@/lib/sportIcons`
-3. Replace `SPORT_ICONS[laji.toLowerCase()] ?? SPORT_ICONS['fallback']` with `sportIconSvgString(laji)`
+The key insight: Etusivu's map is not a reusable map component — it is the entire consumer experience. A business user's "map view" is a read-only directory lookup, not a personalized consumer app. The correct architectural seam is a route boundary, not a prop toggle.
 
-The rendered output is identical. This is an import swap, not an architectural change.
+**Implementation path:**
+- Extract `KarttatYdin` from `Etusivu` into `app/components/KarttatYdin.tsx` — handles Map, SportPin clustering, AdvancedMarker, GPS pan, RecenterButton, CalloutCard, PaikkaSheet (click-to-view). This is purely map-focused.
+- `Etusivu` wraps `KarttatYdin` + adds sheet/AI/filter overlay on top.
+- `app/business/map/page.tsx` uses `KarttatYdin` directly with no overlay.
 
-### If True DOM-String Injection Is Needed in the Future
-
-If a future feature requires building a complete HTML/SVG string (e.g., for canvas rendering, PDF export, or a Google Maps InfoWindow with icons), the pattern using `SPORT_SVG_PATHS` is:
-
-```typescript
-function buildPinHtml(laji: string, color: string): string {
-  const iconPaths = SPORT_SVG_PATHS[laji] ?? SPORT_SVG_PATHS['fallback']
-  return `
-    <div style="position:relative;width:28px;height:38px">
-      <svg viewBox="0 0 28 38" width="28" height="38">
-        <path d="${PIN_PATH}" fill="${color}" />
-        <circle cx="14" cy="14" r="10" fill="white" />
-        <g transform="translate(5,5) scale(0.75)"
-           stroke="#1e3a8a" stroke-width="2.5" fill="none"
-           stroke-linecap="round" stroke-linejoin="round">
-          ${iconPaths}
-        </g>
-      </svg>
-    </div>
-  `
-}
-```
-
-Safe because all inputs are compile-time constants — `SPORT_SVG_PATHS` values are authored, `color` comes from `lajiKonfig` (also a constant). No user input, no XSS risk.
+**Verdict:** Separate route with a shared `KarttatYdin` component. Do not conditionally hide parts of `Etusivu`. The extraction is also long-term health work (Etusivu is overloaded).
 
 ---
 
-## Modified Files
+## 3. Publication Pipeline: Syncing Business Data to `paikat` After Approval
 
-| File | What Changes | Driver |
+### Current State
+
+`/api/admin/approve/route.ts` already:
+- Sets `business_paikka_links.claim_status = 'approved'`
+- For `link_type = 'created'`, sets `published = true` on `liikuntapaikat`
+
+The approval does NOT currently copy business data (images, hinnasto, aukioloajat, kuvaus) to `liikuntapaikat`. That sync happens when the business submits the onboarding wizard (`/api/business/onboarding/submit`), which runs before approval. The submit route sets `business_managed = true` and writes all fields.
+
+For "business data overwrites Google Places data on approval" (v1.8 goal), the missing piece is: after approval, force `published = true` AND ensure all business-supplied fields from the `onboarding_draft` are written to `liikuntapaikat`. But the draft is deleted after submit. So the source of truth after submit is already `liikuntapaikat` itself.
+
+### Pattern Options
+
+**Supabase database trigger/function:** A BEFORE/AFTER UPDATE trigger on `business_paikka_links` that fires when `claim_status` transitions to `'approved'`. Pros: atomic, no extra round trips. Cons: Supabase hosted environment limits trigger complexity; debugging triggers is opaque; this logic has email side effects (send approval email) that cannot run in a trigger.
+
+**Extend `/api/admin/approve` Route Handler (recommended):** The approve route already runs as a privileged server action with `supabaseAdmin`. Add a step after setting `claim_status = 'approved'` that reads the current `liikuntapaikat` row for `business_managed = true` and ensures `published = true`. For claim-type venues (already published), no additional action is needed. For created-type venues, the current code already sets `published = true`.
+
+The data sync itself is already done by `onboarding/submit`. What v1.8 needs is: if the business edits data AFTER submit but BEFORE approval, a re-submit mechanism. The `EditWizardInner` already calls `/api/business/update-paikka` on save — this writes directly to `liikuntapaikat` regardless of approval state. So post-approval data is always current.
+
+**Verdict:** No separate pipeline needed. The approve route already handles publication. The `onboarding/submit` + `update-paikka` routes handle data sync. What v1.8 needs is:
+1. Confirm the approve route also sets `published = true` for `claim_type = 'claim'` venues (currently it only does `link_type = 'created'` — claims are already published, which is correct per CLAIM-03).
+2. Add the `business_managed = true` flag write to `liikuntapaikat` in the approve step for claim-type venues (currently only set by `onboarding/submit`, not by approve). This is the one gap: a claim venue that skips the onboarding/submit step would lack `business_managed = true`.
+
+Single addition to `/api/admin/approve`: after `claim_status = 'approved'`, always do `UPDATE liikuntapaikat SET business_managed = true WHERE id = link.paikka_id`.
+
+---
+
+## 4. Wizard Refactor: Extracting Shared Logic from OnboardingWizardInner + EditWizardInner
+
+### Current Duplication
+
+| Concern | OnboardingWizardInner | EditWizardInner |
 |---|---|---|
-| `lib/lajit.ts` | Remove `SPORT_ICONS` export and lucide component imports; add `labelEn` to `LajiKonfig` and populate all entries | SVG icons + i18n |
-| `app/components/SportPin.tsx` | Remove local `SPORT_ICONS` const and `g()` helper; import `sportIconSvgString` | SVG icons |
-| `app/components/Etusivu.tsx` | Add `useLocale()`; replace all hardcoded Finnish strings with `t()`; replace `SPORT_ICONS` import/usage with `SportIcon` | i18n + SVG icons |
-| `app/components/DiagonaalKortti.tsx` | Add `useLocale()`; replace strings; replace `SPORT_ICONS` import/usage with `SportIcon` | i18n + SVG icons |
-| `app/components/PaikkaKortti.tsx` | Add `useLocale()`; replace strings; remove duplicated local `SPORT_ICONS` constant; use `SportIcon` | i18n + SVG icons |
-| `app/components/NavBar.tsx` | Add `useLocale()`; replace aria-labels and UI strings; add FI/EN toggle button | i18n |
-| `app/components/PaikkaSheet.tsx` | Add `useLocale()`; replace all labels | i18n |
-| `app/components/AuthModal.tsx` | Add `useLocale()`; replace all modal text | i18n |
-| `app/layout.tsx` | Wrap `<MapProvider>` with `<LocaleProvider>` | i18n |
+| Auth guard | useEffect → getUser + business_accounts check | useEffect → getUser + business_accounts check |
+| Draft fetch | Complex: URL param → business_paikka_links → onboarding_draft | Not applicable (uses paikka prop) |
+| Route/step URL navigation | `goToStep(n)` with paikka_id param | `router.push('/business/' + paikkaId + '?step=' + n)` |
+| Step components | StepPaikka, StepMediat, StepHinnasto, StepAukioloajat, StepYhteystiedot, StepEsikatselu (6 steps) | StepMediat, StepHinnasto, StepAukioloajat, StepYhteystiedot (4 steps, no StepPaikka/StepEsikatselu) |
+| Forward-skip guard | Yes — maxReachedStep | No — free navigation |
+| Local state after save | Re-fetches draft | Uses local state (localHinnasto, localAukioloajat, etc.) |
+
+### Extraction Pattern
+
+The clean seam in Next.js App Router for this case is a **shared hook**, not a shared wrapper component.
+
+Create `lib/useWizardAuth.ts`:
+
+```typescript
+// Returns: { authChecked: boolean } — redirects to /business/rekisteroidy if no valid session
+export function useWizardAuth(): { authChecked: boolean }
+```
+
+This replaces the duplicated `useEffect + getUser + business_accounts` block in both wizards. It is a pure auth guard with no routing or step logic.
+
+Do NOT create a `WizardShell` wrapper component that tries to unify both wizards' layouts. The two have fundamentally different UX: onboarding has a linear ProgressBar + forward-skip guard; edit has a tab bar + free navigation. Forcing them into one component would require complex branching that is worse than the current duplication.
+
+The step components (StepMediat, StepHinnasto, StepAukioloajat, StepYhteystiedot) are already shared via imports from `app/business/onboarding/` into `EditWizardInner`. They accept an `editMode?: boolean` prop to switch behavior. This is the right pattern — keep it.
+
+**What to refactor for v1.8:**
+1. Extract `useWizardAuth` hook (replaces ~10 lines of duplicated logic, high value for low risk).
+2. Clean the `onboarding_completed` flag from `business_accounts` — v1.8 tech debt item. The `/business` page currently checks for the presence of an `onboarding_draft` row to decide whether to resume onboarding. The `onboarding_completed` column on `business_accounts` was also set by `onboarding/submit` but is never read (the draft-check pattern superseded it). Remove the writes or the column — do not leave dead state that will confuse future phases.
+3. The `StepPaikka` guard in `OnboardingWizardInner` (URL-skipping prevention via `maxReachedStep`) should be documented with a comment, not abstracted — it is onboarding-specific logic with no edit-mode equivalent.
+
+**Note on `business/layout.tsx` interaction:** Once `app/business/layout.tsx` (RSC) provides the auth guard at the route level, the `useWizardAuth` hook becomes redundant for routes under `/business/*`. In that case, the hook's role is eliminated and the `authChecked` spinner in the wizards can be removed. The RSC layout redirects before the page renders — no client-side auth check needed. This means the ideal order is: build `layout.tsx` first, then strip the auth useEffect from both wizards directly (without the intermediate hook step).
+
+**Verdict:** If building `business/layout.tsx`, skip `useWizardAuth` and just delete the auth useEffect from both wizards after the layout is in place. If for some reason layout.tsx is deferred, extract the hook as an interim step.
 
 ---
 
-## New Files
+## 5. Verification Badge: `business_managed` Across Cards Without Prop Drilling
 
-| File | Purpose |
+### Current State
+
+`business_managed` is a column in `liikuntapaikat` (Postgres boolean). It is set to `true` by `create-paikka` and `onboarding/submit` routes. It is NOT in `lib/types.ts` (the `Liikuntapaikka` type). It is NOT selected in `app/page.tsx`'s Supabase query. It therefore does not reach any card component.
+
+`PaikkaKortti`, `DiagonaalKortti`, and `PaikkaSheet` all receive `paikka: Liikuntapaikka`. They render badges based on other fields (`featured`, `hinta_kuvaus`). The verification badge must appear in all three.
+
+### The Prop-Drilling Problem
+
+If you add `business_managed?: boolean` to `Liikuntapaikka` and select it in `app/page.tsx`, the field flows through:
+- `app/page.tsx` → `Etusivu` (as part of the `paikat` array) → DiagonaalKortti, PaikkaKortti, PaikkaSheet
+
+That is NOT prop drilling — that is normal data flow. `Etusivu` already passes `paikka` objects to all three components. No intermediate component needs to be aware of `business_managed`; it just rides along in the type.
+
+The concern in the question is presumably about whether adding `business_managed` to the Supabase SELECT query in `app/page.tsx` causes regressions. It does not — adding one column to a SELECT is additive. The type must be updated.
+
+### Recommendation
+
+**Step 1:** Add `business_managed?: boolean | null` to `Liikuntapaikka` in `lib/types.ts`.
+
+**Step 2:** Add `business_managed` to the SELECT in `app/page.tsx`'s Supabase query.
+
+**Step 3:** In `PaikkaKortti`, `DiagonaalKortti`, and `PaikkaSheet`, render the verification badge when `paikka.business_managed === true`. Use the existing badge row pattern (like `featured` → "Sponsoroitu" badge). Suggested: a small blue checkmark badge inline with the venue name or in the badge row, using the glassmorphism color system (not amber, reserved for Sponsoroitu; not green, reserved for "Auki nyt").
+
+**What NOT to do:** Do not create a separate context or a custom hook that fetches `business_managed` independently in each card. Do not query Supabase from a card component for this flag. The data is already available at page load time.
+
+**PreviewModal path:** `PreviewModal` and `StepEsikatselu` show `PaikkaKortti`, `DiagonaalKortti`, and `PaikkaSheet` in preview mode. They receive a `paikka` object assembled from the draft. Since a business venue is by definition `business_managed = true`, hard-code `business_managed: true` in the preview assembly — this ensures the badge shows in the wizard preview as well.
+
+---
+
+## Integration Points: New vs Modified Components
+
+### New Components
+
+| Component | Location | Purpose |
+|---|---|---|
+| `app/business/layout.tsx` | New file | RSC auth guard for all `/business/*` routes |
+| `app/business/map/page.tsx` | New file | Business-facing map view (no consumer features) |
+| `app/components/KarttatYdin.tsx` | New file | Shared map core extracted from Etusivu |
+| `lib/useWizardAuth.ts` | New file (optional) | Shared auth guard hook — only needed if layout.tsx deferred |
+
+### Modified Components
+
+| Component | Change | Risk |
+|---|---|---|
+| `lib/types.ts` | Add `business_managed?: boolean \| null` to `Liikuntapaikka` | Very low — additive |
+| `app/page.tsx` | Add `business_managed` to SELECT, pass through Etusivu | Very low — additive |
+| `app/components/PaikkaKortti.tsx` | Render verification badge when `paikka.business_managed` | Low |
+| `app/components/DiagonaalKortti.tsx` | Same | Low |
+| `app/components/PaikkaSheet.tsx` | Same | Low |
+| `app/api/admin/approve/route.ts` | Add `SET business_managed = true` for all approved venues | Low — additive step |
+| `app/components/Etusivu.tsx` | Add business-user redirect check on mount | Low — client-side only |
+| `app/business/onboarding/OnboardingWizardInner.tsx` | Remove auth useEffect (layout.tsx handles it) | Medium — requires careful testing |
+| `app/business/[id]/EditWizardInner.tsx` | Same | Medium |
+| `app/business/page.tsx` | Simplified — layout.tsx handles auth; remove redundant client-side checks | Medium |
+
+### Unmodified Components
+
+`StepMediat`, `StepHinnasto`, `StepAukioloajat`, `StepYhteystiedot`, `StepEsikatselu`, `StepPaikka`, `PreviewModal` — all step and preview components stay unchanged. The shared step components already have `editMode` prop for behavioral switching.
+
+---
+
+## Build Order (Dependency-Aware)
+
+The dependency chain is strict:
+
+```
+1. lib/types.ts — add business_managed
+   ↓
+2. app/page.tsx — add to SELECT
+   ↓
+3. PaikkaKortti + DiagonaalKortti + PaikkaSheet — render verification badge
+   (badge visible end-to-end; zero risk)
+
+4. api/admin/approve — add business_managed write for claim-type venues
+   (independent of above; required before going live)
+
+5. app/business/layout.tsx — RSC auth guard
+   (prerequisite for steps 6, 7, 8)
+   ↓
+6. OnboardingWizardInner + EditWizardInner — remove auth useEffect
+   (layout handles it; simplifies both components)
+   ↓
+7. app/business/page.tsx — strip redundant client-side auth checks
+   ↓
+8. Etusivu — add business-user redirect on mount
+   (needs /business to be a working protected route)
+
+9. KarttatYdin extraction + app/business/map/page.tsx
+   (most complex; comes after all auth work is verified)
+```
+
+**Phase ordering rationale:**
+
+Start with the type + query + badge work (steps 1–3) because it is purely additive, zero risk, and delivers visible value (verification tick) immediately without touching any auth or routing code.
+
+The `approve` route addition (step 4) is independent but must be live before v1.8 ships to production, as it closes the gap where claim-type venues don't get `business_managed = true` written by the admin action.
+
+The `business/layout.tsx` server-side guard (step 5) is the central prerequisite for the wizard simplification and the map route. It must be verified working (redirect chain: no session → `/business/rekisteroidy`, no business_accounts row → `/business/rekisteroidy`) before downstream work.
+
+The `KarttatYdin` extraction (step 9) is the highest-risk item because it requires restructuring the 1700-line `Etusivu`. Do this last, after all other v1.8 pieces are verified working. Risk mitigation: build `app/business/map/page.tsx` first as a minimal standalone map (even duplicating a bit of map setup code temporarily), then extract `KarttatYdin` as a polish step.
+
+---
+
+## Architecture Decisions to Record
+
+| Decision | Rationale |
 |---|---|
-| `lib/sportIcons.ts` | `SPORT_SVG_PATHS` record; `SportIcon` React component; `sportIconSvgString()` for Maps/string injection |
-| `lib/i18n.ts` | `Locale` type, `Translations` interface, full FI dictionary, full EN dictionary, `TranslationKey` type |
-| `hooks/useLocale.ts` | `useLocale()` hook — reads `LocaleContext`, returns `{ locale, t, setLocale }` |
-| `app/components/LocaleProvider.tsx` | Client component — owns locale state, localStorage persistence, provides `LocaleContext` |
+| `business/layout.tsx` RSC guard, not middleware | Middleware cannot query `business_accounts` table without service key at edge |
+| Homepage business redirect is client-side in Etusivu | Avoids adding DB call to every homepage load; existing `subscribeToAuthUser` pattern makes it natural |
+| Separate `/business/map` route, not Etusivu prop | `Etusivu` is not a composable map component; route boundary is the correct seam |
+| `business_managed` rides in `Liikuntapaikka` type | No intermediate components need awareness; data flows naturally from page.tsx through paikat array |
+| No shared wizard shell; only shared auth removal | Two wizards have incompatible UX (linear vs tab); once layout.tsx handles auth, no shared hook needed |
+| Approve route adds `business_managed = true` write | Closes the gap for claim-type venues that bypass `onboarding/submit` |
+| `onboarding_completed` column removed or writes removed | Dead state — the draft-check pattern superseded it; leaving it causes confusion |
 
 ---
 
-## Build Order
+## Sources
 
-Dependencies must be resolved bottom-up. Build strictly in this sequence:
-
-### Step 1 — SVG Path Registry (no consumer changes yet)
-**Create `lib/sportIcons.ts`.** Port the SVG path strings from `SportPin.tsx`'s local `SPORT_ICONS` constant into `SPORT_SVG_PATHS`. Add `SportIcon` component. Add `sportIconSvgString()`. No other files change. Run the dev server and confirm the file compiles cleanly.
-
-### Step 2 — Update `SportPin.tsx` (isolated, Maps-critical)
-**Swap `SportPin.tsx` to use `sportIconSvgString`.** Remove local constants, add import. This is a pure refactor — rendered output is identical. Verify visually that map pins render correctly. This step touches only one file and has zero cascade risk.
-
-### Step 3 — Update `lib/lajit.ts`
-**Remove `SPORT_ICONS` and add `labelEn` to `LajiKonfig`.** Fill in English labels for all sports. Remove lucide component imports. This will break `Etusivu.tsx` and `DiagonaalKortti.tsx` (they import `SPORT_ICONS` from here) — fix immediately in Steps 4–6.
-
-### Step 4 — Update `DiagonaalKortti.tsx`
-Replace `SPORT_ICONS[paikka.laji] ?? Activity` with `<SportIcon laji={paikka.laji} ... />`. The `Activity` fallback is now handled inside `SportIcon`.
-
-### Step 5 — Update `PaikkaKortti.tsx`
-Remove the duplicated local `SPORT_ICONS` constant. Replace with `SportIcon`. This file has no `lib/lajit.ts` icon import to fix — only the local duplicate.
-
-### Step 6 — Update `Etusivu.tsx` icon usage
-Fix `CalloutCard` and `CombinedFilterPill` which import `SPORT_ICONS` from `@/lib/lajit`. Replace all `SPORT_ICONS[...] ?? Activity` patterns with `<SportIcon laji={...} ... />`. At this point the entire SVG icon migration is complete and no Lucide sport icon components remain in use.
-
-### Step 7 — i18n Infrastructure (no UI strings yet)
-**Create `lib/i18n.ts`** with the complete FI and EN dictionaries. Write all strings before wiring — this forces an audit of every hardcoded string upfront. The TypeScript `TranslationKey` type will enforce completeness.
-
-**Create `hooks/useLocale.ts`** — reads context, returns typed `t()` function.
-
-**Create `app/components/LocaleProvider.tsx`** — context + localStorage hydration.
-
-**Update `app/layout.tsx`** — add `<LocaleProvider>` wrapper around `<MapProvider>`.
-
-### Step 8 — Wire i18n: NavBar first
-**`NavBar.tsx`** — smallest string surface, contains the language toggle button. Add `useLocale()`, replace strings, add the FI/EN toggle. Testing the toggle here validates the entire context/localStorage pipeline before touching larger components.
-
-### Step 9 — Wire i18n: Card components
-**`PaikkaKortti.tsx`** and **`DiagonaalKortti.tsx`** — already modified in Steps 4–5. Adding `useLocale()` is an incremental change to open files.
-
-### Step 10 — Wire i18n: Etusivu
-**`Etusivu.tsx`** — largest and most complex file (1670 lines). Do last to avoid re-opening it before the icon changes stabilize.
-
-### Step 11 — Wire i18n: Sheet and Modal
-**`PaikkaSheet.tsx`** and **`AuthModal.tsx`** — isolated client components, no dependencies on the icon work.
-
-### Step 12 — Verification
-- Toggle FI → EN → FI; verify all visible strings update without page reload
-- Refresh page with `locale=en` in localStorage; verify English loads correctly
-- Verify map pins render correctly (SportPin visual regression)
-- Verify sport badge icons in cards match previous Lucide icons in visual weight and alignment
-
----
-
-## Key Pitfalls
-
-### `LocaleProvider` must be a Client Component but `app/layout.tsx` is a Server Component
-Compatible: a Server Component can render a Client Component as a child. The `children` passed through `LocaleProvider` can still be Server Components — Next.js handles the boundary correctly. The `'use client'` directive on `LocaleProvider` only affects `LocaleProvider` itself and its subtree that is not passed as `children` props.
-
-### `LAJIT_FILTTERI` sentinel `'Kaikki'` must not be translated at the data layer
-`searchKaupunki === 'Kaikki'` is a data comparison, not a display string. Translate the display label only in the render path. Keep the sentinel value as Finnish.
-
-### `SportIcon` SVG stroke control
-Tailwind `stroke-*` utilities and SVG `stroke` attribute are different things. Use `stroke="currentColor"` as an SVG presentation attribute inside the `<svg>` element definition. Control the color by setting `color` via the parent's `style` or via `className` on the wrapping element — matching the current `SportPin.tsx` approach where `style={{ color: '#1e3a8a' }}` on the `<g>` element sets `currentColor`.
-
-### `PaikkaKortti.tsx` has a fully duplicated icon map
-The file has `const SPORT_ICONS: Record<string, LucideIcon> = { padel: Zap, ... }` as a local constant — it does NOT import from `lib/lajit.ts`. This is an existing duplication. It must be removed and replaced with `SportIcon`, or it will stay out of sync.
-
-### ReviewSection and ReviewForm may also contain hardcoded Finnish strings
-These components were not fully read but given their review form functionality (`"TÄHTIARVOSANA"`, `"Vapaaehtoinen kommentti"`, `"Jätä arvostelu"`, `"Tallennus epäonnistui"`) they will need `useLocale()` wiring. Scan them during the Step 11 phase.
-
----
-
-## Component Dependency Graph
-
-```
-lib/sportIcons.ts
-  └── SportPin.tsx (svgString only)
-  └── lib/lajit.ts (re-exports or removes SPORT_ICONS)
-      └── DiagonaalKortti.tsx (SportIcon)
-      └── PaikkaKortti.tsx (SportIcon, local copy removed)
-      └── Etusivu.tsx (CalloutCard, CombinedFilterPill)
-
-lib/i18n.ts
-  └── hooks/useLocale.ts
-      └── app/components/LocaleProvider.tsx
-          └── app/layout.tsx (wraps MapProvider)
-              └── NavBar.tsx (toggle + strings)
-              └── PaikkaKortti.tsx (strings)
-              └── DiagonaalKortti.tsx (strings)
-              └── Etusivu.tsx (strings)
-              └── PaikkaSheet.tsx (strings)
-              └── AuthModal.tsx (strings)
-```
+- Direct codebase inspection: `middleware.ts`, `app/business/page.tsx`, `app/business/onboarding/OnboardingWizardInner.tsx`, `app/business/[id]/EditWizardInner.tsx`, `app/admin/page.tsx`, `app/api/admin/approve/route.ts`, `app/api/business/onboarding/submit/route.ts`, `app/components/Etusivu.tsx`, `app/components/PaikkaKortti.tsx`, `app/components/DiagonaalKortti.tsx`, `app/components/PaikkaSheet.tsx`, `lib/types.ts`, `lib/supabaseSSR.ts`, `app/layout.tsx`, `lib/onboardingUtils.ts`
+- Next.js App Router: route segment layouts as auth guards is the documented pattern for protecting route segments without middleware
+- Supabase SSR: `createServerClient` in RSC layouts is the canonical server-side auth pattern; service key must never reach Edge Runtime
+- Confidence: HIGH for all five questions — based on direct code inspection, not inference

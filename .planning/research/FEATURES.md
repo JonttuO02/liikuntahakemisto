@@ -1,249 +1,232 @@
-# Feature Landscape: i18n FI/EN Toggle + SVG Sport Icon System
+# Feature Landscape — v1.8 Dual-Mode UX & Business Publication
 
-**Domain:** Sports venue directory app (AKTIIVI) — adding language switch and custom SVG icons
-**Researched:** 2026-06-03
-**App context:** Next.js 14 App Router, Tailwind v3, Framer Motion, @vis.gl/react-google-maps AdvancedMarker, Serwist PWA
-
----
-
-## i18n Features
-
-### What "without URL routing" means
-
-"Without URL routing" means the locale is NOT encoded in the URL path (no `/fi/`, `/en/`). The URL stays `/` regardless of language. Locale preference is stored in a cookie (`NEXT_LOCALE` or custom key) and read server-side in `i18n/request.ts`. Switching language sets the cookie and calls `router.refresh()` to re-render server components with the new locale — no page navigation, no URL change.
-
-This is an officially supported next-intl configuration called "App Router without i18n routing."
-
-**Locale switching mechanism (cookie + refresh):**
-
-1. `i18n/request.ts` reads locale from cookie: `cookies().get('NEXT_LOCALE')?.value ?? 'fi'`
-2. A client-side button writes the cookie directly (`document.cookie`) or via a Server Action
-3. Client calls `router.refresh()` — re-runs RSC render with new cookie value, no navigation
-4. `NextIntlClientProvider` is rendered by a Server Component and inherits locale automatically
-
-**Important constraint for AKTIIVI:** `router.refresh()` re-renders server components but does NOT remount client components. State in client components (map pan position, filter selections, open bottom sheet) survives the language switch. This is the desired behaviour.
-
-### Library choice: next-intl (recommended)
-
-| Criterion | next-intl | react-i18next | Custom React Context |
-|-----------|-----------|---------------|---------------------|
-| App Router / Server Components | First-class (RSC + client) | Client-only workarounds needed | Client-only |
-| Without-routing mode | Official, documented, example in repo | Not designed for it | Trivial to implement |
-| Type safety | Full (`AppConfig` augmentation) | Moderate | Manual |
-| Bundle overhead | ~8 kB gzip | ~20 kB (i18next + react-i18next + detector plugins) | ~0 kB |
-| Cookie persistence | Built-in `NEXT_LOCALE` cookie convention | DIY | DIY |
-| Translation file format | JSON with ICU message syntax | JSON with ICU | Any |
-
-**Recommendation:** Use next-intl. It is the only option with first-class App Router support and explicit documentation for the no-URL-routing pattern.
-
-**Custom hook is acceptable if:** the team wants zero new dependencies and the translation surface is genuinely small. For ~83 strings it is viable but requires manually wiring cookie persistence, `router.refresh()`, and SSR hydration safety to avoid `useLayoutEffect` mismatches.
-
-**Confidence:** HIGH — verified against next-intl official docs, Context7 source `/amannn/next-intl`, and multiple GitHub discussions.
-
-### Translation surface for AKTIIVI (estimated)
-
-| Area | String count | Notes |
-|------|-------------|-------|
-| NavBar labels | ~8 | "Kirjaudu", "Kirjaudu ulos", "Haku", "Suosikit" |
-| Filter pill labels | ~10 | "Kaikki" + sport names — sport names may stay Finnish in both locales |
-| Card UI labels | ~15 | "Auki nyt", "Näytä tiedot", "Sponsoroitu", price suffixes |
-| Search/filter UI | ~12 | Placeholder text, city selector label, sort labels |
-| Profile page | ~20 | Section headings, hours table, review labels |
-| Auth modal | ~10 | Form labels, error messages |
-| Error/empty states | ~8 | "Ei tuloksia", 404 message |
-| **Total** | **~83** | Flat single namespace is fine; no need for multiple namespaces |
-
-Sport category proper nouns (Padel, Tennis, Jooga, etc.) should stay Finnish in both locales. They are international sport names, not UI copy. This reduces translation work and avoids confusion for Finnish users who already know them.
+**Domain:** Sports venue directory with dual consumer/business portal (AKTIIVI)
+**Researched:** 2026-06-11
+**Milestone:** v1.8 Yritysportaali v2 — Julkistaminen & UX
 
 ---
 
-## SVG Icon System Approaches
+## Context: What Already Exists in v1.7
 
-### Context: three rendering environments
-
-The app must render sport icons in three distinct contexts with different constraints:
-
-| Context | React control | Styling access | Current solution |
-|---------|---------------|----------------|-----------------|
-| React components (PaikkaKortti badge, filter pills, CalloutCard) | Full React | CSS, Tailwind, `currentColor` | Lucide icons from `lib/lajit.ts` |
-| Google Maps AdvancedMarker DOM (`SportPin.tsx`) | None — raw DOM outside React tree | Inline styles only, no Tailwind, no CSS vars | Inline SVG path strings via `dangerouslySetInnerHTML` |
-| Framer Motion animated elements (`motion.div` wrappers) | React (wraps content) | Same as React components | Lucide icons |
-
-**The AdvancedMarker constraint is the dominant design driver.** The existing `SportPin.tsx` already solves it by storing SVG path strings as compile-time constants and injecting via `dangerouslySetInnerHTML`. Any new icon system must be compatible with this pattern or extend it — not replace it.
-
-### Approach A: SVGR webpack plugin (import SVG as React component)
-
-Each `.svg` file is transformed at build time into a React component (`import PadelIcon from '@/icons/padel.svg'`).
-
-**Pros:** Full React control, `currentColor` works, TypeScript types automatic.
-
-**Cons:**
-- Adds ~3x bundle overhead vs sprite (each SVG = JS string in bundle)
-- Does NOT help AdvancedMarker DOM — still need raw path strings for `SportPin.tsx`
-- Next.js 14 with Turbopack (the default dev server) does not support webpack plugins; SVGR requires webpack config in `next.config.js` which conflicts with Turbopack in dev
-- Adds a dependency and webpack config change for questionable gain
-
-**Confidence:** HIGH (multiple official sources confirm the Turbopack limitation)
-
-### Approach B: Public folder `<img src>` for all uses
-
-SVG files placed in `/public/icons/padel.svg`, rendered as `<img src="/icons/padel.svg" />`.
-
-**Pros:** Zero build complexity. Works in AdvancedMarker DOM (`pin.content.innerHTML = '<img src="/icons/padel.svg" />'`). Works offline if Serwist runtime caching is configured for `/icons/*`.
-
-**Cons:**
-- SVGs rendered as `<img>` cannot be styled with CSS or `currentColor` — fill/stroke colors are hardcoded in the file
-- Requires per-icon HTTP request (mitigated by HTTP/2 and browser cache, but still latency on first load)
-- CSS `filter: hue-rotate()` hacks to recolor are fragile and imprecise
-- 35 icons = 35 separate files to maintain
-
-**Confidence:** HIGH
-
-### Approach C: SVG sprite (`/public/sprite.svg` with `<use href>`)
-
-One build script combines 35 SVGs into `/public/icons/sprite.svg`. Components use `<svg><use href="/icons/sprite.svg#padel" /></svg>`.
-
-**Pros:** One HTTP request for all 35 icons.
-
-**Cons:**
-- External `<use href="file.svg#id">` does NOT allow `currentColor` to cascade into the referenced SVG — colors must be hardcoded in the sprite file
-- Does NOT work reliably in AdvancedMarker DOM — external resource `<use>` references can be blocked in sandboxed or isolated DOM contexts
-- Requires a build script and keeping the sprite file in sync with source files
-- For 35 icons, the single-request benefit is marginal (total payload ~15 kB)
-
-**Confidence:** MEDIUM (external `<use>` cross-document styling limitation is a documented browser gotcha)
-
-### Approach D: Inline path string registry (recommended)
-
-Keep existing `SportPin.tsx` inline SVG path strings for AdvancedMarker (already works, proven in production). Extend to a central registry `lib/sportIcons.ts` that stores all 35 icon path strings. React components render via a thin `SportIcon` wrapper component using `dangerouslySetInnerHTML` — the same pattern already used in `SportPin.tsx`.
-
-```typescript
-// lib/sportIcons.ts — single source of truth for all 35 icons
-export const SPORT_SVG_PATHS: Record<string, string> = {
-  padel:    '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2..." />',
-  tennis:   '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/>...',
-  // 33 more entries
-}
-
-// Thin React wrapper — no SVGR plugin needed
-export function SportIcon({ laji, size = 24, color = 'currentColor', className }: SportIconProps) {
-  return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none"
-         stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-         className={className}
-         dangerouslySetInnerHTML={{ __html: SPORT_SVG_PATHS[laji] ?? SPORT_SVG_PATHS.fallback }}
-    />
-  )
-}
-```
-
-AdvancedMarker (`SportPin.tsx`) uses the same path string from the same registry — zero duplication.
-
-**Pros:**
-- Zero new npm dependencies
-- Zero webpack/Turbopack config changes
-- Works in all three contexts: React, AdvancedMarker DOM, Framer Motion wrappers
-- Single source of truth for all 35 icon paths
-- `currentColor` / CSS color control works everywhere via `stroke={color}` prop
-- Icons ship in the JS bundle, already covered by Serwist's default precaching of JS chunks — no explicit PWA cache rule needed
-- Pattern is proven in production (existing `SportPin.tsx`)
-
-**Cons:**
-- `dangerouslySetInnerHTML` on every icon render — safe because paths are compile-time constants, never user data
-- Icon paths must be manually maintained as strings in `lib/sportIcons.ts` (no file-system auto-discovery)
-- 35 icons adds ~15–20 kB unminified to the JS bundle (Lucide-react is already ~100 kB, so this is a modest increase)
-
-**Confidence:** HIGH — pattern already proven in production codebase (`SportPin.tsx` lines 12–21)
+- `business_accounts` + `business_paikka_links` tables with RLS
+- `published` boolean on `liikuntapaikat` (new venues start `published=false`, existing start `true`)
+- `is_claimed` boolean on `liikuntapaikat` (set to `true` when any claim/create is submitted)
+- `business_managed` boolean guards Places sync script from overwriting managed venues
+- `/business` management panel with venue list, edit wizard, preview modal
+- `/admin` panel for approve/reject with email notifications
+- 6-step onboarding wizard with draft persistence in `onboarding_draft` table
+- Middleware (`middleware.ts`) currently only refreshes the Supabase session cookie — no role-based routing
+- `/business` page does **client-side** role detection via `useEffect` + `business_accounts` query
+- `/admin` page does **client-side** auth guard via `useEffect + router.replace('/')` — not server-side
 
 ---
 
 ## Table Stakes
 
-Features users expect. Missing = product feels incomplete.
+Features users expect in each category. Missing = product feels broken or incomplete.
+
+### 1. Role Detection and Routing at App Level
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| FI/EN language toggle button | Any app with international audience has this | Low | Single button or pill in NavBar; cookie write + `router.refresh()` |
-| Preference persists across sessions | Users expect browser to remember language | Low | Cookie (not localStorage — must be readable server-side for RSC) |
-| All visible UI strings translated | Partial translation = broken trust | Medium | ~83 strings; sport names stay Finnish |
-| Language switch takes effect without full page reload | Modern UX expectation | Low | `router.refresh()` re-renders RSC in-place, client state survives |
-| Sport icons consistent across all views | Card badges, map pins, filter pills should show same icon | Low | Single `lib/sportIcons.ts` registry ensures consistency |
-| Icons readable at minimum size (16px) | Icons fail at small sizes if paths are too complex | Medium | Paths must be simplified/optimized for small viewBox; avoid thin strokes |
-| Icons use sport-type accent colors | Design system coherence with existing `lajiKonfig` | Low | Pass `lajiKonfig[laji].color` as `color` prop to `SportIcon` |
+| Business user lands on `/business` dashboard instead of consumer map at `/` | Every dual-mode SaaS (Airbnb host/guest switch, Google Business Profile, Foursquare for Business) routes role-appropriate home on login. A business user landing on the consumer map and having to manually navigate to their panel feels broken. | Medium | Middleware reads `business_accounts` existence for authenticated users hitting `/`; redirects to `/business`. One extra DB query only on `/` for authenticated users — acceptable. |
+| Business redirect happens server-side, not via `useEffect` | Client-side redirect causes a flash of the consumer map before redirect fires. This is the current `/business` page pattern — it works but produces a blank loading state | Medium | Extend `middleware.ts` to include a `/` path check with `business_accounts` lookup |
+| Consumer users are never redirected to `/business` | Consumers have nothing to do there; seeing it would be confusing or alarming | Low | Already guarded — `/business` checks `business_accounts` table and shows a "register" CTA |
+| Auth state fully resolved before redirect decision | User should not see flash of wrong content, then redirect | Medium | Middleware runs server-side before any render — this is the correct architectural layer |
+| Logout from business context returns to consumer home | After sign-out the user is no longer a business user; `/business` would just redirect them away | Low | Existing sign-out flow already navigates to `/` — no change needed |
+
+**Confidence: HIGH** — Airbnb's documented "Switch to hosting/traveling" flow and Next.js middleware role routing are both well-documented. The existing `middleware.ts` already calls `supabase.auth.getUser()` on every request; the extension is a known pattern.
+
+### 2. Business Dashboard UX
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Approval status per venue, clearly labeled | A business needs to know at a glance whether they are live, waiting, or rejected — without hunting | Low | Already rendered in `/business` venue list with color-coded badges. Needs clear header copy for the "pending" state to explain what waiting means. |
+| Quick action to edit venue | Primary recurring action after approval | Low | Already exists as "Muokkaa" link to `/business/[id]` |
+| Pending state communicates expected timeline | Businesses anxiety-check during review | Low | Add explanatory copy: "Hakemus odottaa tarkistusta, saat sähköpostin kun se on käsitelty" |
+| Rejection reason visible with re-apply CTA | Without a reason, re-apply is guesswork; business has no idea what to fix | Low | Already implemented in `/business` — `rejection_reason` column shown with "Hae uudelleen" button |
+| "Add another venue" action prominent | Multi-venue businesses (gym chains, sports clubs) are a core segment | Low | Already implemented as "+ Lisää paikka" toggle. Needs to be more prominently placed in the dashboard layout. |
+| Navigation back to consumer view | Business users are also consumers; they want to see the map, find venues near theirs | Low | A "Avaa kartta" or "Näytä hakemisto" link from the dashboard |
+| Business profile page (not consumer profile) | `/profiili` currently shows `kotikaupunki` and `kiinnostukset` — irrelevant fields for a business account | Medium | Detect business account on `/profiili`, render company info (company_name) instead of consumer interests/hometown fields |
+
+**Confidence: HIGH** — Validated against both existing v1.7 code and standard SaaS patterns (Tripadvisor Management Centre, Foursquare Business Listings dashboard). Most pieces exist; the gap is UX framing and the profile page adaptation.
+
+### 3. "Verified/Managed" Listing Indicators
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Visual badge or checkmark next to venue name for claimed/approved venues | Google Business Profile (blue checkmark), Yelp (claimed badge + shield for verified licenses), Foursquare, Tripadvisor — all use this pattern. Consumers expect it in any serious directory. | Low | Render conditionally when `is_claimed=true` in `PaikkaKortti`, `DiagonaalKortti`, and `PaikkaSheet`. `is_claimed` is already in the schema and in the `liikuntapaikat` SELECT. |
+| Indicator visible wherever the venue appears | Trust signal must appear in card list, map sheet, and any preview | Low | Three render targets: `PaikkaKortti` (card name row), `DiagonaalKortti` (card name row), `PaikkaSheet` (hero/header section) |
+| Indicator is visually distinct from "Sponsoroitu" | Amber is already reserved for sponsored content. Verification must use a different visual token or it creates confusion | Low | Use indigo (`text-indigo-600`) with a `BadgeCheck` or `CheckCircle` Lucide icon at 12px — aligns with AKTIIVI's indigo brand color |
+| Indicator does NOT appear for unmanaged venues | False trust signals would be worse than no signals | Low | Read `is_claimed` — only `true` when a business has submitted a claim/create. Admin approval is separate; indicator appears at claim time, not approval time. |
+| "Managed by owner" tooltip or label on hover | Power users want to understand what the checkmark means | Low | `title` attribute or a brief tooltip: "Paikan omistaja ylläpitää tietoja" |
+
+**Confidence: HIGH** — Universal directory pattern. Yelp research shows claimed/verified badges increase engagement by ~10%. `is_claimed` column already exists in schema and is already queried by `app/page.tsx`.
+
+### 4. Business Data Publication Flow
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Admin approval triggers `published=true` on `liikuntapaikat` | Core contract: admin approval = venue becomes visible to consumers | Low | Extend the existing `/api/admin/approve` Route Handler to additionally set `published=true`. Currently only sets `claim_status='approved'`. |
+| Business-entered data syncs to `liikuntapaikat` on approval | Business provided their own images, pricing, hours, description, contact info through onboarding. This data must replace the auto-scraped Google Places fallback data. Without this step, the venue goes live but shows stale auto-populated data. | Medium | Read onboarding data from source tables (business_paikka_links fields / onboarding_draft data or directly from liikuntapaikat columns already written by wizard). Build UPDATE for `liikuntapaikat`. |
+| `business_managed=true` set on approval | Existing column; prevents sync script from later overwriting the business-entered data with Google Places auto-scrape | Low | Set in same DB transaction as `published=true` in the approve handler |
+| Field-level fallback: if business left a field empty, keep existing data | Not all businesses fill every field. A missing phone number should not overwrite a valid phone number that was auto-populated. | Medium | Field-level null-check before overwrite: only `UPDATE liikuntapaikat SET col=val WHERE id=X` for non-null, non-empty business fields. |
+| Rejection does NOT publish | Rejected venues must stay `published=false` | Low | Approve handler already gates on `claim_status`. Reject handler does not touch `published`. No change needed. |
+| Re-approval after rejection republishes | Business fixes issues, resubmits, gets approved again — same outcome | Low | Same approval code path handles both first-time and re-approval. No separate logic needed. |
+| Photo and logo URLs sync from Storage on approval | `photo_urls` and `logo_url` were uploaded to Supabase Storage during onboarding. They are written to the `liikuntapaikat` record but need to be confirmed live-ready on approval. | Medium | Confirm `image_url`, `logo_url`, `photo_urls` are written to `liikuntapaikat` as part of approval. These columns exist (added in v1.7 migrations). |
+
+**Confidence: HIGH** — Migration files confirm the column structure (`published`, `business_managed`, `is_claimed`, `photo_urls`, `logo_url`, `image_url`). The `/api/admin/approve` endpoint exists from v1.7. The data sync extension is the concrete gap.
+
+---
 
 ## Differentiators
 
-Features that set the product apart. Not expected, but valued.
+Features that set this product apart from a bare-minimum implementation.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Browser language auto-detection on first visit | Frictionless onboarding for English-speaking tourists | Low | Read `navigator.language` if no cookie set; fall back to `'fi'` as default |
-| Animated FI/EN toggle pill | On-brand, polished feel consistent with Framer Motion system | Low | `whileTap={{ scale: 0.95 }}` + text crossfade with `AnimatePresence` |
-| Sport icons as animated map pin glyphs with custom paths | Distinctive, recognizable map experience | Medium | Extends existing `SportPin.tsx`; custom paths replace Lucide-derived paths |
-| Icons reinforce color-coding in filter carousel | Faster cognitive scan — color + icon vs color alone | Low | `SportIcon` in `FilterCarouselPill` with `lajiKonfig[laji].color` |
+| Business dashboard as the real homepage (not a `/business` redirect) | Feels intentional, not bolted-on. Business users get their primary experience immediately, with no visible client-side detection delay. | Medium | Requires server-side middleware role check. Replaces current `useEffect`-based detection in `/business`. |
+| Consumer map accessible from business dashboard in stripped mode | Business users are also consumers. They want to explore the map, find venues near theirs, test the discovery experience. But they should not see consumer-only features (AI widget, bookmarks, bottomsheet reviews). | Medium | Add `businessMode?: boolean` prop to `Etusivu`. When `true`: hide AI weather widget, hide bookmark button, hide bottomsheet review prompt. GPS and map pins remain fully functional. Do NOT create a separate route — that would duplicate the map codebase. |
+| `/profiili` shows business context for business users | Profile page currently shows `kotikaupunki` and `kiinnostukset` — irrelevant for a business. A business profile page should show company name, approval status, link to `/business`. | Medium | Check `business_accounts` in `ProfiiliClient` or server-side in `/profiili/page.tsx`. Render a business-specific section instead of consumer interests. |
+| Verified checkmark in all three venue card formats simultaneously | PaikkaKortti + DiagonaalKortti + PaikkaSheet all show the indicator. Consistent trust signal regardless of where you encounter the venue. | Low | Three small changes, each low complexity. High visible impact. |
+
+**Confidence: MEDIUM** — Airbnb's server-driven dual-mode architecture confirms this is the right approach at scale. The stripped-map pattern is specific to this app; complexity estimate is based on reading `Etusivu.tsx` (large component but prop-threaded patterns already exist).
+
+---
 
 ## Anti-Features
 
-Features to explicitly NOT build in this milestone.
+Features to explicitly NOT build in v1.8.
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| URL-based locale routing (`/fi/`, `/en/`) | Changes URL structure, requires redirect middleware, breaks existing `/suosikit`, `/paikat/[id]` routes, breaks all existing links and SEO | Cookie-based locale, same URL |
-| SVGR webpack plugin for `.svg` file imports | Next.js 14 + Turbopack friction; double implementation needed (SVGR for React + path strings for AdvancedMarker anyway); bundle penalty for 35 icons | Inline path string registry in `lib/sportIcons.ts` |
-| SVG sprite file in public folder | External `<use href>` blocks CSS `currentColor`; unreliable in AdvancedMarker DOM; adds a build step | Inline path strings |
-| Third-party i18n CMS (Phrase, Lokalise, Crowdin) | Overkill for 2 locales + 83 strings; adds SaaS cost and integration surface | Static JSON files: `messages/fi.json`, `messages/en.json` |
-| ICU pluralization, date/number formatting | Not needed for this UI surface (no count-dependent strings, no formatted dates) | Plain string interpolation (`{count} paikkaa`) is sufficient |
-| More than 2 locales | Out of scope; adds N×83 translation maintenance burden | Design toggle as binary FI ↔ EN flip |
-| `next-i18next` (Pages Router library) | Designed for Pages Router, requires `serverSideTranslations` in every `getStaticProps` — incompatible with App Router | Use next-intl which has first-class App Router support |
-| `localStorage` for locale persistence | Not accessible server-side — Server Components cannot read it; causes hydration mismatch on first render | Cookie readable by both server and client |
-| Separate icon fonts (`@font-face` with icon glyphs) | Accessibility problems (screen readers read glyph characters), poor rendering at small sizes, outdated pattern | SVG paths with semantic aria-hidden |
+| Separate `/map` route for business users | Creates a second map codebase to maintain. GPS, clustering, pin logic, zoom behavior would duplicate. Guaranteed to diverge. | Pass `businessMode` prop to `Etusivu`; conditionally hide consumer widgets |
+| Re-approval flow for every edit | Would create excessive friction for minor pricing/hours updates. v1.7 explicitly decided: only first claim needs admin approval. Edits in edit wizard apply immediately. | Keep v1.7 decision: edits are immediate, no re-approval |
+| "Switch mode" toggle for business users on the map | Adds cognitive overhead — a business user switching to "consumer mode" to use the map they occasionally want to browse is unnecessary UX complexity | Simple "Avaa kartta" button from the dashboard is sufficient |
+| Verified checkmark as a paid feature | Yelp monetized this; BrightLocal research documented user trust erosion as a result. Verification should be the natural reward for admin approval, not a premium feature. | Free for all approved venues as part of the publication flow |
+| Google Places conflict-resolution UI for overlapping data | Extremely complex UX for a v1.8 scope. Business data should simply win at approval time with no UI needed. | Field-level null-check: business value wins if non-empty; otherwise keep existing auto-populated value |
+| Analytics dashboard on `/business` | No meaningful data yet. Premature optimization. | Defer to a future milestone when venues have accumulated visits/review data |
+| Re-send approval email button for admin | Low value; Resend email infra works correctly; admins can use Supabase directly if needed | Not needed |
 
 ---
 
 ## Feature Dependencies
 
 ```
-Cookie-based locale storage
-  -> i18n/request.ts reads cookie server-side
-  -> NextIntlClientProvider wraps layout.tsx children
-  -> useTranslations() usable in all components (RSC + client)
-  -> Language toggle button in NavBar (writes cookie, calls router.refresh())
+Middleware server-side role routing
+  requires: business_accounts table (exists v1.7)
+  required by: business-dashboard-as-homepage UX
+  required by: /profiili business variant (can share same check)
 
-lib/sportIcons.ts path registry
-  -> SportIcon React component (card badges, filter pills, CalloutCard)
-  -> SportPin.tsx AdvancedMarker DOM injection (Google Maps pins)
-  -> FilterCarouselPill icon slot
-  -> PaikkaKortti sport badge
+Publication on approval
+  requires: /api/admin/approve (exists v1.7, needs extension)
+  requires: business_managed=true column (exists v1.7)
+  requires: published=false for new venues (exists v1.7, enforced at create time)
+  required by: verified checkmark appearing on published+claimed venues
+
+Verified checkmark in cards
+  requires: is_claimed=true in liikuntapaikat (exists v1.7, set at claim/create time)
+  requires: published=true (gated by publication flow)
+  requires: is_claimed added to SELECT in app/page.tsx (may need to verify it's included)
+  required by: consumer trust signal
+
+Consumer map in business dashboard (stripped mode)
+  requires: middleware routing (business lands on /business first, has "Avaa kartta" button)
+  requires: businessMode prop in Etusivu
+  independent of: publication flow
+
+/profiili business variant
+  requires: business_accounts check (server or client side)
+  independent of: publication flow
+  independent of: middleware routing (nice to have but not blocked by it)
 ```
+
+---
+
+## Tech Debt Items (v1.8 scope, not new features)
+
+| Item | What It Is | Complexity | Why Now |
+|------|-----------|------------|---------|
+| Wizard orchestration refactor | Shared step-navigation logic between `OnboardingWizardInner` and `EditWizardInner` is currently duplicated. Step state, URL sync, prev/next handlers repeat. | Medium | Reduces bug surface before v1.8 adds more wizard interactions |
+| Claim route `business_managed=true` fix | When a business claims an existing venue (`/api/business/claim-paikka`), `business_managed` should be set to `true` immediately — not only on admin approval. The sync script checks this flag to skip managed venues. If not set at claim time, a sync during the pending period could overwrite business-entered data. | Low | Data integrity fix; 1-line change in the claim Route Handler |
+| `/admin` Next.js middleware protection | `app/admin/page.tsx` uses `useEffect + router.replace('/')` client-side guard. This causes a blank flash for unauthorized users; worse, the page briefly renders before redirect for fast connections. Server-side protection via middleware is the correct pattern. | Low | Security/UX fix; extends the same middleware that will handle business user routing |
+| `onboarding_completed` cleanup | If a `onboarding_completed` boolean exists on `business_accounts`, it is redundant with the `onboarding_draft` table (which is the authoritative "is onboarding in progress" source). The column creates confusion about the source of truth. | Low | Schema hygiene; prevents future bugs where both signals are checked inconsistently |
+
+**Confidence: HIGH** — All items confirmed by direct code inspection of `middleware.ts`, `app/admin/page.tsx`, and the migration files.
+
+---
+
+## Implementation Notes for Roadmap Planning
+
+### Middleware Role Check (performance consideration)
+The existing `middleware.ts` runs `supabase.auth.getUser()` on every request. Adding a `business_accounts` lookup would add one extra DB round-trip, but ONLY for:
+- Authenticated users (unauthenticated users skip it)
+- Hitting the `/` path (no reason to check on `/paikat/[id]`, `/profiili`, etc.)
+
+Pattern: `if (request.nextUrl.pathname === '/' && user) { check business_accounts; if found, redirect to /business }`. This is a minimal, targeted extension.
+
+Alternative: Store business account existence in a JWT custom claim or cookie at login time to avoid the DB round-trip entirely. However, this requires a database webhook or login trigger to populate the claim — added complexity. For v1.8, the single targeted DB query on `/` is simpler and sufficient.
+
+### Data Sync on Approval
+The approve endpoint (`/api/admin/approve`) must be extended to:
+1. Fetch the `paikka_id` from `business_paikka_links` for the application being approved
+2. Read current business-entered data already in `liikuntapaikat` (images, pricing, hours, contact info were written by the onboarding wizard via edit wizard pattern)
+3. Build an UPDATE that sets `published=true`, `business_managed=true` (and only overwrites other fields if they are non-null in the current row — since the wizard already wrote them, they should be present)
+4. Execute as a single atomic update
+
+The onboarding wizard in v1.7 writes data directly to `liikuntapaikat` rows during the wizard steps (confirmed by the edit wizard pattern in `app/business/[id]/EditWizardInner.tsx`). So approval does not need to "copy" data from a separate draft — it just needs to flip `published` and `business_managed`.
+
+### Verified Checkmark Token
+Project design system: amber is already reserved for "Sponsoroitu". Indigo aligns with the AKTIIVI brand (NavBar is `bg-indigo-800`, hero is `bg-indigo-600`). Use `text-indigo-600` with a `BadgeCheck` Lucide icon at `w-3 h-3` or `w-3.5 h-3.5`. Avoid blue (used for map pins). The indicator renders inline next to the venue name in the card name row.
+
+### Stripped Map for Business Users
+`Etusivu.tsx` is a large component (~900 lines). Do not fork it. Add a `businessMode?: boolean` prop. Gate the following elements behind `!businessMode`:
+- AI weather widget (`SaaWidget` / AI recommendations section)
+- Bookmark button (`BookmarkButton` component)
+- Bottomsheet review/rating prompts
+- The "Kirjaudu" nav button (business is already logged in)
+
+GPS, map pins, search, filters, and bottomsheet venue info should all remain functional — business users legitimately want to find venues.
 
 ---
 
 ## MVP Recommendation
 
-For a single milestone, recommended build order:
+Recommended phase order for v1.8:
 
-1. **`lib/sportIcons.ts`** — build the 35-icon path registry first; this unblocks all icon usage in all contexts
-2. **`SportIcon` React component** — thin wrapper over the registry; replaces Lucide icons in card badges and filter pills
-3. **`SportPin.tsx` update** — swap Lucide-derived path strings for custom paths from registry; AdvancedMarker pins get new icons
-4. **next-intl setup** — `messages/fi.json`, `messages/en.json`, `i18n/request.ts` reading `NEXT_LOCALE` cookie, `NextIntlClientProvider` in `layout.tsx`
-5. **Language toggle button in NavBar** — FI/EN pill with cookie write + `router.refresh()`
-6. **Translate all UI strings** — systematic pass through all components using `useTranslations()`
+1. **Tech debt** — wizard refactor, claim `business_managed` fix, admin middleware protection, `onboarding_completed` cleanup. Low risk, sets clean foundation.
+2. **Publication on approval** — extend `/api/admin/approve` to set `published=true` + `business_managed=true`. Core value delivery of v1.8.
+3. **Verified checkmark** — add `is_claimed` to `PaikkaKortti`, `DiagonaalKortti`, `PaikkaSheet`. Visual payoff, depends only on #2 for the approved venues case (though `is_claimed=true` is already set at claim time).
+4. **Business dashboard as homepage** — middleware role routing + "Avaa kartta" button on dashboard + stripped consumer map.
+5. **Profile page business variant** — `/profiili` hides consumer fields for business users. Lower priority, but important for the cohesive business experience.
 
-**Defer:**
-- Browser language auto-detection: low value for a Finnish-first product; Finnish speakers are the primary audience
-- Icon animation polish beyond what `SportPin.tsx` already does: nice-to-have, not MVP
+**Defer to future milestone:**
+- Analytics/metrics on business dashboard (no data yet)
+- Business notification email when listing goes live (email infra exists but adds scope)
+- Paid "Sponsoroitu" upgrade flow for businesses
+
+---
+
+## Confidence Assessment
+
+| Area | Confidence | Notes |
+|------|------------|-------|
+| Role detection / middleware routing | HIGH | Next.js middleware pattern well-documented; existing middleware is the right extension point; confirmed by Next.js docs and GitHub discussions |
+| Business dashboard table stakes | HIGH | Most already built in v1.7; gaps confirmed by code inspection of `app/business/page.tsx` |
+| Verified indicator | HIGH | `is_claimed` column exists and is in schema; visual token pattern is industry-standard |
+| Publication data sync | HIGH | Column structure confirmed in migrations; approve endpoint exists; extension is well-scoped |
+| Stripped map for business | MEDIUM | `Etusivu.tsx` is large; prop threading is the right approach but needs care; not a documented external pattern — estimation based on code reading |
+| Tech debt items | HIGH | All four items confirmed by direct code inspection |
 
 ---
 
 ## Sources
 
-- [next-intl App Router without i18n routing (official docs)](https://next-intl.dev/docs/getting-started/app-router/without-i18n-routing) — HIGH confidence
-- [next-intl cookie locale configuration](https://next-intl.dev/docs/usage/configuration) — HIGH confidence
-- [next-intl issue #1334: Change locale without routing (community discussion)](https://github.com/amannn/next-intl/issues/1334) — MEDIUM confidence (verified against docs)
-- [How to import SVGs into Next.js — LogRocket 2025](https://blog.logrocket.com/import-svgs-next-js-apps/) — MEDIUM confidence
-- [SVG sprite icons in Next.js — Jake Roberts](https://jakerob.pro/blog/svg-sprite-icons-in-next-js) — MEDIUM confidence
-- [Google Maps AdvancedMarker graphic markers (official Google docs)](https://developers.google.com/maps/documentation/javascript/advanced-markers/graphic-markers) — HIGH confidence
-- [@vis.gl/react-google-maps AdvancedMarker component (official docs)](https://visgl.github.io/react-google-maps/docs/api-reference/components/advanced-marker) — HIGH confidence
-- [SVG icon management comparison in React — DEV Community](https://dev.to/simprl/a-comprehensive-comparison-of-svg-icon-management-options-in-react-js-projects-glc) — LOW confidence (single source, unverified benchmarks; direction aligns with other sources)
-- [i18next language detection docs — Context7 `/i18next/i18next`](https://github.com/i18next/i18next/blob/master/_autodocs/README.md) — HIGH confidence
-- [Serwist precaching assets](https://serwist.pages.dev/docs/serwist/guide/precaching) — MEDIUM confidence
+- Codebase: `app/business/page.tsx`, `app/admin/page.tsx`, `middleware.ts`, `supabase/migrations/20260605000000_business_accounts.sql`, `supabase/migrations/20260605000001_business_managed.sql`, `supabase/migrations/20260605000004_published_is_claimed.sql`
+- Airbnb dual-mode switching: [Switching between hosting and traveling](https://www.airbnb.com/help/article/3546)
+- Next.js middleware role routing: [Role-based routing discussion](https://github.com/vercel/next.js/discussions/23041), [Next.js Middleware docs](https://nextjs.org/docs/14/app/building-your-application/routing/middleware)
+- Google Business Profile verification: [Verify your business on Google](https://support.google.com/business/answer/7107242?hl=en), [Understand Google updates to your profile](https://support.google.com/business/answer/3480441)
+- Yelp claimed vs verified: [What is a claimed business?](https://www.yelp-support.com/article/What-is-a-claimed-business?l=en_US), [Is Yelp monetizing trust with verified badge?](https://www.brightlocal.com/blog/is-yelp-monetizing-consumer-trust-with-its-new-verified-badge/)
+- Tripadvisor Management Centre: [Quick Start Guide](https://www.tripadvisor.co.uk/TripAdvisorInsights/w746)
+- Foursquare Business Listings: [foursquare.com/products/business-listings/](https://foursquare.com/products/business-listings/)
+- Directorist claim listing: [Moderating Claims](https://directorist.com/documentation/extensions/claim-listing/moderating-claims/)
