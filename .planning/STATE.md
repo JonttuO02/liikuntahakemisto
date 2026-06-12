@@ -4,13 +4,13 @@ milestone: v2.0
 milestone_name: Business UX & Navigation
 status: ready_to_execute
 last_updated: "2026-06-12T00:00:00.000Z"
-last_activity: 2026-06-12 — Phase 41 planned (2 plans, 2 waves)
+last_activity: 2026-06-12 — Phase 41 Wave 1 complete (Plan 41-01: BusinessNav + i18n keys)
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 2
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 50
 ---
 
 # Project State
@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-12)
 
 ## Current Position
 
-Phase: 41 (Navigation Foundation) — planned, ready to execute
-Plan: 41-01 (Wave 1), 41-02 (Wave 2)
-Status: Ready to execute
-Last activity: 2026-06-12 — Phase 41 planned (2 plans: BusinessNav + layout wiring)
+Phase: 41 (Navigation Foundation) — Wave 2 in progress
+Plan: 41-02 (Wave 2) — pending human verify checkpoint
+Status: Executing Wave 2
+Last activity: 2026-06-12 — Plan 41-01 complete (BusinessNav + i18n keys merged to master)
 
 Progress: ░░░░░░░░░░ 0% (0/3 phases, 0/2 plans)
 

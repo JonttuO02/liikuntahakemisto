@@ -158,7 +158,7 @@ Full archive: `.planning/milestones/v1.9-ROADMAP.md`
   4. Navigating directly to /business/kirjaudu while already logged in redirects to /business immediately
 **Plans**: 2 plans (Wave 1 → Wave 2)
 **Wave 1**
-- [ ] 41-01-PLAN.md — i18n keys + BusinessNav component
+- [x] 41-01-PLAN.md — i18n keys + BusinessNav component
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 41-02-PLAN.md — layout wiring + kirjaudu RSC redirect
 **UI hint**: yes
@@ -235,6 +235,6 @@ Full archive: `.planning/milestones/v1.9-ROADMAP.md`
 | 38. Business Data Publication | v1.8 | 1/1 | Complete | 2026-06-11 |
 | 39. Auth-Separaatio | v1.9 | 4/4 | Complete | 2026-06-12 |
 | 40. Wizard-konsolidointi & Cleanup | v1.9 | 3/3 | Complete | 2026-06-12 |
-| 41. Navigation Foundation | v2.0 | 0/? | Not started | - |
+| 41. Navigation Foundation | v2.0 | 1/2 | In progress | - |
 | 42. Dashboard & Map | v2.0 | 0/? | Not started | - |
 | 43. Business Profile | v2.0 | 0/? | Not started | - |
