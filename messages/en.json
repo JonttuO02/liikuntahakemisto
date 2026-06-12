@@ -220,7 +220,16 @@
     "navProfile": "Profile",
     "navSignOut": "Sign out",
     "navOpenMenu": "Open menu",
-    "navCloseMenu": "Close menu"
+    "navCloseMenu": "Close menu",
+    "dashboardStatusPendingTitle": "Your application is pending review",
+    "dashboardStatusPendingBody": "We'll notify you by email once reviewed.",
+    "dashboardStatusApprovedTitle": "Your account is approved",
+    "dashboardStatusApprovedBody": "Your venues are visible in the directory.",
+    "dashboardStatusRejectedTitle": "Your application was rejected",
+    "dashboardStatusRejectedBody": "Reason: {reason}",
+    "dashboardStatusRejectedBodyNoReason": "Contact support for more information.",
+    "dashboardMapCta": "Open map",
+    "dashboardVenuesHeading": "Your venues"
   },
   "Admin": {
     "pageTitle": "Admin — Pending applications",
