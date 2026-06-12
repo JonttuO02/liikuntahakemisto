@@ -139,7 +139,7 @@ Full archive: `.planning/milestones/v1.9-ROADMAP.md`
 
 ### v2.0 Business UX & Navigation (Phases 41–43) — ACTIVE
 
-- [ ] **Phase 41: Navigation Foundation** — BusinessNav component + consumer NavBar hidden on /business/* + post-login redirect *(2 plans: Wave 1×1 + Wave 2×1)*
+- [x] **Phase 41: Navigation Foundation** — BusinessNav component + consumer NavBar hidden on /business/* + post-login redirect *(2 plans: Wave 1×1 + Wave 2×1)* — 2026-06-12
 - [ ] **Phase 42: Dashboard & Map** — /business dashboard redesign (status card + venue list + actions) + /business/map new route
 - [ ] **Phase 43: Business Profile** — /business/profiili page: read-only account info, editable contact fields, language toggle, sign-out
 
@@ -235,6 +235,6 @@ Full archive: `.planning/milestones/v1.9-ROADMAP.md`
 | 38. Business Data Publication | v1.8 | 1/1 | Complete | 2026-06-11 |
 | 39. Auth-Separaatio | v1.9 | 4/4 | Complete | 2026-06-12 |
 | 40. Wizard-konsolidointi & Cleanup | v1.9 | 3/3 | Complete | 2026-06-12 |
-| 41. Navigation Foundation | v2.0 | 1/2 | In progress | - |
+| 41. Navigation Foundation | v2.0 | 2/2 | Complete | 2026-06-12 |
 | 42. Dashboard & Map | v2.0 | 0/? | Not started | - |
 | 43. Business Profile | v2.0 | 0/? | Not started | - |

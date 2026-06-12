@@ -3,9 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Business UX & Navigation
 status: executing
-stopped_at: context exhaustion at 82% (2026-06-12)
-last_updated: "2026-06-12T10:00:25.648Z"
-last_activity: 2026-06-12 — Plan 41-01 complete (BusinessNav + i18n keys merged to master)
+last_updated: "2026-06-12T10:45:00Z"
+last_activity: 2026-06-12 — Phase 41 UAT complete (6/7 passed, 1 skipped); phase marked complete
 progress:
   total_phases: 3
   completed_phases: 1
@@ -25,10 +24,9 @@ See: .planning/PROJECT.md (updated 2026-06-12)
 
 ## Current Position
 
-Phase: 41 (Navigation Foundation) — Wave 2 in progress
-Plan: 41-02 (Wave 2) — pending human verify checkpoint
-Status: Executing Wave 2
-Last activity: 2026-06-12 — Plan 41-01 complete (BusinessNav + i18n keys merged to master)
+Phase: 42 (Dashboard & Map) — not started
+Status: Phase 41 complete; ready to plan Phase 42
+Last activity: 2026-06-12 — Phase 41 UAT complete (6/7 passed, 1 skipped — active route highlight deferred to Phase 43)
 
 Progress: ░░░░░░░░░░ 0% (0/3 phases, 0/2 plans)
 
