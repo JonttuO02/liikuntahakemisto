@@ -1,5 +1,18 @@
 # Liikuntahakemisto
 
+## Current Milestone: v2.0 Business UX & Navigation
+
+**Goal:** Build a cohesive, fully-navigable business interface — dedicated navigation, proper dashboard homepage, standalone map, and business profile page.
+
+**Target features:**
+- `BusinessNav` component replacing consumer NavBar on all `/business/*` routes (Dashboard / Kartta / Profiili / Kirjaudu ulos)
+- Post-login redirect: `/business/kirjaudu` → `/business` after successful login (unblocked by v1.9 auth separation)
+- `/business` dashboard redesign: approval status card, venue list with status badges, quick-action links
+- `/business/map`: standalone full-screen map — all venues + "Omat paikat" toggle filter, PaikkaSheet on pin tap
+- `/business/profiili`: account info display, editable contact fields, FI/EN language toggle, business sign-out
+
+---
+
 ## Shipped: v1.9 Auth-Separaatio & Cleanup (2026-06-12)
 
 **Delivered:** Auth-sessioiden täydellinen eristys `sb-biz-*`-cookie-nimiavaruudella; path-conditional middleware refresh; `/business/kirjaudu` dedikoitu kirjautumissivu; kaikki `/business/*`-reitit migroitu business-asiakkaaseen; `WizardInner` konsolidoitu yhdeksi komponentiksi (`mode: 'onboarding' | 'edit'`); testitilien siivousmigraatio luotu.
@@ -209,9 +222,17 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **CLEAN-02**: WizardInner konsolidoitu `OnboardingWizardInner` + `EditWizardInner` → yksi `WizardInner(mode)` — v1.9
 - ✓ **CLEAN-03–05**: update-paikka claim_status -rajoitus poistettu; step-skip-suoja; onboarding_completed kuollut koodi poistettu — v1.9 (pre-existing, verified)
 
-### Active (next milestone)
+### Active (v2.0)
 
-*(Määritellään seuraavan /gsd:new-milestone -komennon yhteydessä)*
+- [ ] **BIZNAV-01**: Business user sees a dedicated BusinessNav (Dashboard / Kartta / Profiili / Kirjaudu ulos) on all `/business/*` pages
+- [ ] **BIZNAV-02**: Consumer NavBar is not rendered on any `/business/*` page
+- [ ] **BIZUX-02**: User is redirected to `/business` dashboard after successful login at `/business/kirjaudu`
+- [ ] **BIZUX-03**: `/business` dashboard shows approval status card, venue list with status badges, and quick-action links
+- [ ] **BIZUX-04**: `/business/map` shows a full-screen map with all venues and "Omat paikat" toggle filter; tapping a pin opens PaikkaSheet
+- [ ] **BIZPRO-01**: `/business/profiili` displays company name, email, and account type
+- [ ] **BIZPRO-02**: `/business/profiili` allows editing contact info (phone, email, website) saved to `business_accounts`
+- [ ] **BIZPRO-03**: `/business/profiili` provides FI/EN language toggle persisted in NEXT_LOCALE cookie
+- [ ] **BIZPRO-04**: `/business/profiili` sign-out button clears `sb-biz-*` session and redirects to `/business/kirjaudu`
 
 ### Future (deferred from v1.1 + v1.7)
 
@@ -315,4 +336,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-12 after v1.9 milestone (Auth-Separaatio & Cleanup)*
+*Last updated: 2026-06-12 — v2.0 milestone started (Business UX & Navigation)*

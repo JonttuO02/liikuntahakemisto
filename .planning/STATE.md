@@ -1,43 +1,40 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.9
-milestone_name: Auth-Separaatio & Cleanup
-status: archived
-stopped_at: v1.9 archived 2026-06-12 — ready for /gsd:new-milestone
-last_updated: "2026-06-12T10:00:00.000Z"
-last_activity: 2026-06-12 — v1.9 milestone archived
+milestone: v2.0
+milestone_name: Business UX & Navigation
+status: planning
+last_updated: "2026-06-12T00:00:00.000Z"
+last_activity: 2026-06-12 — Milestone v2.0 started
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-11)
+See: .planning/PROJECT.md (updated 2026-06-12)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v1.9 milestone complete — ready for archiving
+**Current focus:** v2.0 Business UX & Navigation — defining requirements
 
 ## Current Position
 
-Phase: 40 of 40 (Wizard-konsolidointi & Cleanup) — COMPLETE (verification: human_needed for CLEAN-01)
-Status: All 7 plans complete across phases 39–40. CLEAN-01 requires manual Supabase DB push.
-Last activity: 2026-06-12 — Phase 40 executed (3/3 plans)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-12 — Milestone v2.0 started
 
-Progress: [██████████] 100%
+## v2.0 Direction
 
-## v1.9 Direction
+**Core decision (2026-06-12):** Build a complete, self-contained business user interface. BusinessNav replaces consumer NavBar on all `/business/*` routes. Business users have their own dashboard, map, and profile page — entirely separate from the consumer experience. Auth sessions remain fully isolated (v1.9 sb-biz-* architecture).
 
-**Core decision (2026-06-11):** Consumer- ja business-puolen auth-sessiot eriytetään cookie-nimiavaruuksilla. `/business/*`-reitit käyttävät `sb-biz-*`-cookiea, consumer-reitit käyttävät normaalia `sb-*`-cookiea. Sessiot ovat täysin riippumattomia — molempiin vaaditaan oma kirjautuminen.
-
-- Ei uusia ominaisuuksia — puhdas arkkitehtuuri- ja siivousmilestone
-- Testitilit poistetaan (kaikki ovat testitilejä, ei tuotantodataa)
-- Phase 39 jatkaa v1.8:n numerointia (päättyi 38:aan)
+- Phases 41+: continue numbering from v1.9 (ended at 40)
+- BIZUX-05 (hide /profiili fields for business users) dropped — business users navigate to /business/profiili instead
 
 ## Active Decisions (carried forward)
 
@@ -48,9 +45,9 @@ Progress: [██████████] 100%
 - Storage RLS: SECURITY DEFINER function in public schema (storage schema forbidden)
 - JWT verification: supabaseAdmin.auth.getUser(token) at every Route Handler boundary
 - Middleware: never query DB from middleware (Edge Runtime); use RSC layout for auth checks
-- **v1.9 NEW**: Business routes use `sb-biz-*` cookie namespace; consumer routes use default `sb-*`
-- **v1.9 NEW**: `createBusinessServerClient()` and `createBusinessBrowserClient()` in `lib/supabase-business.ts`
-- **v1.9 NEW**: Single `WizardInner` component (mode: 'onboarding' | 'edit') replaces OnboardingWizardInner + EditWizardInner
+- **v1.9**: Business routes use `sb-biz-*` cookie namespace; consumer routes use default `sb-*`
+- **v1.9**: `createBusinessServerClient()` and `createBusinessBrowserClient()` in `lib/supabase-business.ts`
+- **v1.9**: Single `WizardInner` component (mode: 'onboarding' | 'edit')
 
 ## Accumulated Context
 
@@ -59,18 +56,19 @@ Progress: [██████████] 100%
 - Phase 40: WizardInner yhdistetty yhdeksi tiedostoksi — OnboardingMode ja EditMode private sub-komponentteina
 - Phase 38: Admin-hyväksyntä julkaisee paikan atomisesti Postgres-triggerillä (published=true + business_managed=true yhdessä transaktiossa)
 - Phase 37: Middleware ei tee DB-kyselyitä — auth-tarkistukset RSC layout-komponenteissa
+- v2.0: Business users navigate to /business/profiili — consumer /profiili unchanged and not visited by business users
 
 ### Pending Todos
 
-- CLEAN-01: Aja `DELETE FROM auth.users WHERE id IN (SELECT user_id FROM business_accounts);` Supabase Dashboardissa tai `supabase db push` CLI:llä — poistaa kaikki testitilit
+- CLEAN-01: DONE — supabase db push ajettu 2026-06-12 (testitilit poistettu)
 
 ### Blockers/Concerns
 
-- Code review CR-01: `app/business/[id]/page.tsx` lukee paikan tiedot ilman omistajuustarkistusta (pre-existing issue, ei phase 40 -muutos)
-- Code review CR-02: `app/api/business/onboarding/submit/route.ts` ei filtteroi `paikka_id`:llä (pre-existing issue)
+- CR-01: `app/business/[id]/page.tsx` lukee paikan tiedot ilman omistajuustarkistusta (pre-existing issue)
+- CR-02: `app/api/business/onboarding/submit/route.ts` ei filtteroi `paikka_id`:llä (pre-existing issue)
 
 ## Session Continuity
 
-Last session: 2026-06-12T08:30:00.000Z
-Stopped at: Phase 40 complete — v1.9 milestone ready for archiving
-Resume file: None — run /gsd:complete-milestone to archive v1.9
+Last session: 2026-06-12
+Stopped at: Milestone v2.0 initialized
+Resume file: None
