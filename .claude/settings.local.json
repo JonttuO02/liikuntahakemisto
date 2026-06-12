@@ -20,7 +20,11 @@
       "WebFetch(domain:next-intl.dev)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Skill(gsd-ui-phase)"
+      "Skill(gsd-ui-phase)",
+      "Skill(gsd-secure-phase)",
+      "Skill(gsd-validate-phase)",
+      "Skill(gsd-audit-milestone)",
+      "Skill(gsd-pause-work)"
     ]
   }
 }
