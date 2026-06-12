@@ -229,7 +229,10 @@
     "dashboardStatusRejectedBody": "Reason: {reason}",
     "dashboardStatusRejectedBodyNoReason": "Contact support for more information.",
     "dashboardMapCta": "Open map",
-    "dashboardVenuesHeading": "Your venues"
+    "dashboardVenuesHeading": "Your venues",
+    "mapToggleAll": "All venues",
+    "mapToggleMine": "My venues",
+    "mapLoadingVenues": "Loading venues..."
   },
   "Admin": {
     "pageTitle": "Admin — Pending applications",

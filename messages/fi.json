@@ -229,7 +229,10 @@
     "dashboardStatusRejectedBody": "Syy: {reason}",
     "dashboardStatusRejectedBodyNoReason": "Ota yhteyttä ylläpitoon saadaksesi lisätietoja.",
     "dashboardMapCta": "Avaa kartta",
-    "dashboardVenuesHeading": "Paikkasi"
+    "dashboardVenuesHeading": "Paikkasi",
+    "mapToggleAll": "Kaikki paikat",
+    "mapToggleMine": "Omat paikat",
+    "mapLoadingVenues": "Ladataan paikkoja..."
   },
   "Admin": {
     "pageTitle": "Admin — Odottavat hakemukset",
