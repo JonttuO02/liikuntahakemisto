@@ -28,6 +28,27 @@
 
 ---
 
+## v1.8 Yritysportaali v2 — Julkistaminen & UX — 2026-06-11
+
+**Shipped:** 2026-06-11
+**Phases:** 2 (phases 37–38) | **Plans:** 9
+**Timeline:** 2026-06-11 (same-day hardening release on v1.7)
+
+### What Shipped
+
+1. **Tech Debt Foundation (Phase 37)** — RSC guard layoutit kaikille `/business/*`-reiteille; middleware redirect; `is_claimed`-kenttä; `onboarding_completed`-kolumni droppaaminen; wizard-auth-siivous
+2. **Atomic Publication (Phase 38)** — Postgres AFTER UPDATE trigger atomiselle hyväksynnälle (`published=true` + `business_managed=true`); ennenaikaiset `business_managed`-kirjoitukset poistettu; `BadgeCheck`-verifikaatio-tikki PaikkaKortti/DiagonaalKortti/PaikkaSheet -korteissa
+
+### Known Deferred Items at Close
+
+- Phase 39 (original, Business User UX): BIZUX-02–05 siirretty — vaati auth-session eristyksen ensin (toteutettu v1.9:ssä). BIZUX-03 + BIZUX-04 jatkuu seuraavassa milestonessa.
+
+### Archives
+
+- `.planning/milestones/v1.8-ROADMAP.md`
+
+---
+
 ## v1.7 Yritysportaali — 2026-06-11
 
 **Shipped:** 2026-06-11
