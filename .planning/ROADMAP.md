@@ -156,7 +156,9 @@ Full archive: `.planning/milestones/v1.9-ROADMAP.md`
   2. The consumer NavBar does not appear on any /business/* page — no double-nav visible at any breakpoint
   3. After a successful login at /business/kirjaudu, the user lands on /business (not left at the login page)
   4. Navigating directly to /business/kirjaudu while already logged in redirects to /business immediately
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 41-01-PLAN.md — i18n keys + BusinessNav component
+- [ ] 41-02-PLAN.md — layout wiring + kirjaudu RSC redirect
 **UI hint**: yes
 
 ### Phase 42: Dashboard & Map
