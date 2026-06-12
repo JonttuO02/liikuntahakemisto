@@ -214,7 +214,13 @@
     "loginEmailPlaceholder": "Sähköpostiosoite",
     "loginPasswordPlaceholder": "Salasana",
     "noAccountLink": "Ei tiliä? Rekisteröidy",
-    "errorInvalidCredentials": "Virheellinen sähköposti tai salasana."
+    "errorInvalidCredentials": "Virheellinen sähköposti tai salasana.",
+    "navDashboard": "AKTIIVI Business",
+    "navMap": "Kartta",
+    "navProfile": "Profiili",
+    "navSignOut": "Kirjaudu ulos",
+    "navOpenMenu": "Avaa valikko",
+    "navCloseMenu": "Sulje valikko"
   },
   "Admin": {
     "pageTitle": "Admin — Odottavat hakemukset",
