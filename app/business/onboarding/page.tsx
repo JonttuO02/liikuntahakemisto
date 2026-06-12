@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import OnboardingWizardInner from './OnboardingWizardInner'
+import WizardInner from '../WizardInner'
 
 export default function OnboardingWizardPage() {
   return (
@@ -10,7 +10,7 @@ export default function OnboardingWizardPage() {
         </div>
       }
     >
-      <OnboardingWizardInner />
+      <WizardInner mode="onboarding" />
     </Suspense>
   )
 }
