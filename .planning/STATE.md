@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Auth-Separaatio & Cleanup
-status: phase_complete
-stopped_at: Phase 39 complete
-last_updated: "2026-06-12T00:00:00.000Z"
-last_activity: 2026-06-12 — Phase 39 executed (4/4 plans complete)
+status: completed
+stopped_at: Phase 40 context gathered
+last_updated: "2026-06-12T04:46:51.188Z"
+last_activity: 2026-06-12 — Phase 39 executed (4/4 plans)
 progress:
-  total_phases: 2
+  total_phases: 3
   completed_phases: 1
   total_plans: 4
   completed_plans: 4
-  percent: 50
+  percent: 33
 ---
 
 # Project State
@@ -70,6 +70,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-06-11T21:02:11.598Z
-Stopped at: Phase 39 planned (4 plans, 3 waves)
-Resume file: .planning/phases/39-auth-separaatio/39-01-PLAN.md
+Last session: 2026-06-12T04:46:51.177Z
+Stopped at: Phase 40 context gathered
+Resume file: .planning/phases/40-wizard-konsolidointi-cleanup/40-CONTEXT.md
