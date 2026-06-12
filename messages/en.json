@@ -214,7 +214,13 @@
     "loginEmailPlaceholder": "Email address",
     "loginPasswordPlaceholder": "Password",
     "noAccountLink": "No account? Register",
-    "errorInvalidCredentials": "Invalid email or password."
+    "errorInvalidCredentials": "Invalid email or password.",
+    "navDashboard": "AKTIIVI Business",
+    "navMap": "Map",
+    "navProfile": "Profile",
+    "navSignOut": "Sign out",
+    "navOpenMenu": "Open menu",
+    "navCloseMenu": "Close menu"
   },
   "Admin": {
     "pageTitle": "Admin — Pending applications",
