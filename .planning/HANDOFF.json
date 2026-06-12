@@ -1,47 +1,30 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-11T00:56:59.030Z",
-  "phase": null,
-  "phase_name": "hotfix — onboarding regressions",
-  "phase_dir": null,
-  "plan": null,
-  "task": null,
-  "total_tasks": null,
+  "timestamp": "2026-06-12T10:05:07.756Z",
+  "phase": "41",
+  "phase_name": "Navigation Foundation",
+  "phase_dir": ".planning/phases/41-navigation-foundation",
+  "plan": 2,
+  "task": 3,
+  "total_tasks": 3,
   "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "supabase db push — applied migrations 000003–000006", "status": "done"},
-    {"id": 2, "name": "fix migration 000006 CREATE POLICY IF NOT EXISTS syntax error", "status": "done"},
-    {"id": 3, "name": "diagnose root cause of preview/submit/save regressions", "status": "done"},
-    {"id": 4, "name": "wizard: redirect step 6 → step 1 when draft is missing", "status": "done"}
+    {"id": 1, "name": "Add BusinessNav i18n keys to fi.json and en.json", "status": "done", "commit": "451af40"},
+    {"id": 2, "name": "Create BusinessNav.tsx client component", "status": "done", "commit": "c85ac27"},
+    {"id": 3, "name": "Wire BusinessNav into layout.tsx", "status": "done", "commit": "c012a17"},
+    {"id": 4, "name": "Add already-logged-in redirect + extract BusinessKirjauduClient", "status": "done", "commit": "32d55d5"},
+    {"id": 5, "name": "Manual browser verification (checkpoint:human-verify)", "status": "done", "commit": "approved by user 2026-06-12"}
   ],
-  "remaining_tasks": [
-    {"id": 5, "name": "commit hotfix files", "status": "not_started"},
-    {"id": 6, "name": "user verification: full onboarding flow end-to-end", "status": "not_started"}
-  ],
+  "remaining_tasks": [],
   "blockers": [],
-  "human_actions_pending": [
-    {
-      "action": "Test full onboarding flow: steps 1→5 (save), step 6 (preview loads), submit (redirects to /business)",
-      "context": "DB side fixed by db push. Wizard guard added for missing draft at step 6.",
-      "blocking": false
-    }
-  ],
+  "human_actions_pending": [],
   "decisions": [
-    {
-      "decision": "Root cause: Phase 36-03 expanded business/page.tsx query to include logo_url before migration 000003 was applied",
-      "rationale": "This caused the query to fail silently, breaking management panel and cascading to submit/preview",
-      "phase": "hotfix"
-    },
-    {
-      "decision": "Added step-6 guard: if refreshDraftForPreview finds no draft, redirect to step 1",
-      "rationale": "Prevents 8s timeout when draft was deleted by a successful prior submit",
-      "phase": "hotfix"
-    }
+    {"decision": "Phase 41 fully verified — all 7 checkpoint checks passed", "rationale": "User confirmed manually in browser", "phase": "41"},
+    {"decision": "Fixed ClaimSearchForm to use createBusinessBrowserClient() for claim/create token", "rationale": "Consumer client returned empty session for business-only users causing 401 on claim/create APIs", "phase": "41"},
+    {"decision": "Fixed StepAukioloajat buildOpenDaysObject to skip days with empty time strings", "rationale": "Toggled-open days with no times sent empty strings to isValidAukioloajat validator causing 400", "phase": "41"},
+    {"decision": "joona.orava@gmail.com set as admin + approved business account via SQL", "rationale": "Profiles table was empty after cleanup; needed dual consumer+business access for testing", "phase": "41"}
   ],
-  "uncommitted_files": [
-    "app/business/onboarding/OnboardingWizardInner.tsx",
-    "supabase/migrations/20260610000006_rls_business_paikka_links.sql"
-  ],
-  "next_action": "git commit the two modified files, then test the full onboarding flow",
-  "context_notes": "Phase 36 is complete (v1.7 milestone done). This session was emergency debugging. No new phase is active."
+  "uncommitted_files": [".planning/STATE.md"],
+  "next_action": "Run /gsd:verify-work 41 to formally close phase, then plan Phase 42",
+  "context_notes": "Phase 41 done and human-verified. Three out-of-scope bug fixes applied this session. ROADMAP phase 41 row needs updating to 2/2 complete. Phase 42 (Dashboard & Map) and Phase 43 (Business Profile) are next in v2.0."
 }
