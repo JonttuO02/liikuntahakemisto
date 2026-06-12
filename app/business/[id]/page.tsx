@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
-import EditWizardInner from './EditWizardInner'
+import WizardInner from '../WizardInner'
 
 export default async function BusinessVenuePage({ params }: { params: { id: string } }) {
   // Auth guard is client-side in EditWizardInner — the browser client stores
@@ -31,7 +31,7 @@ export default async function BusinessVenuePage({ params }: { params: { id: stri
             </div>
           }
         >
-          <EditWizardInner paikka={paikka} paikkaId={paikkaId} />
+          <WizardInner mode="edit" paikka={paikka} paikkaId={paikkaId} />
         </Suspense>
       </div>
     </main>
