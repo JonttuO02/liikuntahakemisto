@@ -220,7 +220,16 @@
     "navProfile": "Profiili",
     "navSignOut": "Kirjaudu ulos",
     "navOpenMenu": "Avaa valikko",
-    "navCloseMenu": "Sulje valikko"
+    "navCloseMenu": "Sulje valikko",
+    "dashboardStatusPendingTitle": "Hakemuksesi odottaa hyväksyntää",
+    "dashboardStatusPendingBody": "Tarkistamme tiedot ja ilmoitamme sinulle sähköpostitse.",
+    "dashboardStatusApprovedTitle": "Tilisi on hyväksytty",
+    "dashboardStatusApprovedBody": "Paikkasi näkyvät hakemistossa.",
+    "dashboardStatusRejectedTitle": "Hakemuksesi on hylätty",
+    "dashboardStatusRejectedBody": "Syy: {reason}",
+    "dashboardStatusRejectedBodyNoReason": "Ota yhteyttä ylläpitoon saadaksesi lisätietoja.",
+    "dashboardMapCta": "Avaa kartta",
+    "dashboardVenuesHeading": "Paikkasi"
   },
   "Admin": {
     "pageTitle": "Admin — Odottavat hakemukset",
