@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Business UX & Navigation
-status: planning
+status: ready_to_execute
 last_updated: "2026-06-12T00:00:00.000Z"
-last_activity: 2026-06-12 — Roadmap created for v2.0 (phases 41–43)
+last_activity: 2026-06-12 — Phase 41 planned (2 plans, 2 waves)
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
+  total_plans: 2
   completed_plans: 0
   percent: 0
 ---
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-12)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v2.0 Business UX & Navigation — roadmap created, ready to plan Phase 41
+**Current focus:** v2.0 Business UX & Navigation — Phase 41 planned, ready to execute
 
 ## Current Position
 
-Phase: 41 (Navigation Foundation) — not started
-Plan: —
-Status: Ready to plan
-Last activity: 2026-06-12 — Roadmap created (phases 41–43)
+Phase: 41 (Navigation Foundation) — planned, ready to execute
+Plan: 41-01 (Wave 1), 41-02 (Wave 2)
+Status: Ready to execute
+Last activity: 2026-06-12 — Phase 41 planned (2 plans: BusinessNav + layout wiring)
 
-Progress: ░░░░░░░░░░ 0% (0/3 phases, 0/0 plans)
+Progress: ░░░░░░░░░░ 0% (0/3 phases, 0/2 plans)
 
 ## v2.0 Direction
 
@@ -76,5 +76,5 @@ Progress: ░░░░░░░░░░ 0% (0/3 phases, 0/0 plans)
 ## Session Continuity
 
 Last session: 2026-06-12
-Stopped at: Roadmap created — ready to run /gsd:plan-phase 41
+Stopped at: Phase 41 planned — ready to run /gsd:execute-phase 41
 Resume file: None

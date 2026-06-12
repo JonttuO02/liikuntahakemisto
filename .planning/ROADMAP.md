@@ -139,7 +139,7 @@ Full archive: `.planning/milestones/v1.9-ROADMAP.md`
 
 ### v2.0 Business UX & Navigation (Phases 41–43) — ACTIVE
 
-- [ ] **Phase 41: Navigation Foundation** — BusinessNav component + consumer NavBar hidden on /business/* + post-login redirect
+- [ ] **Phase 41: Navigation Foundation** — BusinessNav component + consumer NavBar hidden on /business/* + post-login redirect *(2 plans: Wave 1×1 + Wave 2×1)*
 - [ ] **Phase 42: Dashboard & Map** — /business dashboard redesign (status card + venue list + actions) + /business/map new route
 - [ ] **Phase 43: Business Profile** — /business/profiili page: read-only account info, editable contact fields, language toggle, sign-out
 
@@ -156,8 +156,10 @@ Full archive: `.planning/milestones/v1.9-ROADMAP.md`
   2. The consumer NavBar does not appear on any /business/* page — no double-nav visible at any breakpoint
   3. After a successful login at /business/kirjaudu, the user lands on /business (not left at the login page)
   4. Navigating directly to /business/kirjaudu while already logged in redirects to /business immediately
-**Plans**: 2 plans
+**Plans**: 2 plans (Wave 1 → Wave 2)
+**Wave 1**
 - [ ] 41-01-PLAN.md — i18n keys + BusinessNav component
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 41-02-PLAN.md — layout wiring + kirjaudu RSC redirect
 **UI hint**: yes
 
