@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Business UX & Navigation
 status: executing
-last_updated: "2026-06-12T13:15:00Z"
-last_activity: 2026-06-12 — Phase 42 wave 1 complete (42-01 dashboard redesign done)
+last_updated: "2026-06-12T13:30:00Z"
+last_activity: 2026-06-12 — Phase 42 all plans complete (42-01 dashboard + 42-02 /business/map)
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 4
-  completed_plans: 3
-  percent: 50
+  completed_plans: 4
+  percent: 67
 ---
 
 # Project State
@@ -24,11 +24,11 @@ See: .planning/PROJECT.md (updated 2026-06-12)
 
 ## Current Position
 
-Phase: 42 (Dashboard & Map) — executing wave 2
-Status: Wave 1 complete (42-01 dashboard redesign done). Wave 2 in progress (42-02 /business/map).
-Last activity: 2026-06-12 — 42-01 dashboard redesign merged; StatusCard + VenueRow + map CTA live
+Phase: 42 (Dashboard & Map) — all plans complete, pending verification
+Status: Both plans executed — 42-01 dashboard redesign + 42-02 /business/map route
+Last activity: 2026-06-12 — all phase 42 plans merged, TypeScript clean
 
-Progress: ████░░░░░░ 50% (0/3 phases, 1/2 plans)
+Progress: ████████░░ 67% (0/3 phases, 2/2 plans)
 
 ## v2.0 Direction
 
