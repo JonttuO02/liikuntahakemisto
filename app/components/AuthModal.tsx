@@ -88,8 +88,9 @@ export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }:
             .eq('user_id', session.user.id)
             .maybeSingle()
           if (bizRow) {
-            onClose()
-            router.push('/business')
+            await supabase.auth.signOut()
+            setLoading(false)
+            setError('Yritystilit kirjautuvat osoitteessa /business/kirjaudu')
           } else {
             onSuccess?.(pendingPaikkaId ?? null)
             onClose()
