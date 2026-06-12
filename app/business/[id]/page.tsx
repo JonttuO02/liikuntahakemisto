@@ -1,13 +1,9 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
-import EditWizardInner from './EditWizardInner'
+import WizardInner from '../WizardInner'
 
 export default async function BusinessVenuePage({ params }: { params: { id: string } }) {
-  // Auth guard is client-side in EditWizardInner — the browser client stores
-  // session in localStorage (not cookies), so server-side getUser() always
-  // returns null for this app's auth setup.
-
   // Parse paikka_id from URL param
   const paikkaId = parseInt(params.id, 10)
   if (isNaN(paikkaId) || paikkaId < 1) notFound()
@@ -31,7 +27,7 @@ export default async function BusinessVenuePage({ params }: { params: { id: stri
             </div>
           }
         >
-          <EditWizardInner paikka={paikka} paikkaId={paikkaId} />
+          <WizardInner mode="edit" paikka={paikka} paikkaId={paikkaId} />
         </Suspense>
       </div>
     </main>
