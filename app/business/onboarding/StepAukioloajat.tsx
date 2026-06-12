@@ -102,11 +102,9 @@ export default function StepAukioloajat({
   function buildOpenDaysObject(): Record<string, { open: string; close: string }> {
     const openDaysObject: Record<string, { open: string; close: string }> = {}
     for (const dayKey of ORDERED_DAYS) {
-      if (hours[dayKey]?.isOpen) {
-        openDaysObject[dayKey] = {
-          open: hours[dayKey].open,
-          close: hours[dayKey].close,
-        }
+      const day = hours[dayKey]
+      if (day?.isOpen && day.open && day.close) {
+        openDaysObject[dayKey] = { open: day.open, close: day.close }
       }
     }
     return openDaysObject
