@@ -133,7 +133,7 @@ Full archive: `.planning/milestones/v1.7-ROADMAP.md`
 **Milestone Goal:** Consumer- ja business-puolen auth-sessiot eriytetään täysin toisistaan cookie-nimiavaruuksilla, ja v1.7–v1.8 tech debt siistitään — wizard-duplikaattien yhdistäminen, API-bugifixit, kuollut koodi ja testitilit.
 
 - [x] **Phase 39: Auth-Separaatio** — Eriytetyt auth-sessiot: sb-biz-* business-puolelle, sb-* consumer-puolelle; simultaanisessiot mahdollisia *(4/4 plans)* — 2026-06-12
-- [ ] **Phase 40: Wizard-konsolidointi & Cleanup** — WizardInner-yhdistäminen, update-paikka 403 -bugikorjaus, step-skip-suoja, kuollut koodi ja testitilit poistetaan *(3 plans, Wave 1×1 + Wave 2×2)*
+- [x] **Phase 40: Wizard-konsolidointi & Cleanup** — WizardInner-yhdistäminen, update-paikka 403 -bugikorjaus, step-skip-suoja, kuollut koodi ja testitilit poistetaan *(3 plans, Wave 1×1 + Wave 2×2)*
 
 ## Phase Details
 
@@ -167,8 +167,8 @@ Plans:
 **Plans**: 3 plans (Wave 1×1 + Wave 2×2)
 Plans:
 - [x] 40-01-PLAN.md — Verify CLEAN-03/04/05 pre-implementations (read-only)
-- [ ] 40-02-PLAN.md — CLEAN-01: test account cleanup migration
-- [ ] 40-03-PLAN.md — CLEAN-02: WizardInner merge (OnboardingWizardInner + EditWizardInner → WizardInner)
+- [x] 40-02-PLAN.md — CLEAN-01: test account cleanup migration
+- [x] 40-03-PLAN.md — CLEAN-02: WizardInner merge (OnboardingWizardInner + EditWizardInner → WizardInner)
 
 ---
 
