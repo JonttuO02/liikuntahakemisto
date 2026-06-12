@@ -133,7 +133,7 @@ Full archive: `.planning/milestones/v1.7-ROADMAP.md`
 **Milestone Goal:** Consumer- ja business-puolen auth-sessiot eriytetään täysin toisistaan cookie-nimiavaruuksilla, ja v1.7–v1.8 tech debt siistitään — wizard-duplikaattien yhdistäminen, API-bugifixit, kuollut koodi ja testitilit.
 
 - [x] **Phase 39: Auth-Separaatio** — Eriytetyt auth-sessiot: sb-biz-* business-puolelle, sb-* consumer-puolelle; simultaanisessiot mahdollisia *(4/4 plans)* — 2026-06-12
-- [ ] **Phase 40: Wizard-konsolidointi & Cleanup** — WizardInner-yhdistäminen, update-paikka 403 -bugikorjaus, step-skip-suoja, kuollut koodi ja testitilit poistetaan
+- [ ] **Phase 40: Wizard-konsolidointi & Cleanup** — WizardInner-yhdistäminen, update-paikka 403 -bugikorjaus, step-skip-suoja, kuollut koodi ja testitilit poistetaan *(3 plans, Wave 1×1 + Wave 2×2)*
 
 ## Phase Details
 
@@ -164,7 +164,11 @@ Plans:
   3. Onboarding-velhoussa `?step=N`-URL-parametri ei voi hypätä ohi tekemättömien vaiheiden — suoraan `?step=4`-osoitteeseen menevä käyttäjä ohjataan ensimmäiseen tekemättömään vaiheeseen
   4. `/api/business/onboarding/submit`-reitti ei enää kirjoita `onboarding_completed`-kolumniin — kolumni ei vaikuta mihinkään routing-päätökseen
   5. Supabase Dashboardissa ei ole testitili-rivejä `business_accounts`- eikä `auth.users`-tauluissa
-**Plans**: TBD
+**Plans**: 3 plans (Wave 1×1 + Wave 2×2)
+Plans:
+- [x] 40-01-PLAN.md — Verify CLEAN-03/04/05 pre-implementations (read-only)
+- [ ] 40-02-PLAN.md — CLEAN-01: test account cleanup migration
+- [ ] 40-03-PLAN.md — CLEAN-02: WizardInner merge (OnboardingWizardInner + EditWizardInner → WizardInner)
 
 ---
 
@@ -211,4 +215,4 @@ Plans:
 | 37. Tech Debt Foundation | v1.8 | 1/1 | Complete | 2026-06-11 |
 | 38. Business Data Publication | v1.8 | 1/1 | Complete | 2026-06-11 |
 | 39. Auth-Separaatio | v1.9 | 4/4 | Complete | 2026-06-12 |
-| 40. Wizard-konsolidointi & Cleanup | v1.9 | 0/TBD | Not started | - |
+| 40. Wizard-konsolidointi & Cleanup | v1.9 | 0/3 | Planned | - |
