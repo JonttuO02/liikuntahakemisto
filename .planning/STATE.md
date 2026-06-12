@@ -4,9 +4,9 @@ milestone: v2.0
 milestone_name: Business UX & Navigation
 status: planning
 last_updated: "2026-06-12T00:00:00.000Z"
-last_activity: 2026-06-12 — Milestone v2.0 started
+last_activity: 2026-06-12 — Roadmap created for v2.0 (phases 41–43)
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,20 +20,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-12)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v2.0 Business UX & Navigation — defining requirements
+**Current focus:** v2.0 Business UX & Navigation — roadmap created, ready to plan Phase 41
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 41 (Navigation Foundation) — not started
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-12 — Milestone v2.0 started
+Status: Ready to plan
+Last activity: 2026-06-12 — Roadmap created (phases 41–43)
+
+Progress: ░░░░░░░░░░ 0% (0/3 phases, 0/0 plans)
 
 ## v2.0 Direction
 
 **Core decision (2026-06-12):** Build a complete, self-contained business user interface. BusinessNav replaces consumer NavBar on all `/business/*` routes. Business users have their own dashboard, map, and profile page — entirely separate from the consumer experience. Auth sessions remain fully isolated (v1.9 sb-biz-* architecture).
 
-- Phases 41+: continue numbering from v1.9 (ended at 40)
+- Phases 41–43: v2.0 milestone
+- Phase 41 unblocks Phase 42 and Phase 43 (nav shell must exist first)
 - BIZUX-05 (hide /profiili fields for business users) dropped — business users navigate to /business/profiili instead
 
 ## Active Decisions (carried forward)
@@ -48,6 +51,8 @@ Last activity: 2026-06-12 — Milestone v2.0 started
 - **v1.9**: Business routes use `sb-biz-*` cookie namespace; consumer routes use default `sb-*`
 - **v1.9**: `createBusinessServerClient()` and `createBusinessBrowserClient()` in `lib/supabase-business.ts`
 - **v1.9**: Single `WizardInner` component (mode: 'onboarding' | 'edit')
+- **v2.0**: /business/map is a NEW standalone route — does NOT modify Etusivu.tsx
+- **v2.0**: Consumer /profiili page is NOT touched — business users navigate to /business/profiili
 
 ## Accumulated Context
 
@@ -57,6 +62,7 @@ Last activity: 2026-06-12 — Milestone v2.0 started
 - Phase 38: Admin-hyväksyntä julkaisee paikan atomisesti Postgres-triggerillä (published=true + business_managed=true yhdessä transaktiossa)
 - Phase 37: Middleware ei tee DB-kyselyitä — auth-tarkistukset RSC layout-komponenteissa
 - v2.0: Business users navigate to /business/profiili — consumer /profiili unchanged and not visited by business users
+- v2.0: BusinessNav rendered inside app/business/layout.tsx (already an RSC guard) — consumer NavBar suppressed at layout level
 
 ### Pending Todos
 
@@ -70,5 +76,5 @@ Last activity: 2026-06-12 — Milestone v2.0 started
 ## Session Continuity
 
 Last session: 2026-06-12
-Stopped at: Milestone v2.0 initialized
+Stopped at: Roadmap created — ready to run /gsd:plan-phase 41
 Resume file: None

@@ -12,6 +12,7 @@
 - ✅ **v1.7 Yritysportaali** — Phases 31–36 (shipped 2026-06-11)
 - ✅ **v1.8 Yritysportaali v2 — Julkistaminen & UX** — Phases 37–38 (shipped 2026-06-11)
 - ✅ **v1.9 Auth-Separaatio & Cleanup** — Phases 39–40 (shipped 2026-06-12)
+- 🔄 **v2.0 Business UX & Navigation** — Phases 41–43 (active)
 
 ---
 
@@ -136,6 +137,56 @@ Full archive: `.planning/milestones/v1.9-ROADMAP.md`
 
 </details>
 
+### v2.0 Business UX & Navigation (Phases 41–43) — ACTIVE
+
+- [ ] **Phase 41: Navigation Foundation** — BusinessNav component + consumer NavBar hidden on /business/* + post-login redirect
+- [ ] **Phase 42: Dashboard & Map** — /business dashboard redesign (status card + venue list + actions) + /business/map new route
+- [ ] **Phase 43: Business Profile** — /business/profiili page: read-only account info, editable contact fields, language toggle, sign-out
+
+---
+
+## Phase Details
+
+### Phase 41: Navigation Foundation
+**Goal**: Business users can navigate the /business/* area through a dedicated nav bar, and consumer nav is fully absent from that area
+**Depends on**: Phase 40 (auth separation complete; createBusinessBrowserClient / createBusinessServerClient in place)
+**Requirements**: BIZNAV-01, BIZNAV-02, BIZUX-02
+**Success Criteria** (what must be TRUE):
+  1. A business user on any /business/* page sees a BusinessNav bar with links to Dashboard, Kartta, Profiili, and a sign-out action
+  2. The consumer NavBar does not appear on any /business/* page — no double-nav visible at any breakpoint
+  3. After a successful login at /business/kirjaudu, the user lands on /business (not left at the login page)
+  4. Navigating directly to /business/kirjaudu while already logged in redirects to /business immediately
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 42: Dashboard & Map
+**Goal**: Business users have a useful dashboard home and a standalone map to explore venues
+**Depends on**: Phase 41 (BusinessNav wraps all pages; redirect delivers users to /business)
+**Requirements**: BIZUX-03, BIZUX-04
+**Success Criteria** (what must be TRUE):
+  1. The /business dashboard shows a card reflecting the current approval state (pending / approved / rejected) with a reapply CTA when rejected
+  2. The dashboard lists the business's venues with per-venue status badges (pending / approved / rejected)
+  3. The dashboard has quick-action links to the map (/business/map) and to each venue's edit wizard
+  4. /business/map renders a full-screen map showing all published venues
+  5. A pill toggle on /business/map switches between "Kaikki paikat" and "Omat paikat", filtering pins to the business's own venues
+  6. Tapping a map pin on /business/map opens PaikkaSheet for that venue
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 43: Business Profile
+**Goal**: Business users can view their account details, update contact information, switch the UI language, and sign out from a dedicated profile page
+**Depends on**: Phase 41 (BusinessNav present; business auth session accessible via createBusinessBrowserClient)
+**Requirements**: BIZPRO-01, BIZPRO-02, BIZPRO-03, BIZPRO-04
+**Success Criteria** (what must be TRUE):
+  1. /business/profiili displays company name, email address, and account type as read-only fields
+  2. A business user can edit phone, email, and website fields and save them; changes persist in business_accounts after a page reload
+  3. A FI/EN toggle on /business/profiili sets the NEXT_LOCALE cookie and the UI language changes immediately without a full navigation
+  4. Clicking sign-out clears the sb-biz-* session cookies and redirects the user to /business/kirjaudu; the consumer session is unaffected
+**Plans**: TBD
+**UI hint**: yes
+
+---
+
 ## Progress Table
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -180,3 +231,6 @@ Full archive: `.planning/milestones/v1.9-ROADMAP.md`
 | 38. Business Data Publication | v1.8 | 1/1 | Complete | 2026-06-11 |
 | 39. Auth-Separaatio | v1.9 | 4/4 | Complete | 2026-06-12 |
 | 40. Wizard-konsolidointi & Cleanup | v1.9 | 3/3 | Complete | 2026-06-12 |
+| 41. Navigation Foundation | v2.0 | 0/? | Not started | - |
+| 42. Dashboard & Map | v2.0 | 0/? | Not started | - |
+| 43. Business Profile | v2.0 | 0/? | Not started | - |

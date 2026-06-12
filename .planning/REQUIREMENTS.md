@@ -52,12 +52,12 @@
 
 | REQ-ID | Description | Phase |
 |--------|-------------|-------|
-| BIZNAV-01 | BusinessNav component | TBD |
-| BIZNAV-02 | Consumer NavBar hidden on /business/* | TBD |
-| BIZUX-02 | Post-login redirect to /business | TBD |
-| BIZUX-03 | Dashboard: status card + venue list + actions | TBD |
-| BIZUX-04 | /business/map full-screen map + toggle | TBD |
-| BIZPRO-01 | /business/profiili display | TBD |
-| BIZPRO-02 | /business/profiili contact editing | TBD |
-| BIZPRO-03 | /business/profiili language toggle | TBD |
-| BIZPRO-04 | /business/profiili sign-out | TBD |
+| BIZNAV-01 | BusinessNav component | Phase 41 |
+| BIZNAV-02 | Consumer NavBar hidden on /business/* | Phase 41 |
+| BIZUX-02 | Post-login redirect to /business | Phase 41 |
+| BIZUX-03 | Dashboard: status card + venue list + actions | Phase 42 |
+| BIZUX-04 | /business/map full-screen map + toggle | Phase 42 |
+| BIZPRO-01 | /business/profiili display | Phase 43 |
+| BIZPRO-02 | /business/profiili contact editing | Phase 43 |
+| BIZPRO-03 | /business/profiili language toggle | Phase 43 |
+| BIZPRO-04 | /business/profiili sign-out | Phase 43 |
