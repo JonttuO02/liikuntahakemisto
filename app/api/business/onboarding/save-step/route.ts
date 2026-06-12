@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
     // Validate paikka_id
     const parsed = parseInt(body.paikka_id, 10)
-    if (isNaN(parsed)) {
+    if (isNaN(parsed) || parsed < 1) {
       return NextResponse.json({ error: 'Missing or invalid paikka_id' }, { status: 400 })
     }
     paikkaId = parsed

@@ -32,7 +32,6 @@ type WizardInnerProps =
 
 // ─── Onboarding mode ────────────────────────────────────────────────────────
 function OnboardingMode() {
-  const t = useTranslations('Business')
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -46,7 +45,8 @@ function OnboardingMode() {
   const [maxReachedStep, setMaxReachedStep] = useState(0)
 
   // URL-based step routing (D-02)
-  const step = parseInt(searchParams.get('step') ?? '1', 10)
+  const rawStep = parseInt(searchParams.get('step') ?? '1', 10)
+  const step = isNaN(rawStep) || rawStep < 1 || rawStep > 6 ? 1 : rawStep
 
   function goToStep(n: number) {
     const params = new URLSearchParams({ step: String(n) })

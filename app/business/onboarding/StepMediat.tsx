@@ -218,7 +218,7 @@ export default function StepMediat({
       } = await supabase.auth.getSession()
 
       if (!session) {
-        setSaveError('Tallennus epäonnistui')
+        setSaveError(t('errorGeneric'))
         return
       }
 
@@ -242,7 +242,7 @@ export default function StepMediat({
           })
 
         if (uploadErr) {
-          setSaveError('Tallennus epäonnistui')
+          setSaveError(t('errorGeneric'))
           return
         }
 
@@ -268,7 +268,7 @@ export default function StepMediat({
             })
 
           if (uploadErr) {
-            setSaveError('Tallennus epäonnistui')
+            setSaveError(t('errorGeneric'))
             return
           }
 
@@ -303,7 +303,7 @@ export default function StepMediat({
       setTimeout(() => setSaveSuccessVisible(false), 2000)
       onSaveSuccess?.(finalLogoUrl, finalPhotoUrls)
     } catch {
-      setSaveError('Tallennus epäonnistui')
+      setSaveError(t('errorGeneric'))
     } finally {
       setSaving(false)
     }

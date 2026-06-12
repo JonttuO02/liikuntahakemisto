@@ -15,14 +15,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Parse optional paikka_id from request body — used to target the correct draft when a
+  // business user has multiple draft rows (one per venue). Without this filter, maybeSingle()
+  // would return an indeterminate draft for multi-venue businesses.
+  let bodyPaikkaId: number | null = null
+  try {
+    const body = await request.json()
+    const parsed = parseInt(body.paikka_id, 10)
+    if (!isNaN(parsed) && parsed > 0) bodyPaikkaId = parsed
+  } catch { /* missing or invalid body — fall through to unfiltered query */ }
+
   // Step 1: Fetch draft with joined paikka data needed for liikuntapaikat update.
-  // We join to get nimi, laji, osoite, kaupunki for the preview — not strictly needed here
-  // but included for consistency with the draft shape used by StepEsikatselu.
-  const { data: draft, error: draftError } = await supabaseAdmin
+  let draftQuery = supabaseAdmin
     .from('onboarding_draft')
     .select('*, liikuntapaikat(nimi, osoite, kaupunki, laji, latitude, longitude, aukioloajat)')
     .eq('business_account_id', user.id)
-    .maybeSingle()  // returns null when no row, not a PGRST116 error
+  if (bodyPaikkaId !== null) draftQuery = draftQuery.eq('paikka_id', bodyPaikkaId)
+  const { data: draft, error: draftError } = await draftQuery.maybeSingle()  // returns null when no row, not a PGRST116 error
 
   if (draftError || !draft) {
     return NextResponse.json({ error: 'Draft not found' }, { status: 404 })

@@ -60,7 +60,7 @@ export default function StepEsikatselu({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ paikka_id: draft?.paikka_id }),
       })
 
       if (!res.ok) {
