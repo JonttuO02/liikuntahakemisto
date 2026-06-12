@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.9
 milestone_name: Auth-Separaatio & Cleanup
-status: completed
-stopped_at: Phase 40 executed (3/3 plans complete) — CLEAN-01 pending manual DB push
-last_updated: "2026-06-12T08:30:00.000Z"
-last_activity: 2026-06-12 — Phase 40 executed (3/3 plans)
+status: archived
+stopped_at: v1.9 archived 2026-06-12 — ready for /gsd:new-milestone
+last_updated: "2026-06-12T10:00:00.000Z"
+last_activity: 2026-06-12 — v1.9 milestone archived
 progress:
   total_phases: 2
   completed_phases: 2

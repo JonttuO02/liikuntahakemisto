@@ -1,5 +1,33 @@
 # Milestones — Liikuntahakemisto
 
+## v1.9 Auth-Separaatio & Cleanup — 2026-06-12
+
+**Shipped:** 2026-06-12
+**Phases:** 2 (phases 39–40) | **Plans:** 7
+**Timeline:** 2026-06-11 → 2026-06-12 (2 days)
+**Commits:** 86 | **Files changed:** 88 | **Lines:** +8872 / -331
+
+### What Shipped
+
+1. **Auth-sessioiden eristys** — `lib/supabase-business.ts` luo `createBusinessBrowserClient()` ja `createBusinessServerClient()` `sb-biz-*`-cookie-nimiavaruudella — consumer `sb-*` ja business `sb-biz-*` sessiot ovat täysin riippumattomia, molemmat voivat olla aktiivisina samanaikaisesti
+2. **Middleware path-conditional refresh** — `/business/*`-reiteillä refreshataan `sb-biz-*`-cookie ja ohjataan kirjautumattomat `/business/kirjaudu`-sivulle; consumer-reiteillä refreshataan `sb-*`-cookie ilman ohjausta
+3. **Dedikoitu business-kirjautumissivu** — `/business/kirjaudu` käyttää `createBusinessBrowserClient()`; token tallennetaan `sb-biz-*`-cookieen eikä kosketa consumer-sessiota
+4. **Business-reittien migraatio** — kaikki `/business/*`-RSC-layoutit + `/api/business/*`- ja `/api/admin/*`-reitit käyttävät business-asiakasta; consumer-sessio ei vaikuta niihin
+5. **WizardInner-konsolidointi** — `OnboardingWizardInner` ja `EditWizardInner` yhdistetty yhdeksi `app/business/WizardInner.tsx`-tiedostoksi (`mode: 'onboarding' | 'edit'`); duplikoitu logiikka poistettu
+6. **Testitilien siivousmigraatio (CLEAN-01)** — CASCADE-migraatio luotu (`20260612000000_cleanup_test_accounts.sql`); vaatii manuaalisen `supabase db push`
+
+### Known Deferred Items at Close
+
+- CLEAN-01: Migraatio luotu mutta ei ajettu — ei ole oikeata tuotantodataa joka pitäisi suojata
+- Post-review fixes CR-01/CR-02 (business/[id] omistajuustarkistus + submit paikka_id -filtteri) lisätty 2026-06-12
+
+### Archives
+
+- `.planning/milestones/v1.9-ROADMAP.md`
+- `.planning/milestones/v1.9-REQUIREMENTS.md`
+
+---
+
 ## v1.7 Yritysportaali — 2026-06-11
 
 **Shipped:** 2026-06-11

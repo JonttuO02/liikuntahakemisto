@@ -11,7 +11,7 @@
 - ✅ **v1.6 Kielituki, Ikonit & Sheet-redesign** — Phases 27–30 (shipped 2026-06-04)
 - ✅ **v1.7 Yritysportaali** — Phases 31–36 (shipped 2026-06-11)
 - ✅ **v1.8 Yritysportaali v2 — Julkistaminen & UX** — Phases 37–38 (shipped 2026-06-11)
-- 🚧 **v1.9 Auth-Separaatio & Cleanup** — Phases 39–40 (in progress)
+- ✅ **v1.9 Auth-Separaatio & Cleanup** — Phases 39–40 (shipped 2026-06-12)
 
 ---
 
@@ -126,51 +126,15 @@ Full archive: `.planning/milestones/v1.7-ROADMAP.md`
 
 </details>
 
----
-
-### 🚧 v1.9 Auth-Separaatio & Cleanup (Phases 39–40)
-
-**Milestone Goal:** Consumer- ja business-puolen auth-sessiot eriytetään täysin toisistaan cookie-nimiavaruuksilla, ja v1.7–v1.8 tech debt siistitään — wizard-duplikaattien yhdistäminen, API-bugifixit, kuollut koodi ja testitilit.
+<details>
+<summary>✅ v1.9 Auth-Separaatio & Cleanup (Phases 39–40) — SHIPPED 2026-06-12</summary>
 
 - [x] **Phase 39: Auth-Separaatio** — Eriytetyt auth-sessiot: sb-biz-* business-puolelle, sb-* consumer-puolelle; simultaanisessiot mahdollisia *(4/4 plans)* — 2026-06-12
-- [x] **Phase 40: Wizard-konsolidointi & Cleanup** — WizardInner-yhdistäminen, update-paikka 403 -bugikorjaus, step-skip-suoja, kuollut koodi ja testitilit poistetaan *(3 plans, Wave 1×1 + Wave 2×2)*
+- [x] **Phase 40: Wizard-konsolidointi & Cleanup** — WizardInner-yhdistäminen, testitilien siivousmigraatio, kuollut koodi poistettu *(3/3 plans)* — 2026-06-12
 
-## Phase Details
+Full archive: `.planning/milestones/v1.9-ROADMAP.md`
 
-### Phase 39: Auth-Separaatio
-**Goal**: Consumer- ja business-puolen auth-sessiot ovat täysin toisistaan riippumattomia — business-reitit käyttävät sb-biz-*-cookieta, consumer-reitit käyttävät normaalia sb-*-cookieta, ja molemmat voivat olla aktiivisina samanaikaisesti
-**Depends on**: Phase 38 (v1.8 complete)
-**Requirements**: AUTHSEP-01, AUTHSEP-02, AUTHSEP-03, AUTHSEP-04, AUTHSEP-05, AUTHSEP-06, AUTHSEP-07
-**Success Criteria** (what must be TRUE):
-  1. Kirjautuminen `/business/kirjaudu`-sivulla asettaa `sb-biz-*`-cookien — `sb-*`-consumer-cookie ei muutu eikä nollaudu
-  2. Consumer-sivulle kirjautunut käyttäjä voi samanaikaisesti olla kirjautuneena business-puolelle eri tunnuksilla — molemmat sessiot pysyvät voimassa selainistunnon ajan
-  3. Kirjautumaton consumer-käyttäjä, joka navigoi `/business`-reiteille, ohjataan business-kirjautumissivulle — consumer-sessio ei vaikuta tähän tarkistukseen
-  4. Kirjautunut business-käyttäjä, joka navigoi consumer-reiteille (`/`, `/profiili`), näkee sivun normaalisti ilman business-session häiriötä — consumer-auth toimii omalla sb-*-cookiellaan
-  5. Middleware refreshaa oikean session oikealla reitillä: `/business/*`-reiteillä refreshataan sb-biz-*-cookie, muilla reiteillä refreshataan sb-*-cookie
-**Plans**: 4 plans (Wave 1 + Wave 2×2 + Wave 3)
-Plans:
-- [x] 39-01-PLAN.md — Create lib/supabase-business.ts (sb-biz-* namespace clients)
-- [x] 39-02-PLAN.md — Middleware path-conditional refresh + i18n strings
-- [x] 39-03-PLAN.md — /business/kirjaudu login page
-- [x] 39-04-PLAN.md — Migrate all /business/* pages to business client
-
-### Phase 40: Wizard-konsolidointi & Cleanup
-**Goal**: Wizard-duplikaatti poistetaan, API-bugit korjataan ja kuollut koodi siistitään — codebase on tiiviimpi ja business-käyttäjä voi muokata kaikkia paikkojaan riippumatta claim-statuksesta
-**Depends on**: Phase 39
-**Requirements**: CLEAN-01, CLEAN-02, CLEAN-03, CLEAN-04, CLEAN-05
-**Success Criteria** (what must be TRUE):
-  1. Onboarding- ja edit-velhouissa on yksi yhteinen `WizardInner`-komponentti joka hyväksyy `mode: 'onboarding' | 'edit'` — erilliset `OnboardingWizardInner` ja `EditWizardInner` on poistettu koodikannasta
-  2. Yritys pystyy muokkaamaan paikkansa tietoja hallintapaneelista riippumatta siitä onko paikan `claim_status` pending, approved vai rejected — 403-virhe ei enää tule muokkauksesta
-  3. Onboarding-velhoussa `?step=N`-URL-parametri ei voi hypätä ohi tekemättömien vaiheiden — suoraan `?step=4`-osoitteeseen menevä käyttäjä ohjataan ensimmäiseen tekemättömään vaiheeseen
-  4. `/api/business/onboarding/submit`-reitti ei enää kirjoita `onboarding_completed`-kolumniin — kolumni ei vaikuta mihinkään routing-päätökseen
-  5. Supabase Dashboardissa ei ole testitili-rivejä `business_accounts`- eikä `auth.users`-tauluissa
-**Plans**: 3 plans (Wave 1×1 + Wave 2×2)
-Plans:
-- [x] 40-01-PLAN.md — Verify CLEAN-03/04/05 pre-implementations (read-only)
-- [x] 40-02-PLAN.md — CLEAN-01: test account cleanup migration
-- [x] 40-03-PLAN.md — CLEAN-02: WizardInner merge (OnboardingWizardInner + EditWizardInner → WizardInner)
-
----
+</details>
 
 ## Progress Table
 
@@ -215,4 +179,4 @@ Plans:
 | 37. Tech Debt Foundation | v1.8 | 1/1 | Complete | 2026-06-11 |
 | 38. Business Data Publication | v1.8 | 1/1 | Complete | 2026-06-11 |
 | 39. Auth-Separaatio | v1.9 | 4/4 | Complete | 2026-06-12 |
-| 40. Wizard-konsolidointi & Cleanup | v1.9 | 0/3 | Planned | - |
+| 40. Wizard-konsolidointi & Cleanup | v1.9 | 3/3 | Complete | 2026-06-12 |

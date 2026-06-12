@@ -1,14 +1,8 @@
 # Liikuntahakemisto
 
-## Current Milestone: v1.9 Auth-Separaatio & Cleanup
+## Shipped: v1.9 Auth-Separaatio & Cleanup (2026-06-12)
 
-**Goal:** Eriytetään consumer- ja business-puolen auth-sessiot täysin toisistaan cookie-nimiavaruuksilla ja siistitään v1.7–v1.8 tech debt.
-
-**Target features:**
-- Auth session -eristys: /business/* käyttää sb-biz-* cookieta, consumer-puoli käyttää normaalia sb-* cookieta; sessiot ovat täysin riippumattomia
-- Wizard-konsolidointi: OnboardingWizardInner + EditWizardInner yhdistetään yhdeksi WizardInner(mode: 'onboarding' | 'edit')
-- API-bugifixit: update-paikka 403-bugi (pending/rejected-muokkaus estetty virheellisesti), onboarding step-skip URL-bypass
-- Cleanup: onboarding_completed-kirjoitukset poistetaan, testitilit poistetaan
+**Delivered:** Auth-sessioiden täydellinen eristys `sb-biz-*`-cookie-nimiavaruudella; path-conditional middleware refresh; `/business/kirjaudu` dedikoitu kirjautumissivu; kaikki `/business/*`-reitit migroitu business-asiakkaaseen; `WizardInner` konsolidoitu yhdeksi komponentiksi (`mode: 'onboarding' | 'edit'`); testitilien siivousmigraatio luotu.
 
 ---
 
@@ -208,9 +202,16 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **DATA-09**: `business_managed`-boolean; sync-skripti ohittaa managed-paikat — v1.7
 - ✓ **DATA-10**: Supabase Storage `business-media`-bucket; RLS per yritys — v1.7
 
-### Active (v1.9)
+### Validated (v1.9)
 
-*(Määritellään `REQUIREMENTS.md`:ssä)*
+- ✓ **AUTHSEP-01–07**: Auth-sessioiden eristys `sb-biz-*`-nimiavaruudella; middleware path-conditional refresh; `/business/kirjaudu`; kaikki business-reitit eriytetty — v1.9
+- ✓ **CLEAN-01**: Testitilien siivousmigraatio luotu (suoritus manuaalisesti) — v1.9
+- ✓ **CLEAN-02**: WizardInner konsolidoitu `OnboardingWizardInner` + `EditWizardInner` → yksi `WizardInner(mode)` — v1.9
+- ✓ **CLEAN-03–05**: update-paikka claim_status -rajoitus poistettu; step-skip-suoja; onboarding_completed kuollut koodi poistettu — v1.9 (pre-existing, verified)
+
+### Active (next milestone)
+
+*(Määritellään seuraavan /gsd:new-milestone -komennon yhteydessä)*
 
 ### Future (deferred from v1.1 + v1.7)
 
@@ -314,4 +315,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-11 — v1.9 milestone started (Auth-Separaatio & Cleanup)*
+*Last updated: 2026-06-12 after v1.9 milestone (Auth-Separaatio & Cleanup)*
