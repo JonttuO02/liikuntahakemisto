@@ -4,10 +4,6 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
 import WizardInner from '../WizardInner'
 
 export default async function BusinessVenuePage({ params }: { params: { id: string } }) {
-  // Auth guard is client-side in EditWizardInner — the browser client stores
-  // session in localStorage (not cookies), so server-side getUser() always
-  // returns null for this app's auth setup.
-
   // Parse paikka_id from URL param
   const paikkaId = parseInt(params.id, 10)
   if (isNaN(paikkaId) || paikkaId < 1) notFound()
