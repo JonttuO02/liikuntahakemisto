@@ -220,7 +220,10 @@
     "navProfile": "Profiili",
     "navSignOut": "Kirjaudu ulos",
     "navOpenMenu": "Avaa valikko",
-    "navCloseMenu": "Sulje valikko"
+    "navCloseMenu": "Sulje valikko",
+    "mapToggleAll": "Kaikki paikat",
+    "mapToggleMine": "Omat paikat",
+    "mapLoadingVenues": "Ladataan paikkoja..."
   },
   "Admin": {
     "pageTitle": "Admin — Odottavat hakemukset",

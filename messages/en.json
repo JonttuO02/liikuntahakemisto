@@ -220,7 +220,10 @@
     "navProfile": "Profile",
     "navSignOut": "Sign out",
     "navOpenMenu": "Open menu",
-    "navCloseMenu": "Close menu"
+    "navCloseMenu": "Close menu",
+    "mapToggleAll": "All venues",
+    "mapToggleMine": "My venues",
+    "mapLoadingVenues": "Loading venues..."
   },
   "Admin": {
     "pageTitle": "Admin — Pending applications",
