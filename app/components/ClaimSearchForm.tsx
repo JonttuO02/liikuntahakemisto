@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import { createBusinessBrowserClient } from '@/lib/supabase-business'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -95,10 +96,7 @@ export default function ClaimSearchForm() {
     setLoading(true)
     setError(null)
 
-    const supabase = createBrowserSupabase()
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { data: { session } } = await createBusinessBrowserClient().auth.getSession()
     const token = session?.access_token ?? ''
 
     try {
@@ -143,10 +141,7 @@ export default function ClaimSearchForm() {
     setLoading(true)
     setError(null)
 
-    const supabase = createBrowserSupabase()
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { data: { session } } = await createBusinessBrowserClient().auth.getSession()
     const token = session?.access_token ?? ''
 
     try {
