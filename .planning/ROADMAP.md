@@ -252,4 +252,4 @@ Plans:
 | 43. Business Profile | v2.0 | 3/3 | Complete | 2026-06-15 |
 | 44. Brändidatan tietokantaperusta | v2.1 | 1/1 | Complete | 2026-06-15 |
 | 45. Scraper & Claude API -putki | v2.1 | 4/4 | Complete | 2026-06-15 |
-| 46. Pre-vaihe UI & velhointegraatio | v2.1 | 4/6 | In Progress|  |
+| 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | In Progress|  |
