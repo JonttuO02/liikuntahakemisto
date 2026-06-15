@@ -192,7 +192,7 @@ function OnboardingMode({ brandingData }: { brandingData?: BrandingResult | null
       } catch { /* ignore */ }
     }
     refreshDraftForPreview()
-  }, [step])
+  }, [step, paikkaId])
 
   // Derive branding pre-fill values — only when brandingData is fully analyzed
   const brandingPrices = brandingData?.status === 'analyzed'
