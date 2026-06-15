@@ -79,6 +79,9 @@ Last activity: 2026-06-15 -- Phase 45 verified and closed
 
 - CR-01: `app/business/[id]/page.tsx` lukee paikan tiedot ilman omistajuustarkistusta (pre-existing issue)
 - CR-02: `app/api/business/onboarding/submit/route.ts` ei filtteroi `paikka_id`:llä (pre-existing issue)
+- P45-WR-05: `lib/branding/storage.ts` uploadLogo — assert UUID format on businessAccountId to prevent path traversal if call site changes
+- P45-WR-06: migration `20260616000001_business_media_bucket.sql` on timestampattu päivää myöhemmin kuin `20260615000001_business_branding.sql` — fresh db push -ajoituksessa uploadLogo voi epäonnistua ennen bucketin luontia; harkitse timestampin korjausta uudella migraatiolla
+- P45-DNS: `app/api/business/analyze-website/route.ts` SSRF-suojaus tarkistaa hostnamen ennen DNS-resoluutiota — DNS rebinding ohittaa sen; korjaus vaatii post-DNS IP-validoinnin (lisää latenssia, hyväksytty rajoitus v2.1:ssä)
 
 ## Session Continuity
 
