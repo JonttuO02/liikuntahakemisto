@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import { buildDraftAsPaikka, type OnboardingDraft, type PaikkaBase } from '@/lib/onboardingUtils'
+import { type BrandingResult, buildBrandingPreview } from '@/lib/branding/brandingResult'
 import PaikkaKortti from '@/app/components/PaikkaKortti'
 import DiagonaalKortti from '@/app/components/DiagonaalKortti'
 import PaikkaSheet from '@/app/components/PaikkaSheet'
@@ -16,6 +17,7 @@ interface StepEsikatseluProps {
   paikkaInfo: PaikkaBase | null
   brandingData?: BrandingResult | null
   onPrev: () => void
+  brandingData?: BrandingResult | null
 }
 
 export default function StepEsikatselu({
@@ -23,6 +25,7 @@ export default function StepEsikatselu({
   paikkaInfo,
   brandingData: _brandingData,
   onPrev,
+  brandingData,
 }: StepEsikatseluProps) {
   const t = useTranslations('Business')
   const router = useRouter()
@@ -31,9 +34,18 @@ export default function StepEsikatselu({
   const [error, setError] = useState<string | null>(null)
   const [loadTimedOut, setLoadTimedOut] = useState(false)
 
-  // Build preview object when both draft and paikkaInfo are available
+  // Build preview object — when brandingData is available use buildBrandingPreview
+  // (brand colours + logo from analysis); otherwise fall back to buildDraftAsPaikka.
+  // Per D-ES-01/D-ES-02: brandingData path requires paikkaInfo and a numeric paikka_id.
   const draftAsPaikka =
-    draft && paikkaInfo ? buildDraftAsPaikka(draft, paikkaInfo) : null
+    brandingData && paikkaInfo && typeof draft?.paikka_id === 'number'
+      ? buildBrandingPreview(paikkaInfo, brandingData, draft.paikka_id)
+      : draft && paikkaInfo
+        ? buildDraftAsPaikka(draft, paikkaInfo)
+        : null
+
+  // Extract first brand colour for the DiagonaalKortti left panel.
+  const brandColor = brandingData?.colors?.[0] ?? undefined
 
   useEffect(() => {
     if (draftAsPaikka) return
@@ -112,7 +124,7 @@ export default function StepEsikatselu({
             <span className="text-[10px] font-bold uppercase tracking-widest text-[rgba(17,17,17,0.45)]">
               {t('previewLabelDiag')}
             </span>
-            <DiagonaalKortti paikka={draftAsPaikka} />
+            <DiagonaalKortti paikka={draftAsPaikka} brandColor={brandColor} />
           </div>
 
           {/* PROFIILISIVU */}
