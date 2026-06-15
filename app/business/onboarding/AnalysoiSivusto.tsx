@@ -209,11 +209,16 @@ export default function AnalysoiSivusto({ onConfirm, onSkip }: AnalysoiSivustoPr
   // ── URL submit handler ──────────────────────────────────────────────────────
 
   async function handleSubmit() {
-    const trimmed = url.trim()
+    let trimmed = url.trim()
 
-    if (!trimmed || (!trimmed.startsWith('http://') && !trimmed.startsWith('https://'))) {
-      setUrlError('Syötä kelvollinen URL-osoite (alkaa https:// tai http://)')
+    if (!trimmed) {
+      setUrlError('Syötä sivuston osoite')
       return
+    }
+
+    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      trimmed = 'https://' + trimmed
+      setUrl(trimmed)
     }
 
     setSubmitting(true)
