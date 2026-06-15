@@ -81,6 +81,8 @@ function BusinessMapInner({ allVenues, myPaikkaIds }: { allVenues: Liikuntapaikk
         defaultZoom={12}
         gestureHandling="greedy"
         disableDefaultUI
+        clickableIcons={false}
+        keyboardShortcuts={false}
         style={{ width: '100%', height: '100%' }}
         onClick={() => setSelected(null)}
         onCameraChanged={ev => {
