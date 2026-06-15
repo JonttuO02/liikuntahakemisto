@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Business UX & Navigation
-status: verifying
-stopped_at: Phase 43 context gathered
-last_updated: "2026-06-15T09:13:27.672Z"
-last_activity: 2026-06-15 — phase 42 fully verified; 3 critical fixes applied (auth gate, null guard, maybeSingle fix)
+status: planned
+stopped_at: Phase 43 planned — 3 plans, 2 waves; ready to execute
+last_updated: "2026-06-15T10:00:00.000Z"
+last_activity: 2026-06-15 — phase 43 planned (3 plans: 43-01 migration, 43-02 i18n, 43-03 RSC+client)
 progress:
   total_phases: 3
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 3
-  percent: 33
+  completed_phases: 2
+  total_plans: 7
+  completed_plans: 4
+  percent: 67
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-06-12)
 
 ## Current Position
 
-Phase: 43 — next to plan/execute
-Status: Phase 42 complete ✓ (6/6 verified). Ready for Phase 43.
-Last activity: 2026-06-15 — phase 42 fully verified; 3 critical fixes applied (auth gate, null guard, maybeSingle fix)
+Phase: 43 — ready to execute
+Status: Phase 43 planned ✓ (3 plans, 2 waves). Ready to execute.
+Last activity: 2026-06-15 — phase 43 planned (43-01 migration + push, 43-02 i18n keys, 43-03 RSC page + client)
 
-Progress: ████████░░ 67% (2/3 phases, 4/4 plans)
+Progress: ████████░░ 67% (2/3 phases complete; phase 43 planned, 3/7 total plans complete)
 
 ## v2.0 Direction
 
@@ -75,6 +75,6 @@ Progress: ████████░░ 67% (2/3 phases, 4/4 plans)
 
 ## Session Continuity
 
-Last session: 2026-06-15T09:13:27.666Z
-Stopped at: Phase 43 context gathered
-Resume file: .planning/phases/43-business-profile/43-CONTEXT.md
+Last session: 2026-06-15T10:00:00.000Z
+Stopped at: Phase 43 planned (3 plans verified)
+Resume file: .planning/phases/43-business-profile/43-01-PLAN.md
