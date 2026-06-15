@@ -23,19 +23,19 @@
 
 ### Onboarding — Pre-vaihe
 
-- [ ] **ONBOARD-08**: Uusi "Analysoi sivusto" -näkymä ennen 6-vaiheista velhoa — käyttäjä syöttää verkkosivun URL:n ja käynnistää analyysin
-- [ ] **ONBOARD-09**: "Analysoi"-nappi asettaa statuksen `analyzing` ja näyttää latausindikaattorin; virhetilanteessa (`failed`) selkeä virheilmoitus ja mahdollisuus ohittaa ja jatkaa manuaalisesti
-- [ ] **ONBOARD-10**: Analyysin tulokset näytetään pre-vaiheen esikatselussa (logo, väripaletti, poimitut hinnat ja aukioloajat) ennen kuin käyttäjä jatkaa velhoon
+- [x] **ONBOARD-08**: Uusi "Analysoi sivusto" -näkymä ennen 6-vaiheista velhoa — käyttäjä syöttää verkkosivun URL:n ja käynnistää analyysin
+- [x] **ONBOARD-09**: "Analysoi"-nappi asettaa statuksen `analyzing` ja näyttää latausindikaattorin; virhetilanteessa (`failed`) selkeä virheilmoitus ja mahdollisuus ohittaa ja jatkaa manuaalisesti
+- [x] **ONBOARD-10**: Analyysin tulokset näytetään pre-vaiheen esikatselussa (logo, väripaletti, poimitut hinnat ja aukioloajat) ennen kuin käyttäjä jatkaa velhoon
 
 ### Onboarding — Velhointegraatio
 
-- [ ] **ONBOARD-11**: Poimittu hinnasto esitäyttää Hinnasto-vaiheen (step 3) rivit muokattavina kenttinä
-- [ ] **ONBOARD-12**: Poimitut aukioloajat esitäyttävät Aukioloajat-vaiheen (step 4) muokattavina kenttinä
-- [ ] **ONBOARD-13**: Verkkosivun URL esitäyttää Yhteystiedot-vaiheen (step 5) website-kentän
+- [x] **ONBOARD-11**: Poimittu hinnasto esitäyttää Hinnasto-vaiheen (step 3) rivit muokattavina kenttinä
+- [x] **ONBOARD-12**: Poimitut aukioloajat esitäyttävät Aukioloajat-vaiheen (step 4) muokattavina kenttinä
+- [x] **ONBOARD-13**: Verkkosivun URL esitäyttää Yhteystiedot-vaiheen (step 5) website-kentän
 
 ### Esikatselu
 
-- [ ] **PREV-01**: Esikatselu (step 6) renderöi `CalloutCard`:n ja `DiagonaalKortti`:n poimitulla logolla ja brändiväreillä kun brändidataa on saatavilla; fallback olemassa olevaan renderöintiin jos dataa ei ole
+- [x] **PREV-01**: Esikatselu (step 6) renderöi `CalloutCard`:n ja `DiagonaalKortti`:n poimitulla logolla ja brändiväreillä kun brändidataa on saatavilla; fallback olemassa olevaan renderöintiin jos dataa ei ole
 
 ---
 
@@ -70,10 +70,10 @@
 | SCRAP-05 | Phase 45 | Pending |
 | BRDDB-01 | Phase 44 | Pending |
 | BRDDB-02 | Phase 44 | Pending |
-| ONBOARD-08 | Phase 46 | Pending |
-| ONBOARD-09 | Phase 46 | Pending |
-| ONBOARD-10 | Phase 46 | Pending |
-| ONBOARD-11 | Phase 46 | Pending |
-| ONBOARD-12 | Phase 46 | Pending |
-| ONBOARD-13 | Phase 46 | Pending |
-| PREV-01 | Phase 46 | Pending |
+| ONBOARD-08 | Phase 46 | Complete |
+| ONBOARD-09 | Phase 46 | Complete |
+| ONBOARD-10 | Phase 46 | Complete |
+| ONBOARD-11 | Phase 46 | Complete |
+| ONBOARD-12 | Phase 46 | Complete |
+| ONBOARD-13 | Phase 46 | Complete |
+| PREV-01 | Phase 46 | Complete |

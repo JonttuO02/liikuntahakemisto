@@ -157,7 +157,7 @@ Full archive: `.planning/milestones/v2.0-ROADMAP.md`
 
 - [x] **Phase 44: Brändidatan tietokantaperusta** — business_branding-taulu Supabasessa status-seurannalla ja RLS-politiikat (completed 2026-06-15)
 - [x] **Phase 45: Scraper & Claude API -putki** — palvelinpuolen HTML-haku, CSS/logo-poiminta, sharp-konversio ja yksi Claude-kutsu (completed 2026-06-15)
-- [ ] **Phase 46: Pre-vaihe UI & velhointegraatio** — "Analysoi sivusto" -näkymä, esikatseluruutu, esitäyttö steps 3–5, brändivärit step 6:ssa
+- [x] **Phase 46: Pre-vaihe UI & velhointegraatio** — "Analysoi sivusto" -näkymä, esikatseluruutu, esitäyttö steps 3–5, brändivärit step 6:ssa (completed 2026-06-15)
 
 ## Phase Details
 
@@ -252,4 +252,4 @@ Plans:
 | 43. Business Profile | v2.0 | 3/3 | Complete | 2026-06-15 |
 | 44. Brändidatan tietokantaperusta | v2.1 | 1/1 | Complete | 2026-06-15 |
 | 45. Scraper & Claude API -putki | v2.1 | 4/4 | Complete | 2026-06-15 |
-| 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | In Progress|  |
+| 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | Complete    | 2026-06-15 |
