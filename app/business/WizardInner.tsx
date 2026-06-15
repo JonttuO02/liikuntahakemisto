@@ -7,6 +7,7 @@ import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import type { OnboardingDraft } from '@/lib/onboardingUtils'
 import type { Liikuntapaikka } from '@/lib/types'
+import { type BrandingResult } from '@/lib/branding/brandingResult'
 import PreviewModal from '@/app/components/PreviewModal'
 import ProgressBar from './onboarding/ProgressBar'
 import StepPaikka from './onboarding/StepPaikka'
@@ -27,11 +28,11 @@ type PaikkaInfo = {
 }
 
 type WizardInnerProps =
-  | { mode: 'onboarding' }
+  | { mode: 'onboarding'; brandingData?: BrandingResult | null }
   | { mode: 'edit'; paikka: Liikuntapaikka; paikkaId: number }
 
 // ─── Onboarding mode ────────────────────────────────────────────────────────
-function OnboardingMode() {
+function OnboardingMode({ brandingData }: { brandingData?: BrandingResult | null }) {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -192,6 +193,23 @@ function OnboardingMode() {
     refreshDraftForPreview()
   }, [step])
 
+  // Derive branding pre-fill values — only when brandingData is fully analyzed
+  const brandingPrices = brandingData?.status === 'analyzed'
+    ? (brandingData.raw_analysis?.prices ?? null)
+    : null
+  const brandingHours = brandingData?.status === 'analyzed'
+    ? (() => {
+        const hrs = brandingData.raw_analysis?.opening_hours
+        if (!hrs?.length) return null
+        const result: Record<string, { open: string; close: string }> = {}
+        for (const h of hrs) { result[h.day] = { open: h.open, close: h.close } }
+        return result
+      })()
+    : null
+  const brandingWebsite = brandingData?.status === 'analyzed'
+    ? (brandingData.raw_analysis?.website_url || null)
+    : null
+
   if (loading) {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center">
@@ -236,6 +254,7 @@ function OnboardingMode() {
               <StepHinnasto
                 paikkaId={paikkaId}
                 initialHinnasto={draft?.hinnasto}
+                initialBrandingHinnasto={brandingPrices}
                 onNext={() => saveAndAdvance(3)}
                 onPrev={() => goToStep(2)}
               />
@@ -245,6 +264,7 @@ function OnboardingMode() {
                 paikkaId={paikkaId}
                 existingAukioloajat={paikkaInfo?.aukioloajat}
                 initialDraftAukioloajat={draft?.aukioloajat}
+                initialBrandingAukioloajat={brandingHours}
                 onNext={() => saveAndAdvance(4)}
                 onPrev={() => goToStep(3)}
               />
@@ -253,6 +273,7 @@ function OnboardingMode() {
               <StepYhteystiedot
                 paikkaId={paikkaId}
                 initialYhteystiedot={draft?.yhteystiedot}
+                initialBrandingWebsite={brandingWebsite}
                 onNext={() => saveAndAdvance(5)}
                 onPrev={() => goToStep(4)}
               />
@@ -261,6 +282,7 @@ function OnboardingMode() {
               <StepEsikatselu
                 draft={draft}
                 paikkaInfo={paikkaInfo}
+                brandingData={brandingData}
                 onPrev={() => goToStep(5)}
               />
             )}
@@ -416,6 +438,6 @@ function EditMode({ paikka, paikkaId }: { paikka: Liikuntapaikka; paikkaId: numb
 
 // ─── Exported component ───────────────────────────────────────────────────────
 export default function WizardInner(props: WizardInnerProps) {
-  if (props.mode === 'onboarding') return <OnboardingMode />
+  if (props.mode === 'onboarding') return <OnboardingMode brandingData={props.brandingData} />
   return <EditMode paikka={props.paikka} paikkaId={props.paikkaId} />
 }
