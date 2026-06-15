@@ -181,7 +181,12 @@ Full archive: `.planning/milestones/v2.0-ROADMAP.md`
   3. Logo-kandidaatit (SVG, AVIF, WebP mukaan lukien) muunnetaan PNG:ksi `sharp`:lla ennen Claude-kutsua — muunnettu kuva välitetään base64-enkoodattuna vision-viestissä
   4. Yksi Claude API -kutsu lähetetään: logo-kandidaattikuvat vision-sisältönä + HTML-teksti tekstisisältönä → Claude palauttaa strukturoidun JSON:n: `{ logo_url, logo_type, colors: string[], prices: PriceRow[], opening_hours: HoursRow[], website_url }`
   5. Endpoint tallentaa analyysin tuloksen `business_branding`-tauluun statuksella `analyzed`; virhetilanteessa status asetetaan `failed` ja virheviesti tallennetaan `raw_analysis`-kenttään
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 45-01-PLAN.md — Foundation: packages, Storage bucket migration, test stubs
+- [ ] 45-02-PLAN.md — Scraper library: scraper.ts + prompt.ts
+- [ ] 45-03-PLAN.md — Analyzer & Storage: analyzer.ts + storage.ts
+- [ ] 45-04-PLAN.md — Route Handler: POST trigger + GET status poll
 
 ### Phase 46: Pre-vaihe UI & velhointegraatio
 **Goal**: Business-käyttäjä näkee "Analysoi sivusto" -näkymän ennen onboarding-velhoa, voi tarkastella analyysin tuloksia esikatselussa ja jatkaa velhoon jossa steps 3–5 on esitäytetty ja step 6 renderöi brändivärit
@@ -246,5 +251,5 @@ Full archive: `.planning/milestones/v2.0-ROADMAP.md`
 | 42. Dashboard & Map | v2.0 | 3/3 | Complete | 2026-06-15 |
 | 43. Business Profile | v2.0 | 3/3 | Complete | 2026-06-15 |
 | 44. Brändidatan tietokantaperusta | v2.1 | 1/1 | Complete | 2026-06-15 |
-| 45. Scraper & Claude API -putki | v2.1 | 0/? | Not started | - |
+| 45. Scraper & Claude API -putki | v2.1 | 0/4 | Not started | - |
 | 46. Pre-vaihe UI & velhointegraatio | v2.1 | 0/? | Not started | - |
