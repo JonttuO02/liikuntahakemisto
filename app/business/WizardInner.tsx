@@ -68,7 +68,8 @@ function OnboardingMode({ brandingData }: { brandingData?: BrandingResult | null
 
       // Try to get paikka_id from URL param first
       const urlPaikkaId = searchParams.get('paikka_id')
-      let resolvedPaikkaId: number | null = urlPaikkaId ? parseInt(urlPaikkaId, 10) : null
+      const parsed = urlPaikkaId ? parseInt(urlPaikkaId, 10) : null
+      let resolvedPaikkaId: number | null = parsed !== null && !isNaN(parsed) ? parsed : null
 
       // If not in URL, look up from business_paikka_links
       if (!resolvedPaikkaId) {
