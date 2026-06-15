@@ -6,9 +6,17 @@
 
 ---
 
-## Next Milestone: TBD
+## Current Milestone: v2.1 AI-pohjainen yrityssivuanalyysi
 
-Start next milestone with `/gsd:new-milestone`.
+**Goal:** Business-käyttäjä syöttää onboardingissa verkkosivunsa URL:n — sovellus hakee automaattisesti brändivärit, logon, hinnaston ja aukioloajat, ja esitäyttää ne onboarding-velhoon.
+
+**Target features:**
+- Website-scraper (`fetch` + HTML/CSS-parsinta, logo-kandidaatit kuvina)
+- Claude API -analyysi: logo-identifiointi (vision) + värit + hinnat + aukioloajat (yksi kutsu)
+- `business_branding`-taulu Supabasessa status-seurannalla
+- Uusi pre-vaihe ennen onboarding-velhoa: URL-syöttö → analyysi → esikatselu
+- Velhointegraatio: esitäyttö hinnasto-, aukioloaika- ja yhteystietovaiheisiin
+- Esikatselu (step 6) käyttää brändidataa CalloutCard + DiagonaalKortti -renderöintiin
 
 ---
 
@@ -335,4 +343,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-12 — v2.0 milestone started (Business UX & Navigation)*
+*Last updated: 2026-06-15 — v2.1 milestone started (AI-pohjainen yrityssivuanalyysi)*

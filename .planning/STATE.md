@@ -1,43 +1,44 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: Business UX & Navigation
-status: complete
-stopped_at: Phase 43 complete — all 3 plans executed and smoke-tested
+milestone: v2.1
+milestone_name: AI-pohjainen yrityssivuanalyysi
+status: planning
+stopped_at: Milestone v2.1 started — defining roadmap
 last_updated: "2026-06-15T12:00:00.000Z"
-last_activity: 2026-06-15 — phase 43 executed (43-01 migration, 43-02 i18n, 43-03 RSC+client — all verified)
+last_activity: 2026-06-15 — milestone v2.1 started, requirements defined (13 reqs)
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-12)
+See: .planning/PROJECT.md (updated 2026-06-15)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v2.0 Business UX & Navigation — Phase 41 planned, ready to execute
+**Current focus:** v2.1 AI-pohjainen yrityssivuanalyysi — defining roadmap
 
 ## Current Position
 
-Phase: 43 — complete ✓
-Status: v2.0 milestone complete. All 3 phases (41–43) executed and verified.
-Last activity: 2026-06-15 — phase 43 executed (43-01 migration + push, 43-02 i18n keys, 43-03 RSC page + client — smoke-tested)
+Phase: Not started (defining roadmap)
+Plan: —
+Status: Defining roadmap
+Last activity: 2026-06-15 — Milestone v2.1 started
 
-Progress: ██████████ 100% (3/3 phases complete; 7/7 total plans complete)
+## v2.1 Direction
 
-## v2.0 Direction
+**Core decision (2026-06-15):** Business-käyttäjä syöttää onboardingissa verkkosivunsa URL:n. Sovellus hakee HTML:n `fetch`:llä (ei Playwrightia), poimii brändivärit CSS-muuttujista ja `theme-color`-metasta, kerää logo-kandidaatit, ja lähettää ne Claudelle yhdessä API-kutsussa (vision + teksti). Claude palauttaa logon, värit, hinnaston ja aukioloajat JSON:na. Tulokset esitäytetään onboarding-velhoon uuden pre-vaiheen kautta.
 
-**Core decision (2026-06-12):** Build a complete, self-contained business user interface. BusinessNav replaces consumer NavBar on all `/business/*` routes. Business users have their own dashboard, map, and profile page — entirely separate from the consumer experience. Auth sessions remain fully isolated (v1.9 sb-biz-* architecture).
-
-- Phases 41–43: v2.0 milestone
-- Phase 41 unblocks Phase 42 and Phase 43 (nav shell must exist first)
-- BIZUX-05 (hide /profiili fields for business users) dropped — business users navigate to /business/profiili instead
+- Ei Playwrightia — `fetch` + CSS-parsinta + Claude vision
+- Pre-vaihe ennen WizardInneria: URL → analyysi → esikatselu → jatka velhoon
+- Esikatselu (step 6) käyttää brändidataa, kuluttajapuoli ei muutu tässä milestonessa
+- FK: `business_accounts` (ei `businesses`)
+- `brandianalyysi-toteutusohje.md` projektijuuressa — Playwright-osuudet korvattu
 
 ## Active Decisions (carried forward)
 
@@ -53,6 +54,8 @@ Progress: ██████████ 100% (3/3 phases complete; 7/7 total pl
 - **v1.9**: Single `WizardInner` component (mode: 'onboarding' | 'edit')
 - **v2.0**: /business/map is a NEW standalone route — does NOT modify Etusivu.tsx
 - **v2.0**: Consumer /profiili page is NOT touched — business users navigate to /business/profiili
+- **v2.1**: No Playwright — `fetch` only; Framer/SPA fallback is manual entry
+- **v2.1**: `business_branding` FK references `business_accounts`, not `businesses`
 
 ## Accumulated Context
 
@@ -66,15 +69,11 @@ Progress: ██████████ 100% (3/3 phases complete; 7/7 total pl
 
 ### Pending Todos
 
-- CLEAN-01: DONE — supabase db push ajettu 2026-06-12 (testitilit poistettu)
-
-### Blockers/Concerns
-
 - CR-01: `app/business/[id]/page.tsx` lukee paikan tiedot ilman omistajuustarkistusta (pre-existing issue)
 - CR-02: `app/api/business/onboarding/submit/route.ts` ei filtteroi `paikka_id`:llä (pre-existing issue)
 
 ## Session Continuity
 
-Last session: 2026-06-15T10:00:00.000Z
-Stopped at: Phase 43 planned (3 plans verified)
-Resume file: .planning/phases/43-business-profile/43-01-PLAN.md
+Last session: 2026-06-15T12:00:00.000Z
+Stopped at: v2.1 milestone requirements defined — roadmap pending
+Resume file: .planning/ROADMAP.md (once created)
