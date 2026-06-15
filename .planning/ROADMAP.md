@@ -155,7 +155,7 @@ Full archive: `.planning/milestones/v2.0-ROADMAP.md`
 
 **Milestone Goal:** Business-käyttäjä syöttää onboardingissa verkkosivunsa URL:n — sovellus hakee automaattisesti brändivärit, logon, hinnaston ja aukioloajat, ja esitäyttää ne onboarding-velhoon.
 
-- [ ] **Phase 44: Brändidatan tietokantaperusta** — business_branding-taulu Supabasessa status-seurannalla ja RLS-politiikat
+- [x] **Phase 44: Brändidatan tietokantaperusta** — business_branding-taulu Supabasessa status-seurannalla ja RLS-politiikat (completed 2026-06-15)
 - [ ] **Phase 45: Scraper & Claude API -putki** — palvelinpuolen HTML-haku, CSS/logo-poiminta, sharp-konversio ja yksi Claude-kutsu
 - [ ] **Phase 46: Pre-vaihe UI & velhointegraatio** — "Analysoi sivusto" -näkymä, esikatseluruutu, esitäyttö steps 3–5, brändivärit step 6:ssa
 
@@ -245,6 +245,6 @@ Full archive: `.planning/milestones/v2.0-ROADMAP.md`
 | 41. Navigation Foundation | v2.0 | 2/2 | Complete | 2026-06-12 |
 | 42. Dashboard & Map | v2.0 | 3/3 | Complete | 2026-06-15 |
 | 43. Business Profile | v2.0 | 3/3 | Complete | 2026-06-15 |
-| 44. Brändidatan tietokantaperusta | v2.1 | 0/? | Not started | - |
+| 44. Brändidatan tietokantaperusta | v2.1 | 1/1 | Complete | 2026-06-15 |
 | 45. Scraper & Claude API -putki | v2.1 | 0/? | Not started | - |
 | 46. Pre-vaihe UI & velhointegraatio | v2.1 | 0/? | Not started | - |

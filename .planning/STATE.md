@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: AI-pohjainen yrityssivuanalyysi
-status: planning complete
-stopped_at: Phase 44 planned — ready to execute
-last_updated: "2026-06-15T14:00:00.000Z"
-last_activity: 2026-06-15 — Phase 44 planned (1 plan: business_branding migration + RLS)
+status: in progress
+stopped_at: Phase 44 complete — Phase 45 next
+last_updated: "2026-06-15T14:30:00.000Z"
+last_activity: 2026-06-15 — Phase 44 complete (business_branding migration applied to remote Supabase)
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 1
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 33
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-15)
 
 ## Current Position
 
-Phase: 44 — Brändidatan tietokantaperusta (planned, ready to execute)
-Plan: 44-01 (1 plan, Wave 1)
-Status: Planning complete — ready to execute
-Last activity: 2026-06-15 — Phase 44 planned (business_branding migration + 3 RLS policies)
+Phase: 45 — Scraper & Claude API -putki (not started)
+Plan: —
+Status: Phase 44 complete — Phase 45 ready to plan
+Last activity: 2026-06-15 — Phase 44 complete (business_branding table live on remote Supabase)
 
 ## v2.1 Direction
 
