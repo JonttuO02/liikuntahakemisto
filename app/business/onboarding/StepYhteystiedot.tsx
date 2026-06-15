@@ -72,6 +72,7 @@ export default function StepYhteystiedot({
           section: 'yhteystiedot',
           data: {
             puhelin: puhelin.trim(),
+            email: email.trim(),
             varauslinkki: website.trim(),
             kuvaus: kuvaus.trim(),
           },

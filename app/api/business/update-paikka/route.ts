@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     }
     updatePayload = { aukioloajat: validated }
   } else if (section === 'yhteystiedot') {
-    const d = data as { puhelin?: string; varauslinkki?: string; kuvaus?: string }
+    const d = data as { puhelin?: string; email?: string; varauslinkki?: string; kuvaus?: string }
     const puhelin = typeof d.puhelin === 'string' ? d.puhelin.trim() : undefined
     // T-04: Validate varauslinkki is http/https only — prevents javascript: XSS on public profile page.
     let varauslinkki: string | undefined
