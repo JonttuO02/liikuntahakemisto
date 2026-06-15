@@ -126,8 +126,9 @@ function VenueRow({
       <div className="flex items-center gap-3 mt-1">
         <button
           type="button"
-          onClick={() => onPreview(link.liikuntapaikat as unknown as Liikuntapaikka)}
-          className="text-xs text-[rgba(17,17,17,0.45)] hover:text-[#111111] underline-offset-2 hover:underline [transition:color_150ms]"
+          disabled={!link.liikuntapaikat}
+          onClick={() => { if (link.liikuntapaikat) onPreview(link.liikuntapaikat as unknown as Liikuntapaikka) }}
+          className="text-xs text-[rgba(17,17,17,0.45)] hover:text-[#111111] underline-offset-2 hover:underline [transition:color_150ms] disabled:opacity-40 disabled:pointer-events-none"
         >
           {t('esikatseluCta')}
         </button>
@@ -187,13 +188,13 @@ export default function BusinessPage() {
 
       // If an incomplete draft exists, resume the onboarding wizard.
       // This handles both first-time users and multi-venue users mid-onboarding.
-      const { data: draft } = await supabase
+      const { data: drafts } = await supabase
         .from('onboarding_draft')
         .select('id')
         .eq('business_account_id', user.id)
-        .maybeSingle()
+        .limit(1)
 
-      if (draft) {
+      if (drafts && drafts.length > 0) {
         router.push('/business/onboarding')
         return
       }

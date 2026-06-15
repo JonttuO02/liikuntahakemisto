@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import { motion } from 'framer-motion'
 import { Locate } from 'lucide-react'
@@ -115,11 +116,20 @@ function BusinessMapInner({ allVenues, myPaikkaIds }: { allVenues: Liikuntapaikk
 
 export default function BusinessMapPage() {
   const t = useTranslations('Business')
+  const router = useRouter()
   const [allVenues, setAllVenues] = useState<Liikuntapaikka[] | null>(null)
   const [myPaikkaIds, setMyPaikkaIds] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     async function load() {
+      // Auth gate — redirect unauthenticated visitors to business login
+      const bizSb = createBusinessBrowserClient()
+      const { data: { user } } = await bizSb.auth.getUser()
+      if (!user) {
+        router.replace('/business/kirjaudu')
+        return
+      }
+
       // Fetch all published venues (public, anon key)
       const sb = createBrowserSupabase()
       const { data } = await sb
@@ -129,19 +139,15 @@ export default function BusinessMapPage() {
         .order('nimi')
       setAllVenues((data as Liikuntapaikka[]) ?? [])
 
-      // Fetch business's own venue IDs (business session)
-      const bizSb = createBusinessBrowserClient()
-      const { data: { user } } = await bizSb.auth.getUser()
-      if (user) {
-        const { data: links } = await bizSb
-          .from('business_paikka_links')
-          .select('paikka_id')
-          .eq('business_account_id', user.id)
-        setMyPaikkaIds(new Set((links ?? []).map((l: { paikka_id: number }) => l.paikka_id)))
-      }
+      // Fetch business's own venue IDs
+      const { data: links } = await bizSb
+        .from('business_paikka_links')
+        .select('paikka_id')
+        .eq('business_account_id', user.id)
+      setMyPaikkaIds(new Set((links ?? []).map((l: { paikka_id: number }) => l.paikka_id)))
     }
     load()
-  }, [])
+  }, [router])
 
   if (allVenues === null) {
     return (
