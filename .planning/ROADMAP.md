@@ -141,7 +141,7 @@ Full archive: `.planning/milestones/v1.9-ROADMAP.md`
 
 - [x] **Phase 41: Navigation Foundation** — BusinessNav component + consumer NavBar hidden on /business/* + post-login redirect *(2 plans: Wave 1×1 + Wave 2×1)* — 2026-06-12
 - [ ] **Phase 42: Dashboard & Map** — /business dashboard redesign (status card + venue list + actions) + /business/map new route
-- [ ] **Phase 43: Business Profile** — /business/profiili page: read-only account info, editable contact fields, language toggle, sign-out
+- [ ] **Phase 43: Business Profile** — /business/profiili page: read-only account info, editable contact fields, language toggle, sign-out *(3 plans: Wave 1×2 + Wave 2×1)*
 
 ---
 
@@ -186,7 +186,12 @@ Full archive: `.planning/milestones/v1.9-ROADMAP.md`
   2. A business user can edit phone, email, and website fields and save them; changes persist in business_accounts after a page reload
   3. A FI/EN toggle on /business/profiili sets the NEXT_LOCALE cookie and the UI language changes immediately without a full navigation
   4. Clicking sign-out clears the sb-biz-* session cookies and redirects the user to /business/kirjaudu; the consumer session is unaffected
-**Plans**: TBD
+**Plans**: 3 plans (Wave 1×2 + Wave 2×1)
+**Wave 1** *(parallel)*
+- [ ] 43-01-PLAN.md — DB migration + supabase db push (contact_phone column)
+- [ ] 43-02-PLAN.md — i18n profile keys (fi.json + en.json)
+**Wave 2** *(blocked on both Wave 1 plans)*
+- [ ] 43-03-PLAN.md — RSC page + BusinessProfiiliClient component
 **UI hint**: yes
 
 ---
@@ -237,4 +242,4 @@ Full archive: `.planning/milestones/v1.9-ROADMAP.md`
 | 40. Wizard-konsolidointi & Cleanup | v1.9 | 3/3 | Complete | 2026-06-12 |
 | 41. Navigation Foundation | v2.0 | 2/2 | Complete | 2026-06-12 |
 | 42. Dashboard & Map | v2.0 | 0/? | Not started | - |
-| 43. Business Profile | v2.0 | 0/? | Not started | - |
+| 43. Business Profile | v2.0 | 0/3 | In planning | - |
