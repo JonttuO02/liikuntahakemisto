@@ -51,7 +51,12 @@ export type BrandingResult = {
  */
 export function getContrastColor(hex: string): '#000000' | '#ffffff' {
   // Strip leading '#' if present
-  const clean = hex.replace(/^#/, '')
+  let clean = hex.replace(/^#/, '')
+
+  // Expand 3-char shorthand to 6-char (e.g. 'fff' → 'ffffff')
+  if (clean.length === 3) {
+    clean = clean.split('').map(c => c + c).join('')
+  }
 
   // Parse R, G, B as 2-character hex segments; treat NaN as 0 (malformed input guard)
   const r = parseInt(clean.substring(0, 2), 16) || 0
