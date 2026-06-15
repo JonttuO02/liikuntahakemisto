@@ -76,7 +76,9 @@ export default function StepEsikatselu({
       })
 
       if (!res.ok) {
-        try { console.error('[submit] server error:', await res.clone().json()) } catch {}
+        if (process.env.NODE_ENV !== 'production') {
+          try { console.error('[submit] server error:', await res.clone().json()) } catch {}
+        }
         setError(t('errorSubmitFailed'))
         return
       }
