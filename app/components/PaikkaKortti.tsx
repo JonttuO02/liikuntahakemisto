@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { MapPin, Bookmark, BookmarkCheck, BadgeCheck } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
-import { hintateksti, cn } from '@/lib/utils'
+import { hintateksti } from '@/lib/utils'
 import { getOpenStatus } from '@/lib/aukiolo'
 import { isMembershipOnly, priceItemList } from '@/lib/priceUtils'
 import { useOverflowMarquee } from '@/lib/useOverflowMarquee'
@@ -71,6 +71,7 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
             style={{ backgroundColor: laji.color }}
           >
             <SportIcon laji={paikka.laji} size={12} className="shrink-0" />
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {tLajit(paikka.laji as any)}
           </span>
           {paikka.featured && (

@@ -9,7 +9,7 @@ import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import Link from 'next/link'
 import { LAJIT_FILTTERI, lajiKonfig } from '@/lib/lajit'
 import { SportIcon } from '@/lib/sportIcons'
-import { hintateksti } from '@/lib/utils'
+
 import Karuselli from './Karuselli'
 import type { Liikuntapaikka } from '@/lib/types'
 import { isNightHour } from '@/lib/mapStyles'
@@ -24,7 +24,7 @@ import AktiiviLogo from './AktiiviLogo'
 import { createBrowserSupabase, subscribeToAuthUser } from '@/lib/supabaseSSR'
 import AuthModal from './AuthModal'
 import { deriveKaupungit } from '@/lib/cityFilter'
-import DiagonaalKortti, { diagonaalKorttiVariants } from './DiagonaalKortti'
+import DiagonaalKortti from './DiagonaalKortti'
 import PaikkaSheet from './PaikkaSheet'
 import StarPicker from './StarPicker'
 import { useTranslations } from 'next-intl'
@@ -280,6 +280,7 @@ function CombinedFilterPill({
                       className={`flex items-center gap-1 ${isSelected ? 'text-[#111111]' : 'text-[rgba(17,17,17,0.35)]'}`}
                     >
                       <span style={{ color: isSelected ? color : undefined }}><SportIcon laji={sport.toLowerCase()} size={12} className="shrink-0" /></span>
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                       {tLajit(sport.toLowerCase() as any)}
                     </span>
                   )
@@ -364,6 +365,7 @@ function CombinedFilterPill({
                 >
                   <span className={`w-3 h-3 rounded-full flex-shrink-0 ${isSelected ? 'bg-[#111111]' : 'border border-[rgba(0,0,0,0.15)]'}`} />
                   <span style={{ color: isSelected ? color : undefined }}><SportIcon laji={sport.toLowerCase()} size={12} className="flex-shrink-0" /></span>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {tLajit(sport.toLowerCase() as any)}
                 </button>
               )
@@ -786,8 +788,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   }, [sc, bounds, zoomLevel])
 
   const anyOverlayOpen = rightOpen
-
-  const todoContainerVariants = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } }
 
   const todoPaikat = paikat.filter(p => todoIds.has(p.id))
 

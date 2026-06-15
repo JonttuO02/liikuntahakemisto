@@ -111,6 +111,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
               style={{ backgroundColor: laji.color }}
             >
               <SportIcon laji={paikka.laji} size={16} className="shrink-0" />
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {tLajit(paikka.laji as any)}
             </span>
           </div>

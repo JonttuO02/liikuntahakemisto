@@ -114,6 +114,7 @@ export default function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: num
                   <span style={{ color: sportColor }}><SportIcon laji={p.laji} size={16} className="flex-shrink-0" /></span>
                 </motion.span>
                 <span className="flex items-center text-lg font-bold text-[#111111]">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {chars(tLajit(p.laji as any))}
                 </span>
               </motion.div>

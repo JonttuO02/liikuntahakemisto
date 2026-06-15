@@ -20,7 +20,7 @@ export const runtime = 'nodejs'
 async function runAnalysis(url: string, businessAccountId: string): Promise<void> {
   try {
     // 1. Scrape — logoBuffers are PNG Buffer[] (parallel to logoUrls)
-    const { logoUrls: _logoUrls, logoBuffers, colors, htmlSnippet } = await scrapeWebsite(url)
+    const { logoBuffers, htmlSnippet } = await scrapeWebsite(url)
 
     // 2. Analyze — pass logoBuffers (not logoUrls); result includes prices/opening_hours/website_url
     const result = await analyzeWithClaude(logoBuffers, htmlSnippet)

@@ -77,6 +77,7 @@ export default function StepMediat({
     })
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function removeLogoFile(_i: number) {
     setLogoFiles([])
   }

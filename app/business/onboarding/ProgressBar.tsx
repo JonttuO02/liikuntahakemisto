@@ -24,7 +24,6 @@ export default function ProgressBar({ currentStep, completedSteps, onStepClick }
 
   const isCompleted = (n: number) => completedSteps.includes(n)
   const isCurrent = (n: number) => n === currentStep && !isCompleted(n)
-  const isFuture = (n: number) => n > currentStep && !isCompleted(n)
 
   return (
     <div className="glass rounded-2xl px-6 py-4 mb-6 w-full max-w-xl mx-auto">
@@ -34,8 +33,6 @@ export default function ProgressBar({ currentStep, completedSteps, onStepClick }
             const stepNum = index + 1
             const completed = isCompleted(stepNum)
             const current = isCurrent(stepNum)
-            const future = isFuture(stepNum)
-
             return (
               <div key={stepNum} className="flex items-center flex-1 last:flex-none">
                 {/* Step circle */}
