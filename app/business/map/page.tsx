@@ -10,7 +10,6 @@ import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import SportPin from '@/app/components/SportPin'
 import PaikkaSheet from '@/app/components/PaikkaSheet'
-import MapProvider from '@/app/components/MapProvider'
 import CalloutCard from '@/app/components/CalloutCard'
 import MapAutoZoom from '@/app/components/MapAutoZoom'
 import { haversineKm } from '@/lib/geo'
@@ -234,9 +233,5 @@ export default function BusinessMapPage() {
     )
   }
 
-  return (
-    <MapProvider>
-      <BusinessMapInner allVenues={allVenues} myPaikkaIds={myPaikkaIds} />
-    </MapProvider>
-  )
+  return <BusinessMapInner allVenues={allVenues} myPaikkaIds={myPaikkaIds} />
 }
