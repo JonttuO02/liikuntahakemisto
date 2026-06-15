@@ -372,9 +372,9 @@ export default function AnalysoiSivusto({ onConfirm, onSkip }: AnalysoiSivustoPr
           )}
 
           {/* Prices */}
-          {brandingResult.raw_analysis?.prices && brandingResult.raw_analysis.prices.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <LabelCaps>Hinnat</LabelCaps>
+          <div className="flex flex-col gap-2">
+            <LabelCaps>Hinnat</LabelCaps>
+            {brandingResult.raw_analysis?.prices && brandingResult.raw_analysis.prices.length > 0 ? (
               <ul className="flex flex-col gap-1">
                 {brandingResult.raw_analysis.prices.map((price, i) => (
                   <li key={i} className="text-sm text-[#111111]">
@@ -382,23 +382,27 @@ export default function AnalysoiSivusto({ onConfirm, onSkip }: AnalysoiSivustoPr
                   </li>
                 ))}
               </ul>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-[rgba(17,17,17,0.45)]">Hintoja ei löydetty automaattisesti</p>
+            )}
+          </div>
 
           {/* Opening hours */}
-          {brandingResult.raw_analysis?.opening_hours &&
-            brandingResult.raw_analysis.opening_hours.length > 0 && (
-              <div className="flex flex-col gap-2">
-                <LabelCaps>Aukioloajat</LabelCaps>
-                <dl className="flex flex-col gap-1">
-                  {brandingResult.raw_analysis.opening_hours.map((entry, i) => (
-                    <div key={i} className="text-sm text-[#111111]">
-                      {entry.day}: {entry.open}–{entry.close}
-                    </div>
-                  ))}
-                </dl>
-              </div>
+          <div className="flex flex-col gap-2">
+            <LabelCaps>Aukioloajat</LabelCaps>
+            {brandingResult.raw_analysis?.opening_hours &&
+            brandingResult.raw_analysis.opening_hours.length > 0 ? (
+              <dl className="flex flex-col gap-1">
+                {brandingResult.raw_analysis.opening_hours.map((entry, i) => (
+                  <div key={i} className="text-sm text-[#111111]">
+                    {entry.day}: {entry.open}–{entry.close}
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="text-sm text-[rgba(17,17,17,0.45)]">Aukioloaikoja ei löydetty automaattisesti</p>
             )}
+          </div>
 
           {/* Footer */}
           <div className="flex items-center justify-between pt-4 border-t border-[rgba(0,0,0,0.07)]">

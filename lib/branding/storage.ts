@@ -27,5 +27,5 @@ export async function uploadLogo(
     data: { publicUrl },
   } = supabaseAdmin.storage.from('business-media').getPublicUrl(path)
 
-  return publicUrl
+  return publicUrl + '?t=' + Date.now()
 }
