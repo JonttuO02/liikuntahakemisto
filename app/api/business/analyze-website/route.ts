@@ -57,6 +57,7 @@ async function runAnalysis(url: string, businessAccountId: string): Promise<void
       .upsert(
         {
           business_account_id: businessAccountId,
+          website_url: url,
           status: 'failed',
           error_message: err instanceof Error ? err.message : 'Tuntematon virhe',
           updated_at: new Date().toISOString(),
