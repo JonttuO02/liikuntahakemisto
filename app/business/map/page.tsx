@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Locate } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
@@ -11,6 +11,9 @@ import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import SportPin from '@/app/components/SportPin'
 import PaikkaSheet from '@/app/components/PaikkaSheet'
 import MapProvider from '@/app/components/MapProvider'
+import CalloutCard from '@/app/components/CalloutCard'
+import MapAutoZoom from '@/app/components/MapAutoZoom'
+import { haversineKm } from '@/lib/geo'
 import type { Liikuntapaikka } from '@/lib/types'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
@@ -35,6 +38,11 @@ function BusinessMapInner({ allVenues, myPaikkaIds }: { allVenues: Liikuntapaikk
   const [filter, setFilter] = useState<'all' | 'mine'>('all')
   const [selected, setSelected] = useState<Liikuntapaikka | null>(null)
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [zoomLevel, setZoomLevel] = useState(12)
+  const zoomRef = useRef(12)
+  const [mapCenter, setMapCenter] = useState({ lat: 61.4978, lng: 23.7610 })
+  const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
+  const pendingSelectedRef = useRef<Liikuntapaikka | null>(null)
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
@@ -47,6 +55,24 @@ function BusinessMapInner({ allVenues, myPaikkaIds }: { allVenues: Liikuntapaikk
     ? allVenues.filter(v => myPaikkaIds.has(v.id))
     : allVenues
 
+  const venuesWithCoords = useMemo(
+    () => venues.filter((v): v is Liikuntapaikka & { latitude: number; longitude: number } =>
+      v.latitude != null && v.longitude != null
+    ),
+    [venues]
+  )
+
+  const nearestCardId = useMemo<number | null>(() => {
+    if (zoomLevel < 16) return null
+    let minDist = Infinity
+    let nearestId: number | null = null
+    for (const v of venuesWithCoords) {
+      const d = haversineKm(mapCenter.lat, mapCenter.lng, v.latitude, v.longitude)
+      if (d < minDist) { minDist = d; nearestId = v.id }
+    }
+    return minDist <= 0.5 ? nearestId : null
+  }, [zoomLevel, mapCenter, venuesWithCoords])
+
   return (
     <div className="relative w-full h-screen">
       <Map
@@ -56,20 +82,69 @@ function BusinessMapInner({ allVenues, myPaikkaIds }: { allVenues: Liikuntapaikk
         gestureHandling="greedy"
         disableDefaultUI
         style={{ width: '100%', height: '100%' }}
+        onClick={() => setSelected(null)}
+        onCameraChanged={ev => {
+          const newZoom = ev.detail.zoom
+          if (Math.round(newZoom) !== Math.round(zoomRef.current)) setZoomLevel(Math.round(newZoom))
+          zoomRef.current = newZoom
+          if (newZoom >= 16) setMapCenter(ev.detail.center)
+        }}
       >
-        {venues.map(v => (
-          v.latitude && v.longitude ? (
-            <AdvancedMarker
-              key={v.id}
-              position={{ lat: v.latitude, lng: v.longitude }}
-              onClick={() => setSelected(v)}
-            >
-              <div style={{ transform: selected?.id === v.id ? 'scale(1.25)' : 'scale(1)', transition: 'transform 150ms ease' }}>
-                <SportPin laji={v.laji} />
-              </div>
-            </AdvancedMarker>
-          ) : null
+        {venuesWithCoords.map(v => (
+          <AdvancedMarker
+            key={v.id}
+            position={{ lat: v.latitude, lng: v.longitude }}
+          >
+            <div style={{ position: 'relative', width: 0, height: 0 }}>
+              <AnimatePresence initial={false}>
+                {(zoomLevel < 16 || nearestCardId !== v.id) && selected?.id !== v.id && (
+                  <motion.div
+                    key="pin"
+                    style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)' }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    onClick={() => {
+                      setAutoZoomTarget({ lat: v.latitude, lng: v.longitude })
+                    }}
+                  >
+                    <SportPin laji={v.laji} />
+                  </motion.div>
+                )}
+                {zoomLevel >= 16 && nearestCardId === v.id && selected?.id !== v.id && (
+                  <motion.div
+                    key="card"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)', overflow: 'visible' }}
+                    onClick={e => {
+                      e.stopPropagation()
+                      if (zoomRef.current >= 16) {
+                        setSelected(v)
+                      } else {
+                        pendingSelectedRef.current = v
+                        setAutoZoomTarget({ lat: v.latitude, lng: v.longitude })
+                      }
+                    }}
+                  >
+                    <CalloutCard p={v} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </AdvancedMarker>
         ))}
+        <MapAutoZoom
+          target={autoZoomTarget}
+          onComplete={() => {
+            setAutoZoomTarget(null)
+            if (pendingSelectedRef.current) {
+              setSelected(pendingSelectedRef.current)
+              pendingSelectedRef.current = null
+            }
+          }}
+        />
       </Map>
 
       {/* Kaikki / Omat toggle pill — top center */}
