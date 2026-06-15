@@ -12,6 +12,7 @@ import { isMembershipOnly, priceItemList } from '@/lib/priceUtils'
 import { useOverflowMarquee } from '@/lib/useOverflowMarquee'
 import type { Liikuntapaikka } from '@/lib/types'
 import { useTranslations } from 'next-intl'
+import { getContrastColor } from '@/lib/branding/brandingResult'
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
 
@@ -31,9 +32,10 @@ interface DiagonaalKorttiProps {
   onShowMap?: (paikka: Liikuntapaikka) => void
   onCardClick?: () => void
   onToggleTodo?: (id: number) => void
+  brandColor?: string
 }
 
-export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMap, onCardClick, onToggleTodo }: DiagonaalKorttiProps) {
+export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMap, onCardClick, onToggleTodo, brandColor }: DiagonaalKorttiProps) {
   const t = useTranslations('PaikkaKortti')
   const tLajit = useTranslations('Lajit')
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
@@ -41,6 +43,10 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
   const membershipOnly = isMembershipOnly(paikka)
   const priceItems   = priceItemList(paikka.hinta_kuvaus, membershipOnly, hintaTeksti)
+  // Derived contrast text colour for the brand-coloured left panel.
+  // When brandColor is falsy the panel has no background and we leave text at their
+  // default Tailwind classes.  When it is set we override text colour inline.
+  const contrastText = brandColor ? getContrastColor(brandColor) : undefined
   const { containerRef, measureRef, shouldMarquee } = useOverflowMarquee(priceItems?.join('\n') ?? null)
   const hasCoords    = paikka.latitude != null && paikka.longitude != null
 
@@ -80,7 +86,10 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
         <div
           ref={leftPanelRef}
           className="absolute inset-0 z-10 flex flex-col p-3 overflow-hidden"
-          style={{ clipPath: 'polygon(0 0, 62% 0, 57% 100%, 0 100%)' }}
+          style={{
+            clipPath: 'polygon(0 0, 62% 0, 57% 100%, 0 100%)',
+            ...(brandColor ? { backgroundColor: brandColor } : {}),
+          }}
         >
           <div className="flex items-start gap-2 self-start">
             {/* Logo slot — shows uploaded logo when available, falls back to Building2 */}
@@ -108,7 +117,10 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
 
           {/* Name + price grouped tight, mt-1.5 gives minimal breathing room from badge */}
           <div className="flex flex-col gap-0.5 mt-1.5 min-w-0">
-            <p className="font-bold text-[#111111] text-sm leading-snug line-clamp-1 overflow-hidden">
+            <p
+              className="font-bold text-[#111111] text-sm leading-snug line-clamp-1 overflow-hidden"
+              style={contrastText ? { color: contrastText } : undefined}
+            >
               {paikka.nimi}
               {paikka.business_managed && (
                 <BadgeCheck className="w-3.5 h-3.5 ml-1 inline-block align-middle" />
@@ -146,7 +158,11 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
                     style={{ animation: 'marquee 8s linear infinite', willChange: 'transform' }}
                   >
                     {[...priceItems, ...priceItems].map((item, i) => (
-                      <span key={i} className="shrink-0 text-xs font-bold text-[#111111] tabular-nums bg-[rgba(0,0,0,0.05)] px-1.5 py-0.5 rounded">
+                      <span
+                        key={i}
+                        className="shrink-0 text-xs font-bold text-[#111111] tabular-nums bg-[rgba(0,0,0,0.05)] px-1.5 py-0.5 rounded"
+                        style={contrastText ? { color: contrastText } : undefined}
+                      >
                         {item}
                       </span>
                     ))}
@@ -154,7 +170,11 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
                 ) : (
                   <div className="flex flex-wrap gap-1">
                     {priceItems.map((item, i) => (
-                      <span key={i} className="text-xs font-bold text-[#111111] tabular-nums bg-[rgba(0,0,0,0.05)] px-1.5 py-0.5 rounded whitespace-nowrap">
+                      <span
+                        key={i}
+                        className="text-xs font-bold text-[#111111] tabular-nums bg-[rgba(0,0,0,0.05)] px-1.5 py-0.5 rounded whitespace-nowrap"
+                        style={contrastText ? { color: contrastText } : undefined}
+                      >
                         {item}
                       </span>
                     ))}
