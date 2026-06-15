@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Business UX & Navigation
 status: executing
-last_updated: "2026-06-12T13:30:00Z"
-last_activity: 2026-06-12 — Phase 42 all plans complete (42-01 dashboard + 42-02 /business/map)
+last_updated: "2026-06-15T00:00:00Z"
+last_activity: 2026-06-15 — Phase 42 complete (6/6 verified, critical fixes applied)
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
   completed_plans: 4
   percent: 67
@@ -24,11 +24,11 @@ See: .planning/PROJECT.md (updated 2026-06-12)
 
 ## Current Position
 
-Phase: 42 (Dashboard & Map) — all plans complete, pending verification
-Status: Both plans executed — 42-01 dashboard redesign + 42-02 /business/map route
-Last activity: 2026-06-12 — all phase 42 plans merged, TypeScript clean
+Phase: 43 — next to plan/execute
+Status: Phase 42 complete ✓ (6/6 verified). Ready for Phase 43.
+Last activity: 2026-06-15 — phase 42 fully verified; 3 critical fixes applied (auth gate, null guard, maybeSingle fix)
 
-Progress: ████████░░ 67% (0/3 phases, 2/2 plans)
+Progress: ████████░░ 67% (2/3 phases, 4/4 plans)
 
 ## v2.0 Direction
 
