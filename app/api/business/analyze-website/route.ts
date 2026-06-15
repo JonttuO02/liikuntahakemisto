@@ -34,7 +34,7 @@ async function runAnalysis(url: string, businessAccountId: string): Promise<void
     // 4. UPSERT final result — website_url from Claude extraction; raw_analysis = full result
     //    (raw_analysis jsonb stores full BrandingAnalysisResult so Phase 46 can read
     //     prices and opening_hours without additional columns)
-    await supabaseAdmin
+    const { error: finalErr } = await supabaseAdmin
       .from('business_branding')
       .upsert(
         {
@@ -45,11 +45,13 @@ async function runAnalysis(url: string, businessAccountId: string): Promise<void
           colors: result.colors,
           website_url: result.website_url,
           raw_analysis: result,
+          error_message: null,
           analyzed_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'business_account_id' }
       )
+    if (finalErr) throw new Error(`DB upsert: ${finalErr.message}`)
   } catch (err) {
     console.error('[analyze-website] pipeline error:', err)
     await supabaseAdmin
