@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: AI-pohjainen yrityssivuanalyysi
-status: in progress
-stopped_at: Phase 45 planned — 4 plans ready to execute
-last_updated: "2026-06-15T16:00:00.000Z"
-last_activity: 2026-06-15 — Phase 45 planned (4 plans: foundation, scraper, analyzer+storage, route handler)
+status: between_phases
+last_updated: "2026-06-15T19:20:00.000Z"
+last_activity: 2026-06-15 -- Phase 45 complete
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 1
-  percent: 33
+  completed_plans: 5
+  percent: 67
 ---
 
 # Project State
@@ -21,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-15)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v2.1 AI-pohjainen yrityssivuanalyysi — Phase 44 next
+**Current focus:** Phase 46 — pre-vaihe UI & velhointegraatio (next)
 
 ## Current Position
 
-Phase: 45 — Scraper & Claude API -putki (Ready to execute)
-Plan: 4 plans across 4 waves (45-01 → 45-02 → 45-03 → 45-04)
-Status: Phase 45 planned — ready to execute
-Last activity: 2026-06-15 — Phase 45 planned (scraper, Claude vision, Storage upload, waitUntil route)
+Phase: 45 (scraper-claude-api-putki) — COMPLETE
+Plan: 4 of 4
+Status: Phase 45 complete, ready for Phase 46
+Last activity: 2026-06-15 -- Phase 45 verified and closed
 
 ## v2.1 Direction
 
@@ -83,6 +82,6 @@ Last activity: 2026-06-15 — Phase 45 planned (scraper, Claude vision, Storage 
 
 ## Session Continuity
 
-Last session: 2026-06-15T13:00:00.000Z
-Stopped at: Phase 44 context gathered
-Resume file: .planning/phases/44-brandidata-tietokantaperusta/44-CONTEXT.md
+Last session: 2026-06-15T18:50:02.255Z
+Stopped at: context exhaustion at 76% (2026-06-15)
+Resume file: None
