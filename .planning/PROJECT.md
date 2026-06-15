@@ -1,15 +1,14 @@
 # Liikuntahakemisto
 
-## Current Milestone: v2.0 Business UX & Navigation
+## Shipped: v2.0 Business UX & Navigation (2026-06-15)
 
-**Goal:** Build a cohesive, fully-navigable business interface — dedicated navigation, proper dashboard homepage, standalone map, and business profile page.
+**Delivered:** Täydellinen business-navigaatioympäristö — `BusinessNav` glass pill kaikilla `/business/*`-reiteillä (kuluttaja-NavBar poistettu), post-login redirect `/business/kirjaudu` → `/business`, `/business`-hallintapaneeli statuskortti + paikkalistaus + pikatoimintokortit, `/business/map` täysruutu-kartta Supercluster-klusteroinnilla + kaksivaiheinen pinni-interaktio (zoom → CalloutCard → PaikkaSheet), `/business/profiili` lukuvain tilitiedot + puhelinnumeron muokkaus + FI/EN-kielivalitsin + uloskirjautuminen (sb-biz-* isolaatio). 9/9 vaatimusta toimitettu, 3 vaihetta, 55 committia.
 
-**Target features:**
-- `BusinessNav` component replacing consumer NavBar on all `/business/*` routes (Dashboard / Kartta / Profiili / Kirjaudu ulos)
-- Post-login redirect: `/business/kirjaudu` → `/business` after successful login (unblocked by v1.9 auth separation)
-- `/business` dashboard redesign: approval status card, venue list with status badges, quick-action links
-- `/business/map`: standalone full-screen map — all venues + "Omat paikat" toggle filter, PaikkaSheet on pin tap
-- `/business/profiili`: account info display, editable contact fields, FI/EN language toggle, business sign-out
+---
+
+## Next Milestone: TBD
+
+Start next milestone with `/gsd:new-milestone`.
 
 ---
 
