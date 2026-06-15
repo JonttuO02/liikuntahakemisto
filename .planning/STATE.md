@@ -2,51 +2,44 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: AI-pohjainen yrityssivuanalyysi
-status: milestone_complete
-stopped_at: Milestone complete (Phase 46 was final phase)
-last_updated: 2026-06-15T22:36:12.566Z
-last_activity: 2026-06-15 -- Phase 46 execution started
+status: archived
+stopped_at: milestone complete (2026-06-16)
+last_updated: "2026-06-16T00:00:00.000Z"
+last_activity: 2026-06-16
 progress:
-  total_phases: 3
-  completed_phases: 2
-  total_plans: 10
-  completed_plans: 126
-  percent: 67
+  total_phases: 46
+  completed_phases: 46
+  total_plans: 125
+  completed_plans: 125
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-15)
+See: .planning/PROJECT.md (updated 2026-06-16)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Milestone complete
+**Current focus:** v2.1 milestone shipped — ready for next milestone
 
 ## Current Position
 
-Phase: 46
-Plan: Not started
-Status: Milestone complete
-Last activity: 2026-06-15
+Phase: 46 (complete)
+Plan: All complete
+Status: Milestone shipped
 
-## v2.1 Direction
+Last activity: 2026-06-16
 
-**Core decision (2026-06-15):** Business-käyttäjä syöttää onboardingissa verkkosivunsa URL:n. Sovellus hakee HTML:n `fetch`:llä (ei Playwrightia), poimii brändivärit CSS-muuttujista ja `theme-color`-metasta, kerää logo-kandidaatit, ja lähettää ne Claudelle yhdessä API-kutsussa (vision + teksti). Claude palauttaa logon, värit, hinnaston ja aukioloajat JSON:na. Tulokset esitäytetään onboarding-velhoon uuden pre-vaiheen kautta.
+## v2.1 Summary
 
-- Ei Playwrightia — `fetch` + CSS-parsinta + Claude vision
-- Pre-vaihe ennen WizardInneria: URL → analyysi → esikatselu → jatka velhoon
-- Esikatselu (step 6) käyttää brändidataa, kuluttajapuoli ei muutu tässä milestonessa
-- FK: `business_accounts` (ei `businesses`)
-- `brandianalyysi-toteutusohje.md` projektijuuressa — Playwright-osuudet korvattu
+v2.1 AI-pohjainen yrityssivuanalyysi — shipped 2026-06-16.
 
-## v2.1 Roadmap
+- Phase 44: Brändidatan tietokantaperusta (1/1 plans) ✅
+- Phase 45: Scraper & Claude API -putki (4/4 plans) ✅
+- Phase 46: Pre-vaihe UI & velhointegraatio (5/5 plans) ✅
 
-| Phase | Name | Requirements | Status |
-|-------|------|--------------|--------|
-| 44 | Brändidatan tietokantaperusta | BRDDB-01, BRDDB-02 | Not started |
-| 45 | Scraper & Claude API -putki | SCRAP-01–05 | Not started |
-| 46 | Pre-vaihe UI & velhointegraatio | ONBOARD-08–13, PREV-01 | Not started |
+All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
 
 ## Active Decisions (carried forward)
 
@@ -65,27 +58,18 @@ Last activity: 2026-06-15
 - **v2.1**: No Playwright — `fetch` only; Framer/SPA fallback is manual entry
 - **v2.1**: `business_branding` FK references `business_accounts`, not `businesses`
 - **v2.1**: One Claude API call per analysis (vision + text in same message)
+- **v2.1**: `waitUntil` fire-and-forget — POST returns immediately; background pipeline continues
 
-## Accumulated Context
+## Carry-Forward (open items for next milestone)
 
-### Decisions
-
-- Phase 40: WizardInner yhdistetty yhdeksi tiedostoksi — OnboardingMode ja EditMode private sub-komponentteina
-- Phase 38: Admin-hyväksyntä julkaisee paikan atomisesti Postgres-triggerillä (published=true + business_managed=true yhdessä transaktiossa)
-- Phase 37: Middleware ei tee DB-kyselyitä — auth-tarkistukset RSC layout-komponenteissa
-- v2.0: Business users navigate to /business/profiili — consumer /profiili unchanged and not visited by business users
-- v2.0: BusinessNav rendered inside app/business/layout.tsx (already an RSC guard) — consumer NavBar suppressed at layout level
-
-### Pending Todos
-
-- CR-01: `app/business/[id]/page.tsx` lukee paikan tiedot ilman omistajuustarkistusta (pre-existing issue)
-- CR-02: `app/api/business/onboarding/submit/route.ts` ei filtteroi `paikka_id`:llä (pre-existing issue)
-- P45-WR-05: `lib/branding/storage.ts` uploadLogo — assert UUID format on businessAccountId to prevent path traversal if call site changes
-- P45-WR-06: migration `20260616000001_business_media_bucket.sql` on timestampattu päivää myöhemmin kuin `20260615000001_business_branding.sql` — fresh db push -ajoituksessa uploadLogo voi epäonnistua ennen bucketin luontia; harkitse timestampin korjausta uudella migraatiolla
-- P45-DNS: `app/api/business/analyze-website/route.ts` SSRF-suojaus tarkistaa hostnamen ennen DNS-resoluutiota — DNS rebinding ohittaa sen; korjaus vaatii post-DNS IP-validoinnin (lisää latenssia, hyväksytty rajoitus v2.1:ssä)
+- P45-WR-05: `lib/branding/storage.ts` uploadLogo — UUID format assertion on `businessAccountId`
+- P45-WR-06: Migration timestamp order — on fresh db push, uploadLogo may fail before bucket creation
+- P45-DNS: DNS rebinding bypasses hostname SSRF guard — post-DNS IP validation deferred
+- CR-01: `app/business/[id]/page.tsx` reads venue data without ownership check (pre-existing since Phase 38)
+- CR-02: `app/api/business/onboarding/submit/route.ts` doesn't filter by `paikka_id` (pre-existing since Phase 38)
 
 ## Session Continuity
 
-Last session: 2026-06-15T20:05:22.978Z
-Stopped at: Phase 46 context gathered
-Resume file: .planning/phases/46-pre-vaihe-ui-velhointegraatio/PLAN.md
+Last session: 2026-06-16
+Stopped at: milestone complete
+Resume file: None

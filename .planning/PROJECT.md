@@ -6,17 +6,9 @@
 
 ---
 
-## Current Milestone: v2.1 AI-pohjainen yrityssivuanalyysi
+## Shipped: v2.1 AI-pohjainen yrityssivuanalyysi (2026-06-16)
 
-**Goal:** Business-käyttäjä syöttää onboardingissa verkkosivunsa URL:n — sovellus hakee automaattisesti brändivärit, logon, hinnaston ja aukioloajat, ja esitäyttää ne onboarding-velhoon.
-
-**Target features:**
-- Website-scraper (`fetch` + HTML/CSS-parsinta, logo-kandidaatit kuvina)
-- Claude API -analyysi: logo-identifiointi (vision) + värit + hinnat + aukioloajat (yksi kutsu)
-- `business_branding`-taulu Supabasessa status-seurannalla
-- Uusi pre-vaihe ennen onboarding-velhoa: URL-syöttö → analyysi → esikatselu
-- Velhointegraatio: esitäyttö hinnasto-, aukioloaika- ja yhteystietovaiheisiin
-- Esikatselu (step 6) käyttää brändidataa CalloutCard + DiagonaalKortti -renderöintiin
+**Delivered:** Täysi AI-pohjainen yrityssivuanalyysi — `business_branding`-taulu Supabasessa FK `business_accounts`-tauluun + RLS; `POST /api/business/analyze-website` HTML-haku `fetch`:llä + SSRF-suojaus + `sharp`-konversio + yksi Claude API -kutsu (vision + teksti) + `waitUntil` fire-and-forget; pre-vaihe `AnalysoiSivusto` 6-tila kone (url-input → analyzing → preview/error) 30-yrityksen pollauksella; velhointegraatio steps 3–5 esitäytöllä; DiagonaalKortti brändiväreillä YIQ-kontrastilla. 14/14 vaatimusta toimitettu, 3 vaihetta, 76 committia.
 
 ---
 
@@ -229,17 +221,34 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **CLEAN-02**: WizardInner konsolidoitu `OnboardingWizardInner` + `EditWizardInner` → yksi `WizardInner(mode)` — v1.9
 - ✓ **CLEAN-03–05**: update-paikka claim_status -rajoitus poistettu; step-skip-suoja; onboarding_completed kuollut koodi poistettu — v1.9 (pre-existing, verified)
 
-### Active (v2.0)
+### Validated (v2.0)
 
-- [ ] **BIZNAV-01**: Business user sees a dedicated BusinessNav (Dashboard / Kartta / Profiili / Kirjaudu ulos) on all `/business/*` pages
-- [ ] **BIZNAV-02**: Consumer NavBar is not rendered on any `/business/*` page
-- [ ] **BIZUX-02**: User is redirected to `/business` dashboard after successful login at `/business/kirjaudu`
-- [ ] **BIZUX-03**: `/business` dashboard shows approval status card, venue list with status badges, and quick-action links
-- [ ] **BIZUX-04**: `/business/map` shows a full-screen map with all venues and "Omat paikat" toggle filter; tapping a pin opens PaikkaSheet
-- [ ] **BIZPRO-01**: `/business/profiili` displays company name, email, and account type
-- [ ] **BIZPRO-02**: `/business/profiili` allows editing contact info (phone, email, website) saved to `business_accounts`
-- [ ] **BIZPRO-03**: `/business/profiili` provides FI/EN language toggle persisted in NEXT_LOCALE cookie
-- [ ] **BIZPRO-04**: `/business/profiili` sign-out button clears `sb-biz-*` session and redirects to `/business/kirjaudu`
+- ✓ **BIZNAV-01**: Business user sees a dedicated BusinessNav (Dashboard / Kartta / Profiili / Kirjaudu ulos) on all `/business/*` pages — v2.0
+- ✓ **BIZNAV-02**: Consumer NavBar is not rendered on any `/business/*` page — v2.0
+- ✓ **BIZUX-02**: User is redirected to `/business` dashboard after successful login at `/business/kirjaudu` — v2.0
+- ✓ **BIZUX-03**: `/business` dashboard shows approval status card, venue list with status badges, and quick-action links — v2.0
+- ✓ **BIZUX-04**: `/business/map` shows a full-screen map with all venues and "Omat paikat" toggle filter; tapping a pin opens PaikkaSheet — v2.0
+- ✓ **BIZPRO-01**: `/business/profiili` displays company name, email, and account type — v2.0
+- ✓ **BIZPRO-02**: `/business/profiili` allows editing contact info (phone, email, website) saved to `business_accounts` — v2.0
+- ✓ **BIZPRO-03**: `/business/profiili` provides FI/EN language toggle persisted in NEXT_LOCALE cookie — v2.0
+- ✓ **BIZPRO-04**: `/business/profiili` sign-out button clears `sb-biz-*` session and redirects to `/business/kirjaudu` — v2.0
+
+### Validated (v2.1)
+
+- ✓ **BRDDB-01**: `business_branding`-taulu Supabasessa: brändidata (logo_url, logo_type, värit, raw_analysis) + status-seuranta (`pending → analyzing → analyzed → failed`), FK `business_accounts`-tauluun — v2.1
+- ✓ **BRDDB-02**: RLS-politiikat `business_branding`-taululle: yritys näkee ja muokkaa vain omaa brändidataansa — v2.1
+- ✓ **SCRAP-01**: Sovellus hakee yrityksen verkkosivun HTML:n palvelinpuolella `fetch`:llä oikealla User-Agent-headerilla — v2.1
+- ✓ **SCRAP-02**: Sovellus poimii brändivärit `<meta name="theme-color">`:stä ja CSS `:root`-muuttujista (ulkoiset `.css`-tiedostot noudetaan rinnakkain) — v2.1
+- ✓ **SCRAP-03**: Sovellus kerää logo-kandidaatit HTML:stä: favicon, `og:image`, ja `<img>`-elementit joiden src/alt/class sisältää "logo" — v2.1
+- ✓ **SCRAP-04**: Yksi Claude API -kutsu analysoi logo-kandidaatit (vision) + HTML-tekstisisällön → palauttaa logovalinnan, logo-tyypin, värit, hinnaston ja aukioloajat strukturoituna JSON:na — v2.1
+- ✓ **SCRAP-05**: Logo-kandidaatit muunnetaan PNG:ksi `sharp`:lla ennen Claude-kutsua (SVG, AVIF, WebP -tuki) — v2.1
+- ✓ **ONBOARD-08**: Uusi "Analysoi sivusto" -näkymä ennen 6-vaiheista velhoa — käyttäjä syöttää verkkosivun URL:n ja käynnistää analyysin — v2.1
+- ✓ **ONBOARD-09**: "Analysoi"-nappi asettaa statuksen `analyzing` ja näyttää latausindikaattorin; virhetilanteessa (`failed`) selkeä virheilmoitus ja mahdollisuus ohittaa ja jatkaa manuaalisesti — v2.1
+- ✓ **ONBOARD-10**: Analyysin tulokset näytetään pre-vaiheen esikatselussa (logo, väripaletti, poimitut hinnat ja aukioloajat) ennen kuin käyttäjä jatkaa velhoon — v2.1
+- ✓ **ONBOARD-11**: Poimittu hinnasto esitäyttää Hinnasto-vaiheen (step 3) rivit muokattavina kenttinä — v2.1
+- ✓ **ONBOARD-12**: Poimitut aukioloajat esitäyttävät Aukioloajat-vaiheen (step 4) muokattavina kenttinä — v2.1
+- ✓ **ONBOARD-13**: Verkkosivun URL esitäyttää Yhteystiedot-vaiheen (step 5) website-kentän — v2.1
+- ✓ **PREV-01**: Esikatselu (step 6) renderöi `CalloutCard`:n ja `DiagonaalKortti`:n poimitulla logolla ja brändiväreillä kun brändidataa on saatavilla; fallback olemassa olevaan renderöintiin jos dataa ei ole — v2.1
 
 ### Future (deferred from v1.1 + v1.7)
 
@@ -262,7 +271,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ## Context
 
-**Nykytila:** v1.7 Yritysportaali toimitettu 2026-06-11. Kaikki 23 v1.7-vaatimusta toteutettu. Sovellus on nyt täydellinen yritysportaali: yritys voi rekisteröityä, ottaa paikan haltuunsa tai luoda uuden, käydä 6-vaiheisen onboarding-velhon, odottaa admin-hyväksyntää, ja ylläpitää tietojaan hallintapaneelista. 44 plania, 297 committia, 7 päivää.
+**Nykytila:** v2.1 AI-pohjainen yrityssivuanalyysi toimitettu 2026-06-16. Kaikki 14 v2.1-vaatimusta toteutettu. Sovellus analysoi automaattisesti yrityksen verkkosivun — hakee HTML:n `fetch`:llä, poimii brändivärit ja logo-kandidaatit, muuntaa kuvat `sharp`:lla, lähettää ne Claudelle yhdessä kutsulla (vision + teksti), ja esitäyttää onboarding-velhon steps 3–5 tuloksilla. DiagonaalKortti renderöi brändivärit YIQ-kontrastilla. 10 plania (phases 44–46), 76 committia.
 
 **Data-arkkitehtuuri:** Google Places API hakee automaattisesti aukioloajat → upsertit Supabaseen. Kertakäyntihinnat manuaalisesti top 20 palvelulle. AI-widget: Claude Haiku + Open-Meteo, sessionStorage-cache per kalenteripäivä + per kaupunki. Supabase Auth käyttäjätaulut + suosikit (user_id → paikka_id). Sync-skripti tukee ?kaupunki= parametria Helsinki/Turku/Tampere-datalle.
 
@@ -343,4 +352,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-15 — v2.1 milestone started (AI-pohjainen yrityssivuanalyysi)*
+*Last updated: 2026-06-16 — v2.1 milestone shipped (AI-pohjainen yrityssivuanalyysi)*
