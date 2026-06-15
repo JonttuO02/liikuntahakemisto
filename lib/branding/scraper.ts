@@ -48,6 +48,9 @@ export async function scrapeWebsite(url: string): Promise<ScrapeResult> {
   if (!res.ok) throw new Error(`Sivua ei saatu ladattua: ${url}`)
   const html = await res.text()
 
+  // WR-01: Reject oversized responses before loading into memory
+  if (html.length > 5 * 1024 * 1024) throw new Error('Response too large (>5MB)')
+
   const colors: string[] = []
 
   // 2. Parse theme-color meta tag
@@ -83,8 +86,10 @@ export async function scrapeWebsite(url: string): Promise<ScrapeResult> {
   )
 
   // 4. Extract :root hex vars from each CSS text
-  const rootVarRegex = /--[\w-]+\s*:\s*(#[0-9a-fA-F]{3,6})\b/g
+  // CR-05: regex must be re-created per CSS file — a shared /g regex retains lastIndex
+  // across files and silently drops matches from the 2nd and 3rd stylesheet.
   for (const cssText of cssResults) {
+    const rootVarRegex = /--[\w-]+\s*:\s*(#[0-9a-fA-F]{3,6})\b/g
     let match: RegExpExecArray | null
     while ((match = rootVarRegex.exec(cssText)) !== null) {
       colors.push(match[1])
@@ -191,10 +196,15 @@ export async function scrapeWebsite(url: string): Promise<ScrapeResult> {
   }
 
   // 7. Return ScrapeResult
+  // CR-03 partial: strip HTML comments and script/style blocks to reduce prompt injection surface
+  const strippedHtml = html
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
   return {
     logoUrls,
     logoBuffers,
     colors: uniqueColors,
-    htmlSnippet: html.slice(0, 8000),
+    htmlSnippet: strippedHtml.slice(0, 8000),
   }
 }

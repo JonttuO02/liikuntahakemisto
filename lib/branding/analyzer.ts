@@ -83,14 +83,29 @@ export async function analyzeWithClaude(
       )
     }
 
-    // 7. Return structured result
+    // 7. Return structured result — validate all Claude-returned fields at runtime
+    const VALID_LOGO_TYPES: BrandingAnalysisResult['logo_type'][] = ['wordmark', 'icon', 'combination', 'unknown']
+    const rawLogoType = result.logo_type
+    const logo_type: BrandingAnalysisResult['logo_type'] =
+      VALID_LOGO_TYPES.includes(rawLogoType as BrandingAnalysisResult['logo_type'])
+        ? (rawLogoType as BrandingAnalysisResult['logo_type'])
+        : 'unknown'
+
+    // CR-02: guard against non-string website_url (Claude may return null or number)
+    const website_url = typeof result.website_url === 'string' ? result.website_url : ''
+
+    // WR-04: filter colors to only valid hex strings
+    const colors = Array.isArray(result.colors)
+      ? result.colors.filter((c): c is string => typeof c === 'string' && /^#[0-9a-fA-F]{3,6}$/.test(c))
+      : []
+
     return {
       logo_index: result.logo_index,
-      logo_type: result.logo_type as BrandingAnalysisResult['logo_type'],
-      colors: result.colors ?? [],
+      logo_type,
+      colors,
       prices: result.prices ?? [],
       opening_hours: result.opening_hours ?? [],
-      website_url: result.website_url ?? '',
+      website_url,
       raw_analysis: result,
     }
   } catch (err) {
