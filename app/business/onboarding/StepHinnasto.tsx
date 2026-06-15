@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
+import { hinnastaToHintaKuvaus } from '@/lib/onboardingUtils'
 
 type PricingRow = {
   id: string
@@ -133,15 +134,15 @@ export default function StepHinnasto({
       const hinta_min = numericPrices.length > 0 ? Math.min(...numericPrices) : null
       const hinta_max = numericPrices.length > 0 ? Math.max(...numericPrices) : null
 
-      // Derive hinta_kuvaus: compact string from non-empty rows
-      const hinta_kuvaus = rows
-        .filter(r => r.hinta.trim() !== '')
-        .map(r => {
-          const base = `${r.kategoria}: €${r.hinta}`
-          return r.lisatieto.trim() ? `${base} (${r.lisatieto.trim()})` : base
-        })
-        .join('; ')
-        .slice(0, 200) || null
+      // Derive hinta_kuvaus: use canonical serializer so format matches priceUtils parser
+      const hinta_kuvaus =
+        hinnastaToHintaKuvaus(
+          rows.filter(r => r.hinta.trim() !== '').map(({ kategoria, hinta, lisatieto }) => ({
+            kategoria,
+            hinta,
+            lisatieto,
+          }))
+        ) || null
 
       const res = await fetch('/api/business/update-paikka', {
         method: 'POST',
