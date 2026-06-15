@@ -23,18 +23,22 @@ export default function SportPin({ laji, animDelay }: SportPinProps) {
             <stop offset="0%" stopColor="#38bdf8" />
             <stop offset="100%" stopColor="#1e40af" />
           </linearGradient>
+          <clipPath id={`${gradId}-c`}>
+            <circle cx="14" cy="14" r="10" />
+          </clipPath>
         </defs>
         {/* Teardrop body — blue gradient */}
         <path d={PIN_PATH} fill={`url(#${gradId})`} />
         {/* White circle — cx=14 cy=14 r=10 matches original */}
         <circle cx="14" cy="14" r="10" fill="white" />
-        {/* Icon — fills white circle fully; cx=14 cy=14 r=10 → usable area x=4..24 y=4..24 */}
+        {/* Icon clipped to white circle so square PNG corners never bleed outside */}
         <image
           href={SPORT_ICONS[laji.toLowerCase()] ?? SPORT_ICONS['fallback']}
           x="4"
           y="4"
           width="20"
           height="20"
+          clipPath={`url(#${gradId}-c)`}
         />
       </svg>
 

@@ -950,19 +950,13 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusId, paikat])
 
-  const lajitKartalla = useMemo(
-    () => new Set(LAJIT_FILTTERI.filter(l => l !== 'Kaikki').map(l => l.toLowerCase())),
-    []
-  )
-
   const paikatKartalla = useMemo(
     () => paikat.filter(
       (p): p is Liikuntapaikka & { latitude: number; longitude: number } =>
         (searchLaji.length === 0 || searchLaji.some(s => s.toLowerCase() === p.laji.toLowerCase())) &&
-        p.latitude != null && p.longitude != null &&
-        lajitKartalla.has(p.laji.toLowerCase())
+        p.latitude != null && p.longitude != null
     ),
-    [paikat, searchLaji, lajitKartalla]
+    [paikat, searchLaji]
   )
 
   type VenuePoint = { paikka: Liikuntapaikka & { latitude: number; longitude: number } }

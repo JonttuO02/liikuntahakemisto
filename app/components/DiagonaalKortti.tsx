@@ -187,25 +187,28 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
           className="absolute top-0 right-0 bottom-0 overflow-hidden"
           style={{ left: '50%', clipPath: 'polygon(14% 0, 100% 0, 100% 100%, 4% 100%)' }}
         >
-          {paikka.image_url ? (
-            <img
-              src={paikka.image_url}
-              alt={`Kuva: ${paikka.nimi}`}
-              className="w-full h-full object-cover"
-              loading="lazy"
-              onError={(e) => {
-                const img = e.currentTarget
-                img.style.display = 'none'
-                const fallback = img.parentElement?.querySelector('[data-fallback]') as HTMLElement | null
-                if (fallback) fallback.hidden = false
-              }}
-            />
-          ) : null}
+          {(() => {
+            const src = paikka.image_url ?? paikka.photo_urls?.[0] ?? null
+            return src ? (
+              <img
+                src={src}
+                alt={`Kuva: ${paikka.nimi}`}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                onError={(e) => {
+                  const img = e.currentTarget
+                  img.style.display = 'none'
+                  const fallback = img.parentElement?.querySelector('[data-fallback]') as HTMLElement | null
+                  if (fallback) fallback.hidden = false
+                }}
+              />
+            ) : null
+          })()}
           <div
             className="w-full h-full flex items-center justify-center bg-[rgba(0,0,0,0.06)]"
             aria-hidden
             data-fallback
-            hidden={!!paikka.image_url}
+            hidden={!!(paikka.image_url ?? paikka.photo_urls?.[0])}
           >
             <Camera size={24} className="text-[rgba(0,0,0,0.2)]" />
           </div>

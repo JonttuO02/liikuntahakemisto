@@ -4,7 +4,7 @@ import Etusivu from './components/Etusivu'
 export default async function Home() {
   const { data: paikat, error } = await supabase
     .from('liikuntapaikat')
-    .select('id, nimi, laji, osoite, kaupunki, latitude, longitude, hinta_min, hinta_max, varauslinkki, kuvaus, puhelin, aukioloajat, hinta_kuvaus, featured, is_claimed, business_managed, photo_urls, logo_url')
+    .select('id, nimi, laji, osoite, kaupunki, latitude, longitude, hinta_min, hinta_max, varauslinkki, kuvaus, puhelin, aukioloajat, hinta_kuvaus, featured, is_claimed, business_managed, image_url, photo_urls, logo_url')
     .eq('published', true)
     .order('nimi')
 
