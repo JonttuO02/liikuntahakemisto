@@ -65,6 +65,9 @@ export default function StepAukioloajat({
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccessVisible, setSaveSuccessVisible] = useState(false)
 
+  // Onboarding gate: at least one day must be marked open before advancing
+  const hasAnyOpenDay = ORDERED_DAYS.some(d => hours[d]?.isOpen)
+
   // Pre-fill from draft (priority) → branding → Google Places data
   // CRITICAL: all sources use English day keys (monday, tuesday, ...)
   useEffect(() => {
@@ -334,7 +337,7 @@ export default function StepAukioloajat({
             type="button"
             whileTap={{ scale: 0.95 }}
             onClick={handleNext}
-            disabled={loading}
+            disabled={loading || !hasAnyOpenDay}
             className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
           >
             {loading ? (
