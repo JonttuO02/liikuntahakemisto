@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Business UX & Navigation
-status: planned
-stopped_at: Phase 43 planned — 3 plans, 2 waves; ready to execute
-last_updated: "2026-06-15T10:00:00.000Z"
-last_activity: 2026-06-15 — phase 43 planned (3 plans: 43-01 migration, 43-02 i18n, 43-03 RSC+client)
+status: complete
+stopped_at: Phase 43 complete — all 3 plans executed and smoke-tested
+last_updated: "2026-06-15T12:00:00.000Z"
+last_activity: 2026-06-15 — phase 43 executed (43-01 migration, 43-02 i18n, 43-03 RSC+client — all verified)
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
-  completed_plans: 4
-  percent: 67
+  completed_plans: 7
+  percent: 100
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-06-12)
 
 ## Current Position
 
-Phase: 43 — ready to execute
-Status: Phase 43 planned ✓ (3 plans, 2 waves). Ready to execute.
-Last activity: 2026-06-15 — phase 43 planned (43-01 migration + push, 43-02 i18n keys, 43-03 RSC page + client)
+Phase: 43 — complete ✓
+Status: v2.0 milestone complete. All 3 phases (41–43) executed and verified.
+Last activity: 2026-06-15 — phase 43 executed (43-01 migration + push, 43-02 i18n keys, 43-03 RSC page + client — smoke-tested)
 
-Progress: ████████░░ 67% (2/3 phases complete; phase 43 planned, 3/7 total plans complete)
+Progress: ██████████ 100% (3/3 phases complete; 7/7 total plans complete)
 
 ## v2.0 Direction
 
