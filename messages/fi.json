@@ -232,7 +232,18 @@
     "dashboardVenuesHeading": "Paikkasi",
     "mapToggleAll": "Kaikki paikat",
     "mapToggleMine": "Omat paikat",
-    "mapLoadingVenues": "Ladataan paikkoja..."
+    "mapLoadingVenues": "Ladataan paikkoja...",
+    "profileTitle": "Yritysprofiili",
+    "profileCompanyName": "Yritys",
+    "profileEmail": "Sähköposti",
+    "profileAccountType": "Yritystili",
+    "profilePhone": "Puhelinnumero",
+    "profilePhonePlaceholder": "esim. +358 40 123 4567",
+    "profileSave": "Tallenna",
+    "profileSaved": "Tallennettu",
+    "profileSaveError": "Tallennus epäonnistui. Yritä uudelleen.",
+    "profileLanguage": "Kieli",
+    "profileSignOut": "Kirjaudu ulos"
   },
   "Admin": {
     "pageTitle": "Admin — Odottavat hakemukset",

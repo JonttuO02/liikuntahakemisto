@@ -232,7 +232,18 @@
     "dashboardVenuesHeading": "Your venues",
     "mapToggleAll": "All venues",
     "mapToggleMine": "My venues",
-    "mapLoadingVenues": "Loading venues..."
+    "mapLoadingVenues": "Loading venues...",
+    "profileTitle": "Business Profile",
+    "profileCompanyName": "Company",
+    "profileEmail": "Email",
+    "profileAccountType": "Business Account",
+    "profilePhone": "Phone number",
+    "profilePhonePlaceholder": "e.g. +358 40 123 4567",
+    "profileSave": "Save",
+    "profileSaved": "Saved",
+    "profileSaveError": "Save failed. Please try again.",
+    "profileLanguage": "Language",
+    "profileSignOut": "Sign out"
   },
   "Admin": {
     "pageTitle": "Admin — Pending applications",
