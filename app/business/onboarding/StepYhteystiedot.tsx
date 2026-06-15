@@ -15,6 +15,7 @@ interface StepYhteystiedotProps {
     website?: string
     kuvaus?: string
   } | null
+  initialBrandingWebsite?: string | null
   editMode?: boolean
   onSaveSuccess?: () => void
   onSaveComplete?: (data: { puhelin: string; email: string; website: string; kuvaus: string }) => void
@@ -28,6 +29,7 @@ export default function StepYhteystiedot({
   onNext,
   onPrev,
   initialYhteystiedot,
+  initialBrandingWebsite,
   editMode = false,
   onSaveSuccess,
   onSaveComplete,
@@ -36,7 +38,7 @@ export default function StepYhteystiedot({
 
   const [puhelin, setPuhelin] = useState(initialYhteystiedot?.puhelin ?? '')
   const [email, setEmail] = useState(initialYhteystiedot?.email ?? '')
-  const [website, setWebsite] = useState(initialYhteystiedot?.website ?? '')
+  const [website, setWebsite] = useState(initialYhteystiedot?.website ?? initialBrandingWebsite ?? '')
   const [kuvaus, setKuvaus] = useState(initialYhteystiedot?.kuvaus ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

@@ -20,6 +20,7 @@ type Props = {
   onPrev: () => void
   initialHinnasto?: Array<{ kategoria: string; hinta: string; lisatieto?: string }> | null
   initialPaikkaHinnasto?: Array<{ kategoria: string; hinta: string; lisatieto?: string }> | null
+  initialBrandingHinnasto?: Array<{ label: string; price: string }> | null
   editMode?: boolean
   onSaveSuccess?: () => void
   onSaveComplete?: (rows: Array<{ kategoria: string; hinta: string; lisatieto: string }>) => void
@@ -41,6 +42,7 @@ export default function StepHinnasto({
   onPrev,
   initialHinnasto,
   initialPaikkaHinnasto,
+  initialBrandingHinnasto,
   editMode = false,
   onSaveSuccess,
   onSaveComplete,
@@ -48,16 +50,36 @@ export default function StepHinnasto({
   const t = useTranslations('Business')
 
   const [rows, setRows] = useState<PricingRow[]>(() => {
-    // In edit mode, prefer initialPaikkaHinnasto if provided
-    const source = editMode ? (initialPaikkaHinnasto ?? initialHinnasto) : initialHinnasto
-    if (source && source.length > 0) {
-      return source.map((row, i) => ({
-        id: `saved-${i}`,
-        kategoria: row.kategoria,
-        hinta: row.hinta,
-        lisatieto: row.lisatieto ?? '',
-        isFixed: false,
-      }))
+    if (editMode) {
+      // In edit mode, prefer initialPaikkaHinnasto if provided — branding not used
+      const source = initialPaikkaHinnasto ?? initialHinnasto
+      if (source && source.length > 0) {
+        return source.map((row, i) => ({
+          id: `saved-${i}`,
+          kategoria: row.kategoria,
+          hinta: row.hinta,
+          lisatieto: row.lisatieto ?? '',
+          isFixed: false,
+        }))
+      }
+    } else {
+      // In onboarding mode: draft data wins, then branding data, then fixed placeholders
+      const draftSource = initialHinnasto
+      const brandSource = initialBrandingHinnasto
+      const source = draftSource?.length
+        ? draftSource
+        : brandSource?.length
+          ? brandSource.map(b => ({ kategoria: b.label, hinta: b.price, lisatieto: undefined }))
+          : null
+      if (source && source.length > 0) {
+        return source.map((row, i) => ({
+          id: `saved-${i}`,
+          kategoria: row.kategoria,
+          hinta: row.hinta,
+          lisatieto: row.lisatieto ?? '',
+          isFixed: false,
+        }))
+      }
     }
     return [
       { id: 'fixed-1', kategoria: t('pricingCategoryDrop'),    hinta: '', lisatieto: '', isFixed: true },
