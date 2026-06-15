@@ -13,6 +13,7 @@
 - ✅ **v1.8 Yritysportaali v2 — Julkistaminen & UX** — Phases 37–38 (shipped 2026-06-11)
 - ✅ **v1.9 Auth-Separaatio & Cleanup** — Phases 39–40 (shipped 2026-06-12)
 - ✅ **v2.0 Business UX & Navigation** — Phases 41–43 (shipped 2026-06-15)
+- 🚧 **v2.1 AI-pohjainen yrityssivuanalyysi** — Phases 44–46 (in progress)
 
 ---
 
@@ -150,6 +151,53 @@ Full archive: `.planning/milestones/v2.0-ROADMAP.md`
 
 ---
 
+### 🚧 v2.1 AI-pohjainen yrityssivuanalyysi (In Progress)
+
+**Milestone Goal:** Business-käyttäjä syöttää onboardingissa verkkosivunsa URL:n — sovellus hakee automaattisesti brändivärit, logon, hinnaston ja aukioloajat, ja esitäyttää ne onboarding-velhoon.
+
+- [ ] **Phase 44: Brändidatan tietokantaperusta** — business_branding-taulu Supabasessa status-seurannalla ja RLS-politiikat
+- [ ] **Phase 45: Scraper & Claude API -putki** — palvelinpuolen HTML-haku, CSS/logo-poiminta, sharp-konversio ja yksi Claude-kutsu
+- [ ] **Phase 46: Pre-vaihe UI & velhointegraatio** — "Analysoi sivusto" -näkymä, esikatseluruutu, esitäyttö steps 3–5, brändivärit step 6:ssa
+
+## Phase Details
+
+### Phase 44: Brändidatan tietokantaperusta
+**Goal**: `business_branding`-taulu on olemassa Supabasessa ja yrityksellä on yksinomainen pääsy omaan brändidataansa
+**Depends on**: Phase 43 (v2.0 complete)
+**Requirements**: BRDDB-01, BRDDB-02
+**Success Criteria** (what must be TRUE):
+  1. `business_branding`-taulu on Supabasessa kolonneineen: `id`, `business_account_id` (FK → `business_accounts`), `logo_url`, `logo_type`, `colors` (jsonb), `raw_analysis` (jsonb), `status` (`pending | analyzing | analyzed | failed`), `website_url`, `created_at`, `updated_at`
+  2. RLS-politiikat estävät yritystä lukemasta tai muokkaamasta toisen yrityksen brändidataa — SELECT, INSERT ja UPDATE edellyttävät että `business_account_id` täsmää kirjautuneen käyttäjän business-tiliin
+  3. Supabase-migraatio ajaa puhtaasti (`supabase db push`) eikä riko olemassa olevia tauluja
+**Plans**: TBD
+
+### Phase 45: Scraper & Claude API -putki
+**Goal**: Palvelinpuolen Route Handler ottaa URL:n, hakee HTML:n, poimii brändidata-kandidaatit, muuntaa kuvat ja palauttaa strukturoidun JSON-analyysin yhdellä Claude-kutsulla
+**Depends on**: Phase 44
+**Requirements**: SCRAP-01, SCRAP-02, SCRAP-03, SCRAP-04, SCRAP-05
+**Success Criteria** (what must be TRUE):
+  1. `POST /api/business/analyze-website` hakee annetun URL:n HTML:n palvelinpuolella oikealla User-Agent-headerilla eikä paljasta API-avaimia clientille
+  2. Endpoint poimii `<meta name="theme-color">` -arvon ja CSS `:root`-muuttujat (noudetaan ulkoiset `.css`-tiedostot rinnakkain) sekä logo-kandidaatit: favicon, og:image ja `<img>`-elementit joiden src/alt/class sisältää "logo"
+  3. Logo-kandidaatit (SVG, AVIF, WebP mukaan lukien) muunnetaan PNG:ksi `sharp`:lla ennen Claude-kutsua — muunnettu kuva välitetään base64-enkoodattuna vision-viestissä
+  4. Yksi Claude API -kutsu lähetetään: logo-kandidaattikuvat vision-sisältönä + HTML-teksti tekstisisältönä → Claude palauttaa strukturoidun JSON:n: `{ logo_url, logo_type, colors: string[], prices: PriceRow[], opening_hours: HoursRow[], website_url }`
+  5. Endpoint tallentaa analyysin tuloksen `business_branding`-tauluun statuksella `analyzed`; virhetilanteessa status asetetaan `failed` ja virheviesti tallennetaan `raw_analysis`-kenttään
+**Plans**: TBD
+
+### Phase 46: Pre-vaihe UI & velhointegraatio
+**Goal**: Business-käyttäjä näkee "Analysoi sivusto" -näkymän ennen onboarding-velhoa, voi tarkastella analyysin tuloksia esikatselussa ja jatkaa velhoon jossa steps 3–5 on esitäytetty ja step 6 renderöi brändivärit
+**Depends on**: Phase 45
+**Requirements**: ONBOARD-08, ONBOARD-09, ONBOARD-10, ONBOARD-11, ONBOARD-12, ONBOARD-13, PREV-01
+**Success Criteria** (what must be TRUE):
+  1. Onboarding-virta näyttää "Analysoi sivusto" -näkymän ennen WizardInneria: käyttäjä voi syöttää URL:n ja käynnistää analyysin — tai ohittaa sen ja jatkaa manuaalisesti
+  2. Analyysiprosessin aikana näkyy latausindikaattori; virhetilanteessa (`failed`) näytetään selkeä suomenkielinen virheilmoitus ja tarjotaan mahdollisuus yrittää uudelleen tai ohittaa
+  3. Onnistuneen analyysin jälkeen pre-vaiheessa näkyy esikatseluruutu: tunnistettu logo, väripaletti, poimitut hinnat ja aukioloajat — käyttäjä vahvistaa ennen velhoon siirtymistä
+  4. Velhon Hinnasto-vaihe (step 3) on esitäytetty analyysin hintariveillä muokattavina kenttinä; Aukioloajat-vaihe (step 4) on esitäytetty analyysin aukioloajoilla; Yhteystiedot-vaihe (step 5) website-kenttä on esitäytetty analysoidulla URL:lla
+  5. Esikatselu (step 6) renderöi CalloutCardin ja DiagonaalKortin poimitulla logolla ja brändiväreillä kun brändidataa on saatavilla; ilman brändidataa renderöinti palaa olemassa olevaan fallback-tyyliin
+**Plans**: TBD
+**UI hint**: yes
+
+---
+
 ## Progress Table
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -197,3 +245,6 @@ Full archive: `.planning/milestones/v2.0-ROADMAP.md`
 | 41. Navigation Foundation | v2.0 | 2/2 | Complete | 2026-06-12 |
 | 42. Dashboard & Map | v2.0 | 3/3 | Complete | 2026-06-15 |
 | 43. Business Profile | v2.0 | 3/3 | Complete | 2026-06-15 |
+| 44. Brändidatan tietokantaperusta | v2.1 | 0/? | Not started | - |
+| 45. Scraper & Claude API -putki | v2.1 | 0/? | Not started | - |
+| 46. Pre-vaihe UI & velhointegraatio | v2.1 | 0/? | Not started | - |

@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: AI-pohjainen yrityssivuanalyysi
-status: planning
-stopped_at: Milestone v2.1 started — defining roadmap
+status: roadmap created
+stopped_at: Roadmap created — 3 phases (44–46), ready to plan Phase 44
 last_updated: "2026-06-15T12:00:00.000Z"
-last_activity: 2026-06-15 — milestone v2.1 started, requirements defined (13 reqs)
+last_activity: 2026-06-15 — roadmap created, 14 requirements mapped across 3 phases
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-15)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v2.1 AI-pohjainen yrityssivuanalyysi — defining roadmap
+**Current focus:** v2.1 AI-pohjainen yrityssivuanalyysi — Phase 44 next
 
 ## Current Position
 
-Phase: Not started (defining roadmap)
+Phase: 44 — Brändidatan tietokantaperusta (not started)
 Plan: —
-Status: Defining roadmap
-Last activity: 2026-06-15 — Milestone v2.1 started
+Status: Roadmap created, ready to plan
+Last activity: 2026-06-15 — Roadmap created (phases 44–46)
 
 ## v2.1 Direction
 
@@ -39,6 +39,14 @@ Last activity: 2026-06-15 — Milestone v2.1 started
 - Esikatselu (step 6) käyttää brändidataa, kuluttajapuoli ei muutu tässä milestonessa
 - FK: `business_accounts` (ei `businesses`)
 - `brandianalyysi-toteutusohje.md` projektijuuressa — Playwright-osuudet korvattu
+
+## v2.1 Roadmap
+
+| Phase | Name | Requirements | Status |
+|-------|------|--------------|--------|
+| 44 | Brändidatan tietokantaperusta | BRDDB-01, BRDDB-02 | Not started |
+| 45 | Scraper & Claude API -putki | SCRAP-01–05 | Not started |
+| 46 | Pre-vaihe UI & velhointegraatio | ONBOARD-08–13, PREV-01 | Not started |
 
 ## Active Decisions (carried forward)
 
@@ -56,6 +64,7 @@ Last activity: 2026-06-15 — Milestone v2.1 started
 - **v2.0**: Consumer /profiili page is NOT touched — business users navigate to /business/profiili
 - **v2.1**: No Playwright — `fetch` only; Framer/SPA fallback is manual entry
 - **v2.1**: `business_branding` FK references `business_accounts`, not `businesses`
+- **v2.1**: One Claude API call per analysis (vision + text in same message)
 
 ## Accumulated Context
 
@@ -75,5 +84,5 @@ Last activity: 2026-06-15 — Milestone v2.1 started
 ## Session Continuity
 
 Last session: 2026-06-15T12:00:00.000Z
-Stopped at: v2.1 milestone requirements defined — roadmap pending
-Resume file: .planning/ROADMAP.md (once created)
+Stopped at: Roadmap created — Phase 44 ready to plan
+Resume file: .planning/ROADMAP.md

@@ -2,11 +2,11 @@
 
 **Milestone:** v2.1
 **Status:** Active
-**Phase range:** 44–46 (TBD by roadmapper)
+**Phase range:** 44–46
 
 ---
 
-## Requirements (0/13 complete)
+## Requirements (0/14 complete)
 
 ### Scraping & Analyysi
 
@@ -63,17 +63,17 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| SCRAP-01 | TBD | — |
-| SCRAP-02 | TBD | — |
-| SCRAP-03 | TBD | — |
-| SCRAP-04 | TBD | — |
-| SCRAP-05 | TBD | — |
-| BRDDB-01 | TBD | — |
-| BRDDB-02 | TBD | — |
-| ONBOARD-08 | TBD | — |
-| ONBOARD-09 | TBD | — |
-| ONBOARD-10 | TBD | — |
-| ONBOARD-11 | TBD | — |
-| ONBOARD-12 | TBD | — |
-| ONBOARD-13 | TBD | — |
-| PREV-01 | TBD | — |
+| SCRAP-01 | Phase 45 | Pending |
+| SCRAP-02 | Phase 45 | Pending |
+| SCRAP-03 | Phase 45 | Pending |
+| SCRAP-04 | Phase 45 | Pending |
+| SCRAP-05 | Phase 45 | Pending |
+| BRDDB-01 | Phase 44 | Pending |
+| BRDDB-02 | Phase 44 | Pending |
+| ONBOARD-08 | Phase 46 | Pending |
+| ONBOARD-09 | Phase 46 | Pending |
+| ONBOARD-10 | Phase 46 | Pending |
+| ONBOARD-11 | Phase 46 | Pending |
+| ONBOARD-12 | Phase 46 | Pending |
+| ONBOARD-13 | Phase 46 | Pending |
+| PREV-01 | Phase 46 | Pending |
