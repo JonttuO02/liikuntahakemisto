@@ -212,14 +212,14 @@ function OnboardingMode({ brandingData }: { brandingData?: BrandingResult | null
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-white flex items-center justify-center">
+      <div className="flex items-center justify-center py-24">
         <div className="w-6 h-6 rounded-full border-2 border-[rgba(17,17,17,0.12)] border-t-[#111111] animate-spin" />
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="min-h-screen bg-white flex flex-col items-center px-4 py-12">
+    <>
       <div className="w-full max-w-xl">
         <ProgressBar
           currentStep={step}
@@ -289,7 +289,7 @@ function OnboardingMode({ brandingData }: { brandingData?: BrandingResult | null
           </motion.div>
         </AnimatePresence>
       </div>
-    </main>
+    </>
   )
 }
 
