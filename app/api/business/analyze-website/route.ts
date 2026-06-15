@@ -184,6 +184,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  // SEC-46-02: strip logo_url if it doesn't point to our own Supabase Storage,
+  // preventing a compromised analysis pipeline from surfacing arbitrary image origins.
+  if (data?.logo_url) {
+    const storageBase = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/'
+    if (!data.logo_url.startsWith(storageBase)) {
+      data.logo_url = null
+    }
+  }
+
   // null data = no branding row yet = pending state (D-06)
   return NextResponse.json(data ?? { status: 'pending' })
 }
