@@ -110,21 +110,34 @@ pending: 0
   reason: "User reported: Only logo and one colour shown — no prices or opening hours rendered in the preview state"
   severity: major
   test: 4
-  artifacts: []
-  missing: []
+  root_cause: "Claude returns empty prices:[] and opening_hours:[] arrays for most websites because the scraped HTML snippet does not contain machine-readable structured data. Preview JSX is correctly gated on array.length > 0 (AnalysoiSivusto.tsx:375,389), so both sections are hidden. Code is correct — extraction quality is the issue."
+  artifacts:
+    - app/business/onboarding/AnalysoiSivusto.tsx:375
+    - app/business/onboarding/AnalysoiSivusto.tsx:389
+    - lib/branding/analyzer.ts:106-107
+  fix: "Add a 'Hintoja ei löydetty automaattisesti' / 'Aukioloaikoja ei löydetty' fallback message when arrays are empty, so the user understands extraction ran but found nothing. Long-term: improve scraper to fetch pricing/contact subpages."
 
 - truth: "Re-analysis clears previous branding result including logo"
   status: failed
   reason: "User reported: After running a new analysis, the logo stays from the previous analysis but the colour updates — logo display is not reset/updated when new analysis result arrives"
   severity: major
   test: 4
-  artifacts: []
-  missing: []
+  root_cause: "uploadLogo always writes to the fixed path branding/{businessAccountId}/logo.png and getPublicUrl returns the same URL string regardless of new file content. The <img> element has no cache-busting key, so the browser serves the cached old image."
+  artifacts:
+    - lib/branding/storage.ts:14
+    - lib/branding/storage.ts:28
+    - app/business/onboarding/AnalysoiSivusto.tsx:349
+  fix: "Append ?t=Date.now() to the publicUrl returned by uploadLogo so each upload produces a distinct URL that forces cache invalidation."
 
 - truth: "Wizard steps 3/4/5 are pre-filled with branding data after clicking Jatka velhoon →"
   status: failed
   reason: "User reported: No pre-fillings in any wizard steps after clicking Jatka velhoon →"
   severity: major
   test: 6
-  artifacts: []
-  missing: []
+  root_cause: "Same root as Bug 1 — raw_analysis.prices and .opening_hours are empty arrays. In WizardInner brandingHours is set to null when hrs?.length is falsy (line 203). In StepHinnasto brandSource?.length is falsy for [] (line 70). Prop threading is correct. StepYhteystiedot website field WOULD pre-fill if website_url is returned."
+  artifacts:
+    - app/business/WizardInner.tsx:198-212
+    - app/business/WizardInner.tsx:203
+    - app/business/onboarding/StepHinnasto.tsx:70
+    - app/business/onboarding/StepAukioloajat.tsx:74
+  fix: "Same as Bug 1 fix for prices/hours. The pre-fill logic and prop threading are correct — no code fix needed beyond improving extraction quality or showing a 'not found' fallback."
