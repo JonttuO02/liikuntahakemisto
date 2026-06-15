@@ -10,22 +10,19 @@ import { type BrandingResult, buildBrandingPreview } from '@/lib/branding/brandi
 import PaikkaKortti from '@/app/components/PaikkaKortti'
 import DiagonaalKortti from '@/app/components/DiagonaalKortti'
 import PaikkaSheet from '@/app/components/PaikkaSheet'
-import { type BrandingResult } from '@/lib/branding/brandingResult'
 
 interface StepEsikatseluProps {
   draft: OnboardingDraft | null
   paikkaInfo: PaikkaBase | null
   brandingData?: BrandingResult | null
   onPrev: () => void
-  brandingData?: BrandingResult | null
 }
 
 export default function StepEsikatselu({
   draft,
   paikkaInfo,
-  brandingData: _brandingData,
-  onPrev,
   brandingData,
+  onPrev,
 }: StepEsikatseluProps) {
   const t = useTranslations('Business')
   const router = useRouter()
