@@ -587,17 +587,11 @@ function parseClaudeJson(raw: string): unknown {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **ANTHROPIC_API_KEY ympäristömuuttuja**
-   - What we know: Avain pitää olla asetettu Vercelissä/`.env.local`:ssa
-   - What's unclear: Onko avain jo olemassa projektissa vai luodaanko se Phase 45:ssa?
-   - Recommendation: Lisää Wave 0:aan tehtävä `ANTHROPIC_API_KEY` -avaimen tarkistukselle (avain on jo mainittu CONTEXT.md:ssä — todennäköisesti tiedossa)
+1. **ANTHROPIC_API_KEY ympäristömuuttuja** — RESOLVED: Avain lisätään `.env.local`:iin ja Verceliin Wave 0:n yhteydessä. Plan 04-Task2 (human checkpoint) varmistaa avaimen olemassaolon ennen live-testausta.
 
-2. **Vercel function timeout**
-   - What we know: `waitUntil`-promise aikakatkaisee funktion timeoutin mukana. Vercel Hobby/Pro: 10–60s
-   - What's unclear: Onko projekti Hobby- vai Pro-tierillä? Riittääkö 10s scraping + Claude-kutsun pitkillä sivuilla?
-   - Recommendation: Lisää selkeä error path jos pipeline katkeaa timeoutiin (status='failed', error_message='Analyysi keskeytyi: timeout')
+2. **Vercel function timeout** — RESOLVED: Hyväksytty rajoitus. `waitUntil`-lupaus voi katketa Hobby-tierin 10s timeoutissa ennen catch-blokin suoritusta — status voi jäädä `analyzing` -tilaan. Plan 04-Task1 dokumentoi tämän koodissa kommentilla. Phase 46 polling-logiikka käsittelee stuck-analyzing -tilan erillisellä timeout-tarkistuksella.
 
 ---
 

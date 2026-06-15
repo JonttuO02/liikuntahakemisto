@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: AI-pohjainen yrityssivuanalyysi
 status: in progress
-stopped_at: Phase 45 context gathered — ready to plan
-last_updated: "2026-06-15T15:00:00.000Z"
-last_activity: 2026-06-15 — Phase 45 context gathered (async waitUntil pipeline, Haiku, Storage upload)
+stopped_at: Phase 45 planned — 4 plans ready to execute
+last_updated: "2026-06-15T16:00:00.000Z"
+last_activity: 2026-06-15 — Phase 45 planned (4 plans: foundation, scraper, analyzer+storage, route handler)
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 1
+  total_plans: 5
   completed_plans: 1
   percent: 33
 ---
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-06-15)
 
 ## Current Position
 
-Phase: 45 — Scraper & Claude API -putki (not started)
-Plan: —
-Status: Phase 44 complete — Phase 45 ready to plan
-Last activity: 2026-06-15 — Phase 44 complete (business_branding table live on remote Supabase)
+Phase: 45 — Scraper & Claude API -putki (Ready to execute)
+Plan: 4 plans across 4 waves (45-01 → 45-02 → 45-03 → 45-04)
+Status: Phase 45 planned — ready to execute
+Last activity: 2026-06-15 — Phase 45 planned (scraper, Claude vision, Storage upload, waitUntil route)
 
 ## v2.1 Direction
 
