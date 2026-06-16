@@ -3,8 +3,9 @@ gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: Onboarding-tekoälyn parannukset
 status: planning
-last_updated: "2026-06-16T00:00:00.000Z"
-last_activity: 2026-06-16
+stopped_at: Phase 47 context gathered
+last_updated: "2026-06-16T07:56:53.463Z"
+last_activity: 2026-06-16 — ROADMAP.md created, 21/21 requirements mapped, REQUIREMENTS.md traceability updated
 progress:
   total_phases: 5
   completed_phases: 0
@@ -91,6 +92,6 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
 
 ## Session Continuity
 
-Last session: 2026-06-16
-Stopped at: ROADMAP.md and REQUIREMENTS.md traceability written for v2.2; awaiting `/gsd:discuss-phase 47`
-Resume file: None
+Last session: 2026-06-16T07:56:53.455Z
+Stopped at: Phase 47 context gathered
+Resume file: .planning/phases/47-skeema-monisivuinen-scraper-putki/47-CONTEXT.md
