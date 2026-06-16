@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: Onboarding-tekoälyn parannukset
 status: planning
-last_updated: "2026-06-16T06:13:25.272Z"
+last_updated: "2026-06-16T00:00:00.000Z"
 last_activity: 2026-06-16
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,14 +20,28 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v2.1 milestone shipped — ready for next milestone
+**Current focus:** v2.2 roadmap created — ready to plan Phase 47
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-06-16 — Milestone v2.2 started
+Phase: 47 of 51 (Skeema & monisivuinen scraper-putki)
+Plan: — (not yet planned)
+Status: Ready to plan
+Last activity: 2026-06-16 — ROADMAP.md created, 21/21 requirements mapped, REQUIREMENTS.md traceability updated
+
+Progress: [░░░░░░░░░░] 0%
+
+## v2.2 Roadmap Summary
+
+| Phase | Goal | Requirements |
+|-------|------|---------------|
+| 47. Skeema & monisivuinen scraper-putki | Multi-page crawl + SSRF re-validation + schema for plural branding data | SCRAP-06..09, BRDDB-03..05 |
+| 48. Logo-, väri- ja galleriavalinta | User picks logo/colors from candidates; validated PATCH route; gallery prefill | ONBOARD-14..17 |
+| 49. Esikatselu- ja kontrastikorjaukset | Step 6 CalloutCard swap; shared contrast-safe logo primitive | PREV-02, PREV-03 |
+| 50. Flow-uudelleenjärjestys & pikahyväksyntä | StepPaikka before URL-analysis; quick-accept into admin queue | FLOW-01..04 |
+| 51. Live-esikatselu velhossa | Shared live-preview state; desktop split / mobile toggle | LIVEPREV-01..04 |
+
+Dependency order: 47 → 48 → 49 → 50 (parallel-safe with 48/49 if needed) → 51 (must be last; consumes final data shape from 47-49).
 
 ## v2.1 Summary
 
@@ -57,17 +71,26 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
 - **v2.1**: `business_branding` FK references `business_accounts`, not `businesses`
 - **v2.1**: One Claude API call per analysis (vision + text in same message)
 - **v2.1**: `waitUntil` fire-and-forget — POST returns immediately; background pipeline continues
+- **v2.2 (research)**: New dependency `cheerio@^1.2.0` for DOM-based link/image discovery — replaces regex extraction
+- **v2.2 (research)**: No concurrency-limiter, no headless browser, no state-management library, no form library — existing patterns (`Promise.all` + `AbortSignal.timeout`, React Context+reducer) are sufficient
+- **v2.2 (research)**: Live preview (Phase 51) sequenced last — depends on final data shape from Phases 47-49; building earlier risks rework
 
 ## Carry-Forward (open items for next milestone)
 
 - P45-WR-05: `lib/branding/storage.ts` uploadLogo — UUID format assertion on `businessAccountId`
 - P45-WR-06: Migration timestamp order — on fresh db push, uploadLogo may fail before bucket creation
-- P45-DNS: DNS rebinding bypasses hostname SSRF guard — post-DNS IP validation deferred
+- P45-DNS: DNS rebinding bypasses hostname SSRF guard — post-DNS IP validation deferred (relevant to Phase 47's SSRF re-validation work)
 - CR-01: `app/business/[id]/page.tsx` reads venue data without ownership check (pre-existing since Phase 38)
 - CR-02: `app/api/business/onboarding/submit/route.ts` doesn't filter by `paikka_id` (pre-existing since Phase 38)
+
+## Open Product Decisions (must resolve before relevant phase)
+
+- **Phase 47**: Multi-venue `business_branding` scoping — confirm re-keying unique constraint to include `paikka_id` (BRDDB-05) is the chosen fix, not just documenting the limitation
+- **Phase 47**: Empirically validate Vercel Hobby `waitUntil` 10s budget under 3-5 page parallel fetch load — do not assume the cap is safe by inspection alone
+- **Phase 50**: Define "minimum viable draft" for quick-accept — what counts as good enough to submit without the remaining wizard steps
 
 ## Session Continuity
 
 Last session: 2026-06-16
-Stopped at: milestone complete
+Stopped at: ROADMAP.md and REQUIREMENTS.md traceability written for v2.2; awaiting `/gsd:discuss-phase 47`
 Resume file: None

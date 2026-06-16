@@ -58,37 +58,35 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ## Traceability
 
-Filled during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCRAP-06 | TBD | Pending |
-| SCRAP-07 | TBD | Pending |
-| SCRAP-08 | TBD | Pending |
-| SCRAP-09 | TBD | Pending |
-| BRDDB-03 | TBD | Pending |
-| BRDDB-04 | TBD | Pending |
-| BRDDB-05 | TBD | Pending |
-| ONBOARD-14 | TBD | Pending |
-| ONBOARD-15 | TBD | Pending |
-| ONBOARD-16 | TBD | Pending |
-| ONBOARD-17 | TBD | Pending |
-| PREV-02 | TBD | Pending |
-| PREV-03 | TBD | Pending |
-| FLOW-01 | TBD | Pending |
-| FLOW-02 | TBD | Pending |
-| FLOW-03 | TBD | Pending |
-| FLOW-04 | TBD | Pending |
-| LIVEPREV-01 | TBD | Pending |
-| LIVEPREV-02 | TBD | Pending |
-| LIVEPREV-03 | TBD | Pending |
-| LIVEPREV-04 | TBD | Pending |
+| SCRAP-06 | Phase 47 | Pending |
+| SCRAP-07 | Phase 47 | Pending |
+| SCRAP-08 | Phase 47 | Pending |
+| SCRAP-09 | Phase 47 | Pending |
+| BRDDB-03 | Phase 47 | Pending |
+| BRDDB-04 | Phase 47 | Pending |
+| BRDDB-05 | Phase 47 | Pending |
+| ONBOARD-14 | Phase 48 | Pending |
+| ONBOARD-15 | Phase 48 | Pending |
+| ONBOARD-16 | Phase 48 | Pending |
+| ONBOARD-17 | Phase 48 | Pending |
+| PREV-02 | Phase 49 | Pending |
+| PREV-03 | Phase 49 | Pending |
+| FLOW-01 | Phase 50 | Pending |
+| FLOW-02 | Phase 50 | Pending |
+| FLOW-03 | Phase 50 | Pending |
+| FLOW-04 | Phase 50 | Pending |
+| LIVEPREV-01 | Phase 51 | Pending |
+| LIVEPREV-02 | Phase 51 | Pending |
+| LIVEPREV-03 | Phase 51 | Pending |
+| LIVEPREV-04 | Phase 51 | Pending |
 
 **Coverage:**
 - v1 requirements: 21 total
-- Mapped to phases: 0
-- Unmapped: 21 ⚠️ (resolved during roadmap creation)
+- Mapped to phases: 21
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-16*
-*Last updated: 2026-06-16 after initial definition*
+*Last updated: 2026-06-16 after roadmap creation (Phases 47-51 mapped, 21/21 requirements, 0 orphans)*

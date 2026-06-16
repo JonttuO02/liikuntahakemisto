@@ -14,6 +14,7 @@
 - ✅ **v1.9 Auth-Separaatio & Cleanup** — Phases 39–40 (shipped 2026-06-12)
 - ✅ **v2.0 Business UX & Navigation** — Phases 41–43 (shipped 2026-06-15)
 - ✅ **v2.1 AI-pohjainen yrityssivuanalyysi** — Phases 44–46 (shipped 2026-06-16)
+- 🚧 **v2.2 Onboarding-tekoälyn parannukset** — Phases 47–51 (in progress)
 
 ---
 
@@ -164,6 +165,78 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 
 ---
 
+### 🚧 v2.2 Onboarding-tekoälyn parannukset (Phases 47–51) — In Progress
+
+**Milestone Goal:** Onboarding-velhon tekoälyanalyysi tuottaa parempaa dataa laajemmalla sivuston haulla, ja käyttäjä näkee/hyväksyy tulokset reaaliajassa — pienemmällä manuaalisella työllä.
+
+- [ ] **Phase 47: Skeema & monisivuinen scraper-putki** — Schema migration + multi-page crawl with re-validated SSRF guard + labeled multi-page Claude prompt
+- [ ] **Phase 48: Logo-, väri- ja galleriavalinta** — Multi-candidate logo picker, 2-color swatch picker, validated PATCH route, gallery prefill
+- [ ] **Phase 49: Esikatselu- ja kontrastikorjaukset** — Step 6 CalloutCard swap + shared contrast-safe logo primitive
+- [ ] **Phase 50: Flow-uudelleenjärjestys & pikahyväksyntä** — StepPaikka before URL-analysis + quick-accept shortcut into admin queue
+- [ ] **Phase 51: Live-esikatselu velhossa** — Shared live-preview state, desktop split-view, mobile toggle
+
+## Phase Details
+
+### Phase 47: Skeema & monisivuinen scraper-putki
+**Goal**: The AI analysis pipeline crawls a business website's pricing/hours/contact subpages (not just the homepage) and safely returns richer, labeled data to Claude — with the database shaped to store plural results.
+**Depends on**: Nothing (builds on v2.1's existing `business_branding` table and scraper/analyzer/route pipeline)
+**Requirements**: SCRAP-06, SCRAP-07, SCRAP-08, SCRAP-09, BRDDB-03, BRDDB-04, BRDDB-05
+**Success Criteria** (what must be TRUE):
+  1. When a business submits its website URL, the analysis follows same-origin links from the homepage to pricing/hours/contact subpages (capped at 3-5 pages) and the extracted hinnasto/aukioloajat reflect data found only on those subpages
+  2. Every followed link and redirect is re-validated against the SSRF guard — a malicious or private-IP subpage link cannot be fetched even if discovered via a legitimate homepage
+  3. The analysis can extract general page images (not just logo candidates) and store them for later gallery use
+  4. `business_branding` rows can store multiple logo candidates, multiple image URLs, and separate background/accent color selections without schema errors
+  5. Saving a `logo_type` value that matches the analyzer's actual enum output no longer fails a CHECK constraint
+  6. Two venues analyzed under the same business account do not silently overwrite each other's branding row
+**Plans**: TBD
+
+### Phase 48: Logo-, väri- ja galleriavalinta
+**Goal**: A business owner can see every AI-found logo and color candidate and explicitly choose what represents their brand, instead of the system silently auto-picking one.
+**Depends on**: Phase 47 (requires plural `logo_candidates`/`image_urls`/color columns and multi-page image discovery)
+**Requirements**: ONBOARD-14, ONBOARD-15, ONBOARD-16, ONBOARD-17
+**Success Criteria** (what must be TRUE):
+  1. When multiple logo candidates were found, the user sees them all and picks exactly one (the AI's top pick pre-selected, not silently final)
+  2. The user picks 2 colors from the extracted palette — one assigned to background, one to accent — rather than the system auto-assigning a single color
+  3. Images discovered on the business's website automatically appear as selectable options in the Mediat step's photo picker
+  4. Submitting a logo/color selection that doesn't belong to that business's own stored analysis result is rejected by the server, not silently accepted
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 49: Esikatselu- ja kontrastikorjaukset
+**Goal**: What the business owner sees in the onboarding preview matches what will actually be published, and a white or transparent logo is never invisible against a white background anywhere in the app.
+**Depends on**: Phase 48 (contrast fix is most useful once a user-selected background color exists, not just a generic neutral backdrop)
+**Requirements**: PREV-02, PREV-03
+**Success Criteria** (what must be TRUE):
+  1. Step 6 of the onboarding wizard shows the same `CalloutCard` venues see live on the site, not the unused `PaikkaKortti` — and venues without coordinates still render a sensible fallback instead of breaking
+  2. A white or transparent logo is visibly distinguishable everywhere `logo_url` is rendered (onboarding preview, dashboard preview, live cards) because all render sites share one contrast-safe logo display primitive
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 50: Flow-uudelleenjärjestys & pikahyväksyntä
+**Goal**: A business owner identifies or creates their venue before being asked to analyze a website, and can skip the rest of the wizard entirely by accepting the AI's results as-is.
+**Depends on**: Phase 47 (quick-accept must read the final, stable branding data shape before reusing the submit route)
+**Requirements**: FLOW-01, FLOW-02, FLOW-03, FLOW-04
+**Success Criteria** (what must be TRUE):
+  1. A new business owner sees the venue-identification step (StepPaikka) before being asked for a website URL to analyze
+  2. After AI analysis completes, the user can accept the results in one action and land directly in the admin approval queue without stepping through the remaining wizard screens
+  3. A quick-accepted submission passes through the same ownership check, validation, and draft-cleanup logic as a normal full-wizard submission — there is no second, less-guarded write path
+  4. A business that started onboarding before this reorder shipped can resume their in-flight draft without getting stuck on a stale step number
+**Plans**: TBD
+
+### Phase 51: Live-esikatselu velhossa
+**Goal**: A business owner sees their venue's card update in real time as they fill in any wizard step, instead of only seeing the final result at step 6.
+**Depends on**: Phase 48, Phase 49 (live preview consumes the final logo/color selection shape and the corrected, contrast-safe preview component — building it earlier would mean rebuilding it)
+**Requirements**: LIVEPREV-01, LIVEPREV-02, LIVEPREV-03, LIVEPREV-04
+**Success Criteria** (what must be TRUE):
+  1. Changing a field on any wizard step (name, price, hours, contact, logo, colors, photos) immediately updates a live preview without requiring a save or page reload
+  2. On desktop, the live preview is visible side-by-side with the step currently being edited
+  3. On mobile, the user can toggle between the edit form and the live preview instead of losing screen space to a permanent split view
+  4. The live preview renders via `CalloutCard`/`DiagonaalKortti` using the current in-progress (unsaved) field values, not stale data from the last save
+**Plans**: TBD
+**UI hint**: yes
+
+---
+
 ## Progress Table
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -214,3 +287,8 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 44. Brändidatan tietokantaperusta | v2.1 | 1/1 | Complete | 2026-06-15 |
 | 45. Scraper & Claude API -putki | v2.1 | 4/4 | Complete | 2026-06-15 |
 | 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | Complete    | 2026-06-15 |
+| 47. Skeema & monisivuinen scraper-putki | v2.2 | 0/TBD | Not started | - |
+| 48. Logo-, väri- ja galleriavalinta | v2.2 | 0/TBD | Not started | - |
+| 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 0/TBD | Not started | - |
+| 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 0/TBD | Not started | - |
+| 51. Live-esikatselu velhossa | v2.2 | 0/TBD | Not started | - |
