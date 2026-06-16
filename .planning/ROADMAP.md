@@ -191,7 +191,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 **Plans**: 5 plans (Wave 1: 47-01 schema, 47-02 SSRF utils, 47-04 analyzer/prompt/screenshot; Wave 2: 47-03 scraper crawl; Wave 3: 47-05 route wiring)
 - [x] 47-01-PLAN.md — Schema migration: plural columns + paikka_id backfill + composite UNIQUE (BRDDB-03/04/05); [BLOCKING] supabase db push
 - [x] 47-02-PLAN.md — Shared SSRF validator + redirect-revalidating fetch wrapper (SCRAP-07)
-- [ ] 47-03-PLAN.md — Multi-page subpage crawl + gallery image extraction (SCRAP-06/09)
+- [x] 47-03-PLAN.md — Multi-page subpage crawl + gallery image extraction (SCRAP-06/09)
 - [x] 47-04-PLAN.md — Verbatim prompt + array-based analyzer + Playwright homepage screenshot (SCRAP-08)
 - [ ] 47-05-PLAN.md — Route wiring: paikka_id scoping + ownership check + pipeline integration (BRDDB-05)
 
@@ -292,7 +292,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 44. Brändidatan tietokantaperusta | v2.1 | 1/1 | Complete | 2026-06-15 |
 | 45. Scraper & Claude API -putki | v2.1 | 4/4 | Complete | 2026-06-15 |
 | 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | Complete    | 2026-06-15 |
-| 47. Skeema & monisivuinen scraper-putki | v2.2 | 3/5 | In Progress|  |
+| 47. Skeema & monisivuinen scraper-putki | v2.2 | 4/5 | In Progress|  |
 | 48. Logo-, väri- ja galleriavalinta | v2.2 | 0/TBD | Not started | - |
 | 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 0/TBD | Not started | - |
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 0/TBD | Not started | - |
