@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { Check } from 'lucide-react'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import type { BrandingResult } from '@/lib/branding/brandingResult'
@@ -92,11 +93,16 @@ function MutedButton({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: AnalysoiSivustoProps) {
+  const router = useRouter()
   const [phase, setPhase] = useState<Phase>('checking')
   const [url, setUrl] = useState('')
   const [urlError, setUrlError] = useState<string | null>(null)
   const [brandingResult, setBrandingResult] = useState<BrandingResult | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // ── Quick-accept state (FLOW-02/FLOW-03) ────────────────────────────────────
+  const [submittingQuick, setSubmittingQuick] = useState(false)
+  const [quickError, setQuickError] = useState<string | null>(null)
 
   // ── Logo/color selection state (D-07, D-12, D-13) ──────────────────────────
   const [selectedLogoUrl, setSelectedLogoUrl] = useState<string | null>(null)
@@ -243,6 +249,88 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
       patchBranding({ image_urls: next }, 'gallery')
       return next
     })
+  }
+
+  // ── Quick-accept: map AI results + selections into onboarding_draft, then call the
+  // existing submit route unmodified (D-10/D-11, FLOW-02/FLOW-03). No parallel write path —
+  // every field is written via the same save-step route the full wizard uses. ──────────────
+  async function handleQuickAccept() {
+    if (!brandingResult || submittingQuick) return
+
+    setSubmittingQuick(true)
+    setQuickError(null)
+
+    try {
+      const token = await getAuthToken()
+
+      const hinnasto = (brandingResult.raw_analysis?.prices ?? []).map(p => ({
+        kategoria: p.label,
+        hinta: p.price,
+        lisatieto: '',
+      }))
+      const aukioloajat = Object.fromEntries(
+        (brandingResult.raw_analysis?.opening_hours ?? []).map(e => [
+          e.day,
+          { open: e.open, close: e.close },
+        ])
+      )
+      const yhteystiedot = { website: brandingResult.raw_analysis?.website_url ?? '' }
+      // selectedLogoUrl is already server-validated against logo_candidates membership
+      // (Plan 01's PATCH route) — no unvalidated client logo URL reaches the draft.
+      const media_urls = { logo: selectedLogoUrl, photos: selectedGallery.slice(0, 5) }
+
+      const fieldsToWrite: Array<{ field: 'hinnasto' | 'aukioloajat' | 'yhteystiedot' | 'media_urls'; value: unknown }> = [
+        { field: 'hinnasto', value: hinnasto },
+        { field: 'aukioloajat', value: aukioloajat },
+        { field: 'yhteystiedot', value: yhteystiedot },
+        { field: 'media_urls', value: media_urls },
+      ]
+
+      // Sequential, NOT transactional: if call N fails after 1..N-1 succeeded, the draft is
+      // left partially populated. This is RECOVERABLE by design — each save-step write is an
+      // idempotent UPSERT on (business_account_id, paikka_id), so re-clicking "Hyväksy ja
+      // lähetä" re-writes all four fields (succeeded ones harmlessly overwrite with the same
+      // value) and then submits; alternatively the user can click "Jatka velhoon →" and finish
+      // via the full wizard, where the partially-written fields appear pre-filled. Do NOT add
+      // rollback/compensation logic — idempotent retry + wizard fallback is the intended
+      // recovery path (T-48-14, accepted risk).
+      for (const { field, value } of fieldsToWrite) {
+        const res = await fetch('/api/business/onboarding/save-step', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ paikka_id: paikkaId, step: 6, field, value }),
+        })
+
+        if (!res.ok) {
+          setQuickError('Lähetys epäonnistui. Yritä uudelleen tai jatka velhon kautta.')
+          return
+        }
+      }
+
+      const submitRes = await fetch('/api/business/onboarding/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ paikka_id: paikkaId }),
+      })
+
+      if (!submitRes.ok) {
+        setQuickError('Lähetys epäonnistui. Yritä uudelleen tai jatka velhon kautta.')
+        return
+      }
+
+      // Same post-submit destination the full wizard's StepEsikatselu uses on success.
+      router.push('/business')
+    } catch {
+      setQuickError('Lähetys epäonnistui. Yritä uudelleen tai jatka velhon kautta.')
+    } finally {
+      setSubmittingQuick(false)
+    }
   }
 
   // ── On-mount check (checking phase) ────────────────────────────────────────
@@ -749,25 +837,43 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
             )}
           </div>
 
+          {/* Quick-accept failure */}
+          {quickError && (
+            <p className="text-sm text-red-600" role="alert">
+              {quickError}
+            </p>
+          )}
+
           {/* Footer */}
-          <div className="flex items-center justify-between pt-4 border-t border-[rgba(0,0,0,0.07)]">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t border-[rgba(0,0,0,0.07)]">
             <button
               type="button"
               onClick={() => {
                 setBrandingResult(null)
                 setPhase('url-input')
               }}
-              className="text-sm text-[rgba(17,17,17,0.45)] underline-offset-2 hover:underline hover:text-[#111111] transition-colors"
+              disabled={submittingQuick}
+              className="text-sm text-[rgba(17,17,17,0.45)] underline-offset-2 hover:underline hover:text-[#111111] transition-colors disabled:opacity-50"
             >
               Analysoi uudelleen
             </button>
-            <PrimaryButton
-              onClick={() =>
-                onConfirm(brandingResult, { logoUrl: selectedLogoUrl, gallery: selectedGallery })
-              }
-            >
-              Jatka velhoon →
-            </PrimaryButton>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <PrimaryButton
+                onClick={() =>
+                  onConfirm(brandingResult, { logoUrl: selectedLogoUrl, gallery: selectedGallery })
+                }
+                disabled={submittingQuick}
+              >
+                Jatka velhoon →
+              </PrimaryButton>
+              <PrimaryButton
+                onClick={handleQuickAccept}
+                disabled={submittingQuick}
+                loading={submittingQuick}
+              >
+                {submittingQuick ? 'Lähetetään...' : 'Hyväksy ja lähetä'}
+              </PrimaryButton>
+            </div>
           </div>
         </>
       )}
