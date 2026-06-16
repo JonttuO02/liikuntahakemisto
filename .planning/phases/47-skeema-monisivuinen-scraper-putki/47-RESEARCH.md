@@ -467,10 +467,10 @@ function extractGalleryImages(html: string, baseUrl: string, excludeUrls: Set<st
    - Recommendation: Default to additive (keep `logo_url`/flat `colors` fields populated from `logos[0]`/derived values alongside the new array fields) unless the user confirms Phase 47+48 will deploy together as one release. Flag this explicitly for `/gsd:discuss-phase` follow-up if not already resolved.
 
 3. **What is the actual current Vercel plan and is the Pro upgrade already done?**
-   - **RESOLVED:** see Plan 47-05 Task 3 (checkpoint:human-verify confirming Vercel plan status).
+   - **RESOLVED (updated 2026-06-16, post-planning):** Confirmed there is no Vercel project at all yet — no `.vercel/vercel.json` in the local repo, and zero deployments/check-runs/commit-statuses on the `JonttuO02/liikuntahakemisto` GitHub repo (checked via `gh api repos/.../deployments`, `/hooks`, `/commits/HEAD/check-runs`, `/commits/HEAD/status`, all empty). D-04's original framing ("upgrade Hobby to Pro") assumed an existing deployment that does not exist. The actual prerequisite chain is: create Vercel account/project → import the GitHub repo → first deploy (lands on Hobby by default) → upgrade to Pro. Plan 47-01's and 47-04's `user_setup` blocks and Plan 47-05 Task 3's checkpoint have been updated to reflect this three-step chain instead of a single upgrade step.
    - What we know: CONTEXT.md D-04 says this is "an out-of-band account action the user must take separately."
-   - What's unclear: Whether the upgrade has already happened by the time this phase executes, which determines whether the screenshot capability can be tested end-to-end during this phase or must be built defensively (feature-detected/gracefully degraded) without ever running against production.
-   - Recommendation: Planner should add a checkpoint:human-verify task confirming Vercel plan status before any task that depends on `maxDuration` > 300s or actual screenshot capture being exercised in a deployed environment.
+   - What's unclear: Whether the user will complete all three steps before Plan 47-05's checkpoint, which determines whether the screenshot capability can be tested end-to-end during this phase or must be built defensively (feature-detected/gracefully degraded) without ever running against production.
+   - Recommendation: Plan 47-05 Task 3's checkpoint:human-verify now asks the developer to state which of three states applies (no project / Hobby / Pro) rather than a binary Hobby-vs-Pro check.
 
 ## Environment Availability
 
