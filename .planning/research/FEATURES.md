@@ -1,232 +1,168 @@
-# Feature Landscape — v1.8 Dual-Mode UX & Business Publication
+# Feature Research
 
-**Domain:** Sports venue directory with dual consumer/business portal (AKTIIVI)
-**Researched:** 2026-06-11
-**Milestone:** v1.8 Yritysportaali v2 — Julkistaminen & UX
+**Domain:** AI-assisted business onboarding wizard — website-to-brand-kit extraction + multi-step form with live preview (Finnish sports-venue directory business portal)
+**Researched:** 2026-06-16
+**Milestone:** v2.2 Onboarding-tekoälyn parannukset
+**Confidence:** MEDIUM (codebase analysis is HIGH confidence; external ecosystem patterns are MEDIUM — WebSearch-verified across multiple sources but no single authoritative spec exists for this niche combination of features)
 
----
+## Context: What Already Exists (v2.1 baseline)
 
-## Context: What Already Exists in v1.7
+Before categorizing the 8 target features, the current pipeline matters because every feature either extends or risks breaking it:
 
-- `business_accounts` + `business_paikka_links` tables with RLS
-- `published` boolean on `liikuntapaikat` (new venues start `published=false`, existing start `true`)
-- `is_claimed` boolean on `liikuntapaikat` (set to `true` when any claim/create is submitted)
-- `business_managed` boolean guards Places sync script from overwriting managed venues
-- `/business` management panel with venue list, edit wizard, preview modal
-- `/admin` panel for approve/reject with email notifications
-- 6-step onboarding wizard with draft persistence in `onboarding_draft` table
-- Middleware (`middleware.ts`) currently only refreshes the Supabase session cookie — no role-based routing
-- `/business` page does **client-side** role detection via `useEffect` + `business_accounts` query
-- `/admin` page does **client-side** auth guard via `useEffect + router.replace('/')` — not server-side
+- `AnalysoiSivusto.tsx` — pre-wizard state machine (`checking → url-input → analyzing → preview/error/timeout`), polls `GET /api/business/analyze-website` every 2s up to 30 tries (~60s cap)
+- `scrapeWebsite()` (`lib/branding/scraper.ts`) — fetches **homepage HTML only**, regex-extracts theme-color + `:root` CSS vars (colors), and up to 5 logo candidates (favicon → og:image → `<img>` with "logo" in src/alt/class), converts each to PNG via `sharp`
+- `analyzeWithClaude()` (`lib/branding/analyzer.ts` + `prompt.ts`) — **single** Claude vision+text call returns `{ logo_index (one int), logo_type, colors[] (read-only list, first one used as bg), prices[], opening_hours[], website_url }`
+- Result stored in `business_branding` table (one row per `business_account_id`, status state machine `pending→analyzing→analyzed→failed`)
+- `WizardInner.tsx` renders steps in fixed order 1 Paikka → 2 Mediat → 3 Hinnasto → 4 Aukioloajat → 5 Yhteystiedot → 6 Esikatselu; `OnboardingWizardPage` runs `AnalysoiSivusto` *before* `WizardInner` even mounts (step 1/Paikka is never visible until after analysis or skip)
+- `StepEsikatselu.tsx` (step 6) currently renders `PaikkaKortti` + `DiagonaalKortti` + `PaikkaSheet` — **not** `CalloutCard`, which is what's actually used in production (per target feature 1)
+- `buildBrandingPreview()` only ever uses `colors[0]` as a single `brandColor`; logo is whatever index Claude picked, with no white/transparent contrast handling
+- Submission only happens via the full step-6 `handleSubmit` → `POST /api/business/onboarding/submit`; there is no quick-accept path that skips wizard steps 2–5
+- No live-preview mechanism exists in any step today — `StepMediat`, `StepHinnasto`, etc. only show a preview on step 6, and `PreviewModal` (edit mode) is an on-demand modal, not continuously live
 
----
+## Feature Landscape
 
-## Table Stakes
+### Table Stakes (Users Expect These)
 
-Features users expect in each category. Missing = product feels broken or incomplete.
-
-### 1. Role Detection and Routing at App Level
+These match what any modern "scan my website → prefill my profile" or website-builder onboarding flow offers as baseline. Missing them makes the AI onboarding feel broken or untrustworthy relative to category leaders (Wix ADI, Squarespace Blueprint, Brandfetch-style brand-kit tools).
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Business user lands on `/business` dashboard instead of consumer map at `/` | Every dual-mode SaaS (Airbnb host/guest switch, Google Business Profile, Foursquare for Business) routes role-appropriate home on login. A business user landing on the consumer map and having to manually navigate to their panel feels broken. | Medium | Middleware reads `business_accounts` existence for authenticated users hitting `/`; redirects to `/business`. One extra DB query only on `/` for authenticated users — acceptable. |
-| Business redirect happens server-side, not via `useEffect` | Client-side redirect causes a flash of the consumer map before redirect fires. This is the current `/business` page pattern — it works but produces a blank loading state | Medium | Extend `middleware.ts` to include a `/` path check with `business_accounts` lookup |
-| Consumer users are never redirected to `/business` | Consumers have nothing to do there; seeing it would be confusing or alarming | Low | Already guarded — `/business` checks `business_accounts` table and shows a "register" CTA |
-| Auth state fully resolved before redirect decision | User should not see flash of wrong content, then redirect | Medium | Middleware runs server-side before any render — this is the correct architectural layer |
-| Logout from business context returns to consumer home | After sign-out the user is no longer a business user; `/business` would just redirect them away | Low | Existing sign-out flow already navigates to `/` — no change needed |
+| **Esikatselu preview shows the real card component (Feature 1)** | Users judge "is this what my listing will look like" by comparing the preview to what they've seen elsewhere in the product (the map CalloutCard). A wrong/unused component breaks trust in the whole onboarding output. | LOW | Pure swap: `StepEsikatselu.tsx` imports `PaikkaKortti`/`DiagonaalKortti` instead of `CalloutCard`. Already has `draftAsPaikka` + `brandColor` computed — `CalloutCard` likely needs same `Liikuntapaikka` shape (verify props match; CalloutCard may expect map-context props like position/zoom it won't have here — needs a "static/preview" variant or prop subset). |
+| **Logo visible against its actual background (Feature 7 — bug fix)** | Every brand-kit tool (Brandfetch, Wix Logo Maker) renders extracted logos on a checkerboard or contrasting backdrop specifically because white/transparent logos are extremely common (most company logos ship as transparent PNG/SVG with a wordmark in dark or white). Showing it on a plain white card is a known, well-documented failure mode. | LOW | Needs either (a) a neutral/checkerboard backdrop behind the logo thumbnail in preview, or (b) using the extracted brand background color as the logo's container background (ties to Feature 6 — 2-color pick gives a natural "use accent/bg color as logo backdrop" solution). Cheapest fix: container `bg-[rgba(0,0,0,0.05)]` checkerboard or border; better fix ties into Feature 6. |
+| **Single-call AI prefill of structured fields (already shipped)** | Baseline expectation once you've shipped "Analysoi sivustosi" — not new for v2.2, but Features 3–5 extend the *scope* of what's extracted (subpages, multiple images), which IS table stakes once competitors (Wix ADI, Squarespace Blueprint) all crawl more than the homepage. | — | Context only — not new in this milestone. |
+| **Following internal links to pricing/hours/contact subpages (Feature 3)** | Real Finnish sports venues very commonly put hinnasto/aukioloajat/yhteystiedot on dedicated subpages, not the homepage. Every competing "site analyzer" (Wix ADI, brand-kit extractors, SEO crawlers) follows at least same-domain links 1 level deep for exactly this reason — homepage-only scraping is considered the naive/incomplete version of this feature category. | MEDIUM | This is the single highest-risk feature for cost/latency/security blast-radius — see Pitfalls below. Requires: link discovery (regex or HTML parse for `<a href>` with Finnish keywords "hinnasto", "hinnat", "aukioloajat", "yhteystiedot", "yhteys", "contact"), same-origin enforcement (reuse existing SSRF guard — apply to EVERY followed link, not just the seed URL), a hard cap on number of pages fetched (e.g. 3–5) and total combined HTML size, and extending `analyzeWithClaude`'s prompt to accept multiple HTML snippets labeled by page type. |
+| **Multiple photos prefilled into Mediat gallery (Feature 4)** | Once you're already scraping for logos, collecting "other images on the page" (hero images, facility photos) for the gallery step is the obvious next step and matches what users expect from "smart" import tools — they expect to not re-upload photos that already exist on their own site. | MEDIUM | `StepMediat` already supports a `media_urls.photos` array (max 5) and an `existingPhotoUrls` UI for delete/replace — the slot exists. New work: scraper needs an "other images" candidate list (distinct from logo candidates — likely `<img>` NOT matching "logo" heuristic, filtered by min dimensions to exclude icons/spacers), then those need to be fetched server-side, converted/validated, and stored in Supabase Storage (or referenced by external URL until user confirms) before populating `media_urls.photos`. Costs note: each extra image = another fetch + sharp conversion in the background job, increasing waitUntil duration risk (Hobby tier 10s cap, already flagged as an accepted limitation in this codebase). |
 
-**Confidence: HIGH** — Airbnb's documented "Switch to hosting/traveling" flow and Next.js middleware role routing are both well-documented. The existing `middleware.ts` already calls `supabase.auth.getUser()` on every request; the extension is a known pattern.
+### Differentiators (Competitive Advantage)
 
-### 2. Business Dashboard UX
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Approval status per venue, clearly labeled | A business needs to know at a glance whether they are live, waiting, or rejected — without hunting | Low | Already rendered in `/business` venue list with color-coded badges. Needs clear header copy for the "pending" state to explain what waiting means. |
-| Quick action to edit venue | Primary recurring action after approval | Low | Already exists as "Muokkaa" link to `/business/[id]` |
-| Pending state communicates expected timeline | Businesses anxiety-check during review | Low | Add explanatory copy: "Hakemus odottaa tarkistusta, saat sähköpostin kun se on käsitelty" |
-| Rejection reason visible with re-apply CTA | Without a reason, re-apply is guesswork; business has no idea what to fix | Low | Already implemented in `/business` — `rejection_reason` column shown with "Hae uudelleen" button |
-| "Add another venue" action prominent | Multi-venue businesses (gym chains, sports clubs) are a core segment | Low | Already implemented as "+ Lisää paikka" toggle. Needs to be more prominently placed in the dashboard layout. |
-| Navigation back to consumer view | Business users are also consumers; they want to see the map, find venues near theirs | Low | A "Avaa kartta" or "Näytä hakemisto" link from the dashboard |
-| Business profile page (not consumer profile) | `/profiili` currently shows `kotikaupunki` and `kiinnostukset` — irrelevant fields for a business account | Medium | Detect business account on `/profiili`, render company info (company_name) instead of consumer interests/hometown fields |
-
-**Confidence: HIGH** — Validated against both existing v1.7 code and standard SaaS patterns (Tripadvisor Management Centre, Foursquare Business Listings dashboard). Most pieces exist; the gap is UX framing and the profile page adaptation.
-
-### 3. "Verified/Managed" Listing Indicators
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Visual badge or checkmark next to venue name for claimed/approved venues | Google Business Profile (blue checkmark), Yelp (claimed badge + shield for verified licenses), Foursquare, Tripadvisor — all use this pattern. Consumers expect it in any serious directory. | Low | Render conditionally when `is_claimed=true` in `PaikkaKortti`, `DiagonaalKortti`, and `PaikkaSheet`. `is_claimed` is already in the schema and in the `liikuntapaikat` SELECT. |
-| Indicator visible wherever the venue appears | Trust signal must appear in card list, map sheet, and any preview | Low | Three render targets: `PaikkaKortti` (card name row), `DiagonaalKortti` (card name row), `PaikkaSheet` (hero/header section) |
-| Indicator is visually distinct from "Sponsoroitu" | Amber is already reserved for sponsored content. Verification must use a different visual token or it creates confusion | Low | Use indigo (`text-indigo-600`) with a `BadgeCheck` or `CheckCircle` Lucide icon at 12px — aligns with AKTIIVI's indigo brand color |
-| Indicator does NOT appear for unmanaged venues | False trust signals would be worse than no signals | Low | Read `is_claimed` — only `true` when a business has submitted a claim/create. Admin approval is separate; indicator appears at claim time, not approval time. |
-| "Managed by owner" tooltip or label on hover | Power users want to understand what the checkmark means | Low | `title` attribute or a brief tooltip: "Paikan omistaja ylläpitää tietoja" |
-
-**Confidence: HIGH** — Universal directory pattern. Yelp research shows claimed/verified badges increase engagement by ~10%. `is_claimed` column already exists in schema and is already queried by `app/page.tsx`.
-
-### 4. Business Data Publication Flow
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Admin approval triggers `published=true` on `liikuntapaikat` | Core contract: admin approval = venue becomes visible to consumers | Low | Extend the existing `/api/admin/approve` Route Handler to additionally set `published=true`. Currently only sets `claim_status='approved'`. |
-| Business-entered data syncs to `liikuntapaikat` on approval | Business provided their own images, pricing, hours, description, contact info through onboarding. This data must replace the auto-scraped Google Places fallback data. Without this step, the venue goes live but shows stale auto-populated data. | Medium | Read onboarding data from source tables (business_paikka_links fields / onboarding_draft data or directly from liikuntapaikat columns already written by wizard). Build UPDATE for `liikuntapaikat`. |
-| `business_managed=true` set on approval | Existing column; prevents sync script from later overwriting the business-entered data with Google Places auto-scrape | Low | Set in same DB transaction as `published=true` in the approve handler |
-| Field-level fallback: if business left a field empty, keep existing data | Not all businesses fill every field. A missing phone number should not overwrite a valid phone number that was auto-populated. | Medium | Field-level null-check before overwrite: only `UPDATE liikuntapaikat SET col=val WHERE id=X` for non-null, non-empty business fields. |
-| Rejection does NOT publish | Rejected venues must stay `published=false` | Low | Approve handler already gates on `claim_status`. Reject handler does not touch `published`. No change needed. |
-| Re-approval after rejection republishes | Business fixes issues, resubmits, gets approved again — same outcome | Low | Same approval code path handles both first-time and re-approval. No separate logic needed. |
-| Photo and logo URLs sync from Storage on approval | `photo_urls` and `logo_url` were uploaded to Supabase Storage during onboarding. They are written to the `liikuntapaikat` record but need to be confirmed live-ready on approval. | Medium | Confirm `image_url`, `logo_url`, `photo_urls` are written to `liikuntapaikat` as part of approval. These columns exist (added in v1.7 migrations). |
-
-**Confidence: HIGH** — Migration files confirm the column structure (`published`, `business_managed`, `is_claimed`, `photo_urls`, `logo_url`, `image_url`). The `/api/admin/approve` endpoint exists from v1.7. The data sync extension is the concrete gap.
-
----
-
-## Differentiators
-
-Features that set this product apart from a bare-minimum implementation.
+These go beyond what most generic "analyze my website" tools do, and align with the project's core differentiator of making business onboarding nearly frictionless for small Finnish sports venues with weak/no web presence skills.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Business dashboard as the real homepage (not a `/business` redirect) | Feels intentional, not bolted-on. Business users get their primary experience immediately, with no visible client-side detection delay. | Medium | Requires server-side middleware role check. Replaces current `useEffect`-based detection in `/business`. |
-| Consumer map accessible from business dashboard in stripped mode | Business users are also consumers. They want to explore the map, find venues near theirs, test the discovery experience. But they should not see consumer-only features (AI widget, bookmarks, bottomsheet reviews). | Medium | Add `businessMode?: boolean` prop to `Etusivu`. When `true`: hide AI weather widget, hide bookmark button, hide bottomsheet review prompt. GPS and map pins remain fully functional. Do NOT create a separate route — that would duplicate the map codebase. |
-| `/profiili` shows business context for business users | Profile page currently shows `kotikaupunki` and `kiinnostukset` — irrelevant for a business. A business profile page should show company name, approval status, link to `/business`. | Medium | Check `business_accounts` in `ProfiiliClient` or server-side in `/profiili/page.tsx`. Render a business-specific section instead of consumer interests. |
-| Verified checkmark in all three venue card formats simultaneously | PaikkaKortti + DiagonaalKortti + PaikkaSheet all show the indicator. Consistent trust signal regardless of where you encounter the venue. | Low | Three small changes, each low complexity. High visible impact. |
+| **Quick-accept path: skip straight to admin queue (Feature 2, part B)** | Most onboarding products (Airtable, Wix ADI) still force users through every step once an AI draft exists; letting a confident user submit the AI's first guess directly to admin review is a meaningfully lower-friction path than competitors offer, especially for venues whose owner has very limited time/digital literacy — a strong fit for this product's Finnish small-business audience. | MEDIUM | Needs: a new "Hyväksy ja lähetä" CTA on the `AnalysoiSivusto` preview phase (before `WizardInner` ever mounts) that (a) creates/links the `paikka_id` from whatever `StepPaikka` would have collected — but Feature 2 part A moves `StepPaikka` BEFORE the URL step, so by the time analysis preview renders, `paikka_id` already exists; (b) writes branding result directly into `onboarding_draft` fields (hinnasto, aukioloajat, yhteystiedot/website) bypassing steps 2–5 entirely, since Mediat (logo/photos) and the new multi-pick UIs (Features 5–6) still need *some* minimal interaction — open question whether quick-accept skips those too or forces at least a logo/color confirmation click; (c) calls the same `/api/business/onboarding/submit` endpoint used by step 6. Risk: submit endpoint may assume all draft fields are present/validated — needs auditing for partial-draft submission. |
+| **StepPaikka moved before URL analysis (Feature 2, part A)** | Lets the system resolve `paikka_id` first, which (a) enables tying the analysis run + quick-accept directly to a known venue row instead of an account-level `business_branding` row, and (b) gives the scraper/Claude prompt the venue's existing `laji` (sport type) and city as context, which could improve subpage-link heuristics and price/hours extraction accuracy (e.g. disambiguating multi-location chains). | MEDIUM | Structural reorder in `WizardInner`/`OnboardingWizardPage`: today `AnalysoiSivusto` renders standalone before `WizardInner` mounts at all, so `paikkaId` doesn't exist yet when analysis starts. Moving Paikka first means either (a) lifting `StepPaikka` out of `WizardInner` into the page-level flow before `AnalysoiSivusto`, or (b) restructuring `business_branding`'s key from `business_account_id` (1 row per account) to `paikka_id`-scoped, which is a bigger schema change since a business can own multiple venues (`business_paikka_links` already supports many-to-one). **This is the most architecturally invasive of the 8 features** — touches DB schema/RLS (`business_branding` FK), the route handler's UPSERT `onConflict` key, and both onboarding/edit entry points. |
+| **Multi-logo selection UI (Feature 5)** | Wix's AI Logo Maker, Brandfetch, and most brand-kit extractors that find >1 plausible logo present a small picker grid rather than silently auto-selecting — auto-pick is a known source of "wrong logo chosen" complaints (e.g. picking a partner/sponsor logo instead of the venue's own). Letting the user choose converts an occasionally-wrong AI guess into a fast, low-friction confirm step. | MEDIUM | Scraper already collects up to 5 logo candidates and converts all to PNG (`logoBuffers`) — the raw materials already exist! Today only `result.logo_index` (Claude's single pick) is uploaded via `uploadLogo()`; the other 4 candidate buffers are discarded. New work: (a) upload ALL candidate buffers to Storage (or a temp/staging path) so the user can render a picker grid of real images, not just Claude's pick; (b) `analyzeWithClaude` should still return a *ranked* `logo_index` as the default/highlighted choice, but the UI must allow override; (c) the chosen index needs to flow into `media_urls.logo` / `business_branding.logo_url` on confirm. Standard interaction model from research: a horizontal/grid thumbnail picker with the AI's top pick pre-highlighted/selected, single-select (radio-button semantics, not checkboxes). |
+| **2-color palette selection (Feature 6)** | Squarespace Blueprint and similar tools present a small swatch picker (3–6 extracted colors) and let the user assign roles (background vs. accent) rather than auto-applying the first extracted color. This is more sophisticated than this project's current v2.1 implementation (`colors[0]` always = background, no accent at all) and directly fixes the Feature 7 white-logo bug by giving users an explicit way to choose a *visible* background. | MEDIUM | `scraper.ts` and the prompt already return up to 5 colors as a flat ranked array (`colors: string[]`) — the data exists. New work: (a) UI swatch grid where user picks 2 roles from the palette (could also allow a manual hex override / "pick custom color" escape hatch since auto-extracted palettes are sometimes irrelevant, e.g. picked up a CSS framework's accent rather than true brand color); (b) extend `BrandingResult`/`business_branding` schema from `colors: string[]` to an explicit `{ background: string, accent: string }` selection persisted separately from the raw extracted list (raw list stays in `raw_analysis` for audit/regenerate); (c) `buildBrandingPreview()` and `DiagonaalKortti`/`CalloutCard` need a second color prop threaded through (today only `brandColor` singular is passed). Standard interaction model: tap/click first swatch → assign "Tausta", tap second → assign "Korostus", with a visual preview chip showing both colors together (often shown as a small two-tone pill or split swatch). |
+| **Live preview while editing, with desktop split-view / mobile toggle (Feature 8)** | This is the strongest differentiator of the 8 — Airbnb's listing editor and Squarespace's site editor are the closest reference patterns, both showing real-time updates as the user types/uploads, specifically to reduce "I'll find out what it looks like at the end" anxiety. Currently this wizard ONLY shows a preview at step 6, which is the single biggest UX gap relative to category leaders. | HIGH | This is the most invasive feature for the *existing component architecture*: every Step component (`StepMediat`, `StepHinnasto`, `StepAukioloajat`, `StepYhteystiedot`) currently manages local form state independently and only persists to Supabase on "Next"/"Save" — there's no shared/lifted state that a sibling preview pane could read from while a step is still being edited. Implementing this requires either (a) lifting ALL step form state up into `WizardInner` (a large refactor touching 4 step components + draft-loading logic), or (b) each step emitting an `onChange` callback (not just `onNext`) that WizardInner uses to update a shared "live draft" object the preview pane reads — less invasive than (a) but still touches every step's internals. Desktop: two-column layout (edit form left/right, preview right/left) replacing the current single-centered-column `max-w-xl` step layout — a layout change for the whole wizard shell, not just step 6. Mobile: a toggle/tab control (segmented control "Muokkaa / Esikatselu") swapping which pane is visible, consistent with `AnimatePresence` crossfade patterns already used elsewhere in the app (per CLAUDE.md animation principles — no y-movement, opacity-only crossfade). **Recommend scoping this as its own phase, last, after Features 1–7 stabilize the preview component and color/logo model it needs to render live.** |
 
-**Confidence: MEDIUM** — Airbnb's server-driven dual-mode architecture confirms this is the right approach at scale. The stripped-map pattern is specific to this app; complexity estimate is based on reading `Etusivu.tsx` (large component but prop-threaded patterns already exist).
+### Anti-Features (Commonly Requested, Often Problematic)
 
----
-
-## Anti-Features
-
-Features to explicitly NOT build in v1.8.
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| Separate `/map` route for business users | Creates a second map codebase to maintain. GPS, clustering, pin logic, zoom behavior would duplicate. Guaranteed to diverge. | Pass `businessMode` prop to `Etusivu`; conditionally hide consumer widgets |
-| Re-approval flow for every edit | Would create excessive friction for minor pricing/hours updates. v1.7 explicitly decided: only first claim needs admin approval. Edits in edit wizard apply immediately. | Keep v1.7 decision: edits are immediate, no re-approval |
-| "Switch mode" toggle for business users on the map | Adds cognitive overhead — a business user switching to "consumer mode" to use the map they occasionally want to browse is unnecessary UX complexity | Simple "Avaa kartta" button from the dashboard is sufficient |
-| Verified checkmark as a paid feature | Yelp monetized this; BrightLocal research documented user trust erosion as a result. Verification should be the natural reward for admin approval, not a premium feature. | Free for all approved venues as part of the publication flow |
-| Google Places conflict-resolution UI for overlapping data | Extremely complex UX for a v1.8 scope. Business data should simply win at approval time with no UI needed. | Field-level null-check: business value wins if non-empty; otherwise keep existing auto-populated value |
-| Analytics dashboard on `/business` | No meaningful data yet. Premature optimization. | Defer to a future milestone when venues have accumulated visits/review data |
-| Re-send approval email button for admin | Low value; Resend email infra works correctly; admins can use Supabase directly if needed | Not needed |
-
----
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|------------------|-------------|
+| **Full recursive site crawl (>1 link depth, sitemap.xml ingestion, unlimited pages)** | "Better scraping" (Feature 3) could be over-interpreted as "crawl the whole site like a search engine" to maximize data found. | Massively increases SSRF/cost/latency risk on a server that already has a documented Hobby-tier 10s `waitUntil` cap; most small Finnish venue sites have <10 pages total, so diminishing returns are immediate; widens prompt-injection attack surface (more attacker-controllable HTML reaching the Claude prompt) per existing `CR-03`/`CR-04`/`WR-02` mitigations already in this codebase. | Cap at homepage + N (3–5) same-origin links matched by keyword heuristics (hinnasto/hinnat, aukioloajat/aukiolo, yhteystiedot/yhteys/contact) found in the homepage's own nav/footer links — bounded, predictable cost, addresses the actual user need (subpages, not the whole site). |
+| **Auto-applying full extracted palette (5 colors) across the entire site theme** | "Let users use the brand colors everywhere" sounds appealing as a natural extension of Feature 6. | This project has a fixed glassmorphism design system (CLAUDE.md: `.glass`, fixed neutral palette, sport-type colors in `lib/lajit.ts`) — applying arbitrary scraped colors site-wide would conflict with brand consistency rules already established and risks accessibility (contrast) issues outside the narrow, already-YIQ-checked DiagonaalKortti/CalloutCard usage. | Keep 2-color selection scoped to the venue's own card/preview components only (current pattern), not the wizard chrome or rest of the app. |
+| **Real-time live preview implemented via continuous Supabase writes on every keystroke** | "Live" could be naively implemented as "save to DB on every onChange" to keep the preview and persisted draft always in sync. | Hammers the DB with writes on every keystroke (price input, hours input), risking rate limits/cost and race conditions with the existing debounced/explicit-save pattern already used by `StepHinnasto`/`StepAukioloajat`; also reintroduces the same kind of TOCTOU concern flagged elsewhere in this project's history (`WR-03`: TOCTOU approve). | Keep persistence on explicit Next/Save as today; live preview reads from **local component state** (or a lifted in-memory draft object), not from a round-tripped Supabase read — DB writes stay exactly as frequent as they are now. |
+| **Letting Claude pick colors AND logo AND crop/recolor images automatically with no extracted-candidate transparency** | Tempting to "let the AI just decide" to minimize new UI work for Features 5–6. | Directly contradicts the stated v2.2 goal (user sees/approves results in real time with less manual work, but also more control) and is the literal current behavior (auto-pick) that targets 5 and 6 exist specifically to replace. Continuing single auto-pick is the status quo being fixed, not a feature. | Multi-candidate picker UIs as scoped in Features 5 and 6, with AI's top pick pre-selected as the default (best of both: zero-click for users who trust the AI, override available for ones who don't). |
 
 ## Feature Dependencies
 
 ```
-Middleware server-side role routing
-  requires: business_accounts table (exists v1.7)
-  required by: business-dashboard-as-homepage UX
-  required by: /profiili business variant (can share same check)
+StepPaikka-before-URL-analysis (Feature 2A)
+    └──requires──> business_branding scoped to paikka_id, not just business_account_id
+                       └──affects──> Quick-accept path (Feature 2B) — needs paikka_id to exist before analysis starts
+                       └──affects──> Multi-page scraping (Feature 3) — venue laji/city context can improve subpage heuristics
 
-Publication on approval
-  requires: /api/admin/approve (exists v1.7, needs extension)
-  requires: business_managed=true column (exists v1.7)
-  requires: published=false for new venues (exists v1.7, enforced at create time)
-  required by: verified checkmark appearing on published+claimed venues
+Quick-accept path (Feature 2B)
+    └──requires──> StepPaikka-before-URL-analysis (Feature 2A) — paikka_id must exist first
+    └──requires──> Multi-logo selection (Feature 5) OR an explicit decision to skip logo confirmation in quick-accept
+    └──requires──> 2-color selection (Feature 6) OR an explicit decision to skip color confirmation in quick-accept
+    └──requires──> /api/business/onboarding/submit to accept partial/AI-only drafts
 
-Verified checkmark in cards
-  requires: is_claimed=true in liikuntapaikat (exists v1.7, set at claim/create time)
-  requires: published=true (gated by publication flow)
-  requires: is_claimed added to SELECT in app/page.tsx (may need to verify it's included)
-  required by: consumer trust signal
+Multi-page scraping (Feature 3)
+    └──enhances──> Image discovery (Feature 4) — following subpages surfaces more candidate photos (e.g. gallery pages)
+    └──enhances──> Multi-logo selection (Feature 5) — more pages = more logo candidate sightings
+    └──conflicts-risk──> existing SSRF/prompt-injection guards — every new followed URL must re-run the same hostname/private-IP checks as the seed URL
 
-Consumer map in business dashboard (stripped mode)
-  requires: middleware routing (business lands on /business first, has "Avaa kartta" button)
-  requires: businessMode prop in Etusivu
-  independent of: publication flow
+Multi-logo selection (Feature 5)
+    └──requires──> scraper already returns logoBuffers[] (exists today) — needs all candidates uploaded, not just the chosen one
+    └──helps-fix──> White/transparent logo bug (Feature 7) — letting user pick avoids picking an obviously-broken candidate, but doesn't fully fix contrast
 
-/profiili business variant
-  requires: business_accounts check (server or client side)
-  independent of: publication flow
-  independent of: middleware routing (nice to have but not blocked by it)
+2-color selection (Feature 6)
+    └──requires──> scraper colors[] already exists — needs UI + schema change to store 2 roles instead of "colors[0] = bg"
+    └──fixes──> White/transparent logo bug (Feature 7) — chosen background color becomes the logo's contrasting backdrop
+
+White/transparent logo bug (Feature 7)
+    └──blocks──> CalloutCard preview fix (Feature 1) looking correct for any venue with a white/transparent logo — must ship together or the new preview will visibly reproduce the same bug
+
+CalloutCard preview fix (Feature 1)
+    └──independent — no hard dependency on other features, but should land before Live preview (Feature 8) since Feature 8 will repeatedly re-render whichever preview component is chosen
+
+Live preview while editing (Feature 8)
+    └──requires──> CalloutCard preview fix (Feature 1) — must render the correct component before making it "live"
+    └──requires──> 2-color selection (Feature 6) + Multi-logo selection (Feature 5) state shape finalized — live preview needs a stable shape to read from for logo/colors, not the old single-logo/single-color shape
+    └──requires──> lifting form state out of each Step component (StepMediat, StepHinnasto, StepAukioloajat, StepYhteystiedot) into a shared draft object WizardInner/page can pass to a preview pane
 ```
 
----
+### Dependency Notes
 
-## Tech Debt Items (v1.8 scope, not new features)
+- **Feature 2A (StepPaikka reorder) requires a `business_branding` schema/key change:** today `business_branding` has one row per `business_account_id` (UPSERT `onConflict: 'business_account_id'`). If a business owns multiple venues (already supported via `business_paikka_links`), reordering so Paikka comes first and ties analysis to a specific venue likely means re-keying this table to `paikka_id` (or a composite key). This is a migration + RLS policy change, not just a UI reorder — flag for its own implementation step.
+- **Feature 2B (quick-accept) requires 2A first:** the quick-accept CTA needs a resolved `paikka_id` to write hinnasto/aukioloajat/yhteystiedot into `onboarding_draft` and to call `/api/business/onboarding/submit`. It cannot exist before the reorder lands.
+- **Feature 3 (multi-page scraping) is the highest security-review-risk item:** the existing SSRF guard (private-IP blocklist, protocol check) in `route.ts` only runs once, on the user-submitted seed URL. Every link discovered and followed on the homepage must pass through the *same* guard before fetching — Claude-suggested or HTML-extracted URLs are attacker-influenceable input (the existing `WR-02` "only trust Claude's URL if same hostname" pattern is the right model to replicate here).
+- **Feature 5 (multi-logo) and Feature 6 (2-color) both change persisted data shape**, which Feature 8 (live preview) then depends on. Sequencing these before Feature 8 avoids building the live-preview data plumbing twice.
+- **Feature 7 (white logo bug) is cheapest to fix as a standalone CSS/contrast change** (checkerboard or neutral backdrop on logo thumbnails) but is *more completely* solved once Feature 6 exists (use the user-chosen background color as the logo's preview backdrop, matching what it will look like in the live card).
+- **Feature 8 (live preview) is correctly the most complex and should be sequenced last** — it depends on the final shape of every other feature's output (correct preview component, fixed logo contrast, 2-color model, multi-logo selection) and requires the largest structural refactor (lifting state out of 4 step components).
 
-| Item | What It Is | Complexity | Why Now |
-|------|-----------|------------|---------|
-| Wizard orchestration refactor | Shared step-navigation logic between `OnboardingWizardInner` and `EditWizardInner` is currently duplicated. Step state, URL sync, prev/next handlers repeat. | Medium | Reduces bug surface before v1.8 adds more wizard interactions |
-| Claim route `business_managed=true` fix | When a business claims an existing venue (`/api/business/claim-paikka`), `business_managed` should be set to `true` immediately — not only on admin approval. The sync script checks this flag to skip managed venues. If not set at claim time, a sync during the pending period could overwrite business-entered data. | Low | Data integrity fix; 1-line change in the claim Route Handler |
-| `/admin` Next.js middleware protection | `app/admin/page.tsx` uses `useEffect + router.replace('/')` client-side guard. This causes a blank flash for unauthorized users; worse, the page briefly renders before redirect for fast connections. Server-side protection via middleware is the correct pattern. | Low | Security/UX fix; extends the same middleware that will handle business user routing |
-| `onboarding_completed` cleanup | If a `onboarding_completed` boolean exists on `business_accounts`, it is redundant with the `onboarding_draft` table (which is the authoritative "is onboarding in progress" source). The column creates confusion about the source of truth. | Low | Schema hygiene; prevents future bugs where both signals are checked inconsistently |
+## MVP Definition
 
-**Confidence: HIGH** — All items confirmed by direct code inspection of `middleware.ts`, `app/admin/page.tsx`, and the migration files.
+### Launch With (v2.2 core)
 
----
+Minimum set that delivers the milestone's stated goal ("AI analysis produces better data via broader site search, user sees/approves results in real time, with less manual work") without requiring the full live-preview refactor:
 
-## Implementation Notes for Roadmap Planning
+- [ ] **Feature 1 — CalloutCard preview fix** — cheap, fixes a visibly broken/wrong preview; should not ship another milestone with the wrong component showing
+- [ ] **Feature 7 — White/transparent logo contrast fix** — small, visible bug; cheap relative to value once Feature 6's color model exists (sequence after Feature 6, or ship a quick backdrop-only fix first if Feature 6 slips)
+- [ ] **Feature 3 — Multi-page scraping (homepage + N same-origin subpages)** — this is the actual "better data" half of the milestone goal; bounded scope (3–5 pages, keyword-matched links) keeps cost/risk manageable
+- [ ] **Feature 5 — Multi-logo selection** — raw candidates already exist in the pipeline (`logoBuffers`); mostly a UI + upload-all-candidates change, high value-to-effort ratio
+- [ ] **Feature 6 — 2-color selection** — raw palette already exists in the pipeline (`colors[]`); mostly a UI + schema change, also high value-to-effort ratio and unblocks Feature 7's proper fix
 
-### Middleware Role Check (performance consideration)
-The existing `middleware.ts` runs `supabase.auth.getUser()` on every request. Adding a `business_accounts` lookup would add one extra DB round-trip, but ONLY for:
-- Authenticated users (unauthenticated users skip it)
-- Hitting the `/` path (no reason to check on `/paikat/[id]`, `/profiili`, etc.)
+### Add After Validation (v2.x)
 
-Pattern: `if (request.nextUrl.pathname === '/' && user) { check business_accounts; if found, redirect to /business }`. This is a minimal, targeted extension.
+- [ ] **Feature 4 — Image discovery for Mediat gallery** — natural follow-on once Feature 3's multi-page fetch exists (more pages = more candidate photos found), but adds Storage cost and background-job duration risk — validate Feature 3's latency/cost first
+- [ ] **Feature 2 (A+B) — Flow reorder + quick-accept** — valuable but the most architecturally invasive (schema re-key); worth its own focused phase once the data the quick-accept path would submit (logo, colors, subpages) is stable from Features 3/5/6
 
-Alternative: Store business account existence in a JWT custom claim or cookie at login time to avoid the DB round-trip entirely. However, this requires a database webhook or login trigger to populate the claim — added complexity. For v1.8, the single targeted DB query on `/` is simpler and sufficient.
+### Future Consideration (v3+)
 
-### Data Sync on Approval
-The approve endpoint (`/api/admin/approve`) must be extended to:
-1. Fetch the `paikka_id` from `business_paikka_links` for the application being approved
-2. Read current business-entered data already in `liikuntapaikat` (images, pricing, hours, contact info were written by the onboarding wizard via edit wizard pattern)
-3. Build an UPDATE that sets `published=true`, `business_managed=true` (and only overwrites other fields if they are non-null in the current row — since the wizard already wrote them, they should be present)
-4. Execute as a single atomic update
+- [ ] **Feature 8 — Live preview with desktop split/mobile toggle** — explicitly the highest-complexity item; depends on every other feature's final data shape being settled, and requires lifting state out of 4 step components plus a wizard-shell layout change. Defer until Features 1, 3, 5, 6, 7 have shipped and stabilized the preview data model; building live preview against a still-changing data shape means rework.
 
-The onboarding wizard in v1.7 writes data directly to `liikuntapaikat` rows during the wizard steps (confirmed by the edit wizard pattern in `app/business/[id]/EditWizardInner.tsx`). So approval does not need to "copy" data from a separate draft — it just needs to flip `published` and `business_managed`.
+## Feature Prioritization Matrix
 
-### Verified Checkmark Token
-Project design system: amber is already reserved for "Sponsoroitu". Indigo aligns with the AKTIIVI brand (NavBar is `bg-indigo-800`, hero is `bg-indigo-600`). Use `text-indigo-600` with a `BadgeCheck` Lucide icon at `w-3 h-3` or `w-3.5 h-3.5`. Avoid blue (used for map pins). The indicator renders inline next to the venue name in the card name row.
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| 1. CalloutCard preview fix | MEDIUM | LOW | P1 |
+| 2A. StepPaikka before URL analysis | MEDIUM | MEDIUM | P2 |
+| 2B. Quick-accept to admin queue | HIGH | MEDIUM | P2 |
+| 3. Multi-page scraping | HIGH | MEDIUM | P1 |
+| 4. Image discovery for Mediat | MEDIUM | MEDIUM | P2 |
+| 5. Multi-logo selection | HIGH | MEDIUM | P1 |
+| 6. 2-color selection | HIGH | MEDIUM | P1 |
+| 7. White/transparent logo bug fix | MEDIUM | LOW | P1 |
+| 8. Live preview (split/toggle) | HIGH | HIGH | P3 |
 
-### Stripped Map for Business Users
-`Etusivu.tsx` is a large component (~900 lines). Do not fork it. Add a `businessMode?: boolean` prop. Gate the following elements behind `!businessMode`:
-- AI weather widget (`SaaWidget` / AI recommendations section)
-- Bookmark button (`BookmarkButton` component)
-- Bottomsheet review/rating prompts
-- The "Kirjaudu" nav button (business is already logged in)
+**Priority key:**
+- P1: Must have for v2.2 — delivers the stated milestone goal (better data, real-time approve, less manual work) at acceptable cost
+- P2: Should have, sequence into v2.2 if P1 lands cleanly, otherwise v2.3
+- P3: Nice to have, defer to its own milestone — highest complexity, depends on P1/P2 data shapes settling first
 
-GPS, map pins, search, filters, and bottomsheet venue info should all remain functional — business users legitimately want to find venues.
+## Competitor Feature Analysis
 
----
-
-## MVP Recommendation
-
-Recommended phase order for v1.8:
-
-1. **Tech debt** — wizard refactor, claim `business_managed` fix, admin middleware protection, `onboarding_completed` cleanup. Low risk, sets clean foundation.
-2. **Publication on approval** — extend `/api/admin/approve` to set `published=true` + `business_managed=true`. Core value delivery of v1.8.
-3. **Verified checkmark** — add `is_claimed` to `PaikkaKortti`, `DiagonaalKortti`, `PaikkaSheet`. Visual payoff, depends only on #2 for the approved venues case (though `is_claimed=true` is already set at claim time).
-4. **Business dashboard as homepage** — middleware role routing + "Avaa kartta" button on dashboard + stripped consumer map.
-5. **Profile page business variant** — `/profiili` hides consumer fields for business users. Lower priority, but important for the cohesive business experience.
-
-**Defer to future milestone:**
-- Analytics/metrics on business dashboard (no data yet)
-- Business notification email when listing goes live (email infra exists but adds scope)
-- Paid "Sponsoroitu" upgrade flow for businesses
-
----
-
-## Confidence Assessment
-
-| Area | Confidence | Notes |
-|------|------------|-------|
-| Role detection / middleware routing | HIGH | Next.js middleware pattern well-documented; existing middleware is the right extension point; confirmed by Next.js docs and GitHub discussions |
-| Business dashboard table stakes | HIGH | Most already built in v1.7; gaps confirmed by code inspection of `app/business/page.tsx` |
-| Verified indicator | HIGH | `is_claimed` column exists and is in schema; visual token pattern is industry-standard |
-| Publication data sync | HIGH | Column structure confirmed in migrations; approve endpoint exists; extension is well-scoped |
-| Stripped map for business | MEDIUM | `Etusivu.tsx` is large; prop threading is the right approach but needs care; not a documented external pattern — estimation based on code reading |
-| Tech debt items | HIGH | All four items confirmed by direct code inspection |
-
----
+| Feature | Wix ADI / Squarespace Blueprint | Brandfetch-style brand-kit extractors | Our Approach |
+|---------|----------------------------------|----------------------------------------|--------------|
+| Logo extraction | AI-generated or single best-guess logo suggestion from a brief, not scraped from an existing site (different use case — building a new site, not importing an existing one) | Extracts and lists ALL logo variants found (favicon, wordmark, icon) and lets user pick/download any | Already scrapes multiple candidates (`logoBuffers`); v2.2 adds the missing picker UI to match the brand-kit-extractor pattern (Feature 5) |
+| Color palette | Presents a small set of curated palette options matched to a style/mood the user selects; live preview updates as palettes are swapped | Extracts a ranked list of hex colors found in CSS/meta tags with no role assignment | v2.2's 2-color picker is closer to the brand-kit-extractor model (raw extracted palette) but adds Wix/Squarespace's "live preview as you pick" sensibility by assigning explicit roles (bg/accent) rather than just listing colors |
+| Subpage crawling | Wix ADI ingests an existing Facebook/website link and crawls multiple pages of the source to build site content — multi-page is the norm, not the exception, for this category | N/A (most brand-kit tools are single-page extractors) | v2.2's Feature 3 brings this project in line with the AI-website-builder norm (Wix/Squarespace), bounded to a few same-origin pages rather than full-site ingestion |
+| Live preview while editing | Core differentiator of both Wix ADI and Squarespace Blueprint — every selection (palette, layout, copy) updates a visible preview immediately | N/A — brand-kit extractors are one-shot exports, not editing tools | Feature 8 directly targets parity with this pattern but is correctly scoped as the largest, last-sequenced piece of work given this project's current step-isolated form architecture |
 
 ## Sources
 
-- Codebase: `app/business/page.tsx`, `app/admin/page.tsx`, `middleware.ts`, `supabase/migrations/20260605000000_business_accounts.sql`, `supabase/migrations/20260605000001_business_managed.sql`, `supabase/migrations/20260605000004_published_is_claimed.sql`
-- Airbnb dual-mode switching: [Switching between hosting and traveling](https://www.airbnb.com/help/article/3546)
-- Next.js middleware role routing: [Role-based routing discussion](https://github.com/vercel/next.js/discussions/23041), [Next.js Middleware docs](https://nextjs.org/docs/14/app/building-your-application/routing/middleware)
-- Google Business Profile verification: [Verify your business on Google](https://support.google.com/business/answer/7107242?hl=en), [Understand Google updates to your profile](https://support.google.com/business/answer/3480441)
-- Yelp claimed vs verified: [What is a claimed business?](https://www.yelp-support.com/article/What-is-a-claimed-business?l=en_US), [Is Yelp monetizing trust with verified badge?](https://www.brightlocal.com/blog/is-yelp-monetizing-consumer-trust-with-its-new-verified-badge/)
-- Tripadvisor Management Centre: [Quick Start Guide](https://www.tripadvisor.co.uk/TripAdvisorInsights/w746)
-- Foursquare Business Listings: [foursquare.com/products/business-listings/](https://foursquare.com/products/business-listings/)
-- Directorist claim listing: [Moderating Claims](https://directorist.com/documentation/extensions/claim-listing/moderating-claims/)
+- Codebase analysis (HIGH confidence): `app/business/WizardInner.tsx`, `app/business/onboarding/{StepPaikka,StepMediat,StepEsikatselu,AnalysoiSivusto}.tsx`, `app/api/business/analyze-website/route.ts`, `lib/branding/{scraper,analyzer,brandingResult,prompt}.ts`, `.planning/PROJECT.md` (v2.1 shipped summary + v2.2 target list)
+- [Brand Kit Extractor — Chrome Web Store](https://chromewebstore.google.com/detail/brand-kit-extractor/mcegfbolimgfafdlblnnfkpfjdohccad) — MEDIUM confidence, ecosystem pattern for one-click brand asset extraction
+- [Brandfetch — Chrome Web Store](https://chromewebstore.google.com/detail/brandfetch/ecbhicmbbeeckcmhgoaiemddbfcgphhj?hl=en) — MEDIUM confidence, multi-logo/color/font extraction pattern reference
+- [Branding Capture — Chrome Web Store](https://chromewebstore.google.com/detail/branding-capture/lkgghfingfogkbogcgkmhahbdneikafd) — MEDIUM confidence, color extraction/categorization pattern
+- Wix AI Logo Maker review (websitebuilderexpert.com) — MEDIUM confidence, color-suggestion + multi-option pattern
+- Wix vs Squarespace AI builder comparison (lokuma.ai) — MEDIUM confidence, "live preview updates as user picks options" pattern (Squarespace Blueprint)
+- [Is there a scraper that can navigate subpages and find all links for me? — Firecrawl Glossary](https://www.firecrawl.dev/glossary/web-crawling-apis/scraper-to-navigate-subpages-find-all-links) — MEDIUM confidence, crawl-boundary best practices (depth limit, URL pattern matching, breadth-first for site-mapping)
+- Pluralsight scraping best-practices guide — MEDIUM confidence, ethical/rate-limit crawling guidance
+- Userguiding.com onboarding wizard examples (Airbnb/Upwork live-preview pattern) — MEDIUM confidence, live-preview-while-editing reference pattern
+
+---
+*Feature research for: AI-assisted business onboarding wizard, website-to-brand-kit extraction*
+*Researched: 2026-06-16*

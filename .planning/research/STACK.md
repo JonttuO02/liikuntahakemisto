@@ -1,271 +1,162 @@
-# Technology Stack — v1.8 Additions
+# Stack Research
 
-**Project:** Liikuntahakemisto / AKTIIVI — v1.8 Yritysportaali v2 (Julkistaminen & UX)
-**Researched:** 2026-06-11
-**Scope:** New capabilities only. Existing stack (Next.js 14, Supabase, Tailwind v3, Framer Motion,
-next-intl, @serwist/next, Vitest) is NOT re-evaluated.
+**Domain:** Server-side website scraping enhancements (multi-page crawl, image gallery extraction) + live two-pane preview UI for a multi-step onboarding wizard
+**Researched:** 2026-06-16
+**Confidence:** HIGH (Cheerio, Framer Motion, Sharp all verified via Context7/official docs; concurrency-control decision verified against project's existing tsconfig)
 
----
+## Context: What Already Exists (do not re-architect)
 
-## Summary Verdict: Zero new npm packages required
+This is an **additive** milestone on top of a working v2.1 pipeline:
 
-All three v1.8 feature areas — role-based UI, data publication pipeline, business dashboard UX — are
-implementable entirely with the existing stack. The work is SQL migrations, Route Handler logic,
-middleware edits, and React component restructuring. No dependency additions.
+- `lib/branding/scraper.ts` — `fetch`-only HTML scraping, regex-based extraction (no DOM parser currently), SSRF guard already in `route.ts`, 5MB response cap, 10s/5s `AbortSignal.timeout`
+- `lib/branding/analyzer.ts` + `lib/branding/prompt.ts` — ONE Claude Haiku call combining vision (logo PNGs) + text (HTML snippet, 8000 chars) → structured JSON (`logo_index`, `logo_type`, `colors[]` up to 5, `prices[]`, `opening_hours[]`, `website_url`)
+- `colors: string[]` already returns **up to 5 hex colors** extracted from `<meta theme-color>` + CSS `:root` vars — the "2-color palette selection" requirement is a **UI-only** change (user picks 2 of the existing N swatches), **not a new color-extraction capability**
+- `sharp` already converts arbitrary image formats (SVG/AVIF/WebP) to PNG for Claude vision input
+- `app/business/WizardInner.tsx` — single component, `mode: 'onboarding' | 'edit'`, plain `useState`/`useEffect`, no form library, no global state library
+- Vercel Hobby `waitUntil` 10-second background-execution ceiling is a known, accepted constraint (documented in `route.ts` comments) — **multi-page crawling must respect this budget**
 
----
+Given this, the stack additions below are deliberately minimal.
 
-## Feature Area 1: Role-Based UI (consumer vs business user)
+## Recommended Stack
 
-### Decision: DB lookup in page components, not in middleware
+### Core Technologies (new)
 
-**Why middleware cannot do role-based routing in this project:**
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| `cheerio` | `^1.2.0` | Parse HTML on subpages to extract `<a href>` links and `<img>` candidates (logo + gallery) | The current scraper uses hand-rolled regex for a handful of fixed patterns (favicon, og:image, theme-color). That approach does not scale to "find all internal links" or "find all content images, excluding logos/icons/nav assets" — regex-based link/attribute extraction on arbitrary real-world HTML is fragile (nested quotes, self-closing variations, attribute order) and was already showing strain (CR-05 lastIndex bug in the existing regex loop). Cheerio gives a real DOM + CSS-selector + jQuery-like `.attr()`/`.each()` API, pure JS (no native binary, no Edge Runtime conflict — same `runtime = 'nodejs'` constraint as `sharp` already requires), tiny footprint (the route already pulls in `sharp`, this adds negligible bundle weight), and is the de-facto standard for server-side HTML scraping in the Node ecosystem. It does NOT execute JS or render the page — it parses static HTML exactly like the current `fetch`-based pipeline already does, so the architecture is unchanged, just the parsing layer is upgraded from regex to a proper parser. |
 
-Next.js middleware runs on the Edge Runtime. Supabase's own official documentation states that
-middleware should only call `supabase.auth.getUser()` to refresh the session cookie. Any additional
-Postgres query from middleware (e.g., `SELECT user_id FROM business_accounts`) fails or produces
-unpredictable latency because the Edge Runtime has no persistent DB connection. This is a documented
-limitation confirmed by multiple Supabase/Next.js community discussions. The existing `middleware.ts`
-correctly does session refresh only and must stay that way.
+### Supporting Libraries
 
-**What middleware CAN do for v1.8:** Path-based redirect using only the session cookie.
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| *(none — no new runtime dependency for image gallery extraction)* | — | Extracting non-logo `<img>` candidates reuses Cheerio + the existing `toPngBase64`/fetch pattern in `scraper.ts` | Select `<img>` tags via `$('img')`, filter out ones already claimed as logo candidates (same URL), filter out tiny images (favicons/icons) by checking `width`/`height` attributes when present, cap to N (e.g. 8) candidates, resolve to absolute URL with `new URL(src, baseUrl)` exactly as the logo extraction already does |
+| *(none — no concurrency-limiter library)* | — | Bounding parallel subpage/image fetches | The scale here is small and fixed (e.g. ≤4 extra subpages, ≤8 extra images) — use the same pattern already in `scraper.ts` (`Promise.all` over a `.slice()`-capped array with per-request `AbortSignal.timeout`). Adding `p-limit` (`^7.3.0`, pure ESM) is unnecessary complexity for a fixed small fan-out and the existing code already proves `Promise.all` + per-call timeout is the established idiom in this codebase. Revisit only if the page/image cap grows materially. |
 
-```ts
-// middleware.ts extension — no DB query, uses only auth.getUser() already called
-const { data: { user } } = await supabase.auth.getUser()
+### Development Tools
 
-if (!user && (
-  request.nextUrl.pathname.startsWith('/business') ||
-  request.nextUrl.pathname.startsWith('/admin')
-)) {
-  return NextResponse.redirect(new URL('/', request.url))
+| Tool | Purpose | Notes |
+|------|---------|-------|
+| Vitest (existing) | Unit tests for new crawler/extraction logic | `lib/branding/scraper.test.ts` already exists — extend it; mock `fetch` the same way for subpage crawl tests |
+
+## Installation
+
+```bash
+# Core
+npm install cheerio@^1.2.0
+
+# No supporting libraries or dev dependencies needed beyond what's already installed
+```
+
+## What's Needed for Each Feature (a–d)
+
+### (a) Multi-page crawling — same-origin link discovery with limits
+
+**No new infra beyond Cheerio.** Implementation pattern, integrated into `lib/branding/scraper.ts`:
+
+1. After fetching the homepage HTML (already done), parse it with `cheerio.load(html)` instead of (or alongside) the current regex logo/color extraction.
+2. Extract `$('a[href]')`, resolve each to absolute URL via `new URL(href, baseUrl)`, filter to **same hostname** (`new URL(href).hostname === new URL(baseUrl).hostname`) — same-origin check the SSRF guard in `route.ts` already models.
+3. Score/select candidate subpages by keyword match against the link's path/text (Finnish + English: `hinnasto|hinnat|price`, `aukiolo|tunnit|hours`, `yhteys|contact`) — this is plain string matching, no library needed.
+4. Cap to **2–4 subpages max** (hard limit, not configurable by the response) to stay inside the 10s `waitUntil` budget already documented as a constraint.
+5. Fetch each selected subpage with the **same** `fetch` + `AbortSignal.timeout(5000)` + 5MB-size-guard pattern already used for CSS files in `scraper.ts` — run them with `Promise.all` (bounded by the hard page cap, so no concurrency limiter needed).
+6. Concatenate/label each subpage's stripped HTML snippet (reuse the existing comment/script/style-stripping regex) and pass labeled snippets into the Claude prompt (e.g. `--- Page: /hinnasto ---\n<snippet>`) so Claude can attribute extracted prices/hours to source pages if useful for debugging.
+7. **Do not** introduce a crawl queue, sitemap parser, or `robots.txt` parser for this milestone — the brief is "follow homepage links to find a few specific subpages," not general-purpose crawling. Respect SSRF guard on every followed URL exactly as the homepage URL is checked today (same-origin filtering already makes this mostly moot, but re-validate each resolved URL through the same private-IP check before fetching, since a malicious homepage could link to a private-IP-resolving same-looking hostname).
+
+**Why not Playwright/Puppeteer:** `playwright` is already a `devDependency` in this repo but is verified **unused in source** (search found it only in `package.json`/`package-lock.json`/a stale `TESTING.md` reference — Vitest is the actual active test runner per `package.json` scripts and `lib/branding/*.test.ts`). Do not promote it to a runtime dependency. A headless browser is unnecessary here — every target subpage (pricing, hours, contact) is typically server-rendered static HTML on small business sites, exactly the kind of content `fetch` already retrieves successfully for the homepage. Headless browsers add ~300MB+ deploy size, multi-second cold starts, and are flatly incompatible with the existing `waitUntil` 10-second Hobby-tier budget and the `runtime = 'nodejs'` Vercel function model already in place. If a future milestone discovers JS-rendered SPA target sites, that's a distinct, larger architectural decision — not an incremental addition here.
+
+### (b) Extracting non-logo images reliably for a media gallery
+
+Reuse Cheerio's `$('img')` traversal:
+
+- Exclude any `src` already present in the logo-candidate list (string equality after URL resolution).
+- Exclude tiny images: if `width`/`height` attributes are present and either is `<100`, skip (catches icons/spacers/tracking pixels).
+- Exclude common non-content patterns by filename/class heuristics already proven useful for logo detection in reverse: skip if `src`/`alt`/`class` matches `icon|sprite|pixel|spinner|loader`.
+- Resolve to absolute URL, dedupe, cap to a fixed number (e.g. 8) — same `.slice()` pattern as logo candidates.
+- Fetch + `sharp`-convert each to PNG/WebP **only if needed for storage normalization** — note the existing pipeline only does this for logo candidates because they're sent to Claude vision. Gallery images do **not** need to go through Claude vision (no requirement to classify gallery photos), so they can be passed through as discovered URLs and copied directly into Supabase Storage (or referenced if already public) without a `sharp` round-trip, saving compute. Only convert if the original format is unsupported by `<img>` rendering (e.g. legacy `.bmp`) — rare enough to handle with the existing `toPngBase64` helper as a fallback, not a new dependency.
+
+### (c) React pattern for two-pane live preview in Next.js 14 + Framer Motion
+
+**Framer Motion (already installed, `^12.38.0`) is sufficient. No new library needed.** Verified via Context7 (`/grx7/framer-motion`) — note the upstream package was renamed `motion` (npm `motion`, import `motion/react`) in 2025, but `framer-motion` remains a maintained legacy-named alias and this project's CLAUDE.md/animation conventions are written against `framer-motion` imports already used throughout (`AnimatePresence`, `motion.div`, `whileHover`, `staggerChildren`). **Do not migrate the import path** in this milestone — that's an unrelated, unscoped rename with no functional benefit here.
+
+The actual pattern needed is a **state-lifting** pattern, not a new animation or state-management library:
+
+1. Lift form field state (or at minimum a derived "preview model" object: chosen logo URL, 2 selected colors, pricing rows, hours, contact info) up into `WizardInner` (already the shared parent across all 6 steps per the `mode: 'onboarding' | 'edit'` consolidation done in v1.9).
+2. Each `Step*.tsx` component receives `value` + `onChange` props (or a single `onPreviewUpdate(partial)` callback) instead of owning fully isolated local state — this is a small refactor of the existing `useState`-per-step pattern, not an architecture change. (`StepHinnasto`, `StepMediat`, etc. already accept `initialDraft`/`initialPaikka` as props and call `onSaveSuccess` callbacks upward — extending this with a live "preview model" callback is consistent with the existing prop-drilling convention, no Context API or external store required given only 6 steps and one parent.)
+3. Render `DiagonaalKortti` (already brand-color-aware with YIQ contrast, per v2.1) directly inside the preview pane, fed by the lifted state — this component already exists and already does exactly the rendering job needed; no new preview-renderer component required.
+4. Desktop layout: CSS Grid/Flex two-column (`md:grid md:grid-cols-2`), no animation library involvement — this is pure Tailwind layout.
+5. Mobile layout: toggle between edit/preview panes using the **same `AnimatePresence mode="wait"` crossfade pattern already mandated in CLAUDE.md** for lista/kartta view switches (`opacity`-only, `duration: 0.2`, stable `key` prop) — this is a direct reuse of an existing, documented animation convention, not a new pattern.
+6. For the live update itself (preview re-rendering as the user types), this is just React re-render on lifted state change — no debouncing library needed at this form scale (a handful of text/select inputs), though a simple `useDeferredValue` (built into React 18, already in use) can be applied to the preview-feeding state if typing-induced re-renders of `DiagonaalKortti` ever feel janky. This is a built-in React 18 hook, not a new dependency.
+
+**What NOT to add:** no Zustand/Jotai/Redux (6 steps, one parent component, prop-drilling is already the established and sufficient pattern per `WizardInner`/`Step*` props); no React Hook Form (the codebase has zero form-library usage today — every step uses raw `useState` for fields — introducing one now for live-preview alone would be inconsistent and unnecessary since the live-preview requirement is satisfied by lifting plain state).
+
+### (d) Logo contrast / checkerboard backdrop for transparency visibility
+
+**Pure CSS — no library.** This is a well-known pattern (same one Photoshop/Figma use for transparent layers):
+
+```css
+.logo-checkerboard-backdrop {
+  background-image:
+    linear-gradient(45deg, #80808022 25%, transparent 25%),
+    linear-gradient(-45deg, #80808022 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #80808022 75%),
+    linear-gradient(-45deg, transparent 75%, #80808022 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
 }
 ```
 
-This is valid because it does NOT query `business_accounts` — it only checks for a logged-in session.
-The business-vs-consumer distinction is made inside the page, not in middleware.
+Implementation notes specific to this project:
+- Render the logo `<img>`/`<Image>` inside a small container with this checkerboard background, OR offer a light/dark toggle behind the logo (two solid swatches, e.g. `#ffffff` and `#111111` — the project's own foreground-primary token from CLAUDE.md) so the user can manually verify visibility against both extremes, in addition to the checkerboard which reveals transparency itself.
+- Recommend **checkerboard as the default backdrop** (reveals transparency unambiguously) with a small toggle to preview against the *actual selected background color* (one of the 2 chosen palette colors from requirement 4) — this directly serves the bug being fixed (white logo invisible on white preview background) by letting the user see the logo against the real background color they picked, not just a generic white card.
+- No new npm package — this is ~10 lines of CSS plus a boolean toggle state, consistent with the project's existing glassmorphism utility-class convention (`globals.css`) of defining reusable primitives there rather than inline styles. Add a `.checkerboard` utility class to `app/globals.css` alongside `.glass`/`.glass-hover` per existing convention.
 
-**Why not JWT custom claims (Supabase Custom Access Token Hook):**
-Embedding `is_business` into the JWT via a Supabase Custom Access Token Hook is architecturally
-possible but adds operational overhead (hook lives in Supabase dashboard, must be maintained separately,
-role changes require a token refresh cycle). Given that the role check is a single
-`SELECT user_id FROM business_accounts WHERE user_id = $1`, which is a primary key lookup (fast, indexed),
-the direct DB check in the page component is simpler and matches the pattern already used for `is_admin`
-in `/admin/page.tsx`.
+## Alternatives Considered
 
-**Recommended pattern — same as v1.7 `business_accounts` check:**
+| Recommended | Alternative | When to Use Alternative |
+|-------------|-------------|--------------------------|
+| Cheerio for HTML parsing | `node-html-parser` | Slightly faster/lighter for very simple selector needs, but lacks Cheerio's jQuery-style `.attr()`/`.each()`/manipulation ergonomics and has a smaller ecosystem; not worth the tradeoff for this use case |
+| Cheerio for HTML parsing | `linkedom` | Closer to a full DOM (supports more DOM APIs), used when code needs `document.querySelector`-style APIs or is shared with browser code; this project has no such cross-environment requirement, so Cheerio's purpose-built scraping API is the better fit |
+| Plain `Promise.all` + `.slice()` cap for fan-out fetches | `p-limit` (`^7.3.0`) | Use if the subpage/image cap grows beyond a small fixed number (e.g. dynamic discovery of 20+ pages) where uncontrolled parallel fetches could overwhelm the target server or blow the 10s budget — not needed at the 2–4 page / ≤8 image scale specified here |
+| Lifted `useState` in `WizardInner` for live preview | React Hook Form + Context | Use if the wizard grows significantly more complex (cross-field validation, large dynamic field arrays) — at 6 fixed steps with simple field shapes, the overhead and inconsistency with the existing zero-form-library codebase isn't justified |
+| CSS checkerboard backdrop | `react-checkerboard` / canvas-based pattern libraries | Never needed here — these exist for canvas/WebGL contexts (e.g. image editors with zoom/pan); a static CSS background covers this project's "preview a logo" use case completely |
 
-The `/business/page.tsx` already does:
-1. `supabase.auth.getUser()` — confirms logged-in state
-2. `SELECT user_id FROM business_accounts WHERE user_id = $1` — confirms business membership
-3. Conditional renders based on result
+## What NOT to Use
 
-For v1.8 dual-mode experience (business dashboard vs consumer profile), extend this same pattern:
-- `/business/page.tsx`: render dashboard if `business_accounts` row exists; redirect to `/` if not
-- `/profiili/page.tsx`: detect `business_accounts` membership; hide `kiinnostukset`/`kotikaupunki`
-  sections if user is a business account
+| Avoid | Why | Use Instead |
+|-------|-----|--------------|
+| Playwright / Puppeteer for crawling | Already a devDependency but unused in source; headless browsers add huge cold-start latency and deploy size, and are incompatible with the documented 10s `waitUntil` Hobby-tier budget that the multi-page crawl must still fit inside | `fetch` + Cheerio (static HTML parsing), exactly extending the existing `scraper.ts` approach |
+| `p-limit`/`p-queue` for this milestone's fetch fan-out | Adds a pure-ESM dependency for a problem (bounding ~4 parallel fetches) the codebase already solves inline with `Promise.all` + per-call `AbortSignal.timeout` | Keep using the existing inline `Promise.all` pattern from `scraper.ts` |
+| `node-vibrant` / `sharp-vibrant` (image-based color extraction) | The milestone's "2-color palette" requirement operates on the **already-extracted** `colors: string[]` (from HTML/CSS, by explicit prompt design — "Do NOT extract colors from images") — adding image-based palette extraction would contradict the existing, deliberate prompt instruction and pipeline design; it's also not asked for (the brief is "user picks 2 of the extracted colors," not "extract colors from images") | Reuse existing `colors[]` array from `analyzeWithClaude`; build a 2-of-N swatch picker UI only |
+| Zustand/Redux/Jotai for live-preview state | No global/cross-route state-sharing need exists — the wizard is a single component tree (`WizardInner` → `Step*`) already using lifted props successfully | Lift preview-relevant state into `WizardInner`, pass down via props |
+| react-hook-form (for this milestone specifically) | Zero existing usage in the codebase; introducing it only for live-preview would create an inconsistent two-pattern codebase (some steps raw `useState`, others RHF) for no functional gain — live preview only needs state lifting, not validation/schema features | Keep raw `useState` lifted to the parent, same as the rest of the wizard |
+| `framer-motion` → `motion` package rename | Out of scope; the rename is cosmetic (same API, new import path `motion/react`) and every existing component/CLAUDE.md convention in this repo is written against `framer-motion` — migrating mid-milestone for an unrelated feature set adds churn with zero benefit | Continue using `framer-motion@^12.38.0` exactly as already installed |
 
-For the consumer-facing home page (`/`), no role check is needed — the map, sheet, and AI widget
-display for everyone. The business user simply navigates to `/` like any consumer.
+## Stack Patterns by Variant
 
-**No new packages needed.** `@supabase/ssr` and `createBrowserSupabase()` already handle this.
+**If subpage discovery via link-text keyword matching finds zero confident matches (e.g. a single-page site with no separate pricing/hours pages):**
+- Fall back to homepage-only analysis exactly as today — this is not a regression, it's the existing v2.1 behavior preserved as a fallback path.
+- Because: the milestone goal is "better data when subpages exist," not "force a crawl" — Claude's existing single-call analysis of the homepage alone remains a fully valid result.
 
-**Confidence:** HIGH — based on official Supabase Next.js SSR docs, existing codebase pattern in
-`app/admin/page.tsx` and `app/business/page.tsx`, and documented Edge Runtime limitations.
+**If a discovered subpage fails to fetch (timeout, 404, non-HTML content-type):**
+- Skip it silently (same `try/catch`-and-continue idiom already used for logo-candidate fetches in `scraper.ts`) and proceed with whatever subpages did succeed, even if that's zero.
+- Because: one flaky subpage must never fail the entire analysis — this mirrors the existing per-candidate error handling philosophy already in the codebase.
 
----
+## Version Compatibility
 
-## Feature Area 2: Business Data Publication Pipeline
-
-### Decision: Postgres trigger function (pure SQL migration)
-
-**Three approaches evaluated:**
-
-| Approach | Mechanism | Verdict |
-|----------|-----------|---------|
-| A. Postgres trigger (PL/pgSQL) | Fires AFTER UPDATE on `business_paikka_links`; copies data in-DB atomically | USE THIS |
-| B. Supabase Database Webhook (pg_net) | Fires async after UPDATE; POSTs to a Next.js Route Handler | Unnecessary network round-trip for a pure in-DB operation |
-| C. Extend `/api/admin/approve` Route Handler | Application code already does partial sync (Step 6); add remaining sync here | Works, but mixes approval gate with data sync concerns |
-
-**Recommendation: Approach A — Postgres trigger.**
-
-The data sync on approval is entirely within the database. The onboarding wizard already writes all
-business content (hinnasto, aukioloajat, yhteystiedot, photo_urls, logo_url) directly to `liikuntapaikat`
-during the onboarding submit step (`/api/business/onboarding/submit`). On approval, only two flags
-need to change: `published = true` and `business_managed = true`. A trigger handles this atomically
-with zero application-layer involvement.
-
-**What already exists in the schema (v1.7 migrations):**
-- `liikuntapaikat.published` — `BOOLEAN NOT NULL DEFAULT true` (created: Phase 33 migration)
-- `liikuntapaikat.business_managed` — `BOOLEAN NOT NULL DEFAULT false` (created: Phase 31 migration)
-- `liikuntapaikat.is_claimed` — `BOOLEAN NOT NULL DEFAULT false` (created: Phase 33 migration)
-- `/api/admin/approve/route.ts` Step 6: already sets `published = true` for `link_type = 'created'`
-- Google Places sync script: already skips rows where `business_managed = true` (DATA-09)
-
-**What v1.8 adds:** A Postgres trigger that makes the `published = true` + `business_managed = true`
-flip reliable for ALL approval paths (application code, direct SQL admin changes, future automation):
-
-```sql
--- Migration: 20260612000000_business_approval_trigger.sql
-CREATE OR REPLACE FUNCTION sync_business_approval()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
-BEGIN
-  IF OLD.claim_status IS DISTINCT FROM 'approved'
-     AND NEW.claim_status = 'approved'
-  THEN
-    UPDATE liikuntapaikat
-    SET published = true,
-        business_managed = true
-    WHERE id = NEW.paikka_id;
-  END IF;
-  RETURN NEW;
-END;
-$$;
-
-DROP TRIGGER IF EXISTS on_link_approved ON business_paikka_links;
-CREATE TRIGGER on_link_approved
-  AFTER UPDATE ON business_paikka_links
-  FOR EACH ROW
-  EXECUTE FUNCTION sync_business_approval();
-```
-
-`SECURITY DEFINER` is needed because `liikuntapaikat` has RLS and the trigger runs in the context of
-the updating user (anon/business), not service role. `SECURITY DEFINER` makes the function execute as
-the function owner (postgres/service role), which can write to `liikuntapaikat` freely.
-
-**Relationship to existing `/api/admin/approve` Route Handler:**
-The Route Handler Step 6 (sets `published = true` for `link_type = 'created'`) and the trigger will
-both fire on the same approval. This is safe because both write the same values — idempotent UPDATEs.
-The trigger adds coverage for `link_type = 'claim'` where the Route Handler currently does not sync.
-Optionally remove the application-code Step 6 from the Route Handler after the trigger is confirmed
-working, to reduce duplication — but it is not required.
-
-**Verification badge ("verified tick"):**
-The `is_claimed = true` column already exists on `liikuntapaikat`. This flag is already set to `true`
-by the claim/create Route Handlers on submission (before approval). The verification badge is a
-frontend-only addition: read `paikka.is_claimed` (already in `lib/types.ts`? — no, needs adding) and
-render a small SVG tick next to the venue name in `PaikkaKortti`, `DiagonaalKortti`, and `PaikkaSheet`.
-No new DB column needed. `is_claimed` must be added to the `Liikuntapaikka` type in `lib/types.ts`
-and to the SELECT queries that feed those components.
-
-**When to use Supabase Database Webhooks (pg_net) instead:**
-Use webhooks only if the approval needs to trigger something OUTSIDE the database (e.g., calling a
-third-party API, sending a Slack notification). For in-DB data sync, a trigger is always the right tool.
-For email notifications on approval, the existing `/api/admin/approve` Route Handler already calls
-`sendApprovalEmail` directly via Resend — no webhook needed there either.
-
-**Confidence:** HIGH — standard Postgres pattern, no external dependencies, confirmed by Supabase
-Postgres triggers documentation and existing migration conventions in this codebase.
-
----
-
-## Feature Area 3: Business Dashboard UX
-
-### Decision: Restructure existing `/business/page.tsx`, no new packages
-
-The v1.7 `/business/page.tsx` is already a `'use client'` component that fetches `business_paikka_links`
-with joined `liikuntapaikat` data. The v1.8 dashboard is a visual and information-architecture
-restructuring of this same data — not a new data source.
-
-**"Avaa kartta" button without consumer features:**
-The consumer features (TO DO overlay, AI widget, review prompt, bottom sheet) are separate client
-components that render on `/`. For a business user navigating to `/`, these components will still
-render. If the requirement is a completely stripped-down map view for business users, the approach is:
-a `?context=business` URL param + a single `if (searchParams.context === 'business') return null`
-guard in the overlay components. This is a Tailwind/conditional-render change, no new packages.
-If a business user just needs a link to the map without the overlay, a plain `<a href="/">` link works.
-
-**`/profiili` without consumer-only fields for business users:**
-The `/profiili` page needs to detect `is_business`. The check is the same `SELECT user_id FROM
-business_accounts WHERE user_id = $1` pattern. Detection should happen once on mount, then stored in
-component state to drive conditional renders of the `kiinnostukset` and `kotikaupunki` sections.
-
-**Confidence:** HIGH — no new data, no new packages, pure UI restructuring.
-
----
-
-## Package Inventory
-
-| Capability | New package? | Rationale |
-|-----------|-------------|-----------|
-| Role-based UI branching | NO | DB lookup in existing client component pattern |
-| Middleware route protection (unauthenticated) | NO | Extend existing `middleware.ts` with path check |
-| Data sync on approval | NO | Postgres trigger in SQL migration |
-| Verification badge on cards | NO | Read existing `is_claimed` boolean, Tailwind CSS |
-| Business dashboard layout | NO | Tailwind grid/flex, existing glassmorphism classes |
-| Business vs consumer profile page | NO | Conditional render based on `business_accounts` check |
-
-**Total new npm installs for v1.8: 0**
-
----
-
-## Existing Dependencies — Version Adequacy (confirmed)
-
-| Package | Installed | Adequate for v1.8? | Notes |
-|---------|-----------|-------------------|-------|
-| `@supabase/ssr` | `^0.10.3` | YES | `createServerClient`, `createBrowserClient` both available |
-| `@supabase/supabase-js` | `^2.105.4` | YES | `supabaseAdmin` in Route Handlers for trigger migration |
-| `next` | `14.2.35` | YES | App Router, middleware, Server Components fully supported |
-| `resend` | `^6.12.4` | YES | Email notifications already working, no change needed |
-| `framer-motion` | `^12.38.0` | YES | Dashboard animations use existing motion primitives |
-
----
-
-## What NOT to Add
-
-**`@casl/ability` or similar authorization libraries:**
-The role model is binary: a user either has a row in `business_accounts` or they do not. CASL and
-Permit.io are designed for multi-role permission matrices with dozens of resources and actions.
-Adding ~20 KB of abstraction for a two-role system is disproportionate.
-
-**Supabase Edge Functions:**
-No v1.8 use case. Data sync is in-DB (Postgres trigger). Email notifications are in Route Handlers
-(Resend, already working). Edge Functions add deployment complexity (separate deploy step, different
-runtime from Next.js).
-
-**`jose` or `jsonwebtoken` for JWT parsing in middleware:**
-Would be needed only if embedding custom claims in the JWT. This project does not use custom claims
-and should not start now — the DB lookup pattern already works.
-
-**Supabase Realtime subscriptions:**
-Business dashboard does not need live updates. Approval status changes are infrequent admin actions.
-A page refresh (or `router.refresh()`) after an action is sufficient.
-
-**`react-query` or `swr`:**
-The `useEffect + useState` pattern in `business/page.tsx` handles one data fetch on mount.
-Adding a caching layer is premature for this access pattern.
-
-**`sharp` or color extraction libraries:**
-Automatic color theming from business images is explicitly listed as "Future (deferred)" in
-`PROJECT.md`. Do not add for v1.8.
-
----
-
-## SQL Migration Needed for v1.8
-
-**`20260612000000_business_approval_trigger.sql`**
-
-Creates a `SECURITY DEFINER` PL/pgSQL function and an AFTER UPDATE trigger on
-`business_paikka_links` that sets `published = true` and `business_managed = true` on the linked
-`liikuntapaikat` row when `claim_status` transitions to `'approved'`. Uses `IS DISTINCT FROM` to
-safely handle NULL-to-value transitions. Idempotent: `CREATE OR REPLACE FUNCTION` +
-`DROP TRIGGER IF EXISTS` before `CREATE TRIGGER`.
-
-No other schema changes are required for v1.8 as scoped in `PROJECT.md`. The `is_claimed`,
-`business_managed`, and `published` columns already exist from v1.7 migrations.
-
-`lib/types.ts` update needed (TypeScript, not schema): add `is_claimed?: boolean | null` and
-`business_managed?: boolean | null` to the `Liikuntapaikka` type so the verified badge can read these
-fields without TypeScript errors.
-
----
+| Package A | Compatible With | Notes |
+|-----------|------------------|-------|
+| `cheerio@^1.2.0` | Next.js 14.2.35, Node.js runtime (`runtime = 'nodejs'`) | Pure JS, no native bindings — safe alongside `sharp` (native) in the same Node.js-runtime-only API route; do not import in any file reachable by the Edge Runtime |
+| `cheerio@^1.2.0` | TypeScript 5.x strict mode | Ships its own types; `import * as cheerio from 'cheerio'` per current ESM-first API (v1.x's documented API surface, confirmed via Context7 docs example) |
+| `framer-motion@^12.38.0` (existing, unchanged) | React 18, Next.js 14 App Router | No version bump needed for this milestone's two-pane preview work; `AnimatePresence`/`motion.div` patterns already proven in this codebase (Kartta/Lista crossfade) directly reusable |
 
 ## Sources
 
-- Supabase Database Webhooks docs (pg_net, SQL setup): https://supabase.com/docs/guides/database/webhooks
-- Supabase Postgres Triggers docs: https://supabase.com/docs/guides/database/postgres/triggers
-- Supabase Next.js SSR auth setup (middleware pattern): https://supabase.com/docs/guides/auth/server-side/nextjs
-- Supabase discussion — role-based DB query from middleware limitations: https://github.com/orgs/supabase/discussions/29482
-- Supabase Custom Access Token Hook docs: https://supabase.com/docs/guides/auth/auth-hooks/custom-access-token-hook
-- Existing codebase: `middleware.ts`, `app/admin/page.tsx`, `app/business/page.tsx`,
-  `app/api/admin/approve/route.ts`, migrations `20260605000001`, `20260605000004`, `20260610000002`
+- Context7 `/cheeriojs/cheerio` — load/selecting/attribute-extraction API confirmed current (`cheerio.load`, `.attr()`, `$.extract()`)
+- Context7 `/grx7/framer-motion` — confirmed `AnimatePresence`/layout animation API surface unchanged from what's already used in this codebase
+- WebSearch, verified against npm — Cheerio latest `1.2.0` (Jan 2026 release) — MEDIUM-HIGH confidence (single search source, but corroborated by Context7 docs reflecting the same v1.x API)
+- WebSearch — Framer Motion → Motion rename (2025, package `motion`, import `motion/react`) — MEDIUM confidence (multiple corroborating sources: motion.dev official upgrade guide, npm); decision to NOT migrate is a project-fit judgment, not a contested fact
+- WebSearch — `p-limit@7.3.0`, pure ESM — MEDIUM confidence (npm package page); decision to avoid it is based on direct codebase inspection (`tsconfig.json` `moduleResolution: bundler` would support it technically, but it's unneeded complexity at this fan-out scale)
+- Direct codebase inspection (HIGH confidence, no external source needed): `lib/branding/scraper.ts`, `lib/branding/analyzer.ts`, `lib/branding/prompt.ts`, `app/api/business/analyze-website/route.ts`, `app/business/WizardInner.tsx`, `app/business/onboarding/StepMediat.tsx`, `app/business/onboarding/StepEsikatselu.tsx`, `package.json`, `tsconfig.json` — confirmed existing pipeline shape, confirmed Playwright is an unused devDependency, confirmed `colors[]` already extracts up to 5 HTML/CSS-sourced hex values, confirmed zero form-library usage, confirmed `bundler` module resolution
+
+---
+*Stack research for: Onboarding-AI scraping/preview enhancements (v2.2 milestone)*
+*Researched: 2026-06-16*
