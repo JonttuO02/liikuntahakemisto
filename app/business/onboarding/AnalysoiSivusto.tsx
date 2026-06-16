@@ -9,6 +9,7 @@ import type { BrandingResult } from '@/lib/branding/brandingResult'
 type Phase = 'checking' | 'url-input' | 'analyzing' | 'preview' | 'error' | 'timeout'
 
 interface AnalysoiSivustoProps {
+  paikkaId: number
   onConfirm: (brandingData: BrandingResult) => void
   onSkip: () => void
 }
@@ -86,7 +87,7 @@ function MutedButton({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function AnalysoiSivusto({ onConfirm, onSkip }: AnalysoiSivustoProps) {
+export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: AnalysoiSivustoProps) {
   const [phase, setPhase] = useState<Phase>('checking')
   const [url, setUrl] = useState('')
   const [urlError, setUrlError] = useState<string | null>(null)
@@ -107,7 +108,7 @@ export default function AnalysoiSivusto({ onConfirm, onSkip }: AnalysoiSivustoPr
     async function checkStatus() {
       try {
         const token = await getAuthToken()
-        const res = await fetch('/api/business/analyze-website', {
+        const res = await fetch(`/api/business/analyze-website?paikka_id=${paikkaId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
 
@@ -166,7 +167,7 @@ export default function AnalysoiSivusto({ onConfirm, onSkip }: AnalysoiSivustoPr
 
       try {
         const token = await getAuthToken()
-        const res = await fetch('/api/business/analyze-website', {
+        const res = await fetch(`/api/business/analyze-website?paikka_id=${paikkaId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
 
@@ -232,7 +233,7 @@ export default function AnalysoiSivusto({ onConfirm, onSkip }: AnalysoiSivustoPr
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ url: trimmed }),
+        body: JSON.stringify({ url: trimmed, paikka_id: paikkaId }),
       })
 
       if (!res.ok) {
