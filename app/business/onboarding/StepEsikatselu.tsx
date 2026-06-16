@@ -41,8 +41,11 @@ export default function StepEsikatselu({
         ? buildDraftAsPaikka(draft, paikkaInfo)
         : null
 
-  // Extract first brand colour for the DiagonaalKortti left panel.
-  const brandColor = brandingData?.colors?.[0] ?? undefined
+  // Brand colour for the DiagonaalKortti left panel — sourced from the user-selected
+  // background color (Phase 48), falling back to the first AI-extracted color when no
+  // selection has been made yet.
+  const brandColor =
+    brandingData?.selected_background_color ?? brandingData?.colors?.[0]?.hex ?? undefined
 
   useEffect(() => {
     if (draftAsPaikka) return
