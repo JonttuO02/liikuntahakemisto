@@ -2,12 +2,120 @@
 // Caller (route.ts) must validate url protocol and block private IP ranges before calling scrapeWebsite
 
 import sharp from 'sharp'
+import { fetchWithSsrfGuard } from './fetchSafe'
+import { isUrlSafe } from './ssrfGuard'
 
 export interface ScrapeResult {
   logoUrls: string[]       // raw image URLs (up to 5)
   logoBuffers: Buffer[]    // fetched + sharp-converted PNG buffers (parallel index to logoUrls)
   colors: string[]         // hex colors from theme-color meta + :root CSS variables
-  htmlSnippet: string      // html.slice(0, 8000)
+  htmlSnippet: string      // html.slice(0, 8000), now populated from the homepage labeled page
+  labeledPages: Array<{ label: string; html: string }>  // multi-page labeled sections (SCRAP-06/SCRAP-08)
+  imageUrls: string[]      // gallery image candidates, distinct from logo candidates (SCRAP-09)
+}
+
+// SCRAP-06: keyword categories for subpage discovery (Finnish + English, D-06)
+const SUBPAGE_KEYWORDS: Record<string, RegExp> = {
+  pricing: /hinnasto|hinnat|pricing|prices/i,
+  hours: /aukioloajat|aukiolo|hours|opening/i,
+  contact: /yhteystiedot|yhteys|contact/i,
+}
+
+/**
+ * Discovers same-origin subpage links on the homepage, scored against Finnish/English
+ * keyword categories (pricing/hours/contact). Falls back to the first `budget` same-origin
+ * links (keyed link0, link1, ...) if zero keyword matches are found (D-06).
+ * Exported for direct unit testing.
+ */
+export function discoverSubpages(html: string, baseUrl: string, budget = 4): Record<string, string> {
+  let baseHost: string
+  try {
+    baseHost = new URL(baseUrl).hostname
+  } catch {
+    return {}
+  }
+
+  // CR-05: fresh /g regex per call — this function is called once per homepage, but keep
+  // the regex scoped locally (not module-level) to match the file's established discipline.
+  const anchorRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi
+  const found: Record<string, string> = {}
+  const sameOriginLinks: string[] = []
+  let match: RegExpExecArray | null
+
+  while ((match = anchorRegex.exec(html)) !== null) {
+    const [, href, linkText] = match
+    let abs: URL
+    try {
+      abs = new URL(href, baseUrl)
+    } catch {
+      continue
+    }
+    if (abs.hostname !== baseHost) continue // same-origin only
+
+    if (!sameOriginLinks.includes(abs.href)) {
+      sameOriginLinks.push(abs.href)
+    }
+
+    const haystack = href + ' ' + linkText
+    for (const [category, re] of Object.entries(SUBPAGE_KEYWORDS)) {
+      if (!found[category] && re.test(haystack)) {
+        found[category] = abs.href
+      }
+    }
+  }
+
+  // D-06 fallback: zero keyword matches found — degrade to "homepage + first N same-origin links"
+  if (Object.keys(found).length === 0) {
+    const fallbackLinks = sameOriginLinks.slice(0, budget)
+    fallbackLinks.forEach((link, i) => {
+      found[`link${i}`] = link
+    })
+  }
+
+  return found
+}
+
+// Noise pattern for gallery image filtering (SCRAP-09 / D-11)
+const GALLERY_NOISE_PATTERN = /icon|sprite|pixel|spinner|loader|favicon|tracking|1x1/i
+const GALLERY_MIN_DIMENSION = 100 // px — only enforced when width/height attrs are present
+const GALLERY_CAP = 15
+
+/**
+ * Extracts general gallery <img> candidates from HTML, distinct from logo candidates.
+ * Skips data: URIs, sub-100px images (when dimensions are present), noise-pattern matches,
+ * and URLs already present in excludeUrls. Deduped, capped at 15 (D-11).
+ * Exported for direct unit testing.
+ */
+export function extractGalleryImages(html: string, baseUrl: string, excludeUrls: Set<string>): string[] {
+  // CR-05: fresh /g regex literal for this call — never share a module-level regex with lastIndex.
+  const imgTagRegex = /<img[^>]+>/gi
+  const found: string[] = []
+  let match: RegExpExecArray | null
+
+  while ((match = imgTagRegex.exec(html)) !== null && found.length < GALLERY_CAP) {
+    const tag = match[0]
+    const src = /\bsrc=["']([^"']+)["']/i.exec(tag)?.[1] ?? ''
+    if (!src || src.startsWith('data:')) continue // skip inline data-URI images
+
+    const widthAttr = /\bwidth=["']?(\d+)/i.exec(tag)?.[1]
+    const heightAttr = /\bheight=["']?(\d+)/i.exec(tag)?.[1]
+    if (widthAttr && parseInt(widthAttr, 10) < GALLERY_MIN_DIMENSION) continue
+    if (heightAttr && parseInt(heightAttr, 10) < GALLERY_MIN_DIMENSION) continue
+
+    const alt = /\balt=["']([^"']*)["']/i.exec(tag)?.[1] ?? ''
+    const cls = /\bclass=["']([^"']*)["']/i.exec(tag)?.[1] ?? ''
+    if (GALLERY_NOISE_PATTERN.test(src) || GALLERY_NOISE_PATTERN.test(alt) || GALLERY_NOISE_PATTERN.test(cls)) continue
+
+    try {
+      const abs = new URL(src, baseUrl).href
+      if (excludeUrls.has(abs)) continue // already a logo candidate
+      if (!found.includes(abs)) found.push(abs)
+    } catch {
+      continue
+    }
+  }
+
+  return found.slice(0, GALLERY_CAP)
 }
 
 /**
@@ -27,22 +135,37 @@ async function toPngBase64(buffer: Buffer): Promise<Buffer | null> {
   }
 }
 
+// Per-page truncation budgets (SCRAP-08 foundation): homepage gets more room than subpages
+// so total prompt size stays within Claude's input budget while still surfacing subpage content.
+const HOMEPAGE_TRUNCATE = 6000
+const SUBPAGE_TRUNCATE = 4000
+const MAX_SUBPAGES = 4
+
+// CR-03 partial: strip HTML comments and script/style blocks to reduce prompt injection surface
+function stripHtml(html: string): string {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+}
+
 /**
  * Scrapes a website URL and returns branding-relevant data.
  *
  * Steps:
- *  1. Fetch HTML with 10s timeout and Mozilla User-Agent
+ *  1. Fetch homepage HTML via fetchWithSsrfGuard (10s timeout, Mozilla User-Agent)
  *  2. Parse <meta name="theme-color"> hex value
- *  3. Fetch up to 3 stylesheet links in parallel (5s timeout each)
+ *  3. Fetch up to 3 stylesheet links in parallel via fetchWithSsrfGuard (5s timeout each)
  *  4. Extract :root CSS hex variables from each stylesheet
  *  5. Collect logo candidates (favicon → og:image → img[*=logo])
- *  6. Fetch + convert each logo candidate to PNG via sharp
- *  7. Return ScrapeResult
+ *  6. Fetch + convert each logo candidate to PNG via sharp (fetch routed via fetchWithSsrfGuard)
+ *  7. Discover same-origin subpages (pricing/hours/contact) and fetch up to 4 via fetchWithSsrfGuard (SCRAP-06)
+ *  8. Extract gallery images from homepage + subpages, excluding logo candidates (SCRAP-09)
+ *  9. Return extended ScrapeResult with labeledPages + imageUrls
  */
 export async function scrapeWebsite(url: string): Promise<ScrapeResult> {
-  // 1. Fetch HTML
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AktiiviBot/1.0)' },
+  // 1. Fetch homepage HTML through the SSRF-guarded, redirect-revalidating wrapper
+  const res = await fetchWithSsrfGuard(url, {
     signal: AbortSignal.timeout(10000),
   })
   if (!res.ok) throw new Error(`Sivua ei saatu ladattua: ${url}`)
@@ -73,11 +196,13 @@ export async function scrapeWebsite(url: string): Promise<ScrapeResult> {
     }
   }
 
-  // Fetch all CSS files in parallel
+  // Fetch all CSS files in parallel through the SSRF-guarded wrapper (D-10).
+  // When the wrapper throws (SSRF reject, redirect-hop-cap exceeded, network error) the
+  // CSS text degrades to empty, which the color-extraction below already tolerates.
   const cssResults = await Promise.all(
     cssUrls.map(async (cssUrl) => {
       try {
-        const r = await fetch(cssUrl, { signal: AbortSignal.timeout(5000) })
+        const r = await fetchWithSsrfGuard(cssUrl, { signal: AbortSignal.timeout(5000) })
         return r.ok ? await r.text() : ''
       } catch {
         return ''
@@ -175,7 +300,9 @@ export async function scrapeWebsite(url: string): Promise<ScrapeResult> {
 
   for (const candidateUrl of uniqueCandidates) {
     try {
-      const imgRes = await fetch(candidateUrl, { signal: AbortSignal.timeout(5000) })
+      // D-10: route through the SSRF-guarded wrapper; isUrlSafe re-validation and redirect
+      // re-checks happen internally — do not pre-call isUrlSafe separately here.
+      const imgRes = await fetchWithSsrfGuard(candidateUrl, { signal: AbortSignal.timeout(5000) })
       if (!imgRes.ok) continue
 
       const arrayBuffer = await imgRes.arrayBuffer()
@@ -195,16 +322,66 @@ export async function scrapeWebsite(url: string): Promise<ScrapeResult> {
     }
   }
 
-  // 7. Return ScrapeResult
-  // CR-03 partial: strip HTML comments and script/style blocks to reduce prompt injection surface
-  const strippedHtml = html
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
+  // 7. Discover same-origin subpages (pricing/hours/contact) and crawl up to MAX_SUBPAGES (SCRAP-06)
+  const subpageMap = discoverSubpages(html, url, MAX_SUBPAGES)
+  const subpageEntries = Object.entries(subpageMap).slice(0, MAX_SUBPAGES)
+
+  const subpageResults = await Promise.all(
+    subpageEntries.map(async ([category, subUrl]) => {
+      // Cheap pre-validation before attempting the fetch.
+      if (!isUrlSafe(subUrl)) return null
+      try {
+        const subRes = await fetchWithSsrfGuard(subUrl, { signal: AbortSignal.timeout(8000) })
+        if (!subRes.ok) return null
+        const contentType = subRes.headers.get('content-type') ?? ''
+        if (contentType && !contentType.includes('text/html')) return null
+        const subHtml = await subRes.text()
+        // WR-01: per-page size guard
+        if (subHtml.length > 5 * 1024 * 1024) return null
+        return { category, html: subHtml }
+      } catch (err) {
+        console.error('[branding/scraper] subpage fetch error:', err)
+        return null
+      }
+    })
+  )
+
+  const fetchedSubpages = subpageResults.filter(
+    (r): r is { category: string; html: string } => r !== null
+  )
+
+  // 8. Build labeled multi-page sections (SCRAP-08 foundation), homepage first.
+  const strippedHomepageHtml = stripHtml(html)
+  const labeledPages: Array<{ label: string; html: string }> = [
+    { label: 'homepage', html: strippedHomepageHtml.slice(0, HOMEPAGE_TRUNCATE) },
+  ]
+  for (const { category, html: subHtml } of fetchedSubpages) {
+    labeledPages.push({ label: category, html: stripHtml(subHtml).slice(0, SUBPAGE_TRUNCATE) })
+  }
+
+  // 9. Extract gallery images across homepage + fetched subpages, excluding logo candidates (SCRAP-09)
+  const logoCandidateSet = new Set(uniqueCandidates)
+  const galleryImages: string[] = []
+  for (const img of extractGalleryImages(html, url, logoCandidateSet)) {
+    if (!galleryImages.includes(img)) galleryImages.push(img)
+  }
+  for (const { html: subHtml } of fetchedSubpages) {
+    for (const img of extractGalleryImages(subHtml, url, logoCandidateSet)) {
+      if (!galleryImages.includes(img)) galleryImages.push(img)
+      if (galleryImages.length >= GALLERY_CAP) break
+    }
+    if (galleryImages.length >= GALLERY_CAP) break
+  }
+  const imageUrls = galleryImages.slice(0, GALLERY_CAP)
+
+  // 10. Return extended ScrapeResult — htmlSnippet retained from the homepage labeled page
+  // for backward compatibility with existing consumers (RESEARCH.md Pitfall 5).
   return {
     logoUrls,
     logoBuffers,
     colors: uniqueColors,
-    htmlSnippet: strippedHtml.slice(0, 8000),
+    htmlSnippet: labeledPages[0].html,
+    labeledPages,
+    imageUrls,
   }
 }
