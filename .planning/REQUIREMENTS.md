@@ -17,9 +17,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Schema
 
-- [ ] **BRDDB-03**: `business_branding` gains `logo_candidates`, `image_urls`, `selected_background_color`, `selected_accent_color` columns
-- [ ] **BRDDB-04**: `business_branding`'s `logo_type` CHECK constraint fixed to match the analyzer's actual enum values
-- [ ] **BRDDB-05**: `business_branding`'s unique constraint re-keyed to include `paikka_id` (fixes silent multi-venue branding overwrite)
+- [x] **BRDDB-03**: `business_branding` gains `logo_candidates`, `image_urls`, `selected_background_color`, `selected_accent_color` columns
+- [x] **BRDDB-04**: `business_branding`'s `logo_type` CHECK constraint fixed to match the analyzer's actual enum values
+- [x] **BRDDB-05**: `business_branding`'s unique constraint re-keyed to include `paikka_id` (fixes silent multi-venue branding overwrite)
 
 ### Selection UI
 
@@ -64,9 +64,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 | SCRAP-07 | Phase 47 | Pending |
 | SCRAP-08 | Phase 47 | Pending |
 | SCRAP-09 | Phase 47 | Pending |
-| BRDDB-03 | Phase 47 | Pending |
-| BRDDB-04 | Phase 47 | Pending |
-| BRDDB-05 | Phase 47 | Pending |
+| BRDDB-03 | Phase 47 | Complete |
+| BRDDB-04 | Phase 47 | Complete |
+| BRDDB-05 | Phase 47 | Complete |
 | ONBOARD-14 | Phase 48 | Pending |
 | ONBOARD-15 | Phase 48 | Pending |
 | ONBOARD-16 | Phase 48 | Pending |
