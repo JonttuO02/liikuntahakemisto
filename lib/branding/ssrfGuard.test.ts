@@ -55,6 +55,27 @@ describe('isUrlSafe / SCRAP-07', () => {
   it('rejects unparseable input', () => {
     expect(isUrlSafe('not a url')).toBe(false)
   })
+
+  it('rejects the bracketed IPv6 loopback literal [::1]', () => {
+    expect(isUrlSafe('http://[::1]/')).toBe(false)
+  })
+
+  it('rejects IPv4-mapped IPv6 loopback ::ffff:127.0.0.1', () => {
+    expect(isUrlSafe('http://[::ffff:127.0.0.1]')).toBe(false)
+  })
+
+  it('rejects IPv4-mapped IPv6 cloud metadata endpoint ::ffff:169.254.169.254', () => {
+    expect(isUrlSafe('http://[::ffff:169.254.169.254]')).toBe(false)
+  })
+
+  it('rejects IPv4-mapped IPv6 private range ::ffff:192.168.1.1', () => {
+    expect(isUrlSafe('http://[::ffff:192.168.1.1]')).toBe(false)
+  })
+
+  it('allows legitimate domains starting with fc/fd (not IPv6 ULA literals)', () => {
+    expect(isUrlSafe('http://fcbank.com')).toBe(true)
+    expect(isUrlSafe('http://fdating.com')).toBe(true)
+  })
 })
 
 describe('fetchWithSsrfGuard / SCRAP-07', () => {

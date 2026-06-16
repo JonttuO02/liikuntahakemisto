@@ -23,20 +23,40 @@ export function isUrlSafe(url: string): boolean {
   }
 
   const hostname = parsed.hostname.toLowerCase()
+
+  // CR-03: IPv4-mapped IPv6 literals (e.g. ::ffff:127.0.0.1, [::ffff:169.254.169.254])
+  // bypass the dotted-decimal checks below because URL.hostname normalizes them to a
+  // hex-colon form (e.g. [::ffff:7f00:1]) that never matches 127.0.0.1 / 192.168. / etc.
+  // Decode the embedded dotted-decimal IPv4 portion (if present) and re-check it through
+  // the same logic; otherwise reject the mapped-IPv6 form outright.
+  const ipv4MappedMatch = /^\[?::ffff:(\d{1,3}(?:\.\d{1,3}){3})\]?$/.exec(hostname)
+  if (ipv4MappedMatch) {
+    return isUrlSafe(parsed.protocol + '//' + ipv4MappedMatch[1])
+  }
+  // Hex-encoded IPv4-mapped form (e.g. [::ffff:7f00:1]) with no dotted-decimal portion —
+  // reject outright since we can't re-run it through the dotted-decimal checks below.
+  if (/^\[?::ffff:[\da-f]+:[\da-f]+\]?$/.test(hostname)) {
+    return false
+  }
+
   const parts = hostname.split('.')
   const oct1 = parseInt(parts[0] ?? '', 10)
   const oct2 = parseInt(parts[1] ?? '', 10)
+  // CR-03/WR-03: the fd/fc ULA prefix check must only apply to actual IPv6 literals
+  // (bracketed or containing a colon) — otherwise legitimate domains like fcbank.com
+  // or fdating.com are false-positived as private IPv6 addresses.
+  const isIPv6Literal = hostname.startsWith('[') || hostname.includes(':')
   const isPrivate =
     hostname === 'localhost' ||
     hostname === '0.0.0.0' ||
     hostname === '127.0.0.1' ||
     hostname === '::1' ||
+    hostname === '[::1]' ||   // bracketed form — this is the actual URL.hostname value
     hostname === '[::]' ||
     hostname === '169.254.169.254' ||
     hostname.startsWith('192.168.') ||
     hostname.startsWith('10.') ||
-    hostname.startsWith('fd') ||   // IPv6 ULA fd00::/8
-    hostname.startsWith('fc') ||   // IPv6 ULA fc00::/8
+    (isIPv6Literal && (hostname.startsWith('fd') || hostname.startsWith('fc') || hostname.startsWith('[fd') || hostname.startsWith('[fc'))) ||   // IPv6 ULA fd00::/8, fc00::/8
     (oct1 === 172 && oct2 >= 16 && oct2 <= 31) ||   // 172.16.0.0/12
     (oct1 === 100 && oct2 >= 64 && oct2 <= 127)      // 100.64.0.0/10 (CGNAT/Tailscale)
 
