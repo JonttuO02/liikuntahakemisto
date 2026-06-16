@@ -169,7 +169,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 
 **Milestone Goal:** Onboarding-velhon tekoälyanalyysi tuottaa parempaa dataa laajemmalla sivuston haulla, ja käyttäjä näkee/hyväksyy tulokset reaaliajassa — pienemmällä manuaalisella työllä.
 
-- [ ] **Phase 47: Skeema & monisivuinen scraper-putki** — Schema migration + multi-page crawl with re-validated SSRF guard + labeled multi-page Claude prompt
+- [x] **Phase 47: Skeema & monisivuinen scraper-putki** — Schema migration + multi-page crawl with re-validated SSRF guard + labeled multi-page Claude prompt (completed 2026-06-16)
 - [ ] **Phase 48: Logo-, väri- ja galleriavalinta** — Multi-candidate logo picker, 2-color swatch picker, validated PATCH route, gallery prefill
 - [ ] **Phase 49: Esikatselu- ja kontrastikorjaukset** — Step 6 CalloutCard swap + shared contrast-safe logo primitive
 - [ ] **Phase 50: Flow-uudelleenjärjestys & pikahyväksyntä** — StepPaikka before URL-analysis + quick-accept shortcut into admin queue
@@ -193,7 +193,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 - [x] 47-02-PLAN.md — Shared SSRF validator + redirect-revalidating fetch wrapper (SCRAP-07)
 - [x] 47-03-PLAN.md — Multi-page subpage crawl + gallery image extraction (SCRAP-06/09)
 - [x] 47-04-PLAN.md — Verbatim prompt + array-based analyzer + Playwright homepage screenshot (SCRAP-08)
-- [ ] 47-05-PLAN.md — Route wiring: paikka_id scoping + ownership check + pipeline integration (BRDDB-05)
+- [x] 47-05-PLAN.md — Route wiring: paikka_id scoping + ownership check + pipeline integration (BRDDB-05)
 
 ### Phase 48: Logo-, väri- ja galleriavalinta
 **Goal**: A business owner can see every AI-found logo and color candidate and explicitly choose what represents their brand, instead of the system silently auto-picking one.
@@ -292,7 +292,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 44. Brändidatan tietokantaperusta | v2.1 | 1/1 | Complete | 2026-06-15 |
 | 45. Scraper & Claude API -putki | v2.1 | 4/4 | Complete | 2026-06-15 |
 | 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | Complete    | 2026-06-15 |
-| 47. Skeema & monisivuinen scraper-putki | v2.2 | 4/5 | In Progress|  |
+| 47. Skeema & monisivuinen scraper-putki | v2.2 | 5/5 | Complete   | 2026-06-16 |
 | 48. Logo-, väri- ja galleriavalinta | v2.2 | 0/TBD | Not started | - |
 | 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 0/TBD | Not started | - |
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 0/TBD | Not started | - |
