@@ -196,16 +196,19 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 - [x] 47-05-PLAN.md — Route wiring: paikka_id scoping + ownership check + pipeline integration (BRDDB-05)
 
 ### Phase 48: Logo-, väri- ja galleriavalinta
-**Goal**: A business owner can see every AI-found logo and color candidate and explicitly choose what represents their brand, instead of the system silently auto-picking one.
+**Goal**: A business owner can see every AI-found logo and color candidate, explicitly choose what represents their brand instead of the system silently auto-picking one, and can accept the AI's results immediately to submit for approval without stepping through the rest of the wizard.
 **Depends on**: Phase 47 (requires plural `logo_candidates`/`image_urls`/color columns and multi-page image discovery)
-**Requirements**: ONBOARD-14, ONBOARD-15, ONBOARD-16, ONBOARD-17
+**Requirements**: ONBOARD-14, ONBOARD-15, ONBOARD-16, ONBOARD-17, FLOW-02, FLOW-03
 **Success Criteria** (what must be TRUE):
   1. When multiple logo candidates were found, the user sees them all and picks exactly one (the AI's top pick pre-selected, not silently final)
   2. The user picks 2 colors from the extracted palette — one assigned to background, one to accent — rather than the system auto-assigning a single color
   3. Images discovered on the business's website automatically appear as selectable options in the Mediat step's photo picker
   4. Submitting a logo/color selection that doesn't belong to that business's own stored analysis result is rejected by the server, not silently accepted
+  5. After AI analysis (and logo/color selection) completes, the user can accept the results in one action and land directly in the admin approval queue without stepping through the remaining wizard screens
+  6. A quick-accepted submission passes through the same ownership check, validation, and draft-cleanup logic as a normal full-wizard submission — there is no second, less-guarded write path
 **Plans**: TBD
 **UI hint**: yes
+**Note (2026-06-16):** FLOW-02/FLOW-03 moved here from Phase 50 at user request — quick-accept submission belongs with the selection UI it accepts results from, in the same screen/step. Phase 50 retains only the step-reorder work (FLOW-01/FLOW-04).
 
 ### Phase 49: Esikatselu- ja kontrastikorjaukset
 **Goal**: What the business owner sees in the onboarding preview matches what will actually be published, and a white or transparent logo is never invisible against a white background anywhere in the app.
@@ -217,16 +220,15 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 50: Flow-uudelleenjärjestys & pikahyväksyntä
-**Goal**: A business owner identifies or creates their venue before being asked to analyze a website, and can skip the rest of the wizard entirely by accepting the AI's results as-is.
-**Depends on**: Phase 47 (quick-accept must read the final, stable branding data shape before reusing the submit route)
-**Requirements**: FLOW-01, FLOW-02, FLOW-03, FLOW-04
+### Phase 50: Flow-uudelleenjärjestys
+**Goal**: A business owner identifies or creates their venue before being asked to analyze a website.
+**Depends on**: Phase 47 (step-order change must not disturb the analysis flow it precedes)
+**Requirements**: FLOW-01, FLOW-04
 **Success Criteria** (what must be TRUE):
   1. A new business owner sees the venue-identification step (StepPaikka) before being asked for a website URL to analyze
-  2. After AI analysis completes, the user can accept the results in one action and land directly in the admin approval queue without stepping through the remaining wizard screens
-  3. A quick-accepted submission passes through the same ownership check, validation, and draft-cleanup logic as a normal full-wizard submission — there is no second, less-guarded write path
-  4. A business that started onboarding before this reorder shipped can resume their in-flight draft without getting stuck on a stale step number
+  2. A business that started onboarding before this reorder shipped can resume their in-flight draft without getting stuck on a stale step number
 **Plans**: TBD
+**Note (2026-06-16):** FLOW-02/FLOW-03 (quick-accept) moved to Phase 48 at user request — see Phase 48's note.
 
 ### Phase 51: Live-esikatselu velhossa
 **Goal**: A business owner sees their venue's card update in real time as they fill in any wizard step, instead of only seeing the final result at step 6.

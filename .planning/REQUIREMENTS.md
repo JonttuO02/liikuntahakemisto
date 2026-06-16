@@ -74,8 +74,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 | PREV-02 | Phase 49 | Pending |
 | PREV-03 | Phase 49 | Pending |
 | FLOW-01 | Phase 50 | Pending |
-| FLOW-02 | Phase 50 | Pending |
-| FLOW-03 | Phase 50 | Pending |
+| FLOW-02 | Phase 48 | Pending |
+| FLOW-03 | Phase 48 | Pending |
 | FLOW-04 | Phase 50 | Pending |
 | LIVEPREV-01 | Phase 51 | Pending |
 | LIVEPREV-02 | Phase 51 | Pending |
