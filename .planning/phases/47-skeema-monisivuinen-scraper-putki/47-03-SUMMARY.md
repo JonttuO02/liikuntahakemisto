@@ -124,3 +124,12 @@ None - no external service configuration required. This plan only modified `lib/
 ---
 *Phase: 47-skeema-monisivuinen-scraper-putki*
 *Completed: 2026-06-16*
+
+## Self-Check: PASSED
+
+- FOUND: lib/branding/scraper.ts
+- FOUND: lib/branding/scraper.test.ts
+- FOUND: .planning/phases/47-skeema-monisivuinen-scraper-putki/47-03-SUMMARY.md
+- FOUND: 9b1be9c (Task 1 commit)
+- FOUND: 1f9ce9c (Task 2 commit)
+- FOUND: c3005dd (SUMMARY commit)
