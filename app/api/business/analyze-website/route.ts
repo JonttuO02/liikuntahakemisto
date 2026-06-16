@@ -46,7 +46,7 @@ async function runAnalysis(url: string, businessAccountId: string, paikkaId: num
     // consumer + DiagonaalKortti rendering still read logo_url directly).
     const logoPublicUrl =
       result.logo_index >= 0 && result.logo_index < logoBuffers.length
-        ? await uploadLogo(businessAccountId, logoBuffers[result.logo_index])
+        ? await uploadLogo(businessAccountId, paikkaId, logoBuffers[result.logo_index])
         : null
 
     // Upload each distinct logo candidate Claude identified, building logo_candidates (D-12).
@@ -54,7 +54,7 @@ async function runAnalysis(url: string, businessAccountId: string, paikkaId: num
     for (const logo of result.logos) {
       if (logo.index < 0 || logo.index >= logoBuffers.length) continue
       try {
-        const candidateUrl = await uploadLogoCandidate(businessAccountId, logoBuffers[logo.index], logo.index)
+        const candidateUrl = await uploadLogoCandidate(businessAccountId, paikkaId, logoBuffers[logo.index], logo.index)
         logoCandidates.push({ url: candidateUrl, type: logo.type })
       } catch (err) {
         console.error('[analyze-website] logo candidate upload error:', err)
@@ -80,7 +80,7 @@ async function runAnalysis(url: string, businessAccountId: string, paikkaId: num
           .resize(1024, 1024, { fit: 'inside', withoutEnlargement: true })
           .png()
           .toBuffer()
-        const uploadedUrl = await uploadGalleryImage(businessAccountId, pngBuffer, galleryIndex)
+        const uploadedUrl = await uploadGalleryImage(businessAccountId, paikkaId, pngBuffer, galleryIndex)
         galleryUrls.push(uploadedUrl)
         galleryIndex++
       } catch (err) {
