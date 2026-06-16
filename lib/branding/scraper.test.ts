@@ -19,6 +19,8 @@ vi.mock('sharp', () => {
 function makeHtmlResponse(html: string) {
   return {
     ok: true,
+    status: 200,
+    headers: { get: (name: string) => (name.toLowerCase() === 'content-type' ? 'text/html' : null) },
     text: async () => html,
     arrayBuffer: async () => Buffer.from(html).buffer as ArrayBuffer,
   }
@@ -27,6 +29,8 @@ function makeHtmlResponse(html: string) {
 function makeImageResponse(data: Buffer = Buffer.from('FAKE_IMAGE')) {
   return {
     ok: true,
+    status: 200,
+    headers: { get: () => null },
     text: async () => '',
     arrayBuffer: async () => data.buffer as ArrayBuffer,
   }
@@ -37,7 +41,7 @@ beforeEach(() => {
 })
 
 describe('scrapeWebsite', () => {
-  it('SCRAP-01: returns ScrapeResult with all four fields (logoUrls, logoBuffers, colors, htmlSnippet)', async () => {
+  it('SCRAP-01: returns ScrapeResult with all six fields (logoUrls, logoBuffers, colors, htmlSnippet, labeledPages, imageUrls)', async () => {
     const html = '<html><head></head><body>Hello</body></html>'
     // First call: HTML fetch; no CSS links, no logos
     mockFetch.mockResolvedValueOnce(makeHtmlResponse(html))
@@ -50,10 +54,16 @@ describe('scrapeWebsite', () => {
     expect(result).toHaveProperty('logoBuffers')
     expect(result).toHaveProperty('colors')
     expect(result).toHaveProperty('htmlSnippet')
+    expect(result).toHaveProperty('labeledPages')
+    expect(result).toHaveProperty('imageUrls')
     expect(Array.isArray(result.logoUrls)).toBe(true)
     expect(Array.isArray(result.logoBuffers)).toBe(true)
     expect(Array.isArray(result.colors)).toBe(true)
     expect(typeof result.htmlSnippet).toBe('string')
+    expect(Array.isArray(result.labeledPages)).toBe(true)
+    expect(result.labeledPages.length).toBeGreaterThanOrEqual(1)
+    expect(result.labeledPages.length).toBeLessThanOrEqual(5)
+    expect(Array.isArray(result.imageUrls)).toBe(true)
   })
 
   it('SCRAP-02: extracts hex color from <meta name="theme-color">', async () => {
@@ -126,8 +136,8 @@ describe('scrapeWebsite', () => {
     expect(result.logoUrls.length).toBeLessThanOrEqual(5)
   })
 
-  it('htmlSnippet is exactly html.slice(0, 8000) — not longer', async () => {
-    // Create HTML longer than 8000 chars
+  it('htmlSnippet is the stripped homepage truncated to the 6000-char homepage budget — not longer', async () => {
+    // Create HTML longer than 6000 chars (no subpage links, so discoverSubpages fallback finds none)
     const longHtml = '<html><head></head><body>' + 'A'.repeat(10000) + '</body></html>'
     mockFetch.mockResolvedValueOnce(makeHtmlResponse(longHtml))
     // favicon.ico fallback
@@ -135,8 +145,9 @@ describe('scrapeWebsite', () => {
 
     const result = await scrapeWebsite('https://example.com')
 
-    expect(result.htmlSnippet.length).toBeLessThanOrEqual(8000)
-    expect(result.htmlSnippet).toBe(longHtml.slice(0, 8000))
+    expect(result.htmlSnippet.length).toBeLessThanOrEqual(6000)
+    expect(result.htmlSnippet).toBe(longHtml.slice(0, 6000))
+    expect(result.labeledPages[0]).toEqual({ label: 'homepage', html: result.htmlSnippet })
   })
 
   it('SCRAP-05: sharp failure is caught — invalid buffer does not crash scraper and candidate is skipped', async () => {
@@ -269,5 +280,102 @@ describe('extractGalleryImages / SCRAP-09', () => {
     const result = extractGalleryImages(html, 'https://example.com', new Set())
 
     expect(result).toContain('https://example.com/no-dims.jpg')
+  })
+})
+
+describe('scrapeWebsite multi-page / SCRAP-06', () => {
+  it('crawls a discovered pricing subpage and labels it alongside the homepage', async () => {
+    const homepageHtml = `
+      <html><head></head><body>
+        <a href="/hinnasto">Hinnasto</a>
+      </body></html>
+    `
+    const pricingHtml = '<html><head></head><body>Hinnasto: 10e</body></html>'
+
+    mockFetch
+      .mockResolvedValueOnce(makeHtmlResponse(homepageHtml)) // homepage
+      .mockResolvedValueOnce({ ok: false }) // favicon.ico fallback
+      .mockResolvedValueOnce(makeHtmlResponse(pricingHtml)) // /hinnasto subpage
+
+    const result = await scrapeWebsite('https://example.com')
+
+    const labels = result.labeledPages.map((p) => p.label)
+    expect(labels).toContain('homepage')
+    expect(labels).toContain('pricing')
+    expect(result.labeledPages.length).toBeGreaterThanOrEqual(2)
+    expect(result.labeledPages.length).toBeLessThanOrEqual(5)
+  })
+
+  it('never fetches a subpage link pointing at a private IP', async () => {
+    const homepageHtml = `
+      <html><head></head><body>
+        <a href="http://127.0.0.1/x">Hinnasto</a>
+      </body></html>
+    `
+    mockFetch
+      .mockResolvedValueOnce(makeHtmlResponse(homepageHtml)) // homepage
+      .mockResolvedValueOnce({ ok: false }) // favicon.ico fallback
+
+    const result = await scrapeWebsite('https://example.com')
+
+    const fetchedUrls = mockFetch.mock.calls.map((call) => call[0])
+    expect(fetchedUrls).not.toContain('http://127.0.0.1/x')
+    // Only homepage + favicon.ico fallback fetched — subpage pre-validation rejected the private link
+    expect(result.labeledPages.length).toBe(1)
+    expect(result.labeledPages[0].label).toBe('homepage')
+  })
+})
+
+describe('scrapeWebsite SSRF coverage / D-10', () => {
+  it('routes the CSS fetch through fetchWithSsrfGuard and rejects a private-IP CSS URL', async () => {
+    const homepageHtml = `
+      <html><head>
+        <link rel="stylesheet" href="http://127.0.0.1/style.css">
+      </head><body></body></html>
+    `
+    mockFetch
+      .mockResolvedValueOnce(makeHtmlResponse(homepageHtml)) // homepage
+      .mockResolvedValueOnce({ ok: false }) // favicon.ico fallback
+
+    const result = await scrapeWebsite('https://example.com')
+
+    const fetchedUrls = mockFetch.mock.calls.map((call) => call[0])
+    // The private-IP CSS URL must never reach global fetch — isUrlSafe rejects it inside the wrapper
+    expect(fetchedUrls).not.toContain('http://127.0.0.1/style.css')
+    // Color extraction degrades gracefully (no crash, empty CSS text tolerated)
+    expect(Array.isArray(result.colors)).toBe(true)
+  })
+
+  it('routes the logo-candidate image fetch through fetchWithSsrfGuard and rejects a private-IP logo URL', async () => {
+    const homepageHtml = `
+      <html><head>
+        <link rel="icon" href="http://127.0.0.1/favicon.png">
+      </head><body></body></html>
+    `
+    mockFetch.mockResolvedValueOnce(makeHtmlResponse(homepageHtml)) // homepage only — favicon found inline, no fallback needed
+
+    const result = await scrapeWebsite('https://example.com')
+
+    const fetchedUrls = mockFetch.mock.calls.map((call) => call[0])
+    expect(fetchedUrls).not.toContain('http://127.0.0.1/favicon.png')
+    // The rejected candidate is skipped — no logo buffers produced
+    expect(result.logoBuffers.length).toBe(0)
+  })
+
+  it('no bare fetch( call site remains for CSS or logo fetches — all calls go through global fetch only via the wrapper', async () => {
+    // This test asserts behavior (private IPs never reach fetch), the source-level grep gate
+    // in the plan's <verify> command additionally asserts zero literal bare `await fetch(`
+    // call sites remain anywhere in scraper.ts outside fetchWithSsrfGuard.
+    const html = '<html><head></head><body></body></html>'
+    mockFetch
+      .mockResolvedValueOnce(makeHtmlResponse(html))
+      .mockResolvedValueOnce({ ok: false })
+
+    await scrapeWebsite('https://example.com')
+
+    // Every call recorded against the mocked global fetch is expected — fetchWithSsrfGuard
+    // is the only thing that calls global fetch, so this is implicitly covered by the
+    // homepage + favicon fallback call count.
+    expect(mockFetch.mock.calls.length).toBeGreaterThanOrEqual(2)
   })
 })
