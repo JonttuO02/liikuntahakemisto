@@ -1,8 +1,8 @@
 ---
 phase: 47
 slug: skeema-monisivuinen-scraper-putki
-status: draft
-nyquist_compliant: false
+status: approved
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-06-16
 ---
@@ -38,16 +38,16 @@ created: 2026-06-16
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 47-XX-XX | TBD | TBD | SCRAP-06 | — | Same-origin subpage discovery + 3-5 page cap | unit | `npx vitest run lib/branding/scraper.test.ts -t "SCRAP-06"` | ❌ W0 | ⬜ pending |
-| 47-XX-XX | TBD | TBD | SCRAP-07 | T-SSRF-redirect | SSRF re-validation on every link/redirect; manual redirect hop cap | unit | `npx vitest run lib/branding/ssrfGuard.test.ts` | ❌ W0 | ⬜ pending |
-| 47-XX-XX | TBD | TBD | SCRAP-08 | — | Labeled multi-page prompt sections with per-page truncation | unit | `npx vitest run lib/branding/analyzer.test.ts -t "SCRAP-08"` | ❌ W0 | ⬜ pending |
-| 47-XX-XX | TBD | TBD | SCRAP-09 | — | Gallery image extraction + noise filtering | unit | `npx vitest run lib/branding/scraper.test.ts -t "SCRAP-09"` | ❌ W0 | ⬜ pending |
-| 47-XX-XX | TBD | TBD | BRDDB-03 | — | New columns exist with correct types/defaults | manual | `supabase db push` + SQL editor `information_schema` query | N/A | ⬜ pending |
-| 47-XX-XX | TBD | TBD | BRDDB-04 | — | `logo_type` CHECK constraint matches analyzer enum (verify-only — already shipped per research) | manual | `SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conname = 'business_branding_logo_type_check'` | N/A | ⬜ pending |
-| 47-XX-XX | TBD | TBD | BRDDB-05 | T-IDOR-paikka | Composite UNIQUE prevents cross-venue overwrite; backfill correctness | manual | Insert two rows same `business_account_id` different `paikka_id`; attempt duplicate; assert backfill populated `paikka_id` | N/A | ⬜ pending |
+| 47-03 Task 1/2 | 03 | 2 | SCRAP-06 | — | Same-origin subpage discovery + 3-5 page cap | unit | `npx vitest run lib/branding/scraper.test.ts -t "SCRAP-06"` | ❌ W0 | ⬜ pending |
+| 47-02 Task 1/2 | 02 | 1 | SCRAP-07 | T-47-09 (SSRF via CSS/logo) | SSRF re-validation on every link/redirect; manual redirect hop cap | unit | `npx vitest run lib/branding/ssrfGuard.test.ts` | ❌ W0 | ⬜ pending |
+| 47-04 Task 3 | 04 | 1 | SCRAP-08 | — | Labeled multi-page prompt sections with per-page truncation | unit | `npx vitest run lib/branding/analyzer.test.ts -t "SCRAP-08"` | ❌ W0 | ⬜ pending |
+| 47-03 Task 1/2 | 03 | 2 | SCRAP-09 | — | Gallery image extraction + noise filtering | unit | `npx vitest run lib/branding/scraper.test.ts -t "SCRAP-09"` | ❌ W0 | ⬜ pending |
+| 47-01 Task 1/2 | 01 | 1 | BRDDB-03 | — | New columns exist with correct types/defaults | manual | `supabase db push` + SQL editor `information_schema` query | N/A | ⬜ pending |
+| 47-01 Task 3 | 01 | 1 | BRDDB-04 | — | `logo_type` CHECK constraint matches analyzer enum (verify-only — already shipped per research) | manual | `SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conname = 'business_branding_logo_type_check'` | N/A | ⬜ pending |
+| 47-01 Task 1/3, 47-05 Task 2 | 01, 05 | 1, 3 | BRDDB-05 | T-IDOR-paikka | Composite UNIQUE prevents cross-venue overwrite; backfill correctness; route ownership check | manual | Insert two rows same `business_account_id` different `paikka_id`; attempt duplicate; assert backfill populated `paikka_id` | N/A | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
-*Task IDs will be finalized once the planner assigns plan/wave numbers.*
+*Task IDs reference the named tasks inside each plan file (e.g. "47-03 Task 2" = `47-03-PLAN.md`'s "Task 2: Rewire scrapeWebsite...").*
 
 ---
 
@@ -75,11 +75,11 @@ created: 2026-06-16
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-06-16 (gsd-plan-checker VERIFICATION PASSED, revision iteration 1)

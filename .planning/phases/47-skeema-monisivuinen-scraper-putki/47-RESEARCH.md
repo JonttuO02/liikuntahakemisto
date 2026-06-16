@@ -452,19 +452,22 @@ function extractGalleryImages(html: string, baseUrl: string, excludeUrls: Set<st
 
 **If this table is empty:** N/A — see entries above.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Is BRDDB-04 actually fully closed, or does CONTEXT.md know something this research missed?**
+   - **RESOLVED:** see Plan 47-01 Task 3 (live-constraint verification task).
    - What we know: `20260615000002_fix_logo_type_constraint.sql` already sets the CHECK constraint to exactly `('wordmark', 'icon', 'combination', 'unknown')`, matching `analyzer.ts`'s `VALID_LOGO_TYPES` exactly. Git log confirms this shipped in commit `c28cdcb`.
    - What's unclear: CONTEXT.md's D-13 describes this as a live bug ("current migration allows... a real, currently-silent bug"), which appears to be stale information from before the fix migration was written, OR there's a reason the fix migration didn't actually get applied to the live database (e.g. migration drift between local files and deployed Supabase project).
    - Recommendation: Planner should add an explicit verification task — query the live Supabase project's actual constraint definition (`SELECT conname, pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid = 'business_branding'::regclass`) before deciding whether BRDDB-04 needs any migration work at all in this phase.
 
 2. **Should this phase's GET response change be additive or breaking, given Phase 48 isn't shipping simultaneously?**
+   - **RESOLVED:** see Plan 47-05 Task 2 (additive GET response shape).
    - What we know: CONTEXT.md says frontend consumption updates are explicitly Phase 48 scope, and that Phase 47 "only needs to make the new shape available."
    - What's unclear: Whether "available" means the GET route changes its response shape now (breaking Phase 46's currently-deployed consumer) or whether old fields should remain present alongside new ones until Phase 48 ships.
    - Recommendation: Default to additive (keep `logo_url`/flat `colors` fields populated from `logos[0]`/derived values alongside the new array fields) unless the user confirms Phase 47+48 will deploy together as one release. Flag this explicitly for `/gsd:discuss-phase` follow-up if not already resolved.
 
 3. **What is the actual current Vercel plan and is the Pro upgrade already done?**
+   - **RESOLVED:** see Plan 47-05 Task 3 (checkpoint:human-verify confirming Vercel plan status).
    - What we know: CONTEXT.md D-04 says this is "an out-of-band account action the user must take separately."
    - What's unclear: Whether the upgrade has already happened by the time this phase executes, which determines whether the screenshot capability can be tested end-to-end during this phase or must be built defensively (feature-detected/gracefully degraded) without ever running against production.
    - Recommendation: Planner should add a checkpoint:human-verify task confirming Vercel plan status before any task that depends on `maxDuration` > 300s or actual screenshot capture being exercised in a deployed environment.
