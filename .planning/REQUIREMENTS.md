@@ -10,10 +10,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Scraping Pipeline
 
-- [ ] **SCRAP-06**: Scraper follows same-origin links from the homepage to pricing/hours/contact subpages (capped at 3-5 pages)
-- [ ] **SCRAP-07**: Every followed link and fetch redirect is re-validated against the SSRF guard before fetching (not just the entry URL)
-- [ ] **SCRAP-08**: Claude prompt receives labeled multi-page content with per-page truncation budgets, instead of one flat 8000-char slice
-- [ ] **SCRAP-09**: Scraper extracts general page images (not just logo candidates) for gallery prefill
+- [x] **SCRAP-06**: Scraper follows same-origin links from the homepage to pricing/hours/contact subpages (capped at 3-5 pages)
+- [x] **SCRAP-07**: Every followed link and fetch redirect is re-validated against the SSRF guard before fetching (not just the entry URL)
+- [x] **SCRAP-08**: Claude prompt receives labeled multi-page content with per-page truncation budgets, instead of one flat 8000-char slice
+- [x] **SCRAP-09**: Scraper extracts general page images (not just logo candidates) for gallery prefill
 
 ### Schema
 
@@ -60,10 +60,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCRAP-06 | Phase 47 | Pending |
-| SCRAP-07 | Phase 47 | Pending |
-| SCRAP-08 | Phase 47 | Pending |
-| SCRAP-09 | Phase 47 | Pending |
+| SCRAP-06 | Phase 47 | Complete |
+| SCRAP-07 | Phase 47 | Complete |
+| SCRAP-08 | Phase 47 | Complete |
+| SCRAP-09 | Phase 47 | Complete |
 | BRDDB-03 | Phase 47 | Complete |
 | BRDDB-04 | Phase 47 | Complete |
 | BRDDB-05 | Phase 47 | Complete |
