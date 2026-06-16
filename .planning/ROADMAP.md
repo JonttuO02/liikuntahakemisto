@@ -292,7 +292,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 44. Brändidatan tietokantaperusta | v2.1 | 1/1 | Complete | 2026-06-15 |
 | 45. Scraper & Claude API -putki | v2.1 | 4/4 | Complete | 2026-06-15 |
 | 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | Complete    | 2026-06-15 |
-| 47. Skeema & monisivuinen scraper-putki | v2.2 | 5/5 | Complete   | 2026-06-16 |
+| 47. Skeema & monisivuinen scraper-putki | v2.2 | 5/5 | Complete    | 2026-06-16 |
 | 48. Logo-, väri- ja galleriavalinta | v2.2 | 0/TBD | Not started | - |
 | 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 0/TBD | Not started | - |
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 0/TBD | Not started | - |
