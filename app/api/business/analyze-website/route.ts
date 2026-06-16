@@ -185,14 +185,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Business account required' }, { status: 403 })
   }
 
-  // T-47-11: IDOR mitigation — verify the caller owns (has an approved claim on) paikkaId
-  // before triggering analysis or writing any branding row for that venue.
+  // T-47-11 (corrected, Phase 48 Task 0): IDOR mitigation — verify the caller owns paikkaId
+  // before triggering analysis or writing any branding row for that venue. Ownership-only,
+  // matching save-step/submit — onboarding venues sit at claim_status='pending' for the
+  // entire onboarding flow (claim-paikka/create-paikka create the link 'pending'; submit
+  // resets it back to 'pending'). An 'approved' filter here 403s every first-time onboarding
+  // business and makes the 'preview' phase (and all Phase 48 UI) unreachable.
   const { data: ownershipLink } = await supabaseAdmin
     .from('business_paikka_links')
     .select('id')
     .eq('business_account_id', user.id)
     .eq('paikka_id', paikkaId)
-    .eq('claim_status', 'approved')
     .maybeSingle()
   if (!ownershipLink) {
     return NextResponse.json({ error: 'You do not own this venue' }, { status: 403 })

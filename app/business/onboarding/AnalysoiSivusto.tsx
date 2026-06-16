@@ -364,12 +364,12 @@ export default function AnalysoiSivusto({ onConfirm, onSkip }: AnalysoiSivustoPr
             <div className="flex flex-col gap-2">
               <LabelCaps>Brändivärit</LabelCaps>
               <div className="flex flex-row gap-2">
-                {brandingResult.colors.map(hex => (
+                {brandingResult.colors.map(color => (
                   <div
-                    key={hex}
+                    key={color.hex}
                     className="w-8 h-8 rounded-full border border-[rgba(0,0,0,0.07)]"
-                    style={{ backgroundColor: hex }}
-                    title={hex}
+                    style={{ backgroundColor: color.hex }}
+                    title={color.hex}
                   />
                 ))}
               </div>

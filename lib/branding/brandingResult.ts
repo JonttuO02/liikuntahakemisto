@@ -20,7 +20,11 @@ import { type PaikkaBase, hinnastaToHintaKuvaus } from '@/lib/onboardingUtils'
  * BrandingResult — client-safe representation of the analyse-website API
  * response (GET /api/business/analyze-website).
  *
- * Shape mirrors the JSON returned by the GET Route Handler (D-PA-02).
+ * Shape mirrors the JSON returned by the GET Route Handler (D-PA-02), reshaped
+ * in Phase 48 to mirror the live `.select(...)` column list exactly: status,
+ * logo_url, colors, logo_type, logo_candidates, image_urls,
+ * selected_background_color, selected_accent_color, raw_analysis,
+ * error_message, analyzed_at.
  * raw_analysis is kept as a nested object so steps 3–5 can read prices,
  * opening_hours, and website_url without destructuring the full server type.
  */
@@ -28,10 +32,19 @@ export type BrandingResult = {
   status: 'pending' | 'analyzing' | 'analyzed' | 'failed'
   logo_url: string | null
   logo_type: string | null
-  colors: string[] | null
+  /** Plural AI-extracted brand colors with a semantic role per Phase 47's analyzer prompt. */
+  colors: Array<{ hex: string; role: string }> | null
+  /** Logo candidates Claude identified on the page — the user picks one in Phase 48's logo picker. */
+  logo_candidates: Array<{ url: string; type: string }> | null
+  /** Scraped gallery image URLs (Supabase Storage, capped at MAX_GALLERY_UPLOADS) the user can pick from. */
+  image_urls: string[] | null
+  /** User-selected background color, persisted via PATCH /api/business/branding. */
+  selected_background_color: string | null
+  /** User-selected accent color, persisted via PATCH /api/business/branding. */
+  selected_accent_color: string | null
   raw_analysis: {
-    prices: Array<{ label: string; price: string }>
-    opening_hours: Array<{ day: string; open: string; close: string }>
+    prices: Array<{ label: string; price: string; source_page?: string }>
+    opening_hours: Array<{ day: string; open: string; close: string; source_page?: string }>
     website_url: string
   } | null
   error_message: string | null
@@ -87,17 +100,23 @@ export function getContrastColor(hex: string): '#000000' | '#ffffff' {
  * - varauslinkki: raw_analysis.website_url (or null)
  * - business_managed: true (shows verification badge in preview)
  *
- * Note: colors[0] is NOT embedded in the returned Liikuntapaikka — it is
- * passed separately as `brandColor` prop to DiagonaalKortti (D-BR-02).
+ * Note: background/accent color are NOT embedded in the returned Liikuntapaikka
+ * — Phase 48 sources them from `selected_background_color`/`selected_accent_color`
+ * (persisted via PATCH /api/business/branding) and passes them separately as the
+ * `brandColor` prop to DiagonaalKortti (D-BR-02).
  *
  * @param paikkaBase    - Venue name, sport type, address, and coordinates
  * @param brandingResult - Analysis result from GET /api/business/analyze-website
  * @param draftPaikkaId - Numeric id of the venue row in liikuntapaikat
+ * @param selectedLogoUrl - Optional user-selected logo URL (Phase 48 logo picker). When
+ *   provided, takes precedence over brandingResult.logo_url; existing callers that omit
+ *   this argument keep the original logo_url fallback unaffected.
  */
 export function buildBrandingPreview(
   paikkaBase: PaikkaBase,
   brandingResult: BrandingResult,
   draftPaikkaId: number,
+  selectedLogoUrl?: string | null,
 ): Liikuntapaikka {
   // Convert opening_hours Array<{day,open,close}> → Record<string, {open,close}>
   // Day strings from the API are already English weekday names (e.g. "monday"),
@@ -140,7 +159,7 @@ export function buildBrandingPreview(
     hinta_kuvaus,
     aukioloajat,
     image_url: null,
-    logo_url: brandingResult.logo_url,
+    logo_url: selectedLogoUrl ?? brandingResult.logo_url,
     photo_urls: null,
     featured: false,
     business_managed: true,
