@@ -37,7 +37,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [ ] **FLOW-01**: `StepPaikka` renders before the URL-analysis step in the onboarding flow
 - [ ] **FLOW-02**: User can quick-accept the AI analysis results and skip remaining wizard steps, submitting directly to the admin approval queue
-- [ ] **FLOW-03**: Quick-accept reuses the existing submit route's ownership/validation/draft-cleanup invariants via a `submission_type` flag, not a parallel write path
+- [ ] **FLOW-03**: Quick-accept reuses the existing submit route's ownership/validation/draft-cleanup invariants unmodified — AI results are mapped into an `onboarding_draft` row first, then the existing submit route runs exactly as it does for a full-wizard submission, not a parallel write path
 - [ ] **FLOW-04**: In-flight drafts created under the old step order resume correctly after the reorder ships
 
 ### Live Preview
