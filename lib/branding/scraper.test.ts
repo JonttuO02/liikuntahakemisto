@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { scrapeWebsite } from './scraper'
+import { scrapeWebsite, discoverSubpages, extractGalleryImages } from './scraper'
 
 // Mock global fetch so tests never make real network calls
 const mockFetch = vi.fn()
@@ -159,5 +159,115 @@ describe('scrapeWebsite', () => {
     const result = await scrapeWebsite('https://example.com')
     // The failing candidate should be skipped (not included in logoBuffers)
     expect(result.logoBuffers.length).toBe(0)
+  })
+})
+
+describe('discoverSubpages / SCRAP-06', () => {
+  it('returns same-origin pricing and contact links, excludes external host', () => {
+    const html = `
+      <a href="/hinnasto">Hinnasto</a>
+      <a href="/yhteystiedot">Yhteystiedot</a>
+      <a href="https://facebook.com/x">Facebook</a>
+    `
+    const result = discoverSubpages(html, 'https://example.com')
+
+    expect(result.pricing).toBe('https://example.com/hinnasto')
+    expect(result.contact).toBe('https://example.com/yhteystiedot')
+    expect(Object.values(result)).not.toContain('https://facebook.com/x')
+  })
+
+  it('matches both Finnish and English keywords for the same category', () => {
+    const htmlFi = '<a href="/hinnasto">Hinnasto</a>'
+    const htmlEn = '<a href="/pricing">Pricing</a>'
+
+    const resultFi = discoverSubpages(htmlFi, 'https://example.com')
+    const resultEn = discoverSubpages(htmlEn, 'https://example.com')
+
+    expect(resultFi.pricing).toBe('https://example.com/hinnasto')
+    expect(resultEn.pricing).toBe('https://example.com/pricing')
+  })
+
+  it('matches hours and contact keyword categories', () => {
+    const html = `
+      <a href="/aukioloajat">Aukioloajat</a>
+      <a href="/contact">Contact</a>
+    `
+    const result = discoverSubpages(html, 'https://example.com')
+
+    expect(result.hours).toBe('https://example.com/aukioloajat')
+    expect(result.contact).toBe('https://example.com/contact')
+  })
+
+  it('falls back to first N same-origin links when zero keyword matches found (D-06)', () => {
+    const html = `
+      <a href="/about">About</a>
+      <a href="/team">Team</a>
+      <a href="https://external.com/x">External</a>
+    `
+    const result = discoverSubpages(html, 'https://example.com', 4)
+
+    const values = Object.values(result)
+    expect(values.length).toBeGreaterThan(0)
+    expect(values).toContain('https://example.com/about')
+    expect(values).toContain('https://example.com/team')
+    expect(values).not.toContain('https://external.com/x')
+  })
+
+  it('fallback respects the budget parameter', () => {
+    const html = `
+      <a href="/a">A</a>
+      <a href="/b">B</a>
+      <a href="/c">C</a>
+      <a href="/d">D</a>
+      <a href="/e">E</a>
+    `
+    const result = discoverSubpages(html, 'https://example.com', 2)
+
+    expect(Object.keys(result).length).toBeLessThanOrEqual(2)
+  })
+})
+
+describe('extractGalleryImages / SCRAP-09', () => {
+  it('excludes data URIs, sub-100px images, noise patterns, and logo-candidate URLs', () => {
+    const html = `
+      <img src="data:image/png;base64,AAAA" alt="inline">
+      <img src="/spacer.png" width="50" height="50" alt="spacer">
+      <img src="/icon-menu.png" alt="menu icon">
+      <img src="/logo.png" alt="logo">
+      <img src="/gallery-photo1.jpg" alt="venue photo" width="400" height="300">
+    `
+    const excludeUrls = new Set(['https://example.com/logo.png'])
+    const result = extractGalleryImages(html, 'https://example.com', excludeUrls)
+
+    expect(result).not.toContain('https://example.com/spacer.png')
+    expect(result).not.toContain('https://example.com/icon-menu.png')
+    expect(result).not.toContain('https://example.com/logo.png')
+    expect(result).toContain('https://example.com/gallery-photo1.jpg')
+  })
+
+  it('dedupes repeated image URLs', () => {
+    const html = `
+      <img src="/photo.jpg" alt="photo" width="400" height="300">
+      <img src="/photo.jpg" alt="photo again" width="400" height="300">
+    `
+    const result = extractGalleryImages(html, 'https://example.com', new Set())
+
+    expect(result.filter((u) => u === 'https://example.com/photo.jpg').length).toBe(1)
+  })
+
+  it('caps result length at 15', () => {
+    const imgs = Array.from({ length: 25 }, (_, i) =>
+      `<img src="/photo${i}.jpg" alt="photo ${i}" width="400" height="300">`
+    ).join('\n')
+    const result = extractGalleryImages(imgs, 'https://example.com', new Set())
+
+    expect(result.length).toBeLessThanOrEqual(15)
+  })
+
+  it('includes images with no width/height attributes (no dimension info to filter on)', () => {
+    const html = `<img src="/no-dims.jpg" alt="venue photo">`
+    const result = extractGalleryImages(html, 'https://example.com', new Set())
+
+    expect(result).toContain('https://example.com/no-dims.jpg')
   })
 })

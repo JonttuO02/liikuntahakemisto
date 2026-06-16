@@ -2,12 +2,120 @@
 // Caller (route.ts) must validate url protocol and block private IP ranges before calling scrapeWebsite
 
 import sharp from 'sharp'
+import { fetchWithSsrfGuard } from './fetchSafe'
+import { isUrlSafe } from './ssrfGuard'
 
 export interface ScrapeResult {
   logoUrls: string[]       // raw image URLs (up to 5)
   logoBuffers: Buffer[]    // fetched + sharp-converted PNG buffers (parallel index to logoUrls)
   colors: string[]         // hex colors from theme-color meta + :root CSS variables
-  htmlSnippet: string      // html.slice(0, 8000)
+  htmlSnippet: string      // html.slice(0, 8000), now populated from the homepage labeled page
+  labeledPages: Array<{ label: string; html: string }>  // multi-page labeled sections (SCRAP-06/SCRAP-08)
+  imageUrls: string[]      // gallery image candidates, distinct from logo candidates (SCRAP-09)
+}
+
+// SCRAP-06: keyword categories for subpage discovery (Finnish + English, D-06)
+const SUBPAGE_KEYWORDS: Record<string, RegExp> = {
+  pricing: /hinnasto|hinnat|pricing|prices/i,
+  hours: /aukioloajat|aukiolo|hours|opening/i,
+  contact: /yhteystiedot|yhteys|contact/i,
+}
+
+/**
+ * Discovers same-origin subpage links on the homepage, scored against Finnish/English
+ * keyword categories (pricing/hours/contact). Falls back to the first `budget` same-origin
+ * links (keyed link0, link1, ...) if zero keyword matches are found (D-06).
+ * Exported for direct unit testing.
+ */
+export function discoverSubpages(html: string, baseUrl: string, budget = 4): Record<string, string> {
+  let baseHost: string
+  try {
+    baseHost = new URL(baseUrl).hostname
+  } catch {
+    return {}
+  }
+
+  // CR-05: fresh /g regex per call — this function is called once per homepage, but keep
+  // the regex scoped locally (not module-level) to match the file's established discipline.
+  const anchorRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi
+  const found: Record<string, string> = {}
+  const sameOriginLinks: string[] = []
+  let match: RegExpExecArray | null
+
+  while ((match = anchorRegex.exec(html)) !== null) {
+    const [, href, linkText] = match
+    let abs: URL
+    try {
+      abs = new URL(href, baseUrl)
+    } catch {
+      continue
+    }
+    if (abs.hostname !== baseHost) continue // same-origin only
+
+    if (!sameOriginLinks.includes(abs.href)) {
+      sameOriginLinks.push(abs.href)
+    }
+
+    const haystack = href + ' ' + linkText
+    for (const [category, re] of Object.entries(SUBPAGE_KEYWORDS)) {
+      if (!found[category] && re.test(haystack)) {
+        found[category] = abs.href
+      }
+    }
+  }
+
+  // D-06 fallback: zero keyword matches found — degrade to "homepage + first N same-origin links"
+  if (Object.keys(found).length === 0) {
+    const fallbackLinks = sameOriginLinks.slice(0, budget)
+    fallbackLinks.forEach((link, i) => {
+      found[`link${i}`] = link
+    })
+  }
+
+  return found
+}
+
+// Noise pattern for gallery image filtering (SCRAP-09 / D-11)
+const GALLERY_NOISE_PATTERN = /icon|sprite|pixel|spinner|loader|favicon|tracking|1x1/i
+const GALLERY_MIN_DIMENSION = 100 // px — only enforced when width/height attrs are present
+const GALLERY_CAP = 15
+
+/**
+ * Extracts general gallery <img> candidates from HTML, distinct from logo candidates.
+ * Skips data: URIs, sub-100px images (when dimensions are present), noise-pattern matches,
+ * and URLs already present in excludeUrls. Deduped, capped at 15 (D-11).
+ * Exported for direct unit testing.
+ */
+export function extractGalleryImages(html: string, baseUrl: string, excludeUrls: Set<string>): string[] {
+  // CR-05: fresh /g regex literal for this call — never share a module-level regex with lastIndex.
+  const imgTagRegex = /<img[^>]+>/gi
+  const found: string[] = []
+  let match: RegExpExecArray | null
+
+  while ((match = imgTagRegex.exec(html)) !== null && found.length < GALLERY_CAP) {
+    const tag = match[0]
+    const src = /\bsrc=["']([^"']+)["']/i.exec(tag)?.[1] ?? ''
+    if (!src || src.startsWith('data:')) continue // skip inline data-URI images
+
+    const widthAttr = /\bwidth=["']?(\d+)/i.exec(tag)?.[1]
+    const heightAttr = /\bheight=["']?(\d+)/i.exec(tag)?.[1]
+    if (widthAttr && parseInt(widthAttr, 10) < GALLERY_MIN_DIMENSION) continue
+    if (heightAttr && parseInt(heightAttr, 10) < GALLERY_MIN_DIMENSION) continue
+
+    const alt = /\balt=["']([^"']*)["']/i.exec(tag)?.[1] ?? ''
+    const cls = /\bclass=["']([^"']*)["']/i.exec(tag)?.[1] ?? ''
+    if (GALLERY_NOISE_PATTERN.test(src) || GALLERY_NOISE_PATTERN.test(alt) || GALLERY_NOISE_PATTERN.test(cls)) continue
+
+    try {
+      const abs = new URL(src, baseUrl).href
+      if (excludeUrls.has(abs)) continue // already a logo candidate
+      if (!found.includes(abs)) found.push(abs)
+    } catch {
+      continue
+    }
+  }
+
+  return found.slice(0, GALLERY_CAP)
 }
 
 /**
