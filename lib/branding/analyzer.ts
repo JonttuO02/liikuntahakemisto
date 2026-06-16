@@ -128,7 +128,7 @@ export async function analyzeWithClaude(
     const colors: BrandingAnalysisResult['colors'] = rawColors
       .filter(
         (c): c is { hex: string; role?: unknown } =>
-          typeof c?.hex === 'string' && /^#[0-9a-fA-F]{3,6}$/.test(c.hex)
+          typeof c?.hex === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c.hex)
       )
       .map((c) => ({
         hex: c.hex,

@@ -216,6 +216,26 @@ describe('analyzeWithClaude multi-page / SCRAP-08', () => {
     ])
   })
 
+  it('rejects invalid 4- and 5-digit hex strings, but accepts valid 3-digit shorthand', async () => {
+    mockCreate.mockResolvedValue(
+      makeOkResponse({
+        colors: [
+          { hex: '#1234', role: 'background' },
+          { hex: '#12345', role: 'background' },
+          { hex: '#abc', role: 'accent' },
+          { hex: '#aabbcc', role: 'accent' },
+        ],
+      })
+    )
+
+    const result = await analyzeWithClaude(makeBuffers(1), makeLabeledPages())
+
+    expect(result.colors).toEqual([
+      { hex: '#abc', role: 'accent' },
+      { hex: '#aabbcc', role: 'accent' },
+    ])
+  })
+
   it('coerces a missing source_page on prices to an empty string, never undefined', async () => {
     mockCreate.mockResolvedValue(
       makeOkResponse({
