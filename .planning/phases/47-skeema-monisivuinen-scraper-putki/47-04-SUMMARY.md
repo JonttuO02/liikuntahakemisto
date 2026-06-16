@@ -114,3 +114,8 @@ None for this plan specifically — the Vercel Pro / project-creation prerequisi
 ---
 *Phase: 47-skeema-monisivuinen-scraper-putki*
 *Completed: 2026-06-16*
+
+## Self-Check: PASSED
+
+All claimed files verified to exist on disk: `lib/branding/prompt.ts`, `lib/branding/screenshot.ts`, `lib/branding/analyzer.ts`, `lib/branding/analyzer.test.ts`, `package.json`, `next.config.mjs`, and this SUMMARY.md.
+All claimed commits verified to exist in git history: `34d9e1a`, `fe117a5`, `0843445`, `18153bd`, `de6f976`.
