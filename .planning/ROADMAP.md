@@ -171,7 +171,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 
 - [x] **Phase 47: Skeema & monisivuinen scraper-putki** — Schema migration + multi-page crawl with re-validated SSRF guard + labeled multi-page Claude prompt
  (completed 2026-06-16)
-- [ ] **Phase 48: Logo-, väri- ja galleriavalinta** — Multi-candidate logo picker, 2-color swatch picker, validated PATCH route, gallery prefill
+- [x] **Phase 48: Logo-, väri- ja galleriavalinta** — Multi-candidate logo picker, 2-color swatch picker, validated PATCH route, gallery prefill (completed 2026-06-16)
 - [ ] **Phase 49: Esikatselu- ja kontrastikorjaukset** — Step 6 CalloutCard swap + shared contrast-safe logo primitive
 - [ ] **Phase 50: Flow-uudelleenjärjestys & pikahyväksyntä** — StepPaikka before URL-analysis + quick-accept shortcut into admin queue
 - [ ] **Phase 51: Live-esikatselu velhossa** — Shared live-preview state, desktop split-view, mobile toggle
@@ -210,7 +210,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 **Plans**: 3 plans (Wave 1: 48-01 contracts + PATCH route; Wave 2: 48-02 logo/color pickers + paikka_id wiring; Wave 3: 48-03 gallery picker + quick-accept)
 - [x] 48-01-PLAN.md — Reshape BrandingResult + buildBrandingPreview; new validated PATCH /api/business/branding route (ONBOARD-17)
 - [x] 48-02-PLAN.md — Logo + color pickers with autosave; fix paikka_id wiring in pre-vaihe (ONBOARD-14/15)
-- [ ] 48-03-PLAN.md — Gallery checkbox picker + Mediat prefill; quick-accept via unmodified submit route (ONBOARD-16, FLOW-02/03)
+- [x] 48-03-PLAN.md — Gallery checkbox picker + Mediat prefill; quick-accept via unmodified submit route (ONBOARD-16, FLOW-02/03)
 **UI hint**: yes
 **Note (2026-06-16):** FLOW-02/FLOW-03 moved here from Phase 50 at user request — quick-accept submission belongs with the selection UI it accepts results from, in the same screen/step. Phase 50 retains only the step-reorder work (FLOW-01/FLOW-04).
 
@@ -299,7 +299,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 45. Scraper & Claude API -putki | v2.1 | 4/4 | Complete | 2026-06-15 |
 | 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | Complete    | 2026-06-15 |
 | 47. Skeema & monisivuinen scraper-putki | v2.2 | 5/5 | Complete    | 2026-06-16 |
-| 48. Logo-, väri- ja galleriavalinta | v2.2 | 2/3 | In Progress|  |
+| 48. Logo-, väri- ja galleriavalinta | v2.2 | 3/3 | Complete   | 2026-06-16 |
 | 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 0/TBD | Not started | - |
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 0/TBD | Not started | - |
 | 51. Live-esikatselu velhossa | v2.2 | 0/TBD | Not started | - |
