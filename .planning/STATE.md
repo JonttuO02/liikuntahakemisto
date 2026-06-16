@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: Onboarding-tekoälyn parannukset
-status: ready_to_plan
-stopped_at: Phase 47 complete (5/5) — ready to discuss Phase 48
-last_updated: 2026-06-16T15:55:09.258Z
-last_activity: 2026-06-16 -- Phase 47 marked complete
+status: planning
+stopped_at: Phase 48 context gathered
+last_updated: "2026-06-16T17:21:49.612Z"
+last_activity: 2026-06-16
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 5
-  completed_plans: 131
+  completed_plans: 5
   percent: 20
 ---
 
@@ -92,6 +92,6 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
 
 ## Session Continuity
 
-Last session: 2026-06-16T07:56:53.455Z
-Stopped at: Phase 47 context gathered
-Resume file: .planning/phases/47-skeema-monisivuinen-scraper-putki/47-CONTEXT.md
+Last session: 2026-06-16T17:21:49.601Z
+Stopped at: Phase 48 context gathered
+Resume file: .planning/phases/48-logo-v-ri-ja-galleriavalinta/48-CONTEXT.md
