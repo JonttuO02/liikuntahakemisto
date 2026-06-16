@@ -4,8 +4,8 @@ milestone: v2.2
 milestone_name: Onboarding-tekoälyn parannukset
 status: executing
 stopped_at: Phase 47 context gathered
-last_updated: "2026-06-16T11:23:25.320Z"
-last_activity: 2026-06-16 -- Phase 47 planning complete
+last_updated: "2026-06-16T11:35:39.253Z"
+last_activity: 2026-06-16 -- Phase 47 execution started
 progress:
   total_phases: 5
   completed_phases: 0
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v2.2 roadmap created — ready to plan Phase 47
+**Current focus:** Phase 47 — skeema-monisivuinen-scraper-putki
 
 ## Current Position
 
-Phase: 47 of 51 (Skeema & monisivuinen scraper-putki)
-Plan: — (not yet planned)
-Status: Ready to execute
-Last activity: 2026-06-16 -- Phase 47 planning complete
+Phase: 47 (skeema-monisivuinen-scraper-putki) — EXECUTING
+Plan: 1 of 5
+Status: Executing Phase 47
+Last activity: 2026-06-16 -- Phase 47 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
