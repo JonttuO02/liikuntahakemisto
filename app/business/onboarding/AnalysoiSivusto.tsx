@@ -94,10 +94,129 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
   const [brandingResult, setBrandingResult] = useState<BrandingResult | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
+  // ── Logo/color selection state (D-07, D-12, D-13) ──────────────────────────
+  const [selectedLogoUrl, setSelectedLogoUrl] = useState<string | null>(null)
+  const [bgColor, setBgColor] = useState<string | null>(null)
+  const [bgSource, setBgSource] = useState<'ai' | 'custom'>('ai')
+  const [accentColor, setAccentColor] = useState<string | null>(null)
+  const [accentSource, setAccentSource] = useState<'ai' | 'custom'>('ai')
+  const [armedSlot, setArmedSlot] = useState<'tausta' | 'aksentti' | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [savingSection, setSavingSection] = useState<'logo' | 'colors' | null>(null)
+  const [customHexInput, setCustomHexInput] = useState('')
+  const [customHexError, setCustomHexError] = useState<string | null>(null)
+  const selectionInitialisedRef = useRef(false)
+
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const tryCountRef = useRef<number>(0)
   // Track whether we're still mounted (for ignoring stale async responses)
   const mountedRef = useRef(true)
+
+  // ── Initialise selection state from brandingResult (D-13) ──────────────────
+  useEffect(() => {
+    if (!brandingResult || selectionInitialisedRef.current) return
+    selectionInitialisedRef.current = true
+
+    setSelectedLogoUrl(
+      brandingResult.logo_candidates?.[0]?.url ?? brandingResult.logo_url ?? null
+    )
+
+    const colors = brandingResult.colors ?? []
+    if (brandingResult.selected_background_color) {
+      setBgColor(brandingResult.selected_background_color)
+      setBgSource('ai')
+    } else {
+      const bgCandidate = colors.find(c => c.role === 'background')
+      if (bgCandidate) {
+        setBgColor(bgCandidate.hex)
+        setBgSource('ai')
+      }
+    }
+
+    if (brandingResult.selected_accent_color) {
+      setAccentColor(brandingResult.selected_accent_color)
+      setAccentSource('ai')
+    } else {
+      const accentCandidate = colors.find(c => c.role === 'accent')
+      if (accentCandidate) {
+        setAccentColor(accentCandidate.hex)
+        setAccentSource('ai')
+      }
+    }
+  }, [brandingResult])
+
+  // ── Autosave PATCH helper (D-07) ────────────────────────────────────────────
+  async function patchBranding(
+    partial: {
+      selected_logo_url?: string
+      selected_background_color?: string
+      background_color_source?: 'ai' | 'custom'
+      selected_accent_color?: string
+      accent_color_source?: 'ai' | 'custom'
+    },
+    section: 'logo' | 'colors'
+  ): Promise<boolean> {
+    setSavingSection(section)
+    try {
+      const token = await getAuthToken()
+      const res = await fetch('/api/business/branding', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ paikka_id: paikkaId, ...partial }),
+      })
+
+      if (!res.ok) {
+        setSaveError('Valinnan tallennus epäonnistui. Yritä uudelleen.')
+        return false
+      }
+
+      setSaveError(null)
+      return true
+    } catch {
+      setSaveError('Valinnan tallennus epäonnistui. Yritä uudelleen.')
+      return false
+    } finally {
+      setSavingSection(null)
+    }
+  }
+
+  function selectLogo(url: string) {
+    setSelectedLogoUrl(url)
+    patchBranding({ selected_logo_url: url }, 'logo')
+  }
+
+  function assignColorToSlot(slot: 'tausta' | 'aksentti', hex: string, source: 'ai' | 'custom') {
+    if (slot === 'tausta') {
+      setBgColor(hex)
+      setBgSource(source)
+      patchBranding({ selected_background_color: hex, background_color_source: source }, 'colors')
+    } else {
+      setAccentColor(hex)
+      setAccentSource(source)
+      patchBranding({ selected_accent_color: hex, accent_color_source: source }, 'colors')
+    }
+  }
+
+  function handleSwatchClick(hex: string) {
+    // Default the armed slot to 'tausta' if none is armed yet, so a single click works.
+    const slot = armedSlot ?? 'tausta'
+    assignColorToSlot(slot, hex, 'ai')
+  }
+
+  function handleCustomHexSubmit() {
+    const trimmed = customHexInput.trim()
+    if (!/^#[0-9a-fA-F]{6}$/.test(trimmed)) {
+      setCustomHexError('Anna värikoodi muodossa #rrggbb')
+      return
+    }
+    setCustomHexError(null)
+    const slot = armedSlot ?? 'tausta'
+    assignColorToSlot(slot, trimmed, 'custom')
+    setCustomHexInput('')
+  }
 
   // ── On-mount check (checking phase) ────────────────────────────────────────
 
@@ -347,35 +466,174 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
         <>
           <h2 className="text-xl font-bold text-[#111111]">Analyysin tulokset</h2>
 
-          {/* Logo */}
-          {brandingResult.logo_url && (
+          {/* Logo picker (ONBOARD-14) */}
+          {brandingResult.logo_candidates && brandingResult.logo_candidates.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <LabelCaps>Logo</LabelCaps>
+                {savingSection === 'logo' && <Spinner className="w-4 h-4" />}
+              </div>
+              {brandingResult.logo_candidates.length > 1 && (
+                <p className="text-sm text-[rgba(17,17,17,0.45)]">
+                  Valitse logo, jota käytetään profiilissasi
+                </p>
+              )}
+              <div className="flex flex-row flex-wrap gap-2">
+                {brandingResult.logo_candidates.map(candidate => {
+                  const isSelected = selectedLogoUrl === candidate.url
+                  return (
+                    <button
+                      key={candidate.url}
+                      type="button"
+                      onClick={() => selectLogo(candidate.url)}
+                      className={`flex flex-col items-center gap-1 border rounded-lg p-2 transition-colors ${
+                        isSelected
+                          ? 'border-[#111111] ring-2 ring-[#111111]'
+                          : 'border-[rgba(0,0,0,0.12)]'
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={candidate.url}
+                        alt=""
+                        className="h-12 w-auto object-contain rounded"
+                      />
+                      <span className="text-[10px] text-[rgba(17,17,17,0.45)]">
+                        {candidate.type}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ) : (
             <div className="flex flex-col gap-2">
               <LabelCaps>Logo</LabelCaps>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={brandingResult.logo_url}
-                alt=""
-                className="h-12 w-auto object-contain rounded"
-              />
+              <p className="text-sm text-[rgba(17,17,17,0.45)]">
+                Logoa ei löytynyt automaattisesti — voit lisätä sen myöhemmin velhon Mediat-vaiheessa
+              </p>
             </div>
           )}
 
-          {/* Brand colours */}
-          {brandingResult.colors && brandingResult.colors.length > 0 && (
-            <div className="flex flex-col gap-2">
+          {/* Color picker (ONBOARD-15) */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
               <LabelCaps>Brändivärit</LabelCaps>
-              <div className="flex flex-row gap-2">
-                {brandingResult.colors.map(color => (
-                  <div
-                    key={color.hex}
-                    className="w-8 h-8 rounded-full border border-[rgba(0,0,0,0.07)]"
-                    style={{ backgroundColor: color.hex }}
-                    title={color.hex}
-                  />
-                ))}
-              </div>
+              {savingSection === 'colors' && <Spinner className="w-4 h-4" />}
             </div>
-          )}
+            <p className="text-sm text-[rgba(17,17,17,0.45)]">
+              Valitse taustaväri ja aksenttiväri löydetyistä sävyistä, tai syötä oma värikoodi
+            </p>
+
+            {brandingResult.colors && brandingResult.colors.length === 0 && (
+              <p className="text-sm text-[rgba(17,17,17,0.45)]">
+                Värejä ei löytynyt — syötä omat värikoodit alla
+              </p>
+            )}
+
+            {brandingResult.colors && brandingResult.colors.length > 0 && (
+              <div className="flex flex-row flex-wrap gap-2">
+                {brandingResult.colors.slice(0, 6).map(color => {
+                  const isSelected = bgColor === color.hex || accentColor === color.hex
+                  return (
+                    <button
+                      key={color.hex}
+                      type="button"
+                      onClick={() => handleSwatchClick(color.hex)}
+                      className="p-1"
+                      title={color.hex}
+                      aria-label={color.hex}
+                    >
+                      <span
+                        className={`block w-8 h-8 rounded-full border border-[rgba(0,0,0,0.07)] ${
+                          isSelected ? 'ring-2 ring-[#111111] ring-offset-2' : ''
+                        }`}
+                        style={{ backgroundColor: color.hex }}
+                      />
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            <div className="flex flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => setArmedSlot('tausta')}
+                className={`flex items-center gap-2 border rounded-lg p-2 flex-1 transition-colors ${
+                  armedSlot === 'tausta' ? 'border-[#111111] ring-2 ring-[#111111]' : 'border-[rgba(0,0,0,0.12)]'
+                }`}
+              >
+                <span
+                  className="w-6 h-6 rounded-full border border-[rgba(0,0,0,0.07)] flex-shrink-0"
+                  style={{ backgroundColor: bgColor ?? '#ffffff' }}
+                />
+                <span className="flex flex-col items-start">
+                  <span className={`text-sm ${armedSlot === 'tausta' ? 'font-bold text-[#111111]' : 'text-[rgba(17,17,17,0.45)]'}`}>
+                    Tausta
+                  </span>
+                  {bgColor && (
+                    <span className="text-sm text-[rgba(17,17,17,0.45)]">
+                      {bgColor} {bgSource === 'custom' && '(oma)'}
+                    </span>
+                  )}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setArmedSlot('aksentti')}
+                className={`flex items-center gap-2 border rounded-lg p-2 flex-1 transition-colors ${
+                  armedSlot === 'aksentti' ? 'border-[#111111] ring-2 ring-[#111111]' : 'border-[rgba(0,0,0,0.12)]'
+                }`}
+              >
+                <span
+                  className="w-6 h-6 rounded-full border border-[rgba(0,0,0,0.07)] flex-shrink-0"
+                  style={{ backgroundColor: accentColor ?? '#ffffff' }}
+                />
+                <span className="flex flex-col items-start">
+                  <span className={`text-sm ${armedSlot === 'aksentti' ? 'font-bold text-[#111111]' : 'text-[rgba(17,17,17,0.45)]'}`}>
+                    Aksentti
+                  </span>
+                  {accentColor ? (
+                    <span className="text-sm text-[rgba(17,17,17,0.45)]">
+                      {accentColor} {accentSource === 'custom' && '(oma)'}
+                    </span>
+                  ) : (brandingResult.colors?.length ?? 0) === 1 ? (
+                    <span className="text-sm text-[rgba(17,17,17,0.45)]">Valitse aksenttiväri</span>
+                  ) : null}
+                </span>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <div className="flex flex-row gap-2">
+                <input
+                  type="text"
+                  value={customHexInput}
+                  onChange={e => {
+                    setCustomHexInput(e.target.value)
+                    if (customHexError) setCustomHexError(null)
+                  }}
+                  placeholder="#rrggbb"
+                  aria-label="Oma värikoodi"
+                  className="border border-[rgba(0,0,0,0.12)] rounded-lg h-10 px-3 text-sm text-[#111111] outline-none focus:border-[rgba(0,0,0,0.3)] flex-1"
+                />
+                <MutedButton onClick={handleCustomHexSubmit}>Käytä</MutedButton>
+              </div>
+              {customHexError && (
+                <p className="text-sm text-red-600" role="alert">
+                  {customHexError}
+                </p>
+              )}
+            </div>
+
+            {saveError && (
+              <p className="text-sm text-red-600" role="alert">
+                {saveError}
+              </p>
+            )}
+          </div>
 
           {/* Prices */}
           <div className="flex flex-col gap-2">
