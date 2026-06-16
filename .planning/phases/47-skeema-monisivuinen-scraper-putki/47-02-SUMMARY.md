@@ -106,3 +106,11 @@ None - no external service configuration required. Both new modules are pure Typ
 ---
 *Phase: 47-skeema-monisivuinen-scraper-putki*
 *Completed: 2026-06-16*
+
+## Self-Check: PASSED
+
+- FOUND: lib/branding/ssrfGuard.ts
+- FOUND: lib/branding/fetchSafe.ts
+- FOUND: lib/branding/ssrfGuard.test.ts
+- FOUND: .planning/phases/47-skeema-monisivuinen-scraper-putki/47-02-SUMMARY.md
+- FOUND commits: fefd388, 1264a6d, c446a57, 20ba0b8, 8123e2b
