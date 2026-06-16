@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { Check } from 'lucide-react'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import type { BrandingResult } from '@/lib/branding/brandingResult'
 
@@ -10,7 +11,10 @@ type Phase = 'checking' | 'url-input' | 'analyzing' | 'preview' | 'error' | 'tim
 
 interface AnalysoiSivustoProps {
   paikkaId: number
-  onConfirm: (brandingData: BrandingResult) => void
+  onConfirm: (
+    brandingData: BrandingResult,
+    selections: { logoUrl: string | null; gallery: string[] }
+  ) => void | Promise<void>
   onSkip: () => void
 }
 
@@ -102,10 +106,13 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
   const [accentSource, setAccentSource] = useState<'ai' | 'custom'>('ai')
   const [armedSlot, setArmedSlot] = useState<'tausta' | 'aksentti' | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [savingSection, setSavingSection] = useState<'logo' | 'colors' | null>(null)
+  const [savingSection, setSavingSection] = useState<'logo' | 'colors' | 'gallery' | null>(null)
   const [customHexInput, setCustomHexInput] = useState('')
   const [customHexError, setCustomHexError] = useState<string | null>(null)
   const selectionInitialisedRef = useRef(false)
+
+  // ── Gallery selection state (D-04/D-05/D-06, ONBOARD-16) ────────────────────
+  const [selectedGallery, setSelectedGallery] = useState<string[]>([])
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const tryCountRef = useRef<number>(0)
@@ -120,6 +127,9 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
     setSelectedLogoUrl(
       brandingResult.logo_candidates?.[0]?.url ?? brandingResult.logo_url ?? null
     )
+
+    // First 5 (or fewer) gallery images start checked, capped at 5 selected (D-05)
+    setSelectedGallery((brandingResult.image_urls ?? []).slice(0, 5))
 
     const colors = brandingResult.colors ?? []
     if (brandingResult.selected_background_color) {
@@ -153,8 +163,9 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
       background_color_source?: 'ai' | 'custom'
       selected_accent_color?: string
       accent_color_source?: 'ai' | 'custom'
+      image_urls?: string[]
     },
-    section: 'logo' | 'colors'
+    section: 'logo' | 'colors' | 'gallery'
   ): Promise<boolean> {
     setSavingSection(section)
     try {
@@ -216,6 +227,22 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
     const slot = armedSlot ?? 'tausta'
     assignColorToSlot(slot, trimmed, 'custom')
     setCustomHexInput('')
+  }
+
+  // ── Gallery toggle + autosave (D-04/D-05) ───────────────────────────────────
+  function toggleGalleryImage(url: string) {
+    setSelectedGallery(prev => {
+      const isSelected = prev.includes(url)
+      let next: string[]
+      if (isSelected) {
+        next = prev.filter(u => u !== url)
+      } else {
+        if (prev.length >= 5) return prev // cap enforced — non-selected thumbnails are disabled too
+        next = [...prev, url]
+      }
+      patchBranding({ image_urls: next }, 'gallery')
+      return next
+    })
   }
 
   // ── On-mount check (checking phase) ────────────────────────────────────────
@@ -635,6 +662,60 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
             )}
           </div>
 
+          {/* Gallery picker (ONBOARD-16, D-04/D-05/D-06) */}
+          {brandingResult.image_urls && brandingResult.image_urls.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <LabelCaps>Galleria</LabelCaps>
+                {savingSection === 'gallery' && <Spinner className="w-4 h-4" />}
+              </div>
+              <p className="text-sm text-[rgba(17,17,17,0.45)]">
+                Valitse enintään 5 kuvaa galleriaan
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {brandingResult.image_urls.slice(0, 8).map(url => {
+                  const isSelected = selectedGallery.includes(url)
+                  const disabled = !isSelected && selectedGallery.length >= 5
+                  return (
+                    <button
+                      key={url}
+                      type="button"
+                      onClick={() => toggleGalleryImage(url)}
+                      disabled={disabled}
+                      aria-pressed={isSelected}
+                      className={`relative ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={url}
+                        alt=""
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                      {isSelected && (
+                        <span
+                          className="absolute -top-1 -right-1 bg-[#111111] text-white rounded-full w-5 h-5 flex items-center justify-center"
+                          aria-hidden="true"
+                        >
+                          <Check className="w-3 h-3" />
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-sm text-[rgba(17,17,17,0.45)]">
+                {selectedGallery.length}/5 valittu
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <LabelCaps>Galleria</LabelCaps>
+              <p className="text-sm text-[rgba(17,17,17,0.45)]">
+                Kuvia ei löytynyt automaattisesti — voit lisätä kuvia myöhemmin velhon Mediat-vaiheessa
+              </p>
+            </div>
+          )}
+
           {/* Prices */}
           <div className="flex flex-col gap-2">
             <LabelCaps>Hinnat</LabelCaps>
@@ -680,7 +761,11 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
             >
               Analysoi uudelleen
             </button>
-            <PrimaryButton onClick={() => onConfirm(brandingResult)}>
+            <PrimaryButton
+              onClick={() =>
+                onConfirm(brandingResult, { logoUrl: selectedLogoUrl, gallery: selectedGallery })
+              }
+            >
               Jatka velhoon →
             </PrimaryButton>
           </div>

@@ -24,9 +24,14 @@ function PreVaiheSpinner() {
 function PrePhase({
   onConfirm,
   onSkip,
+  onPaikkaIdResolved,
 }: {
-  onConfirm: (result: BrandingResult) => void
+  onConfirm: (
+    result: BrandingResult,
+    selections: { logoUrl: string | null; gallery: string[] }
+  ) => void | Promise<void>
   onSkip: () => void
+  onPaikkaIdResolved: (paikkaId: number) => void
 }) {
   const searchParams = useSearchParams()
   const [paikkaId, setPaikkaId] = useState<number | null>(null)
@@ -55,7 +60,10 @@ function PrePhase({
         }
       }
 
-      if (!cancelled) setPaikkaId(resolved)
+      if (!cancelled) {
+        setPaikkaId(resolved)
+        if (resolved !== null) onPaikkaIdResolved(resolved)
+      }
     }
 
     resolvePaikkaId()
@@ -75,9 +83,45 @@ function PrePhase({
 export default function OnboardingWizardPage() {
   const [pagePhase, setPagePhase] = useState<PagePhase>('pre')
   const [brandingData, setBrandingData] = useState<BrandingResult | null>(null)
+  const [paikkaId, setPaikkaId] = useState<number | null>(null)
 
-  function handleConfirm(result: BrandingResult) {
+  async function handleConfirm(
+    result: BrandingResult,
+    selections: { logoUrl: string | null; gallery: string[] }
+  ) {
     setBrandingData(result)
+
+    // AWAIT the media_urls save-step write BEFORE navigating into the wizard.
+    // WizardInner's OnboardingMode re-fetches the onboarding_draft from Supabase ON MOUNT —
+    // if setPagePhase('wizard') ran before this write landed, that on-mount fetch would read
+    // the stale (pre-write) draft and StepMediat would silently render without the gallery
+    // prefill (no compile error, intermittent). Awaiting here closes that race (T-48-15).
+    if (paikkaId !== null) {
+      try {
+        const supabase = createBusinessBrowserClient()
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        const token = session?.access_token ?? ''
+        await fetch('/api/business/onboarding/save-step', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + token,
+          },
+          body: JSON.stringify({
+            paikka_id: paikkaId,
+            step: 2,
+            field: 'media_urls',
+            value: { logo: selections.logoUrl, photos: selections.gallery },
+          }),
+        })
+      } catch {
+        // Non-blocking: if the write fails, still allow navigation — StepMediat lets the
+        // user re-add photos/logo manually in the wizard.
+      }
+    }
+
     setPagePhase('wizard')
   }
 
@@ -91,7 +135,11 @@ export default function OnboardingWizardPage() {
       <div className="w-full max-w-xl">
         {pagePhase === 'pre' && (
           <Suspense fallback={<PreVaiheSpinner />}>
-            <PrePhase onConfirm={handleConfirm} onSkip={handleSkip} />
+            <PrePhase
+              onConfirm={handleConfirm}
+              onSkip={handleSkip}
+              onPaikkaIdResolved={setPaikkaId}
+            />
           </Suspense>
         )}
         {pagePhase === 'wizard' && (
