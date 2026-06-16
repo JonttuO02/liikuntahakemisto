@@ -17,6 +17,12 @@ const withSerwist = withSerwistInit({
 });
 
 export default withNextIntl(withSerwist({
+  experimental: {
+    serverComponentsExternalPackages: ['playwright-core', '@sparticuz/chromium'],
+    outputFileTracingIncludes: {
+      'app/api/business/analyze-website/route': ['./node_modules/@sparticuz/chromium/bin/**'],
+    },
+  },
   async redirects() {
     return [
       {
