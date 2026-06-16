@@ -208,7 +208,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
   5. After AI analysis (and logo/color selection) completes, the user can accept the results in one action and land directly in the admin approval queue without stepping through the remaining wizard screens
   6. A quick-accepted submission passes through the same ownership check, validation, and draft-cleanup logic as a normal full-wizard submission — there is no second, less-guarded write path
 **Plans**: 3 plans (Wave 1: 48-01 contracts + PATCH route; Wave 2: 48-02 logo/color pickers + paikka_id wiring; Wave 3: 48-03 gallery picker + quick-accept)
-- [ ] 48-01-PLAN.md — Reshape BrandingResult + buildBrandingPreview; new validated PATCH /api/business/branding route (ONBOARD-17)
+- [x] 48-01-PLAN.md — Reshape BrandingResult + buildBrandingPreview; new validated PATCH /api/business/branding route (ONBOARD-17)
 - [ ] 48-02-PLAN.md — Logo + color pickers with autosave; fix paikka_id wiring in pre-vaihe (ONBOARD-14/15)
 - [ ] 48-03-PLAN.md — Gallery checkbox picker + Mediat prefill; quick-accept via unmodified submit route (ONBOARD-16, FLOW-02/03)
 **UI hint**: yes
@@ -299,7 +299,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 45. Scraper & Claude API -putki | v2.1 | 4/4 | Complete | 2026-06-15 |
 | 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | Complete    | 2026-06-15 |
 | 47. Skeema & monisivuinen scraper-putki | v2.2 | 5/5 | Complete    | 2026-06-16 |
-| 48. Logo-, väri- ja galleriavalinta | v2.2 | 0/3 | Planned | - |
+| 48. Logo-, väri- ja galleriavalinta | v2.2 | 1/3 | In Progress|  |
 | 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 0/TBD | Not started | - |
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 0/TBD | Not started | - |
 | 51. Live-esikatselu velhossa | v2.2 | 0/TBD | Not started | - |
