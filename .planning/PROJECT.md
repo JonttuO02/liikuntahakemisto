@@ -1,5 +1,21 @@
 # Liikuntahakemisto
 
+## Current Milestone: v2.2 Onboarding-tekoälyn parannukset
+
+**Goal:** Onboarding-velhon tekoälyanalyysi tuottaa parempaa dataa laajemmalla sivuston haulla, ja käyttäjä näkee/hyväksyy tulokset reaaliajassa — pienemmällä manuaalisella työllä.
+
+**Target features:**
+- Esikatselun korjaus: poistetaan käyttämätön `PaikkaKortti` step 6:sta, tilalle `CalloutCard`
+- Flow-uudelleenjärjestys: `StepPaikka` ennen URL-analyysiä; pikahyväksyntä ohittaa loput velhon vaiheet suoraan admin-jonoon
+- Parempi scraping-ohjeistus: Claude-prompt + scraper seuraavat etusivun linkkejä (hinnasto/aukioloajat/yhteystiedot-sivut)
+- Kuvien haku: muut sivun kuvat (ei vain logo) esitäyttävät Mediat-vaiheen
+- Useamman logon valinta käyttäjälle, jos kandidaatteja löytyy useita
+- Värien käyttö: käyttäjä valitsee 2 väriä paletista → tausta + korostusväri (ei vain tausta)
+- Bugikorjaus: valkoinen/läpinäkyvä logo ei erotu esikatselun valkoisesta taustasta
+- Live-esikatselu velhossa: kaikki vaiheet päivittävät esikatselun reaaliajassa; desktop preview+edit vierekkäin, mobiili toggle
+
+---
+
 ## Shipped: v2.0 Business UX & Navigation (2026-06-15)
 
 **Delivered:** Täydellinen business-navigaatioympäristö — `BusinessNav` glass pill kaikilla `/business/*`-reiteillä (kuluttaja-NavBar poistettu), post-login redirect `/business/kirjaudu` → `/business`, `/business`-hallintapaneeli statuskortti + paikkalistaus + pikatoimintokortit, `/business/map` täysruutu-kartta Supercluster-klusteroinnilla + kaksivaiheinen pinni-interaktio (zoom → CalloutCard → PaikkaSheet), `/business/profiili` lukuvain tilitiedot + puhelinnumeron muokkaus + FI/EN-kielivalitsin + uloskirjautuminen (sb-biz-* isolaatio). 9/9 vaatimusta toimitettu, 3 vaihetta, 55 committia.
@@ -352,4 +368,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-16 — v2.1 milestone shipped (AI-pohjainen yrityssivuanalyysi)*
+*Last updated: 2026-06-16 — v2.2 milestone started (Onboarding-tekoälyn parannukset)*

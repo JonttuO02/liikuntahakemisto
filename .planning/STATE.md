@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.1
-milestone_name: AI-pohjainen yrityssivuanalyysi
-status: archived
-stopped_at: milestone complete (2026-06-16)
-last_updated: "2026-06-16T00:00:00.000Z"
+milestone: v2.2
+milestone_name: Onboarding-tekoälyn parannukset
+status: planning
+last_updated: "2026-06-16T06:13:25.272Z"
 last_activity: 2026-06-16
 progress:
-  total_phases: 46
-  completed_phases: 46
-  total_plans: 125
-  completed_plans: 125
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,11 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-16)
 
 ## Current Position
 
-Phase: 46 (complete)
-Plan: All complete
-Status: Milestone shipped
-
-Last activity: 2026-06-16
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-16 — Milestone v2.2 started
 
 ## v2.1 Summary
 
