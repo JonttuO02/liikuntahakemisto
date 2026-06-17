@@ -93,11 +93,17 @@ function StepPaikkaPrePhase({
 // component is the Suspense-boundary DESCENDANT that calls useSearchParams(), mirroring
 // WizardInner's OnboardingMode pattern exactly. OnboardingWizardPage (the parent that
 // instantiates the boundary) must never call useSearchParams() itself.
+// `knownPaikkaId` lets the caller pass an already-resolved paikka_id (e.g. from
+// StepPaikkaPrePhase, which runs immediately before this phase) to skip the redundant
+// resolution fetch/spinner flash. Falls back to its own resolution logic when absent, so it
+// still works as a defensive fallback / for direct deep-links into the analyze phase.
 function PrePhase({
+  paikkaId: knownPaikkaId,
   onConfirm,
   onSkip,
   onPaikkaIdResolved,
 }: {
+  paikkaId: number | null
   onConfirm: (
     result: BrandingResult,
     selections: { logoUrl: string | null; gallery: string[] }
@@ -106,9 +112,11 @@ function PrePhase({
   onPaikkaIdResolved: (paikkaId: number) => void
 }) {
   const searchParams = useSearchParams()
-  const [paikkaId, setPaikkaId] = useState<number | null>(null)
+  const [paikkaId, setPaikkaId] = useState<number | null>(knownPaikkaId)
 
   useEffect(() => {
+    if (knownPaikkaId !== null) return // already resolved by StepPaikkaPrePhase
+
     let cancelled = false
 
     async function resolvePaikkaId() {
@@ -225,6 +233,7 @@ export default function OnboardingWizardPage() {
         {pagePhase === 'analyze' && (
           <Suspense fallback={<PreVaiheSpinner />}>
             <PrePhase
+              paikkaId={paikkaId}
               onConfirm={handleConfirm}
               onSkip={handleSkip}
               onPaikkaIdResolved={setPaikkaId}
