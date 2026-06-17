@@ -253,7 +253,10 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
   1. A new business owner sees the venue-identification step (StepPaikka) before being asked for a website URL to analyze
   2. A business that started onboarding before this reorder shipped can resume their in-flight draft without getting stuck on a stale step number
 
-**Plans**: TBD
+**Plans**: 2 plans (Wave 1: 50-01 migration + bounds + [BLOCKING] push; Wave 2: 50-02 app-code reorder/renumber)
+
+- [ ] 50-01-PLAN.md — One-time step-renumber migration + tightened save-step bounds; [BLOCKING] supabase db push (FLOW-04)
+- [ ] 50-02-PLAN.md — StepPaikka pre-phase reorder + 5-step wizard renumber + progress bar (FLOW-01, FLOW-04)
 **Note (2026-06-16):** FLOW-02/FLOW-03 (quick-accept) moved to Phase 48 at user request — see Phase 48's note.
 
 ### Phase 51: Live-esikatselu velhossa
@@ -325,6 +328,6 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | Complete    | 2026-06-15 |
 | 47. Skeema & monisivuinen scraper-putki | v2.2 | 5/5 | Complete    | 2026-06-16 |
 | 48. Logo-, väri- ja galleriavalinta | v2.2 | 4/4 | Complete    | 2026-06-17 |
-| 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 2/2 | Complete   | 2026-06-17 |
-| 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 0/TBD | Not started | - |
+| 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 2/2 | Complete    | 2026-06-17 |
+| 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 0/2 | Planned | - |
 | 51. Live-esikatselu velhossa | v2.2 | 0/TBD | Not started | - |
