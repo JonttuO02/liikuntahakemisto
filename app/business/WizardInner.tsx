@@ -10,7 +10,6 @@ import type { Liikuntapaikka } from '@/lib/types'
 import { type BrandingResult } from '@/lib/branding/brandingResult'
 import PreviewModal from '@/app/components/PreviewModal'
 import ProgressBar from './onboarding/ProgressBar'
-import StepPaikka from './onboarding/StepPaikka'
 import StepMediat from './onboarding/StepMediat'
 import StepHinnasto from './onboarding/StepHinnasto'
 import StepAukioloajat from './onboarding/StepAukioloajat'
@@ -47,7 +46,7 @@ function OnboardingMode({ brandingData }: { brandingData?: BrandingResult | null
 
   // URL-based step routing (D-02)
   const rawStep = parseInt(searchParams.get('step') ?? '1', 10)
-  const step = isNaN(rawStep) || rawStep < 1 || rawStep > 6 ? 1 : rawStep
+  const step = isNaN(rawStep) || rawStep < 1 || rawStep > 5 ? 1 : rawStep
 
   function goToStep(n: number) {
     const params = new URLSearchParams({ step: String(n) })
@@ -118,6 +117,8 @@ function OnboardingMode({ brandingData }: { brandingData?: BrandingResult | null
       // Build the resume URL here (not via goToStep) because paikkaId state isn't set yet.
       const savedStep = existingDraft?.current_step ?? 0
       setMaxReachedStep(savedStep)
+      // Post-reorder (50-02): step 1 now means StepMediat (StepPaikka moved to page.tsx as
+      // a pre-phase, no longer rendered here) — this resume-bounce semantics are unchanged.
       if (savedStep > 1 && step === 1) {
         const params = new URLSearchParams({ step: String(savedStep) })
         if (resolvedPaikkaId) params.set('paikka_id', String(resolvedPaikkaId))
@@ -176,7 +177,7 @@ function OnboardingMode({ brandingData }: { brandingData?: BrandingResult | null
 
   // Re-fetch draft when user navigates to step 6 so the preview is always up to date.
   useEffect(() => {
-    if (step !== 6) return
+    if (step !== 5) return
     async function refreshDraftForPreview() {
       try {
         const supabase = createBusinessBrowserClient()
@@ -236,55 +237,51 @@ function OnboardingMode({ brandingData }: { brandingData?: BrandingResult | null
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {step === 1 && (
-              <StepPaikka
-                paikkaInfo={paikkaInfo}
-                paikkaId={paikkaId}
-                onNext={() => saveAndAdvance(1)}
-              />
-            )}
-            {step === 2 && paikkaId !== null && (
+            {step === 1 && paikkaId !== null && (
               <StepMediat
                 paikkaId={paikkaId}
                 initialDraft={draft}
+                onNext={() => saveAndAdvance(1)}
+                // Step 1 is now the wizard's FIRST step (StepPaikka moved to page.tsx as a
+                // pre-phase) — no previous wizard step exists, so onPrev is a no-op rather
+                // than navigating to a non-existent step 0 (D-02/D-03 define no such path).
+                onPrev={() => {}}
+              />
+            )}
+            {step === 2 && paikkaId !== null && (
+              <StepHinnasto
+                paikkaId={paikkaId}
+                initialHinnasto={draft?.hinnasto}
+                initialBrandingHinnasto={brandingPrices}
                 onNext={() => saveAndAdvance(2)}
                 onPrev={() => goToStep(1)}
               />
             )}
             {step === 3 && paikkaId !== null && (
-              <StepHinnasto
-                paikkaId={paikkaId}
-                initialHinnasto={draft?.hinnasto}
-                initialBrandingHinnasto={brandingPrices}
-                onNext={() => saveAndAdvance(3)}
-                onPrev={() => goToStep(2)}
-              />
-            )}
-            {step === 4 && paikkaId !== null && (
               <StepAukioloajat
                 paikkaId={paikkaId}
                 existingAukioloajat={paikkaInfo?.aukioloajat}
                 initialDraftAukioloajat={draft?.aukioloajat}
                 initialBrandingAukioloajat={brandingHours}
-                onNext={() => saveAndAdvance(4)}
-                onPrev={() => goToStep(3)}
+                onNext={() => saveAndAdvance(3)}
+                onPrev={() => goToStep(2)}
               />
             )}
-            {step === 5 && paikkaId !== null && (
+            {step === 4 && paikkaId !== null && (
               <StepYhteystiedot
                 paikkaId={paikkaId}
                 initialYhteystiedot={draft?.yhteystiedot}
                 initialBrandingWebsite={brandingWebsite}
-                onNext={() => saveAndAdvance(5)}
-                onPrev={() => goToStep(4)}
+                onNext={() => saveAndAdvance(4)}
+                onPrev={() => goToStep(3)}
               />
             )}
-            {step === 6 && (
+            {step === 5 && (
               <StepEsikatselu
                 draft={draft}
                 paikkaInfo={paikkaInfo}
                 brandingData={brandingData}
-                onPrev={() => goToStep(5)}
+                onPrev={() => goToStep(4)}
               />
             )}
           </motion.div>
