@@ -34,7 +34,7 @@ Fixed PREV-03 — white/transparent-background logo candidates in AnalysoiSivust
 |------|------|--------|-------|
 | 1 | Create the ContrastSafeLogo presentational primitive | 80299f7 | app/components/ContrastSafeLogo.tsx |
 | 2 | Wire ContrastSafeLogo into the AnalysoiSivusto logo-candidate picker | cfbe9e3 | app/business/onboarding/AnalysoiSivusto.tsx |
-| 3 | Human-verify contrast fix in the logo-candidate picker | — | awaiting human verification (checkpoint:human-verify, gate=blocking) |
+| 3 | Human-verify contrast fix in the logo-candidate picker | — | approved by user 2026-06-17 |
 
 ## What Was Built
 
@@ -53,22 +53,11 @@ Fixed PREV-03 — white/transparent-background logo candidates in AnalysoiSivust
 
 None — plan executed exactly as written. Both tasks matched the UI-SPEC's Component Inventory markup contract and call-site instructions precisely.
 
-## Checkpoint: Task 3 (awaiting human verification)
+## Checkpoint: Task 3 (human verification)
 
 **Type:** human-verify
 **Gate:** blocking
-
-**What was built:** The logo-candidate picker in AnalysoiSivusto's 'preview' phase now wraps every candidate logo in a fixed mid-gray (`rgba(0,0,0,0.06)`) backdrop box via the new shared `ContrastSafeLogo` primitive, so white/transparent-background logos are visibly framed instead of disappearing into the white card.
-
-**How to verify:**
-1. Run the dev server: `npm run dev` (from `C:/ClaudeCodeTestit/liikuntahakemisto`).
-2. Sign in as a business account and open the onboarding wizard's website-analysis step (`AnalysoiSivusto`), or trigger the `'preview'` phase so the logo-candidate picker renders. If no live analysis result is on hand, point the analyzer at a site whose logo is a white/transparent PNG (or temporarily inspect a candidate with a transparent logo).
-3. Confirm: each logo candidate now sits inside a light gray rounded box; a white or transparent-background logo is clearly visible against that gray, not invisible.
-4. Confirm the picker still works as before: clicking a candidate still shows the dark selection ring, the small type label under each logo is still there, and the "no logo candidates" empty-state copy (if triggerable) is unchanged.
-
-**Resume signal:** Type "approved" if white/transparent logos are now visible and selection still works, or describe what looks wrong.
-
-This plan cannot be marked fully complete until a human performs the above verification. Tasks 1–2 (the actual code changes) are committed and verified via automated checks; Task 3 requires manual browser confirmation that this executor agent cannot perform.
+**Result:** approved by user on 2026-06-17 — white/transparent logos are visible against the new backdrop, and selection ring/type label/empty-state behavior is unchanged.
 
 ## Self-Check: PASSED
 

@@ -54,16 +54,9 @@ In `app/business/onboarding/StepEsikatselu.tsx`:
   - `grep` confirmed `CalloutCard` import present, `previewLabelCallout` present, coordinate shim present, `PaikkaKortti` fully removed, and `DiagonaalKortti`/`PaikkaSheet` still present.
   - `npx tsc --noEmit` passed with zero errors across the whole project — the coordinate shim resolves the `number | null` vs `number` type mismatch cleanly.
 
-### Task 3: Human-verify Step 6 CalloutCard swap — AWAITING HUMAN VERIFICATION
+### Task 3: Human-verify Step 6 CalloutCard swap — APPROVED
 
-This is a `checkpoint:human-verify gate="blocking"` task. No code changes — manual browser verification only, which this executor cannot perform. Tasks 1 and 2's automated verification (grep + `tsc --noEmit`) passed, but the actual visual/runtime confirmation in a running dev server (Step 6 of the onboarding wizard, with and without a draft missing coordinates) has not been performed and requires a human to:
-
-1. Run `npm run dev` and step a business account through onboarding to Step 6.
-2. Confirm the first preview card is now the map-style `CalloutCard` (diagonal-clipped speech-bubble with sport icon, animated name/sport toggle) — not the old flat `PaikkaKortti` — captioned "KARTTAKORTTI" (FI) / "MAP CALLOUT" (EN).
-3. Confirm it renders without crashing for a draft venue with no coordinates yet.
-4. Confirm the `DiagonaalKortti` and `PaikkaSheet` sections below are unchanged.
-
-See the plan's Task 3 `<how-to-verify>` block for full step-by-step instructions and the `<resume-signal>` for how to respond.
+`checkpoint:human-verify gate="blocking"`. Approved by user on 2026-06-17 — Step 6's first preview slot renders the map-style `CalloutCard` with the new "KARTTAKORTTI"/"MAP CALLOUT" caption, renders without crashing for a draft missing coordinates, and the `DiagonaalKortti`/`PaikkaSheet` sections below are unchanged.
 
 ## Deviations from Plan
 
