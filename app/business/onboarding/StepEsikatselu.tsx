@@ -7,7 +7,7 @@ import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import { buildDraftAsPaikka, type OnboardingDraft, type PaikkaBase } from '@/lib/onboardingUtils'
 import { type BrandingResult, buildBrandingPreview } from '@/lib/branding/brandingResult'
-import PaikkaKortti from '@/app/components/PaikkaKortti'
+import CalloutCard from '@/app/components/CalloutCard'
 import DiagonaalKortti from '@/app/components/DiagonaalKortti'
 import PaikkaSheet from '@/app/components/PaikkaSheet'
 
@@ -115,12 +115,12 @@ export default function StepEsikatselu({
         </div>
       ) : (
         <div className="flex flex-col gap-6">
-          {/* LISTAKORTTI */}
+          {/* KARTTAKORTTI */}
           <div className="flex flex-col gap-2">
             <span className="text-[10px] font-bold uppercase tracking-widest text-[rgba(17,17,17,0.45)]">
-              {t('previewLabelCard')}
+              {t('previewLabelCallout')}
             </span>
-            <PaikkaKortti paikka={draftAsPaikka} />
+            <CalloutCard p={{ ...draftAsPaikka, latitude: draftAsPaikka.latitude ?? 0, longitude: draftAsPaikka.longitude ?? 0 }} />
           </div>
 
           {/* DIAGONAALIKORTTI */}
