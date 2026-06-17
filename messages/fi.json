@@ -179,6 +179,7 @@
     "contactDescPlaceholder": "Lyhyt kuvaus palvelustanne (max 300 merkkiä)",
     "contactDescCount": "{n}/300",
     "previewLabelCard": "LISTAKORTTI",
+    "previewLabelCallout": "KARTTAKORTTI",
     "previewLabelDiag": "DIAGONAALIKORTTI",
     "previewLabelSheet": "PROFIILISIVU",
     "errorNoPriceRow": "Lisää vähintään yksi hintarivi ennen jatkamista.",

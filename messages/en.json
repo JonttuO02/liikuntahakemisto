@@ -179,6 +179,7 @@
     "contactDescPlaceholder": "Short description of your service (max 300 characters)",
     "contactDescCount": "{n}/300",
     "previewLabelCard": "LIST CARD",
+    "previewLabelCallout": "MAP CALLOUT",
     "previewLabelDiag": "DIAGONAL CARD",
     "previewLabelSheet": "VENUE PAGE",
     "errorNoPriceRow": "Add at least one price row before continuing.",
