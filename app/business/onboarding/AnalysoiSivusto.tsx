@@ -856,7 +856,14 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <PrimaryButton
                 onClick={() =>
-                  onConfirm(brandingResult, { logoUrl: selectedLogoUrl, gallery: selectedGallery })
+                  onConfirm(
+                    // brandingResult itself is never mutated after the initial load (see the
+                    // one-time init effect above) — merge in the user's manual color picks here
+                    // so onConfirm/page.tsx's brandingData (and StepEsikatselu's brandColor) see
+                    // the latest selection instead of the stale AI-extracted defaults.
+                    { ...brandingResult, selected_background_color: bgColor, selected_accent_color: accentColor },
+                    { logoUrl: selectedLogoUrl, gallery: selectedGallery }
+                  )
                 }
                 disabled={submittingQuick}
               >

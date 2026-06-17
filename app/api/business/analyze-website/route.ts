@@ -26,8 +26,10 @@ const MAX_GALLERY_UPLOADS = 8
 async function runAnalysis(url: string, businessAccountId: string, paikkaId: number): Promise<void> {
   try {
     // 1. Scrape — logoBuffers are PNG Buffer[] (parallel to logoUrls); labeledPages/imageUrls
-    // are the new multi-page shapes (SCRAP-06/SCRAP-08/SCRAP-09).
-    const { logoBuffers, labeledPages, imageUrls, colors } = await scrapeWebsite(url)
+    // are the new multi-page shapes (SCRAP-06/SCRAP-08/SCRAP-09). The scraper's own `colors`
+    // (theme-color meta + :root CSS vars only) is intentionally NOT used for the stored
+    // `colors` column below — see step 6 comment.
+    const { logoBuffers, labeledPages, imageUrls } = await scrapeWebsite(url)
 
     // 2. Capture optional homepage screenshot — fail-soft, never aborts the pipeline.
     let screenshot: Buffer | null = null
@@ -103,7 +105,12 @@ async function runAnalysis(url: string, businessAccountId: string, paikkaId: num
           logo_url: logoPublicUrl,
           logo_type: result.logos[0]?.type ?? 'unknown',
           logo_candidates: logoCandidates,
-          colors: colors,
+          // Use Claude's role-tagged, screenshot-derived colors (result.colors), NOT the
+          // scraper's flat theme-color/CSS-var-only colors array. The latter is rarely
+          // present on real sites (causing near-universal "couldn't find colours") and is
+          // a plain string[] anyway — every consumer (AnalysoiSivusto, PATCH route,
+          // BrandingResult type) expects Array<{hex, role}>.
+          colors: result.colors,
           image_urls: galleryUrls,
           // WR-02: use Claude's URL only if same hostname as submitted — prevents
           // prompt injection from storing an attacker-controlled external URL
