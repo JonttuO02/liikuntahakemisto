@@ -30,8 +30,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Preview & Bugfixes
 
-- [ ] **PREV-02**: Step 6 preview renders `CalloutCard` instead of the unused `PaikkaKortti`, with a fallback for venues missing coordinates
-- [ ] **PREV-03**: A shared contrast-safe logo display primitive is used in AnalysoiSivusto's logo-candidate picker, fixing white/transparent logo invisibility against its fixed white background (DiagonaalKortti/PaikkaSheet already have working contrast via user-selected brand color and are out of scope — corrected 2026-06-17 during Phase 49 discussion)
+- [x] **PREV-02**: Step 6 preview renders `CalloutCard` instead of the unused `PaikkaKortti`, with a fallback for venues missing coordinates
+- [x] **PREV-03**: A shared contrast-safe logo display primitive is used in AnalysoiSivusto's logo-candidate picker, fixing white/transparent logo invisibility against its fixed white background (DiagonaalKortti/PaikkaSheet already have working contrast via user-selected brand color and are out of scope — corrected 2026-06-17 during Phase 49 discussion)
 
 ### Flow
 
@@ -71,8 +71,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 | ONBOARD-15 | Phase 48 | Complete |
 | ONBOARD-16 | Phase 48 | Complete |
 | ONBOARD-17 | Phase 48 | Complete |
-| PREV-02 | Phase 49 | Pending |
-| PREV-03 | Phase 49 | Pending |
+| PREV-02 | Phase 49 | Complete |
+| PREV-03 | Phase 49 | Complete |
 | FLOW-01 | Phase 50 | Pending |
 | FLOW-02 | Phase 48 | Complete |
 | FLOW-03 | Phase 48 | Complete |
