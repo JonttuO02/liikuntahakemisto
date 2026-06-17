@@ -55,14 +55,21 @@ function OnboardingMode({
   const step = isNaN(rawStep) || rawStep < 1 || rawStep > 5 ? 1 : rawStep
 
   function goToStep(n: number) {
-    const params = new URLSearchParams({ step: String(n) })
+    const clamped = Math.min(Math.max(n, 1), 5)
+    const params = new URLSearchParams({ step: String(clamped) })
     if (paikkaId !== null) params.set('paikka_id', String(paikkaId))
     router.push('/business/onboarding?' + params.toString())
   }
 
-  // completedSteps: steps 1 through current_step-1
-  const completedSteps: number[] = draft?.current_step && draft.current_step > 1
-    ? Array.from({ length: draft.current_step - 1 }, (_, i) => i + 1)
+  // completedSteps: steps 1 through current_step-1. Clamp draft.current_step to the wizard's
+  // own valid range (1-5) first — the AnalysoiSivusto quick-accept path can transiently
+  // persist current_step:6 (see save-step/route.ts), which would otherwise mark the
+  // not-yet-visited StepEsikatselu (step 5) as "completed" (CR-01).
+  const clampedCurrentStep = draft?.current_step
+    ? Math.min(draft.current_step, 5)
+    : undefined
+  const completedSteps: number[] = clampedCurrentStep && clampedCurrentStep > 1
+    ? Array.from({ length: clampedCurrentStep - 1 }, (_, i) => i + 1)
     : []
 
   useEffect(() => {
@@ -125,8 +132,12 @@ function OnboardingMode({
       setMaxReachedStep(savedStep)
       // Post-reorder (50-02): step 1 now means StepMediat (StepPaikka moved to page.tsx as
       // a pre-phase, no longer rendered here) — this resume-bounce semantics are unchanged.
-      if (savedStep > 1 && step === 1) {
-        const params = new URLSearchParams({ step: String(savedStep) })
+      // Clamp to the wizard's valid 1-5 range before redirecting: the AnalysoiSivusto
+      // quick-accept path can transiently persist current_step:6, which would otherwise
+      // push an out-of-range ?step=6 URL for one render cycle (CR-01).
+      const clampedSavedStep = Math.min(savedStep, 5)
+      if (clampedSavedStep > 1 && step === 1) {
+        const params = new URLSearchParams({ step: String(clampedSavedStep) })
         if (resolvedPaikkaId) params.set('paikka_id', String(resolvedPaikkaId))
         router.push('/business/onboarding?' + params.toString())
       }
