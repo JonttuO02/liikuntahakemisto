@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: Onboarding-tekoälyn parannukset
 status: executing
-stopped_at: Phase 49 UI-SPEC approved
-last_updated: "2026-06-17T05:25:42.424Z"
-last_activity: 2026-06-17 -- Phase 49 execution started
+stopped_at: Phase 49 complete, ready to plan Phase 50
+last_updated: "2026-06-17T09:14:15.239Z"
+last_activity: 2026-06-17
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 11
-  completed_plans: 9
-  percent: 40
+  completed_plans: 11
+  percent: 60
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 49 — esikatselu-ja-kontrastikorjaukset
+**Current focus:** Phase 50 — flow-uudelleenjärjestys
 
 ## Current Position
 
-Phase: 49 (esikatselu-ja-kontrastikorjaukset) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 49
-Last activity: 2026-06-17 -- Phase 49 execution started
+Phase: 50
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-17
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████░░░░] 60%
 
 ## v2.2 Roadmap Summary
 
@@ -92,9 +92,9 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
 
 ## Session Continuity
 
-Last session: 2026-06-17T05:11:25.480Z
-Stopped at: Phase 49 UI-SPEC approved
-Resume file: .planning/phases/49-esikatselu-ja-kontrastikorjaukset/49-UI-SPEC.md
+Last session: 2026-06-17
+Stopped at: Phase 49 complete, ready to plan Phase 50
+Resume file: None
 
 ## Performance Metrics
 
