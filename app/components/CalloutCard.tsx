@@ -22,7 +22,10 @@ const TEXT_CONTAINER_VARIANTS = {
   exit:  { transition: { staggerChildren: 0.014 } },
 }
 
-const RING_WIDTH = 5
+// Generous on purpose: a thin margin is sensitive to any sub-pixel rounding/antialiasing
+// mismatch between the card's clip-path and the backdrop's scaled-up copy, which can leave
+// a hairline gap. A wider margin makes the visible ring more tolerant of that.
+const RING_WIDTH = 8
 
 // Darkens a #rrggbb hex color by `amount` (0-1) — used to build the accent ring's
 // conic-gradient stops (light/mid/dark shades of a single user-picked color), mirroring
@@ -156,12 +159,14 @@ export default function CalloutCard({
           // white. The .glass class's border/box-shadow (gloss highlight, edge sheen) are
           // untouched, so the card keeps its glossy feel without lightening the actual color.
           ...(brandColor ? { background: brandColor } : {}),
-          // .glass's 1px white border (border-top/left/right/bottom) is normally invisible
-          // against the page's white background — but with the accent ring sitting directly
-          // behind/around the card, that border becomes a visible white seam between the
-          // card and the ring. Removing it when the ring is present lets the ring sit flush
-          // against the card with no gap.
-          ...(accentColor ? { border: 'none' } : {}),
+          // .glass's 1px white border (border-top/left/right/bottom) AND its top-edge inset
+          // box-shadow sheen (`inset 0 1px 0 rgba(255,255,255,1)`, a glassmorphism highlight
+          // line) are both normally invisible against the page's white background — but
+          // with the accent ring sitting directly behind/around the card, both become a
+          // visible white seam (the box-shadow specifically explained a seam on the TOP
+          // edge only, since it's a one-sided inset). Removing both when the ring is
+          // present lets the ring sit flush against the card with no gap anywhere.
+          ...(accentColor ? { border: 'none', boxShadow: 'none' } : {}),
         }}
       >
       <div className="flex flex-col gap-2 h-full">
