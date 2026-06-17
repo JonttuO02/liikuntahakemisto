@@ -104,3 +104,12 @@ None — both changes match the plan's `<threat_model>` exactly (T-50-01 mitigat
 ---
 *Phase: 50-flow-uudelleenj-rjestys*
 *Completed: 2026-06-17*
+
+## Self-Check: PASSED
+
+- FOUND: supabase/migrations/20260617000000_renumber_onboarding_steps.sql
+- FOUND: app/api/business/onboarding/save-step/route.ts
+- FOUND: .planning/phases/50-flow-uudelleenj-rjestys/50-01-SUMMARY.md
+- FOUND: commit 43cf131
+- FOUND: commit 97e7acf
+- FOUND: commit 8fa3e6f
