@@ -103,18 +103,23 @@ export default function CalloutCard({
   return (
     <div className="relative" style={{ width: 160, height: 171 }}>
       {accentColor && clipPath && (
-        // Rotating conic-gradient ring traced around the card's actual silhouette (notch
-        // included) — same technique as the map pin's `.pin-arc` (globals.css): a
-        // light→dark→light sweep of one color, masked to the card's shape, then scaled up
-        // ~5% from center so only a thin ring peeks out from behind the card on top.
+        // Conic-gradient ring traced around the card's actual silhouette (notch included),
+        // scaled up ~5% from center so only a thin ring peeks out from behind the card on
+        // top. Unlike the map pin's `.pin-arc` (a perfect circle, where rotating the whole
+        // element via `transform: rotate()` is safe since a circle's boundary is
+        // rotationally symmetric), this card's boundary is NOT symmetric — rotating the
+        // element itself would visibly spin its notched silhouette into a moving diamond.
+        // Instead, only the gradient's `from` angle animates (via the --ring-angle custom
+        // property registered in globals.css), sweeping the light/dark color band around a
+        // perfectly static boundary.
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             clipPath: `path('${clipPath}')`,
-            background: `conic-gradient(${accentColor}59 0deg, ${darkenHex(accentColor, 0.45)} 90deg, ${accentColor} 180deg, ${darkenHex(accentColor, 0.45)} 270deg, ${accentColor}59 360deg)`,
+            background: `conic-gradient(from var(--ring-angle), ${accentColor}59 0deg, ${darkenHex(accentColor, 0.45)} 90deg, ${accentColor} 180deg, ${darkenHex(accentColor, 0.45)} 270deg, ${accentColor}59 360deg)`,
             transform: 'scale(1.045)',
-            animation: 'spinOrbit 3s linear infinite',
-          }}
+            animation: 'ringAngleSpin 3s linear infinite',
+          } as React.CSSProperties}
         />
       )}
       <div

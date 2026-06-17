@@ -114,6 +114,22 @@
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+
+/* Registers --ring-angle as an animatable <angle> custom property so conic-gradient's
+ * `from` angle can be animated WITHOUT rotating the element itself — needed for
+ * CalloutCard's accent ring, whose boundary is a non-circular notched path. Rotating
+ * spinOrbit's `transform: rotate()` on a circle (like .pin-arc) leaves the boundary
+ * unchanged since a circle is rotationally symmetric; rotating a non-circular shape would
+ * visibly spin its silhouette into a diamond. Animating the gradient's angle instead keeps
+ * the boundary perfectly static while still sweeping the light/dark color band around it. */
+@property --ring-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes ringAngleSpin {
+  to { --ring-angle: 360deg; }
+}
 /* Arc sweep: ring in the blue zone outside white circle (r=10→14, center 14,14 in 28×38 div) */
 .pin-arc {
   position: absolute;
