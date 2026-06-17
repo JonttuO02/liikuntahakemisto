@@ -45,13 +45,12 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **LIVEPREV-01**: Each wizard step updates a shared live-preview state on field change
 - [ ] **LIVEPREV-02**: Desktop shows the live preview side-by-side with the active step's edit form
 - [ ] **LIVEPREV-03**: Mobile shows a toggle between edit form and live preview (no side-by-side)
-- [ ] **LIVEPREV-04**: Live preview renders via `CalloutCard`/`DiagonaalKortti` using current in-progress (unsaved) field values
+- [ ] **LIVEPREV-04**: Live preview renders via `CalloutCard`/`DiagonaalKortti` using current in-progress (unsaved) field values, in both onboarding mode and EditMode
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| `PreviewModal.tsx` (used in EditMode dashboard) CalloutCard swap | Out of v2.2's stated scope (StepEsikatselu only); flagged as a likely follow-up for visual consistency |
 | Headless browser / Playwright-based scraping | Target subpages are static server-rendered HTML; incompatible with Vercel Hobby `waitUntil` 10s budget |
 | New state management library (Zustand/Redux/Jotai) for live preview | React Context + reducer scoped to the wizard tree is sufficient at this scale |
 | Form library adoption | No existing usage in codebase; introducing one for live preview alone would be inconsistent |

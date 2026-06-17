@@ -262,7 +262,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 
 ### Phase 51: Live-esikatselu velhossa
 
-**Goal**: A business owner sees their venue's card update in real time as they fill in any wizard step, instead of only seeing the final result at step 6.
+**Goal**: A business owner sees their venue's card update in real time as they fill in any wizard step, instead of only seeing the final result at step 6 — in both the onboarding wizard and the existing-venue EditMode tabs.
 **Depends on**: Phase 48, Phase 49 (live preview consumes the final logo/color selection shape and the corrected, contrast-safe preview component — building it earlier would mean rebuilding it)
 **Requirements**: LIVEPREV-01, LIVEPREV-02, LIVEPREV-03, LIVEPREV-04
 **Success Criteria** (what must be TRUE):
@@ -271,6 +271,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
   2. On desktop, the live preview is visible side-by-side with the step currently being edited
   3. On mobile, the user can toggle between the edit form and the live preview instead of losing screen space to a permanent split view
   4. The live preview renders via `CalloutCard`/`DiagonaalKortti` using the current in-progress (unsaved) field values, not stale data from the last save
+  5. EditMode's existing-venue tabs get the same live preview pattern, replacing the current click-to-open `PreviewModal`
 
 **Plans**: TBD
 **UI hint**: yes
