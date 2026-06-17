@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Check } from 'lucide-react'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import type { BrandingResult } from '@/lib/branding/brandingResult'
+import ContrastSafeLogo from '@/app/components/ContrastSafeLogo'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -607,12 +608,7 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
                           : 'border-[rgba(0,0,0,0.12)]'
                       }`}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={candidate.url}
-                        alt=""
-                        className="h-12 w-auto object-contain rounded"
-                      />
+                      <ContrastSafeLogo src={candidate.url} />
                       <span className="text-[10px] text-[rgba(17,17,17,0.45)]">
                         {candidate.type}
                       </span>
