@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
 import { hinnastaToHintaKuvaus } from '@/lib/onboardingUtils'
+import { useLivePreview } from '@/lib/livePreview/LivePreviewContext'
+import { useDebouncedValue } from '@/lib/livePreview/useDebouncedPreviewField'
 
 type PricingRow = {
   id: string
@@ -49,6 +51,7 @@ export default function StepHinnasto({
   onSaveComplete,
 }: Props) {
   const t = useTranslations('Business')
+  const { dispatch } = useLivePreview()
 
   const [rows, setRows] = useState<PricingRow[]>(() => {
     if (editMode) {
@@ -114,6 +117,18 @@ export default function StepHinnasto({
   function updateRow(id: string, field: keyof PricingRow, value: string) {
     setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r))
   }
+
+  // Live-preview wiring (LIVEPREV-01/04): debounced SET_HINNASTO dispatch,
+  // mirroring the projection used in handleNext (filter non-empty hinta).
+  const debouncedRows = useDebouncedValue(rows, 280)
+  useEffect(() => {
+    dispatch({
+      type: 'SET_HINNASTO',
+      payload: debouncedRows
+        .filter(r => r.hinta.trim() !== '')
+        .map(({ kategoria, hinta, lisatieto }) => ({ kategoria, hinta, lisatieto })),
+    })
+  }, [debouncedRows, dispatch])
 
   async function handleSave() {
     if (!hasAnyPrice || saving) return

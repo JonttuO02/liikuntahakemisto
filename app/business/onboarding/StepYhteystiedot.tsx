@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
+import { useLivePreview } from '@/lib/livePreview/LivePreviewContext'
+import { useDebouncedValue } from '@/lib/livePreview/useDebouncedPreviewField'
 
 interface StepYhteystiedotProps {
   paikkaId: number
@@ -35,6 +37,7 @@ export default function StepYhteystiedot({
   onSaveComplete,
 }: StepYhteystiedotProps) {
   const t = useTranslations('Business')
+  const { dispatch } = useLivePreview()
 
   const [puhelin, setPuhelin] = useState(initialYhteystiedot?.puhelin ?? '')
   const [email, setEmail] = useState(initialYhteystiedot?.email ?? '')
@@ -42,6 +45,12 @@ export default function StepYhteystiedot({
   const [kuvaus, setKuvaus] = useState(initialYhteystiedot?.kuvaus ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Live-preview wiring (LIVEPREV-01/04): debounced SET_YHTEYSTIEDOT dispatch.
+  const debouncedYhteystiedot = useDebouncedValue({ puhelin, email, website, kuvaus }, 280)
+  useEffect(() => {
+    dispatch({ type: 'SET_YHTEYSTIEDOT', payload: debouncedYhteystiedot })
+  }, [debouncedYhteystiedot, dispatch])
 
   // Edit-mode specific state
   const [saving, setSaving] = useState(false)
