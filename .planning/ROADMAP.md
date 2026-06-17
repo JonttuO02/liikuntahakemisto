@@ -171,6 +171,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 
 - [x] **Phase 47: Skeema & monisivuinen scraper-putki** — Schema migration + multi-page crawl with re-validated SSRF guard + labeled multi-page Claude prompt
  (completed 2026-06-16)
+
 - [~] **Phase 48: Logo-, väri- ja galleriavalinta** — Multi-candidate logo picker, 2-color swatch picker, validated PATCH route, gallery prefill (executed 2026-06-16; gap closure 48-04 pending — CR-01/CR-02)
 - [ ] **Phase 49: Esikatselu- ja kontrastikorjaukset** — Step 6 CalloutCard swap + shared contrast-safe logo primitive
 - [ ] **Phase 50: Flow-uudelleenjärjestys & pikahyväksyntä** — StepPaikka before URL-analysis + quick-accept shortcut into admin queue
@@ -179,17 +180,21 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 ## Phase Details
 
 ### Phase 47: Skeema & monisivuinen scraper-putki
+
 **Goal**: The AI analysis pipeline crawls a business website's pricing/hours/contact subpages (not just the homepage) and safely returns richer, labeled data to Claude — with the database shaped to store plural results.
 **Depends on**: Nothing (builds on v2.1's existing `business_branding` table and scraper/analyzer/route pipeline)
 **Requirements**: SCRAP-06, SCRAP-07, SCRAP-08, SCRAP-09, BRDDB-03, BRDDB-04, BRDDB-05
 **Success Criteria** (what must be TRUE):
+
   1. When a business submits its website URL, the analysis follows same-origin links from the homepage to pricing/hours/contact subpages (capped at 3-5 pages) and the extracted hinnasto/aukioloajat reflect data found only on those subpages
   2. Every followed link and redirect is re-validated against the SSRF guard — a malicious or private-IP subpage link cannot be fetched even if discovered via a legitimate homepage
   3. The analysis can extract general page images (not just logo candidates) and store them for later gallery use
   4. `business_branding` rows can store multiple logo candidates, multiple image URLs, and separate background/accent color selections without schema errors
   5. Saving a `logo_type` value that matches the analyzer's actual enum output no longer fails a CHECK constraint
   6. Two venues analyzed under the same business account do not silently overwrite each other's branding row
+
 **Plans**: 5 plans (Wave 1: 47-01 schema, 47-02 SSRF utils, 47-04 analyzer/prompt/screenshot; Wave 2: 47-03 scraper crawl; Wave 3: 47-05 route wiring)
+
 - [x] 47-01-PLAN.md — Schema migration: plural columns + paikka_id backfill + composite UNIQUE (BRDDB-03/04/05); [BLOCKING] supabase db push
 - [x] 47-02-PLAN.md — Shared SSRF validator + redirect-revalidating fetch wrapper (SCRAP-07)
 - [x] 47-03-PLAN.md — Multi-page subpage crawl + gallery image extraction (SCRAP-06/09)
@@ -197,54 +202,68 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 - [x] 47-05-PLAN.md — Route wiring: paikka_id scoping + ownership check + pipeline integration (BRDDB-05)
 
 ### Phase 48: Logo-, väri- ja galleriavalinta
+
 **Goal**: A business owner can see every AI-found logo and color candidate, explicitly choose what represents their brand instead of the system silently auto-picking one, and can accept the AI's results immediately to submit for approval without stepping through the rest of the wizard.
 **Depends on**: Phase 47 (requires plural `logo_candidates`/`image_urls`/color columns and multi-page image discovery)
 **Requirements**: ONBOARD-14, ONBOARD-15, ONBOARD-16, ONBOARD-17, FLOW-02, FLOW-03
 **Success Criteria** (what must be TRUE):
+
   1. When multiple logo candidates were found, the user sees them all and picks exactly one (the AI's top pick pre-selected, not silently final)
   2. The user picks 2 colors from the extracted palette — one assigned to background, one to accent — rather than the system auto-assigning a single color
   3. Images discovered on the business's website automatically appear as selectable options in the Mediat step's photo picker
   4. Submitting a logo/color selection that doesn't belong to that business's own stored analysis result is rejected by the server, not silently accepted
   5. After AI analysis (and logo/color selection) completes, the user can accept the results in one action and land directly in the admin approval queue without stepping through the remaining wizard screens
   6. A quick-accepted submission passes through the same ownership check, validation, and draft-cleanup logic as a normal full-wizard submission — there is no second, less-guarded write path
+
 **Plans**: 4 plans (Wave 1: 48-01 contracts + PATCH route; Wave 2: 48-02 logo/color pickers + paikka_id wiring; Wave 3: 48-03 gallery picker + quick-accept; gap closure: 48-04 fix CR-01 step-skip + CR-02 role-aware color)
+
 - [x] 48-01-PLAN.md — Reshape BrandingResult + buildBrandingPreview; new validated PATCH /api/business/branding route (ONBOARD-17)
 - [x] 48-02-PLAN.md — Logo + color pickers with autosave; fix paikka_id wiring in pre-vaihe (ONBOARD-14/15)
 - [x] 48-03-PLAN.md — Gallery checkbox picker + Mediat prefill; quick-accept via unmodified submit route (ONBOARD-16, FLOW-02/03)
-- [ ] 48-04-PLAN.md — Gap closure: fix CR-01 (handleConfirm step:2→1 so wizard lands on Step 2/Media) + CR-02 (StepEsikatselu role-aware brandColor fallback) (ONBOARD-16, ONBOARD-14/15)
+- [x] 48-04-PLAN.md — Gap closure: fix CR-01 (handleConfirm step:2→1 so wizard lands on Step 2/Media) + CR-02 (StepEsikatselu role-aware brandColor fallback) (ONBOARD-16, ONBOARD-14/15)
+
 **UI hint**: yes
 **Note (2026-06-16):** FLOW-02/FLOW-03 moved here from Phase 50 at user request — quick-accept submission belongs with the selection UI it accepts results from, in the same screen/step. Phase 50 retains only the step-reorder work (FLOW-01/FLOW-04).
 **Note (2026-06-16, gap closure):** 48-VERIFICATION.md found 4/6 success criteria met. Criterion 3 (ONBOARD-16) and the phase goal's "explicit choice" clause failed due to CR-01 (step-skip) and CR-02 (non-role-aware color fallback). 48-04-PLAN.md closes both.
 
 ### Phase 49: Esikatselu- ja kontrastikorjaukset
+
 **Goal**: What the business owner sees in the onboarding preview matches what will actually be published, and a white or transparent logo is never invisible against a white background anywhere in the app.
 **Depends on**: Phase 48 (contrast fix is most useful once a user-selected background color exists, not just a generic neutral backdrop)
 **Requirements**: PREV-02, PREV-03
 **Success Criteria** (what must be TRUE):
+
   1. Step 6 of the onboarding wizard shows the same `CalloutCard` venues see live on the site, not the unused `PaikkaKortti` — and venues without coordinates still render a sensible fallback instead of breaking
   2. A white or transparent logo is visibly distinguishable everywhere `logo_url` is rendered (onboarding preview, dashboard preview, live cards) because all render sites share one contrast-safe logo display primitive
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 50: Flow-uudelleenjärjestys
+
 **Goal**: A business owner identifies or creates their venue before being asked to analyze a website.
 **Depends on**: Phase 47 (step-order change must not disturb the analysis flow it precedes)
 **Requirements**: FLOW-01, FLOW-04
 **Success Criteria** (what must be TRUE):
+
   1. A new business owner sees the venue-identification step (StepPaikka) before being asked for a website URL to analyze
   2. A business that started onboarding before this reorder shipped can resume their in-flight draft without getting stuck on a stale step number
+
 **Plans**: TBD
 **Note (2026-06-16):** FLOW-02/FLOW-03 (quick-accept) moved to Phase 48 at user request — see Phase 48's note.
 
 ### Phase 51: Live-esikatselu velhossa
+
 **Goal**: A business owner sees their venue's card update in real time as they fill in any wizard step, instead of only seeing the final result at step 6.
 **Depends on**: Phase 48, Phase 49 (live preview consumes the final logo/color selection shape and the corrected, contrast-safe preview component — building it earlier would mean rebuilding it)
 **Requirements**: LIVEPREV-01, LIVEPREV-02, LIVEPREV-03, LIVEPREV-04
 **Success Criteria** (what must be TRUE):
+
   1. Changing a field on any wizard step (name, price, hours, contact, logo, colors, photos) immediately updates a live preview without requiring a save or page reload
   2. On desktop, the live preview is visible side-by-side with the step currently being edited
   3. On mobile, the user can toggle between the edit form and the live preview instead of losing screen space to a permanent split view
   4. The live preview renders via `CalloutCard`/`DiagonaalKortti` using the current in-progress (unsaved) field values, not stale data from the last save
+
 **Plans**: TBD
 **UI hint**: yes
 
@@ -301,7 +320,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 45. Scraper & Claude API -putki | v2.1 | 4/4 | Complete | 2026-06-15 |
 | 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | Complete    | 2026-06-15 |
 | 47. Skeema & monisivuinen scraper-putki | v2.2 | 5/5 | Complete    | 2026-06-16 |
-| 48. Logo-, väri- ja galleriavalinta | v2.2 | 3/4 | Gap closure (48-04 pending) | 2026-06-16 |
+| 48. Logo-, väri- ja galleriavalinta | v2.2 | 4/4 | Complete   | 2026-06-17 |
 | 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 0/TBD | Not started | - |
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 0/TBD | Not started | - |
 | 51. Live-esikatselu velhossa | v2.2 | 0/TBD | Not started | - |

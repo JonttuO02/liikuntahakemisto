@@ -23,9 +23,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Selection UI
 
-- [ ] **ONBOARD-14**: User selects one logo from multiple AI-found candidates (instead of auto-pick)
-- [ ] **ONBOARD-15**: User selects 2 colors from the extracted palette — background + accent (instead of one auto-picked color)
-- [ ] **ONBOARD-16**: Scraped gallery images prefill the Mediat step's photo selection
+- [x] **ONBOARD-14**: User selects one logo from multiple AI-found candidates (instead of auto-pick)
+- [x] **ONBOARD-15**: User selects 2 colors from the extracted palette — background + accent (instead of one auto-picked color)
+- [x] **ONBOARD-16**: Scraped gallery images prefill the Mediat step's photo selection
 - [ ] **ONBOARD-17**: New `PATCH /api/business/branding` route validates logo/color selections against the business's own stored analysis result
 
 ### Preview & Bugfixes
@@ -67,9 +67,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 | BRDDB-03 | Phase 47 | Complete |
 | BRDDB-04 | Phase 47 | Complete |
 | BRDDB-05 | Phase 47 | Complete |
-| ONBOARD-14 | Phase 48 | Pending |
-| ONBOARD-15 | Phase 48 | Pending |
-| ONBOARD-16 | Phase 48 | Pending |
+| ONBOARD-14 | Phase 48 | Complete |
+| ONBOARD-15 | Phase 48 | Complete |
+| ONBOARD-16 | Phase 48 | Complete |
 | ONBOARD-17 | Phase 48 | Pending |
 | PREV-02 | Phase 49 | Pending |
 | PREV-03 | Phase 49 | Pending |
@@ -83,6 +83,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 | LIVEPREV-04 | Phase 51 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 21 total
 - Mapped to phases: 21
 - Unmapped: 0 ✓
