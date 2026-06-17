@@ -56,10 +56,13 @@ export async function POST(request: Request) {
     }
     field = body.field as AllowedField
 
-    // Validate step — must be 1–6
+    // Validate step — accepted input range is 0–5 (Phase 50, D-07 + D-04 reconciliation).
+    // Lower bound 0 exists for handleConfirm's quick-accept media_urls pre-save (D-04), which
+    // sends step: 0 so current_step becomes 1 (new Step 1/StepMediat). current_step = step + 1
+    // maps this input range to the stored 1-5 range the 5-step wizard requires (D-07).
     const parsedStep = parseInt(body.step, 10)
-    if (isNaN(parsedStep) || parsedStep < 1 || parsedStep > 6) {
-      return NextResponse.json({ error: 'Invalid step (must be 1–6)' }, { status: 400 })
+    if (isNaN(parsedStep) || parsedStep < 0 || parsedStep > 5) {
+      return NextResponse.json({ error: 'Invalid step (must be 0–5)' }, { status: 400 })
     }
     step = parsedStep
 
