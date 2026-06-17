@@ -8,6 +8,7 @@ import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
 import { isMembershipOnly, priceItemList } from '@/lib/priceUtils'
 import { useOverflowMarquee } from '@/lib/useOverflowMarquee'
+import { getContrastColor } from '@/lib/branding/brandingResult'
 import type { Liikuntapaikka } from '@/lib/types'
 
 const CHAR_VARIANTS = {
@@ -21,7 +22,16 @@ const TEXT_CONTAINER_VARIANTS = {
   exit:  { transition: { staggerChildren: 0.014 } },
 }
 
-export default function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: number; longitude: number } }) {
+export default function CalloutCard({
+  p,
+  brandColor,
+}: {
+  p: Liikuntapaikka & { latitude: number; longitude: number }
+  /** Optional user-selected brand background color (Phase 48). When provided, tints the
+   * card surface and adjusts text contrast — mirrors DiagonaalKortti's existing `brandColor`
+   * prop. Omitted entirely on the live map today, so default rendering is unchanged. */
+  brandColor?: string
+}) {
   const t = useTranslations('PaikkaKortti')
   const tLajit = useTranslations('Lajit')
   const ref = useRef<HTMLDivElement>(null)
@@ -53,6 +63,10 @@ export default function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: num
   const hintaTekstiCC  = hintateksti(p.hinta_min, p.hinta_max)
   const priceItems     = priceItemList(p.hinta_kuvaus, membershipOnly, hintaTekstiCC)
   const { containerRef, measureRef, shouldMarquee } = useOverflowMarquee(priceItems?.join('\n') ?? null)
+  // Derived contrast text colour for the brand-coloured card surface — mirrors
+  // DiagonaalKortti's existing brandColor handling. Undefined (no override) when
+  // brandColor is not supplied, leaving default Tailwind text colours unchanged.
+  const contrastText = brandColor ? getContrastColor(brandColor) : undefined
 
   const chars = (text: string) =>
     text.split(' ').flatMap((word, wi) => [
@@ -79,15 +93,27 @@ export default function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: num
         paddingBottom: 23,
         clipPath: clipPath ? `path('${clipPath}')` : undefined,
         borderRadius: clipPath ? 0 : 10,
+        ...(brandColor ? { backgroundColor: brandColor } : {}),
       }}
     >
       <div className="flex flex-col gap-2 h-full">
-        <div
-          className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center"
-          style={{ backgroundColor: sportColor }}
-        >
-          <span className="text-base font-bold text-white">{p.nimi[0]?.toUpperCase() ?? '?'}</span>
-        </div>
+        {p.logo_url ? (
+          <div className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center bg-[rgba(0,0,0,0.06)] overflow-hidden">
+            <img
+              src={p.logo_url}
+              alt=""
+              aria-hidden
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        ) : (
+          <div
+            className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center"
+            style={{ backgroundColor: sportColor }}
+          >
+            <span className="text-base font-bold text-white">{p.nimi[0]?.toUpperCase() ?? '?'}</span>
+          </div>
+        )}
         <div className="w-full overflow-hidden">
           <AnimatePresence mode="wait">
             {showName ? (
@@ -98,6 +124,7 @@ export default function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: num
                 animate="enter"
                 exit="exit"
                 className="font-bold text-lg text-[#111111] leading-snug"
+                style={contrastText ? { color: contrastText } : undefined}
               >
                 {chars(p.nimi)}
               </motion.div>
@@ -113,7 +140,7 @@ export default function CalloutCard({ p }: { p: Liikuntapaikka & { latitude: num
                 <motion.span variants={CHAR_VARIANTS} className="flex items-center">
                   <span style={{ color: sportColor }}><SportIcon laji={p.laji} size={16} className="flex-shrink-0" /></span>
                 </motion.span>
-                <span className="flex items-center text-lg font-bold text-[#111111]">
+                <span className="flex items-center text-lg font-bold text-[#111111]" style={contrastText ? { color: contrastText } : undefined}>
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {chars(tLajit(p.laji as any))}
                 </span>

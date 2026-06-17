@@ -120,7 +120,7 @@ export default function StepEsikatselu({
             <span className="text-[10px] font-bold uppercase tracking-widest text-[rgba(17,17,17,0.45)]">
               {t('previewLabelCallout')}
             </span>
-            <CalloutCard p={{ ...draftAsPaikka, latitude: draftAsPaikka.latitude ?? 0, longitude: draftAsPaikka.longitude ?? 0 }} />
+            <CalloutCard p={{ ...draftAsPaikka, latitude: draftAsPaikka.latitude ?? 0, longitude: draftAsPaikka.longitude ?? 0 }} brandColor={brandColor} />
           </div>
 
           {/* DIAGONAALIKORTTI */}
