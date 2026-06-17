@@ -2,16 +2,19 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: Onboarding-tekoälyn parannukset
-status: completed
-stopped_at: Phase 51 context gathered
-last_updated: "2026-06-17T22:05:00.777Z"
-last_activity: 2026-06-17 -- Phase 50 marked complete
+current_phase: 51
+current_phase_name: live-esikatselu-velhossa
+status: executing
+stopped_at: Phase 51 planned and verified
+last_updated: "2026-06-17T22:28:23.960Z"
+last_activity: 2026-06-17
+last_activity_desc: Phase 51 execution started
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 13
+  total_plans: 17
   completed_plans: 13
-  percent: 80
+  percent: 76
 ---
 
 # Project State
@@ -21,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 50 — flow-uudelleenj-rjestys
+**Current focus:** Phase 51 — live-esikatselu-velhossa
 
 ## Current Position
 
-Phase: 50 — COMPLETE
-Plan: 1 of 2
-Status: Phase 50 complete
-Last activity: 2026-06-17 -- Phase 50 marked complete
+Phase: 51 (live-esikatselu-velhossa) — EXECUTING
+Plan: 1 of 4
+Status: Executing Phase 51
+Last activity: 2026-06-17 — Phase 51 execution started
 
 Progress: [██████░░░░] 60%
 
@@ -92,9 +95,9 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
 
 ## Session Continuity
 
-Last session: 2026-06-17T22:05:00.762Z
-Stopped at: Phase 51 context gathered
-Resume file: .planning/phases/51-live-esikatselu-velhossa/51-CONTEXT.md
+Last session: 2026-06-17T22:23:19.421Z
+Stopped at: Phase 51 planned and verified
+Resume file: .planning/phases/51-live-esikatselu-velhossa/51-04-PLAN.md
 
 ## Performance Metrics
 
