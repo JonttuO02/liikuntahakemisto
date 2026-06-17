@@ -42,10 +42,12 @@ export default function StepEsikatselu({
         : null
 
   // Brand colour for the DiagonaalKortti left panel — sourced from the user-selected
-  // background color (Phase 48), falling back to the first AI-extracted color when no
-  // selection has been made yet.
+  // background color (Phase 48), falling back to the background-ROLE AI-extracted color
+  // (mirroring AnalysoiSivusto's own initialization) when no selection has been made yet.
   const brandColor =
-    brandingData?.selected_background_color ?? brandingData?.colors?.[0]?.hex ?? undefined
+    brandingData?.selected_background_color ??
+    brandingData?.colors?.find(c => c.role === 'background')?.hex ??
+    undefined
 
   useEffect(() => {
     if (draftAsPaikka) return
