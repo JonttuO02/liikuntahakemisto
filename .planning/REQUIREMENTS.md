@@ -26,7 +26,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **ONBOARD-14**: User selects one logo from multiple AI-found candidates (instead of auto-pick)
 - [x] **ONBOARD-15**: User selects 2 colors from the extracted palette — background + accent (instead of one auto-picked color)
 - [x] **ONBOARD-16**: Scraped gallery images prefill the Mediat step's photo selection
-- [ ] **ONBOARD-17**: New `PATCH /api/business/branding` route validates logo/color selections against the business's own stored analysis result
+- [x] **ONBOARD-17**: New `PATCH /api/business/branding` route validates logo/color selections against the business's own stored analysis result
 
 ### Preview & Bugfixes
 
@@ -36,8 +36,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Flow
 
 - [ ] **FLOW-01**: `StepPaikka` renders before the URL-analysis step in the onboarding flow
-- [ ] **FLOW-02**: User can quick-accept the AI analysis results and skip remaining wizard steps, submitting directly to the admin approval queue
-- [ ] **FLOW-03**: Quick-accept reuses the existing submit route's ownership/validation/draft-cleanup invariants unmodified — AI results are mapped into an `onboarding_draft` row first, then the existing submit route runs exactly as it does for a full-wizard submission, not a parallel write path
+- [x] **FLOW-02**: User can quick-accept the AI analysis results and skip remaining wizard steps, submitting directly to the admin approval queue
+- [x] **FLOW-03**: Quick-accept reuses the existing submit route's ownership/validation/draft-cleanup invariants unmodified — AI results are mapped into an `onboarding_draft` row first, then the existing submit route runs exactly as it does for a full-wizard submission, not a parallel write path
 - [ ] **FLOW-04**: In-flight drafts created under the old step order resume correctly after the reorder ships
 
 ### Live Preview
@@ -70,12 +70,12 @@ Requirements for this milestone. Each maps to roadmap phases.
 | ONBOARD-14 | Phase 48 | Complete |
 | ONBOARD-15 | Phase 48 | Complete |
 | ONBOARD-16 | Phase 48 | Complete |
-| ONBOARD-17 | Phase 48 | Pending |
+| ONBOARD-17 | Phase 48 | Complete |
 | PREV-02 | Phase 49 | Pending |
 | PREV-03 | Phase 49 | Pending |
 | FLOW-01 | Phase 50 | Pending |
-| FLOW-02 | Phase 48 | Pending |
-| FLOW-03 | Phase 48 | Pending |
+| FLOW-02 | Phase 48 | Complete |
+| FLOW-03 | Phase 48 | Complete |
 | FLOW-04 | Phase 50 | Pending |
 | LIVEPREV-01 | Phase 51 | Pending |
 | LIVEPREV-02 | Phase 51 | Pending |

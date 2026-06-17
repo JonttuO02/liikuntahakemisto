@@ -1,34 +1,25 @@
 ---
 phase: 48-logo-v-ri-ja-galleriavalinta
-verified: 2026-06-16T19:51:50Z
-status: gaps_found
-score: 4/6 must-haves verified
+verified: 2026-06-17T12:00:00Z
+status: passed
+score: 6/6 must-haves verified
 overrides_applied: 0
-gaps:
-  - truth: "Submitting the gallery/logo selection and continuing into the wizard ('Jatka velhoon →') reliably shows the prefilled images in the Mediat step (Step 2), satisfying ROADMAP Success Criterion 3"
-    status: failed
-    reason: "page.tsx's handleConfirm POSTs save-step with step:2, which makes save-step's UPSERT set current_step:3. WizardInner's OnboardingMode loadDraft() effect reads savedStep=3, sees savedStep>1 && step===1, and redirects straight to ?step=3 (StepHinnasto). Step 2 (StepMediat) — the only place the prefilled gallery/logo render inside the wizard — is silently skipped for every business that uses 'Jatka velhoon →'. This is CR-01 from 48-REVIEW.md, confirmed still present at HEAD (no commit after the Phase 48 commits touches page.tsx)."
-    artifacts:
-      - path: "app/business/onboarding/page.tsx"
-        issue: "handleConfirm writes save-step with step: 2 instead of step: 1, causing current_step to land one step past Step 2 (Media) in the wizard's auto-resume logic"
-    missing:
-      - "Change page.tsx handleConfirm's save-step call to step: 1 (so current_step becomes 2, landing the user ON Step 2, not past it) OR explicitly navigate WizardInner with ?step=2 instead of relying on current_step for resume positioning"
-  - truth: "The business owner sees their actual chosen/role-correct brand color reflected in the Step 6 preview when no explicit selection exists yet, not an arbitrary AI-extracted color"
-    status: failed
-    reason: "StepEsikatselu.tsx's brandColor fallback is brandingData?.selected_background_color ?? brandingData?.colors?.[0]?.hex ?? undefined — colors[0] is taken regardless of its semantic role. The analyzer assigns roles ('background','accent','text', etc.) and AnalysoiSivusto.tsx itself filters by role (colors.find(c => c.role === 'background')) when initializing picker state, but StepEsikatselu does not mirror that role-aware lookup. This is CR-02 from 48-REVIEW.md, confirmed still present at HEAD. Reachable in practice via 'Jatka velhoon →' before the user has clicked any swatch (no field is required before the footer buttons are enabled), so an accent- or text-role color can render as the DiagonaalKortti panel's full background fill."
-    artifacts:
-      - path: "app/business/onboarding/StepEsikatselu.tsx"
-        issue: "Line 47-48: brandColor fallback picks colors[0].hex without filtering by role==='background', unlike AnalysoiSivusto.tsx's equivalent role-aware fallback"
-    missing:
-      - "Mirror AnalysoiSivusto's role-aware fallback: brandingData?.selected_background_color ?? brandingData?.colors?.find(c => c.role === 'background')?.hex ?? undefined"
+re_verification:
+  previous_status: gaps_found
+  previous_score: 4/6
+  gaps_closed:
+    - "Submitting the gallery/logo selection and continuing into the wizard ('Jatka velhoon →') reliably shows the prefilled images in the Mediat step (Step 2), satisfying ROADMAP Success Criterion 3"
+    - "The business owner sees their actual chosen/role-correct brand color reflected in the Step 6 preview when no explicit selection exists yet, not an arbitrary AI-extracted color"
+  gaps_remaining: []
+  regressions: []
 ---
 
 # Phase 48: Logo-, väri- ja galleriavalinta Verification Report
 
 **Phase Goal:** A business owner can see every AI-found logo and color candidate, explicitly choose what represents their brand instead of the system silently auto-picking one, and can accept the AI's results immediately to submit for approval without stepping through the rest of the wizard.
-**Verified:** 2026-06-16T19:51:50Z
-**Status:** gaps_found
-**Re-verification:** No — initial verification
+**Verified:** 2026-06-17T12:00:00Z
+**Status:** passed
+**Re-verification:** Yes — after gap-closure plan 48-04 (CR-01 step-skip + CR-02 role-aware color)
 
 ## Goal Achievement
 
@@ -36,73 +27,91 @@ gaps:
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | When multiple logo candidates were found, the user sees them all and picks exactly one (AI's top pick pre-selected) | VERIFIED | `AnalysoiSivusto.tsx:585-631` renders every `logo_candidates` entry as a selectable `<button>` card; `selectedLogoUrl` initialized to `logo_candidates?.[0]?.url` (first/top pick pre-selected); click handler `selectLogo` calls `patchBranding({ selected_logo_url: url }, 'logo')` |
-| 2 | The user picks 2 colors from the extracted palette — background + accent — rather than auto-assignment | VERIFIED | `AnalysoiSivusto.tsx:633-751` renders up to 6 swatches + `Tausta`/`Aksentti` slot cards + custom hex input; `handleSwatchClick`/slot-arming logic assigns to the armed slot and autosaves via `patchBranding` |
-| 3 | Images discovered on the business's website automatically appear as selectable options in the Mediat step's photo picker | FAILED | Gallery picker UI itself is correct (`AnalysoiSivusto.tsx:753-804`, `StepMediat.tsx` reads `initialDraft.media_urls.photos` unconditionally at line 43) — but the only path that writes the gallery selection into the draft and navigates into the wizard ("Jatka velhoon →") triggers a `current_step` value that causes the wizard to skip Step 2 entirely (CR-01). The user navigating this path never sees the Mediat step, so the "appear as selectable options in the Mediat step" criterion is not met for the documented flow. |
-| 4 | Submitting a logo/color selection that doesn't belong to that business's own stored analysis result is rejected by the server | VERIFIED | `app/api/business/branding/route.ts:123-148` — logo checked against `logo_candidates[].url` membership (400 on miss), AI-sourced color checked against `colors[].hex` membership (400 on miss), custom hex validated against `/^#[0-9a-fA-F]{6}$/`, gallery URLs checked against stored `image_urls` membership (400 on miss) |
-| 5 | After AI analysis (and selection) completes, the user can accept results in one action and land directly in the admin approval queue without stepping through remaining wizard screens | VERIFIED | `AnalysoiSivusto.tsx:257-334` `handleQuickAccept` maps `raw_analysis` + selections into draft fields, sequentially POSTs `save-step` (step 6) for `hinnasto`/`aukioloajat`/`yhteystiedot`/`media_urls`, then POSTs `submit`, then `router.push('/business')` — entirely bypasses `setPagePhase('wizard')` and the wizard step machinery, so this specific button is unaffected by CR-01 |
-| 6 | A quick-accepted submission passes through the same ownership/validation/draft-cleanup logic as a normal full-wizard submission — no second, less-guarded write path | VERIFIED | `git log` shows no Phase 48 commit touches `app/api/business/onboarding/submit/route.ts` or `save-step/route.ts` (last touch predates Phase 48 by 8 commits); quick-accept calls these routes verbatim with the same body shapes the full wizard uses |
+| 1 | When multiple logo candidates were found, the user sees them all and picks exactly one (AI's top pick pre-selected) | VERIFIED | `AnalysoiSivusto.tsx:585-631` renders every `logo_candidates` entry as a selectable `<button>` card; `selectedLogoUrl` initialized to `logo_candidates?.[0]?.url`; `selectLogo` calls `patchBranding({ selected_logo_url: url }, 'logo')`. Unchanged since prior verification. |
+| 2 | The user picks 2 colors from the extracted palette — background + accent — rather than auto-assignment | VERIFIED | `AnalysoiSivusto.tsx:633-751` renders swatches + `Tausta`/`Aksentti` slot cards + custom hex input; slot-arming logic assigns to background/accent and autosaves via `patchBranding`. Unchanged since prior verification. |
+| 3 | Images discovered on the business's website automatically appear as selectable options in the Mediat step's photo picker | VERIFIED (gap closed) | `page.tsx:117` now writes `step: 1` in the save-step body (was `step: 2`). `save-step/route.ts:107` sets `current_step: step + 1` → `current_step: 2`. `WizardInner.tsx:121` resume condition `savedStep > 1 && step === 1` redirects to `?step=2` (StepMediat) instead of `?step=3` (StepHinnasto). `StepMediat.tsx:43` reads `initialDraft.media_urls.photos` unconditionally and renders them (`StepMediat.tsx:382-384`). The full chain is now traced and connected end-to-end: write → correct current_step → correct resume redirect → render. |
+| 4 | Submitting a logo/color selection that doesn't belong to that business's own stored analysis result is rejected by the server | VERIFIED | `app/api/business/branding/route.ts:110-148` — logo checked against `logo_candidates[].url` membership (400 on miss), AI color checked against `colors[].hex` membership, custom hex validated against `/^#[0-9a-fA-F]{6}$/`, gallery URLs checked against stored `image_urls` membership. Untouched by 48-04, confirmed still present and unchanged. |
+| 5 | After AI analysis (and selection) completes, the user can accept results in one action and land directly in the admin approval queue without stepping through remaining wizard screens | VERIFIED | `AnalysoiSivusto.tsx:257-334` `handleQuickAccept` maps selections into draft fields, sequentially POSTs `save-step`, then POSTs `submit`, then `router.push('/business')` (line 328) — bypasses `setPagePhase('wizard')` entirely. Untouched by 48-04. |
+| 6 | A quick-accepted submission passes through the same ownership check, validation, and draft-cleanup logic as a normal full-wizard submission — no second, less-guarded write path | VERIFIED | `git log` confirms `app/api/business/onboarding/submit/route.ts` and `save-step/route.ts` were last touched by commit `0e44b9a` (pre-Phase-48); no Phase 48 or 48-04 commit modifies either route. Quick-accept calls these routes with the same body shapes the full wizard uses. |
 
-**Score:** 4/6 truths verified
+**Score:** 6/6 truths verified
+
+### Gap Closure Detail (CR-01 and CR-02)
+
+**CR-01 (Success Criterion 3 / ONBOARD-16) — CLOSED:**
+- `app/business/onboarding/page.tsx:117`: `step: 1` confirmed present (commit `7c25638`), `step: 2` confirmed absent.
+- Trace re-derived independently of SUMMARY claims: `save-step/route.ts:107` → `current_step: step + 1` → with `step:1`, `current_step` becomes `2`. `WizardInner.tsx:119-122` → `savedStep = existingDraft?.current_step ?? 0` (= 2) → `if (savedStep > 1 && step === 1)` evaluates true on initial mount (no `step` query param → defaults to 1) → redirects to `?step=2`, which is `StepMediat`. This lands the user ON Step 2, not past it.
+- `field: 'media_urls'` and `value: { logo, photos }` shape confirmed unchanged (diff: `+4/-1` lines, comment update only besides the single digit change).
+- The `await fetch(...)` ordering before `setPagePhase('wizard')` (T-48-15 race fix) is confirmed still intact at `page.tsx:106-126` — no regression.
+
+**CR-02 (phase goal "explicit choice over silent auto-pick") — CLOSED:**
+- `app/business/onboarding/StepEsikatselu.tsx:47-50`: fallback now reads `brandingData?.selected_background_color ?? brandingData?.colors?.find(c => c.role === 'background')?.hex ?? undefined`. `colors?.[0]?.hex` confirmed absent.
+- Mirrors `AnalysoiSivusto.tsx:145-147`'s own `bgCandidate = colors.find(c => c.role === 'background')` pattern exactly.
+- `lib/branding/brandingResult.ts:36` confirms `colors: Array<{ hex: string; role: string }>` — the `role` field is typed and present, no `any` cast was needed or introduced.
+- Leading `selected_background_color ??` and trailing `?? undefined` confirmed unchanged — no behavior change on the explicit-selection path (no regression).
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `app/api/business/branding/route.ts` | Validated PATCH autosave route | VERIFIED | Auth, ownership-only check, logo/color/gallery membership validation, scoped UPSERT — all present and substantive |
-| `lib/branding/brandingResult.ts` | Reshaped BrandingResult + buildBrandingPreview(selectedLogoUrl) | VERIFIED | Type contains `logo_candidates`, `image_urls`, `selected_background_color`, `selected_accent_color`; `getContrastColor` unchanged |
-| `app/api/business/analyze-website/route.ts` | POST ownership check relaxed to ownership-only | VERIFIED | No `claim_status` filter remains in POST; GET unchanged; business-account + SSRF guards intact |
-| `app/business/onboarding/AnalysoiSivusto.tsx` | Logo/color/gallery pickers + autosave + quick-accept | VERIFIED (UI) / WIRED | All three pickers render, autosave via `patchBranding`, `handleQuickAccept` implemented and self-contained |
-| `app/business/onboarding/page.tsx` | paikka_id resolution (Suspense-safe) + handleConfirm awaits save-step before navigating wizard | PARTIAL | Suspense pattern correct (`PrePhase` child calls `useSearchParams()`); `await fetch(...)` does precede `setPagePhase('wizard')` (closing the race per T-48-15) — but the awaited write itself encodes the wrong step number (CR-01), so the await is correct but the destination step is wrong |
-| `app/business/onboarding/StepEsikatselu.tsx` | Role-aware brandColor fallback for DiagonaalKortti background | STUB-LIKE BUG | `colors[0]` fallback present without role filter (CR-02) — the artifact exists and compiles but produces incorrect data when the fallback path is taken |
+| `app/api/business/branding/route.ts` | Validated PATCH autosave route | VERIFIED | Unchanged since prior verification; ownership + membership validation intact |
+| `lib/branding/brandingResult.ts` | Reshaped BrandingResult + buildBrandingPreview(selectedLogoUrl) | VERIFIED | Unchanged; `colors[].role` field confirmed used correctly by both consumers now |
+| `app/api/business/analyze-website/route.ts` | POST ownership check relaxed to ownership-only | VERIFIED | Unchanged since prior verification |
+| `app/business/onboarding/AnalysoiSivusto.tsx` | Logo/color/gallery pickers + autosave + quick-accept | VERIFIED | Unchanged; role-aware `bgCandidate` pattern confirmed as the source mirrored by the CR-02 fix |
+| `app/business/onboarding/page.tsx` | handleConfirm save-step lands wizard on Step 2 (Media) | VERIFIED (fixed) | `step: 1` confirmed at line 117; full resume chain traced and connected |
+| `app/business/onboarding/StepEsikatselu.tsx` | Role-aware brandColor fallback for DiagonaalKortti background | VERIFIED (fixed) | `colors?.find(c => c.role === 'background')?.hex` confirmed at line 49 |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |------|-----|-----|--------|---------|
-| `AnalysoiSivusto.tsx` (logo/color/gallery selection) | `/api/business/branding` PATCH | `patchBranding` fetch | WIRED | Confirmed 3 distinct `patchBranding(...)` call sites (logo, colors, gallery) + definition |
-| `AnalysoiSivusto.tsx handleSubmit/checkStatus/poll` | `/api/business/analyze-website` | `paikka_id` query/body param | WIRED | `paikkaId` prop threaded into all three fetch call sites |
-| `page.tsx handleConfirm` | `/api/business/onboarding/save-step` | awaited fetch before `setPagePhase('wizard')` | WIRED BUT WRONG VALUE | The await ordering is correct (closes the WizardInner draft-fetch race, T-48-15) but `step: 2` in the body causes `current_step=3`, which causes `WizardInner`'s auto-resume to skip past Step 2 — see CR-01 |
-| `AnalysoiSivusto.tsx handleQuickAccept` | `/api/business/onboarding/submit` | unmodified submit route | WIRED | `submit/route.ts` confirmed unchanged via git log; same body shape `{ paikka_id }` |
-| `StepEsikatselu.tsx` | `DiagonaalKortti` brandColor prop | `selected_background_color ?? colors[0].hex` | WIRED BUT DATA-INCORRECT | Link exists and renders, but the fallback value is not guaranteed to be a background-role color (CR-02) |
+| `AnalysoiSivusto.tsx` (logo/color/gallery selection) | `/api/business/branding` PATCH | `patchBranding` fetch | WIRED | Unchanged |
+| `AnalysoiSivusto.tsx handleSubmit/checkStatus/poll` | `/api/business/analyze-website` | `paikka_id` query/body param | WIRED | Unchanged |
+| `page.tsx handleConfirm` | `/api/business/onboarding/save-step` | awaited fetch with `step: 1` before `setPagePhase('wizard')` | WIRED (fixed) | Await ordering preserved; step value now correct — `current_step:2` → resume to `?step=2` (StepMediat), not past it |
+| `WizardInner.tsx` auto-resume | `?step=2` (StepMediat) | `savedStep > 1 && step === 1` redirect | WIRED | Confirmed redirect target is now StepMediat, not StepHinnasto |
+| `AnalysoiSivusto.tsx handleQuickAccept` | `/api/business/onboarding/submit` | unmodified submit route | WIRED | Unchanged |
+| `StepEsikatselu.tsx` | `DiagonaalKortti` brandColor prop | `selected_background_color ?? colors.find(role==='background').hex` | WIRED (fixed) | Role-aware fallback confirmed, matches `AnalysoiSivusto`'s own pattern |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Produces Real Data | Status |
 |----------|---------------|--------|---------------------|--------|
-| `StepMediat.tsx` `existingPhotoUrls` | `initialDraft.media_urls.photos` | `onboarding_draft` row written by `handleConfirm`'s save-step call | Real data when the draft write lands AND the user reaches Step 2 | DISCONNECTED — the write itself is correct, but the component never mounts for the "Jatka velhoon" flow because of CR-01's step-skip |
-| `StepEsikatselu.tsx` `brandColor` | `brandingData.selected_background_color` or `colors[0].hex` | `business_branding` row (already analyzed) | Real data, but potentially wrong-role when no selection exists yet | STATIC/WRONG-ROLE FALLBACK per CR-02 |
+| `StepMediat.tsx` `existingPhotoUrls` | `initialDraft.media_urls.photos` | `onboarding_draft` row written by `handleConfirm`'s save-step call (now `step:1` → `current_step:2`) | Real data, and the component now actually mounts for the "Jatka velhoon" flow | FLOWING (previously DISCONNECTED — now connected end-to-end) |
+| `StepEsikatselu.tsx` `brandColor` | `brandingData.selected_background_color` or `colors.find(role==='background').hex` | `business_branding` row (already analyzed) | Real data, correctly role-filtered | FLOWING (previously STATIC/WRONG-ROLE — now correct) |
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |-------------|------------|-------------|--------|----------|
-| ONBOARD-14 | 48-02 | User selects one logo from multiple candidates | SATISFIED | Logo picker UI + autosave + server validation all present |
-| ONBOARD-15 | 48-02 | User selects 2 colors (background + accent) | SATISFIED | Swatch + slot + custom-hex picker, autosave present |
-| ONBOARD-16 | 48-03 | Scraped gallery images prefill the Mediat step's photo selection | BLOCKED | Gallery picker UI and the StepMediat read-side are both correct in isolation, but CR-01 makes Step 2 unreachable via the documented continuation path — the prefill is never seen by the user in the "Jatka velhoon →" flow |
-| ONBOARD-17 | 48-01 | PATCH /api/business/branding validates selections against stored analysis | SATISFIED | `branding/route.ts` membership checks confirmed for logo, AI color, custom hex format, gallery |
-| FLOW-02 | 48-03 | User can quick-accept and skip remaining wizard steps, submitting to admin queue | SATISFIED | `handleQuickAccept` fully bypasses the wizard, calls submit directly |
-| FLOW-03 | 48-03 | Quick-accept reuses existing submit route's invariants unmodified | SATISFIED | `submit/route.ts` and `save-step/route.ts` confirmed unchanged by Phase 48 commits |
+| ONBOARD-14 | 48-02 | User selects one logo from multiple candidates | SATISFIED | Logo picker UI + autosave + server validation, unchanged |
+| ONBOARD-15 | 48-02 | User selects 2 colors (background + accent) | SATISFIED | Swatch + slot + custom-hex picker, unchanged |
+| ONBOARD-16 | 48-03, gap-closed by 48-04 | Scraped gallery images prefill the Mediat step's photo selection | SATISFIED | CR-01 fix closes the step-skip; Step 2 is now reachable and renders the prefill |
+| ONBOARD-17 | 48-01 | PATCH /api/business/branding validates selections against stored analysis | SATISFIED | `branding/route.ts` membership checks confirmed, unchanged |
+| FLOW-02 | 48-03 | User can quick-accept and skip remaining wizard steps, submitting to admin queue | SATISFIED | `handleQuickAccept` fully bypasses the wizard, unchanged |
+| FLOW-03 | 48-03 | Quick-accept reuses existing submit route's invariants unmodified | SATISFIED | `submit/route.ts` and `save-step/route.ts` confirmed unchanged by Phase 48 + 48-04 commits |
 
-No orphaned requirements — all 6 IDs declared across the three plans (`ONBOARD-14`, `ONBOARD-15`, `ONBOARD-16`, `ONBOARD-17`, `FLOW-02`, `FLOW-03`) match the 6 IDs the ROADMAP and REQUIREMENTS.md assign to Phase 48 exactly.
+All 6 requirement IDs declared across the four plans (`ONBOARD-14`, `ONBOARD-15`, `ONBOARD-16`, `ONBOARD-17`, `FLOW-02`, `FLOW-03`) match the 6 IDs ROADMAP/REQUIREMENTS.md assign to Phase 48. No orphaned requirements. (Note: REQUIREMENTS.md's `[ ]`/`[x]` checkboxes for ONBOARD-17/FLOW-02/FLOW-03 appear stale/unchecked in the file, but the "Status" column for all six already reads "Complete" or was never updated to "Pending" consistently — this is a documentation bookkeeping artifact, not a code gap; all six are independently confirmed SATISFIED by code evidence above.)
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 |------|------|---------|----------|--------|
-| `app/business/onboarding/page.tsx` | 106-118 | Logically incorrect `step` value passed to a working API contract (not a stub, but a wrong-value bug) | BLOCKER | Causes CR-01 — Step 2 of the wizard is silently unreachable via the primary continuation path, breaking ONBOARD-16/Success Criterion 3 |
-| `app/business/onboarding/StepEsikatselu.tsx` | 47-48 | Non-role-aware color fallback duplicated incorrectly from a role-aware sibling implementation | BLOCKER (data-integrity, ties to phase goal "explicitly choose what represents their brand") | Can render the wrong color as the venue's preview background, undermining the "explicit choice over silent auto-pick" goal the phase exists to deliver |
+| `app/business/onboarding/page.tsx` | 106-126 | `await fetch(...)` response not checked for `res.ok`; empty `catch` swallows errors silently (WR-01 in 48-REVIEW.md) | INFO/WARNING (pre-existing, not a blocker) | If the write fails (expired token, ownership check failure), no error is logged; user proceeds to wizard as if it succeeded. Does not block the phase goal since the happy path is what's being verified, but is a real debuggability gap flagged by code review. |
+| `app/business/onboarding/StepEsikatselu.tsx` | 47-50 | Redundant trailing `?? undefined` (IN-01 in 48-REVIEW.md) | INFO | Cosmetic only, no functional impact |
 
-No `TBD`/`FIXME`/`XXX` markers found in phase-modified files. No placeholder/"coming soon" copy found. No empty-array/empty-object hollow-prop patterns found in the picker or quick-accept logic — all rendered data traces back to live `brandingResult` state populated by the `analyze-website` GET/POST cycle.
+No `TBD`/`FIXME`/`XXX` markers found in the 48-04-modified files. No placeholder/"coming soon" copy. No critical findings from 48-REVIEW.md remain — the review explicitly states "No critical issues found in either file as they currently stand," confirming the two fixes themselves introduced no new defects.
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 |----------|---------|--------|--------|
 | `npx tsc --noEmit` across whole project | `npx tsc --noEmit` | No output (clean) | PASS |
-| `save-step` UPSERT sets `current_step: step + 1` | Read `save-step/route.ts:107` | Confirmed `current_step: step + 1` | PASS (confirms CR-01's root cause) |
-| `WizardInner` auto-resume redirect condition | Read `WizardInner.tsx:119-125` | `savedStep > 1 && step === 1` → redirect to `?step=savedStep` | PASS (confirms CR-01's mechanism) |
-| `submit`/`save-step` routes unchanged by Phase 48 | `git log --oneline -- <path>` | Last touch predates Phase 48 commits | PASS |
+| `page.tsx` contains `step: 1`, not `step: 2` | Read `page.tsx:117` | `step: 1,` confirmed | PASS |
+| `StepEsikatselu.tsx` contains role-aware fallback | Read `StepEsikatselu.tsx:49` | `colors?.find(c => c.role === 'background')?.hex` confirmed | PASS |
+| `save-step` UPSERT sets `current_step: step + 1` (unchanged) | Read `save-step/route.ts:107` | Confirmed unchanged | PASS |
+| `WizardInner` auto-resume redirect condition (unchanged) | Read `WizardInner.tsx:119-122` | `savedStep > 1 && step === 1` → redirect to `?step=savedStep` | PASS |
+| `submit`/`save-step` routes unchanged by Phase 48 or 48-04 | `git log --oneline -- <path>` | Last touch predates both, at `0e44b9a` | PASS |
+| Diff scope of 48-04 commits is minimal (no unintended changes) | `git show 7c25638 --stat`, `git show 556c5a8 --stat` | `+4/-1` and `+5/-3` lines respectively, both single-file | PASS |
 
 ### Probe Execution
 
@@ -110,23 +119,21 @@ No `scripts/*/tests/probe-*.sh` files found and none declared in PLAN/SUMMARY fi
 
 ### Human Verification Required
 
-None — both remaining gaps (CR-01, CR-02) are deterministically traceable through code (save-step's `current_step: step + 1` arithmetic, WizardInner's resume-redirect condition, and the unguarded `colors[0]` fallback), so they do not require human/manual testing to confirm. They do require a human decision on whether to fix now or accept as a tracked follow-up, since both were already flagged by code review and intentionally left unresolved as of this verification.
+None. Both gap-closure fixes are deterministic, single-expression changes whose correctness is fully traceable through code (save-step arithmetic, WizardInner's resume condition, brandingResult's typed `role` field) without requiring manual UI testing. The mechanism that previously broke Success Criterion 3 (an off-by-one in `current_step` arithmetic feeding a conditional redirect) has been independently re-traced in this re-verification and confirmed corrected, not merely asserted by SUMMARY.md.
 
 ### Gaps Summary
 
-Two of six ROADMAP success criteria are not genuinely met despite SUMMARY.md claiming the phase complete:
+No gaps remain. Both previously-found blockers are closed:
 
-1. **Success Criterion 3** (gallery images appear as selectable options in the Mediat step) is undermined by **CR-01**: `page.tsx`'s `handleConfirm` writes `save-step` with `step: 2`, which the save-step route turns into `current_step: 3`. `WizardInner`'s on-mount draft-resume logic then redirects every "Jatka velhoon →" user straight to Step 3 (Hinnasto), permanently skipping Step 2 (Media) for the entire session unless the user manually navigates back. The prefill data is correctly persisted and the read-side (`StepMediat.tsx`) is correctly wired — the break is purely in the step-number arithmetic feeding the wizard's resume logic. This is a one-line-class fix (use `step: 1` so `current_step` becomes 2, or navigate explicitly to `?step=2`), but it is unresolved at HEAD.
+1. **CR-01 / Success Criterion 3**: `page.tsx`'s `handleConfirm` now writes `step: 1` (was `step: 2`). This produces `current_step: 2` via `save-step`'s `step + 1` arithmetic, which satisfies `WizardInner`'s `savedStep > 1 && step === 1` resume condition and redirects to `?step=2` (StepMediat) — the step where the prefilled gallery/logo render. Verified independently by re-reading `save-step/route.ts` and `WizardInner.tsx` at HEAD, not by trusting the SUMMARY's narrative.
 
-2. **CR-02** undermines the "explicitly choose what represents their brand" half of the phase's stated goal: `StepEsikatselu.tsx`'s `brandColor` fallback ignores color `role` and can select an accent/text-role color as the full DiagonaalKortti background panel fill whenever the user reaches Step 6 (or the preview state) without having explicitly clicked a swatch — which is possible since no color selection is required before the footer buttons activate. `AnalysoiSivusto.tsx` itself demonstrates the correct role-aware pattern in its own initialization logic, making this an inconsistency within the same phase's own code, not a hard problem.
+2. **CR-02 / phase goal "explicit choice over auto-pick"**: `StepEsikatselu.tsx`'s `brandColor` fallback now selects the `role === 'background'` color via `.find()`, mirroring `AnalysoiSivusto.tsx`'s own established pattern, instead of blindly taking `colors[0]`. Confirmed the `role` field is genuinely typed in `brandingResult.ts` (not a cast-around), so this is a real correctness fix, not a type-system workaround.
 
-Both gaps were already identified and documented with concrete fixes in `48-REVIEW.md` (dated the same day as this verification) but remain unaddressed in the current HEAD — no commit since the Phase 48 task commits touches either file. This verification independently re-derived both bugs from first principles (tracing `save-step`'s UPSERT and `WizardInner`'s resume-redirect logic; comparing `StepEsikatselu`'s fallback against `AnalysoiSivusto`'s role-aware equivalent) before consulting the review file, confirming the findings are not stale.
+Both fixes are minimal (single-expression, `+4/-1` and `+5/-3` line diffs), preserve all surrounding behavior (T-48-15 race fix intact; explicit-selection path unchanged), and introduce no new public symbols or schema changes — exactly as the gap-closure plan specified. `48-REVIEW.md` (dated the same day, scoped to these two files) independently confirms both fixes are correct and found zero critical issues, only one pre-existing warning (WR-01, error-swallowing in the save-step fetch, not introduced by 48-04) and two info-level cosmetic notes — neither blocks the phase goal.
 
-The remaining four success criteria (1, 2, 4, 5, 6) are genuinely implemented: the logo/color pickers are interactive and autosaved, server-side membership validation is real and substantive, and the quick-accept path is fully self-contained and correctly reuses the unmodified submit/save-step routes — FLOW-02 and FLOW-03 are solid because quick-accept never goes through `setPagePhase('wizard')` and is therefore unaffected by CR-01.
-
-**This looks like an oversight, not an intentional deviation** — both CR-01 and CR-02 have a known, narrow fix already specified in `48-REVIEW.md`. No override is suggested; these should be closed via a follow-up plan (e.g. `/gsd:plan-phase 48 --gaps`) rather than accepted as-is, since they directly undermine ROADMAP Success Criterion 3 and the phase's core "explicit choice, not silent auto-pick" goal statement.
+All 6 ROADMAP success criteria and all 6 requirement IDs (ONBOARD-14, ONBOARD-15, ONBOARD-16, ONBOARD-17, FLOW-02, FLOW-03) are now genuinely satisfied with end-to-end traceable evidence. Phase 48 is complete.
 
 ---
 
-_Verified: 2026-06-16T19:51:50Z_
+_Verified: 2026-06-17T12:00:00Z_
 _Verifier: Claude (gsd-verifier)_
