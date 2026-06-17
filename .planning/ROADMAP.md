@@ -173,7 +173,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
  (completed 2026-06-16)
 
 - [~] **Phase 48: Logo-, väri- ja galleriavalinta** — Multi-candidate logo picker, 2-color swatch picker, validated PATCH route, gallery prefill (executed 2026-06-16; gap closure 48-04 pending — CR-01/CR-02)
-- [ ] **Phase 49: Esikatselu- ja kontrastikorjaukset** — Step 6 CalloutCard swap + shared contrast-safe logo primitive
+- [ ] **Phase 49: Esikatselu- ja kontrastikorjaukset** — Step 6 CalloutCard swap + shared contrast-safe logo primitive *(2 plans, Wave 1×2 parallel)*
 - [ ] **Phase 50: Flow-uudelleenjärjestys & pikahyväksyntä** — StepPaikka before URL-analysis + quick-accept shortcut into admin queue
 - [ ] **Phase 51: Live-esikatselu velhossa** — Shared live-preview state, desktop split-view, mobile toggle
 
@@ -236,7 +236,10 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
   1. Step 6 of the onboarding wizard shows the same `CalloutCard` venues see live on the site, not the unused `PaikkaKortti` — and venues without coordinates still render a sensible fallback instead of breaking
   2. A white or transparent logo is visibly distinguishable in AnalysoiSivusto's logo-candidate picker (its only render site with a fixed white background and no contrast handling) because the picker uses a shared contrast-safe logo display primitive — DiagonaalKortti/PaikkaSheet already render logos safely via user-selected brand color and are unchanged (scope corrected 2026-06-17)
 
-**Plans**: TBD
+**Plans**: 2 plans (Wave 1: 49-01 contrast-safe logo primitive + picker wiring; 49-02 Step 6 CalloutCard swap + i18n — both parallel, zero file overlap)
+
+- [ ] 49-01-PLAN.md — Shared ContrastSafeLogo primitive + wire into AnalysoiSivusto logo-candidate picker (PREV-03)
+- [ ] 49-02-PLAN.md — Step 6 CalloutCard swap (with null-coordinate type shim) + previewLabelCallout i18n key (PREV-02)
 **UI hint**: yes
 
 ### Phase 50: Flow-uudelleenjärjestys
@@ -321,6 +324,6 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | Complete    | 2026-06-15 |
 | 47. Skeema & monisivuinen scraper-putki | v2.2 | 5/5 | Complete    | 2026-06-16 |
 | 48. Logo-, väri- ja galleriavalinta | v2.2 | 4/4 | Complete    | 2026-06-17 |
-| 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 0/TBD | Not started | - |
+| 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 0/2 | Not started | - |
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 0/TBD | Not started | - |
 | 51. Live-esikatselu velhossa | v2.2 | 0/TBD | Not started | - |
