@@ -156,6 +156,12 @@ export default function CalloutCard({
           // white. The .glass class's border/box-shadow (gloss highlight, edge sheen) are
           // untouched, so the card keeps its glossy feel without lightening the actual color.
           ...(brandColor ? { background: brandColor } : {}),
+          // .glass's 1px white border (border-top/left/right/bottom) is normally invisible
+          // against the page's white background — but with the accent ring sitting directly
+          // behind/around the card, that border becomes a visible white seam between the
+          // card and the ring. Removing it when the ring is present lets the ring sit flush
+          // against the card with no gap.
+          ...(accentColor ? { border: 'none' } : {}),
         }}
       >
       <div className="flex flex-col gap-2 h-full">
