@@ -24,22 +24,6 @@ const TEXT_CONTAINER_VARIANTS = {
 
 const RING_WIDTH = 5
 
-// Builds the card's notched-tooltip silhouette as an SVG path, optionally offset outward
-// by `o` pixels on every edge (corner radius and notch depth/width grow with it too, so the
-// result is a true parallel outline rather than a scaled copy). A scaled copy distorts an
-// asymmetric shape — its off-center notch moves disproportionately relative to the
-// rectangle as it scales from the element's center, leaving visible gaps on some sides and
-// overlap on others. o=0 reproduces the card's own exact shape.
-function buildCardClipPath(hRect: number, o: number): string {
-  const r = 10 + o
-  const xR = 160 + 2 * o
-  const yB = hRect + 2 * o
-  const notchHalfW = 10 + o
-  const notchDepth = 11 + o
-  const cx = o + 80
-  return `M ${r},0 L ${xR - r},0 Q ${xR},0 ${xR},${r} L ${xR},${yB - r} Q ${xR},${yB} ${xR - r},${yB} L ${cx + notchHalfW},${yB} L ${cx},${yB + notchDepth} L ${cx - notchHalfW},${yB} L ${r},${yB} Q 0,${yB} 0,${yB - r} L 0,${r} Q 0,0 ${r},0 Z`
-}
-
 // Darkens a #rrggbb hex color by `amount` (0-1) — used to build the accent ring's
 // conic-gradient stops (light/mid/dark shades of a single user-picked color), mirroring
 // .pin-arc's light→dark→light blue sweep in globals.css but derived from one input color
@@ -73,23 +57,23 @@ export default function CalloutCard({
   const t = useTranslations('PaikkaKortti')
   const tLajit = useTranslations('Lajit')
   const ref = useRef<HTMLDivElement>(null)
-  // The rounded-rectangle height (card's total height minus the 11px notch tip) — kept as a
-  // raw number rather than a pre-built path string so both the card's own clip-path (o=0)
-  // and the accent ring's offset clip-path (o=RING_WIDTH) can share buildCardClipPath.
-  const [cardH, setCardH] = useState<number | null>(null)
+  const [clipPath, setClipPath] = useState('')
   const [showName, setShowName] = useState(true)
 
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
-    const compute = () => setCardH(el.offsetHeight - 11)
+    const compute = () => {
+      const h = el.offsetHeight - 11
+      setClipPath(
+        `M 10,0 L 150,0 Q 160,0 160,10 L 160,${h - 10} Q 160,${h} 150,${h} L 90,${h} L 80,${h + 11} L 70,${h} L 10,${h} Q 0,${h} 0,${h - 10} L 0,10 Q 0,0 10,0 Z`
+      )
+    }
     const obs = new ResizeObserver(compute)
     obs.observe(el)
     compute()
     return () => obs.disconnect()
   }, [])
-
-  const clipPath = cardH !== null ? buildCardClipPath(cardH, 0) : ''
 
   useEffect(() => {
     const id = setInterval(() => setShowName(v => !v), 2000)
@@ -120,25 +104,22 @@ export default function CalloutCard({
 
   return (
     <div className="relative" style={{ width: 160, height: 171 }}>
-      {accentColor && cardH !== null && (
-        // Conic-gradient ring traced as a TRUE parallel offset of the card's silhouette
-        // (buildCardClipPath with o=RING_WIDTH), not a scaled copy — scaling from center
-        // distorts the off-center notch relative to the rectangle, leaving visible gaps on
-        // some sides. Positioned via `inset: -RING_WIDTH` so its own local coordinate
-        // origin lines up exactly with the offset path's (0,0). Unlike the map pin's
-        // `.pin-arc` (a perfect circle, where rotating the whole element via
-        // `transform: rotate()` is safe since a circle's boundary is rotationally
-        // symmetric), this card's boundary is NOT symmetric — rotating the element itself
-        // would visibly spin its notched silhouette into a moving diamond. Instead, only
+      {accentColor && clipPath && (
+        // Same idea as the map pin's `.pin-arc`: a same-shaped, slightly bigger object sits
+        // BEHIND the card, so only a thin sliver peeks out around the edge. The object
+        // itself stays perfectly still (no transform other than the static scale-up) — only
         // the gradient's `from` angle animates (via the --ring-angle custom property
-        // registered in globals.css), sweeping the light/dark color band around a
-        // perfectly static boundary.
+        // registered in globals.css), sweeping the light/dark color band around it. Unlike
+        // `.pin-arc` (a perfect circle, where the whole element CAN safely rotate because a
+        // circle's boundary is rotationally symmetric), this card's notched boundary is not
+        // symmetric — actually rotating the element would spin its silhouette into a
+        // moving diamond, so the boundary must stay static while only the colors move.
         <div
-          className="absolute pointer-events-none"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            inset: -RING_WIDTH,
-            clipPath: `path('${buildCardClipPath(cardH, RING_WIDTH)}')`,
+            clipPath: `path('${clipPath}')`,
             background: `conic-gradient(from var(--ring-angle), ${accentColor}59 0deg, ${darkenHex(accentColor, 0.45)} 90deg, ${accentColor} 180deg, ${darkenHex(accentColor, 0.45)} 270deg, ${accentColor}59 360deg)`,
+            transform: `scale(${1 + RING_WIDTH / 80})`,
             animation: 'ringAngleSpin 3s linear infinite',
           } as React.CSSProperties}
         />
