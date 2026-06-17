@@ -111,7 +111,10 @@ export default function OnboardingWizardPage() {
           },
           body: JSON.stringify({
             paikka_id: paikkaId,
-            step: 2,
+            // step:1 -> save-step sets current_step:2 -> WizardInner's auto-resume
+            // (savedStep > 1 && step === 1) lands the user ON Step 2 (StepMediat),
+            // where the prefilled gallery/logo render. step:2 would skip Step 2 entirely.
+            step: 1,
             field: 'media_urls',
             value: { logo: selections.logoUrl, photos: selections.gallery },
           }),
