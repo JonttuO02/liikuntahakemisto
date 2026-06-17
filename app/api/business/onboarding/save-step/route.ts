@@ -59,7 +59,11 @@ export async function POST(request: Request) {
     // Validate step — accepted input range is 0–5 (Phase 50, D-07 + D-04 reconciliation).
     // Lower bound 0 exists for handleConfirm's quick-accept media_urls pre-save (D-04), which
     // sends step: 0 so current_step becomes 1 (new Step 1/StepMediat). current_step = step + 1
-    // maps this input range to the stored 1-5 range the 5-step wizard requires (D-07).
+    // maps this input range to a stored range of 1-5 for wizard callers, but 1-6 for the
+    // short-lived AnalysoiSivusto quick-accept case (which sends step: 5 -> current_step: 6).
+    // That value 6 is transient — `submit` deletes the draft row on success — but if it
+    // survives (e.g. a failed quick-accept), callers downstream of this route (WizardInner)
+    // must clamp current_step to 5 before using it for step-range math (see CR-01).
     const parsedStep = parseInt(body.step, 10)
     if (isNaN(parsedStep) || parsedStep < 0 || parsedStep > 5) {
       return NextResponse.json({ error: 'Invalid step (must be 0–5)' }, { status: 400 })
