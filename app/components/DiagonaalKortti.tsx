@@ -33,9 +33,13 @@ interface DiagonaalKorttiProps {
   onCardClick?: () => void
   onToggleTodo?: (id: number) => void
   brandColor?: string
+  /** Optional user-selected accent color (Phase 48/onboarding follow-up). Used for the sport
+   * pill background and the "show on map" button icon — falls back to the sport's own color
+   * and the default muted gray respectively when omitted. */
+  accentColor?: string
 }
 
-export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMap, onCardClick, onToggleTodo, brandColor }: DiagonaalKorttiProps) {
+export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMap, onCardClick, onToggleTodo, brandColor, accentColor }: DiagonaalKorttiProps) {
   const t = useTranslations('PaikkaKortti')
   const tLajit = useTranslations('Lajit')
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
@@ -108,7 +112,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             {/* Sport pill */}
             <span
               className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full text-white truncate max-w-full mt-1"
-              style={{ backgroundColor: laji.color }}
+              style={{ backgroundColor: accentColor ?? laji.color }}
             >
               <SportIcon laji={paikka.laji} size={16} className="shrink-0" />
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -240,7 +244,8 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
         <button
           onClick={e => { e.stopPropagation(); e.preventDefault(); onShowMap?.(paikka) }}
           aria-label={t('showOnMap')}
-          className="absolute bottom-2 left-2 z-20 w-7 h-7 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.5)] hover:text-[#111111] [transition:color_150ms_ease]"
+          className="absolute bottom-2 left-2 z-20 w-7 h-7 glass-btn rounded-full flex items-center justify-center hover:text-[#111111] [transition:color_150ms_ease]"
+          style={{ color: accentColor ?? 'rgba(17,17,17,0.5)' }}
         >
           <MapPin className="w-3.5 h-3.5" />
         </button>

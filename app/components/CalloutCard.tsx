@@ -25,12 +25,17 @@ const TEXT_CONTAINER_VARIANTS = {
 export default function CalloutCard({
   p,
   brandColor,
+  accentColor,
 }: {
   p: Liikuntapaikka & { latitude: number; longitude: number }
   /** Optional user-selected brand background color (Phase 48). When provided, tints the
    * card surface and adjusts text contrast — mirrors DiagonaalKortti's existing `brandColor`
    * prop. Omitted entirely on the live map today, so default rendering is unchanged. */
   brandColor?: string
+  /** Optional user-selected accent color (Phase 48/onboarding follow-up). When provided,
+   * adds a pulsing "shining" ring behind the logo/avatar slot — same expanding-ring motif as
+   * the map's user-location pulse (Etusivu.tsx), recolored to the brand's accent. */
+  accentColor?: string
 }) {
   const t = useTranslations('PaikkaKortti')
   const tLajit = useTranslations('Lajit')
@@ -93,27 +98,54 @@ export default function CalloutCard({
         paddingBottom: 23,
         clipPath: clipPath ? `path('${clipPath}')` : undefined,
         borderRadius: clipPath ? 0 : 10,
-        ...(brandColor ? { backgroundColor: brandColor } : {}),
+        // Override the FULL `background` (not just backgroundColor) so brandColor fully
+        // replaces .glass's white gradient background-image — setting backgroundColor alone
+        // leaves the gradient layered on top, visibly washing the brand color out toward
+        // white. The .glass class's border/box-shadow (gloss highlight, edge sheen) are
+        // untouched, so the card keeps its glossy feel without lightening the actual color.
+        ...(brandColor ? { background: brandColor } : {}),
       }}
     >
       <div className="flex flex-col gap-2 h-full">
-        {p.logo_url ? (
-          <div className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center bg-[rgba(0,0,0,0.06)] overflow-hidden">
-            <img
-              src={p.logo_url}
-              alt=""
-              aria-hidden
-              className="w-full h-full object-cover rounded-full"
-            />
-          </div>
-        ) : (
-          <div
-            className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center"
-            style={{ backgroundColor: sportColor }}
-          >
-            <span className="text-base font-bold text-white">{p.nimi[0]?.toUpperCase() ?? '?'}</span>
-          </div>
-        )}
+        <div className="relative w-12 h-12 flex-shrink-0">
+          {accentColor && (
+            <>
+              {/* Soft static glow — gives the "shining gradient" feel behind the ring */}
+              <div
+                className="absolute pointer-events-none"
+                style={{ inset: -6, borderRadius: '50%', background: `radial-gradient(circle, ${accentColor}40 0%, transparent 70%)` }}
+              />
+              {/* Expanding pulse ring — same motif as the map's user-location pulse
+                  (Etusivu.tsx ~line 970), recolored from blue to the brand's accentColor. */}
+              <motion.div
+                className="absolute pointer-events-none"
+                style={{ inset: -6, borderRadius: '50%', border: `2px solid ${accentColor}` }}
+                animate={{ scale: [0.7, 1.6], opacity: [0.6, 0] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+              />
+            </>
+          )}
+          {p.logo_url ? (
+            // rounded-xl + object-contain (not rounded-full + object-cover) so logos of any
+            // aspect ratio are always shown in full, never cropped to fill a circular mask —
+            // padding gives differently-shaped logos breathing room against the box edge.
+            <div className="relative w-12 h-12 rounded-xl flex items-center justify-center bg-[rgba(0,0,0,0.06)] overflow-hidden p-1">
+              <img
+                src={p.logo_url}
+                alt=""
+                aria-hidden
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+          ) : (
+            <div
+              className="relative w-12 h-12 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: sportColor }}
+            >
+              <span className="text-base font-bold text-white">{p.nimi[0]?.toUpperCase() ?? '?'}</span>
+            </div>
+          )}
+        </div>
         <div className="w-full overflow-hidden">
           <AnimatePresence mode="wait">
             {showName ? (

@@ -53,6 +53,13 @@ export default function StepEsikatselu({
     brandingData?.colors?.find(c => c.role === 'background')?.hex ??
     undefined
 
+  // Accent colour — same sourcing pattern as brandColor, used for the sport pill / "show on
+  // map" button (DiagonaalKortti) and the pulsing ring (CalloutCard).
+  const accentColor =
+    brandingData?.selected_accent_color ??
+    brandingData?.colors?.find(c => c.role === 'accent')?.hex ??
+    undefined
+
   useEffect(() => {
     if (draftAsPaikka) return
     const timer = setTimeout(() => setLoadTimedOut(true), 8000)
@@ -124,7 +131,7 @@ export default function StepEsikatselu({
             <span className="text-[10px] font-bold uppercase tracking-widest text-[rgba(17,17,17,0.45)]">
               {t('previewLabelCallout')}
             </span>
-            <CalloutCard p={{ ...draftAsPaikka, latitude: draftAsPaikka.latitude ?? 0, longitude: draftAsPaikka.longitude ?? 0 }} brandColor={brandColor} />
+            <CalloutCard p={{ ...draftAsPaikka, latitude: draftAsPaikka.latitude ?? 0, longitude: draftAsPaikka.longitude ?? 0 }} brandColor={brandColor} accentColor={accentColor} />
           </div>
 
           {/* DIAGONAALIKORTTI */}
@@ -132,7 +139,7 @@ export default function StepEsikatselu({
             <span className="text-[10px] font-bold uppercase tracking-widest text-[rgba(17,17,17,0.45)]">
               {t('previewLabelDiag')}
             </span>
-            <DiagonaalKortti paikka={draftAsPaikka} brandColor={brandColor} />
+            <DiagonaalKortti paikka={draftAsPaikka} brandColor={brandColor} accentColor={accentColor} />
           </div>
 
           {/* PROFIILISIVU */}
