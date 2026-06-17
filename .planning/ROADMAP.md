@@ -234,7 +234,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 **Success Criteria** (what must be TRUE):
 
   1. Step 6 of the onboarding wizard shows the same `CalloutCard` venues see live on the site, not the unused `PaikkaKortti` — and venues without coordinates still render a sensible fallback instead of breaking
-  2. A white or transparent logo is visibly distinguishable everywhere `logo_url` is rendered (onboarding preview, dashboard preview, live cards) because all render sites share one contrast-safe logo display primitive
+  2. A white or transparent logo is visibly distinguishable in AnalysoiSivusto's logo-candidate picker (its only render site with a fixed white background and no contrast handling) because the picker uses a shared contrast-safe logo display primitive — DiagonaalKortti/PaikkaSheet already render logos safely via user-selected brand color and are unchanged (scope corrected 2026-06-17)
 
 **Plans**: TBD
 **UI hint**: yes

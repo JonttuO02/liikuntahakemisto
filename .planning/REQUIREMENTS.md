@@ -31,7 +31,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Preview & Bugfixes
 
 - [ ] **PREV-02**: Step 6 preview renders `CalloutCard` instead of the unused `PaikkaKortti`, with a fallback for venues missing coordinates
-- [ ] **PREV-03**: A shared contrast-safe logo display primitive is used everywhere `logo_url` renders, fixing white/transparent logo invisibility against white backgrounds
+- [ ] **PREV-03**: A shared contrast-safe logo display primitive is used in AnalysoiSivusto's logo-candidate picker, fixing white/transparent logo invisibility against its fixed white background (DiagonaalKortti/PaikkaSheet already have working contrast via user-selected brand color and are out of scope — corrected 2026-06-17 during Phase 49 discussion)
 
 ### Flow
 
