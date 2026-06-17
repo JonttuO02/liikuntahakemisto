@@ -8,6 +8,7 @@ import UploadDropZone from './UploadDropZone'
 import UploadProgressBar from './UploadProgressBar'
 import type { OnboardingDraft } from '@/lib/onboardingUtils'
 import type { Liikuntapaikka } from '@/lib/types'
+import { useLivePreview } from '@/lib/livePreview/LivePreviewContext'
 
 interface StepMediatProps {
   paikkaId: number
@@ -29,6 +30,7 @@ export default function StepMediat({
   onSaveSuccess,
 }: StepMediatProps) {
   const t = useTranslations('Business')
+  const { dispatch } = useLivePreview()
 
   const [logoFiles, setLogoFiles] = useState<File[]>([])
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
@@ -63,6 +65,29 @@ export default function StepMediat({
   useEffect(() => {
     return () => { stagedPreviewUrls.forEach((u) => URL.revokeObjectURL(u)) }
   }, [stagedPreviewUrls])
+
+  // Object URL for the staged logo file — same mechanism as stagedPreviewUrls above.
+  const logoPreviewUrl = useMemo(
+    () => (logoFiles[0] ? URL.createObjectURL(logoFiles[0]) : null),
+    [logoFiles]
+  )
+  useEffect(() => {
+    return () => { if (logoPreviewUrl) URL.revokeObjectURL(logoPreviewUrl) }
+  }, [logoPreviewUrl])
+
+  // Live-preview wiring (D-05/LIVEPREV-01/04): instant SET_MEDIA dispatch on
+  // file selection — no debounce, reuses local blob URLs so nothing waits on
+  // the Supabase upload. The real (uploaded) URLs still persist on submit
+  // via handleNext/handleSave below, unchanged.
+  useEffect(() => {
+    dispatch({
+      type: 'SET_MEDIA',
+      payload: {
+        logo: logoPreviewUrl ?? existingLogoUrl ?? null,
+        photos: [...existingPhotoUrls, ...stagedPreviewUrls],
+      },
+    })
+  }, [logoPreviewUrl, stagedPreviewUrls, existingLogoUrl, existingPhotoUrls, dispatch])
 
   function handleLogoFilesSelected(files: File[]) {
     // Logo zone: only the first file
