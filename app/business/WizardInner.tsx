@@ -27,11 +27,17 @@ type PaikkaInfo = {
 }
 
 type WizardInnerProps =
-  | { mode: 'onboarding'; brandingData?: BrandingResult | null }
+  | { mode: 'onboarding'; brandingData?: BrandingResult | null; onBackToAnalyze?: () => void }
   | { mode: 'edit'; paikka: Liikuntapaikka; paikkaId: number }
 
 // ─── Onboarding mode ────────────────────────────────────────────────────────
-function OnboardingMode({ brandingData }: { brandingData?: BrandingResult | null }) {
+function OnboardingMode({
+  brandingData,
+  onBackToAnalyze,
+}: {
+  brandingData?: BrandingResult | null
+  onBackToAnalyze?: () => void
+}) {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -242,10 +248,10 @@ function OnboardingMode({ brandingData }: { brandingData?: BrandingResult | null
                 paikkaId={paikkaId}
                 initialDraft={draft}
                 onNext={() => saveAndAdvance(1)}
-                // Step 1 is now the wizard's FIRST step (StepPaikka moved to page.tsx as a
-                // pre-phase) — no previous wizard step exists, so onPrev is a no-op rather
-                // than navigating to a non-existent step 0 (D-02/D-03 define no such path).
-                onPrev={() => {}}
+                // Step 1 is the wizard's first step (StepPaikka moved to page.tsx as a
+                // pre-phase) — there is no previous wizard step, so "back" returns to the
+                // page-level analyze pre-phase instead of navigating within the wizard.
+                onPrev={() => onBackToAnalyze?.()}
               />
             )}
             {step === 2 && paikkaId !== null && (
@@ -436,6 +442,8 @@ function EditMode({ paikka, paikkaId }: { paikka: Liikuntapaikka; paikkaId: numb
 
 // ─── Exported component ───────────────────────────────────────────────────────
 export default function WizardInner(props: WizardInnerProps) {
-  if (props.mode === 'onboarding') return <OnboardingMode brandingData={props.brandingData} />
+  if (props.mode === 'onboarding') {
+    return <OnboardingMode brandingData={props.brandingData} onBackToAnalyze={props.onBackToAnalyze} />
+  }
   return <EditMode paikka={props.paikka} paikkaId={props.paikkaId} />
 }

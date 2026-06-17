@@ -205,6 +205,12 @@ export default function OnboardingWizardPage() {
     setPagePhase('wizard')
   }
 
+  // Wizard step 1's "back" button returns here from page.tsx (D-02/D-03 follow-up) — paikkaId
+  // is already resolved in state, so AnalysoiSivusto re-renders without re-fetching it.
+  function handleBackToAnalyze() {
+    setPagePhase('analyze')
+  }
+
   return (
     <main className="min-h-screen bg-white flex flex-col items-center px-4 py-12">
       <div className="w-full max-w-xl">
@@ -233,7 +239,7 @@ export default function OnboardingWizardPage() {
               </div>
             }
           >
-            <WizardInner mode="onboarding" brandingData={brandingData} />
+            <WizardInner mode="onboarding" brandingData={brandingData} onBackToAnalyze={handleBackToAnalyze} />
           </Suspense>
         )}
       </div>
