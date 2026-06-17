@@ -35,12 +35,12 @@ completed: 2026-06-17
 
 # Phase 50 Plan 01: Onboarding step-renumber migration & bounds check Summary
 
-**One-time SQL migration decrementing in-flight onboarding_draft.current_step values, plus a reconciled 0-5 input bounds check in save-step/route.ts — schema push to the live database blocked on missing Supabase credentials.**
+**One-time SQL migration decrementing in-flight onboarding_draft.current_step values, plus a reconciled 0-5 input bounds check in save-step/route.ts. Schema pushed to the live database by the orchestrator after the executor hit a credentials gate.**
 
 ## Performance
 
 - **Duration:** ~12 min
-- **Tasks:** 2 of 3 completed (Task 3 blocked by authentication gate)
+- **Tasks:** 3 of 3 completed (Task 3 completed by orchestrator post-checkpoint, using a user-supplied access token)
 - **Files modified:** 2
 
 ## Accomplishments
@@ -54,7 +54,7 @@ Each task was committed atomically:
 
 1. **Task 1: Create one-time step-renumber data migration (D-06)** - `43cf131` (feat)
 2. **Task 2: Tighten save-step bounds check to the new range (D-07 + D-04 reconciliation)** - `97e7acf` (fix)
-3. **Task 3: [BLOCKING] Push schema to the live database** - NOT EXECUTED (authentication gate — see below)
+3. **Task 3: Push schema to the live database** - completed by orchestrator via `supabase link` + `supabase db push` from this worktree, using a user-supplied `SUPABASE_ACCESS_TOKEN`. Verified via `supabase migration list` showing `20260617000000` applied remotely. No app-code commit (DB-only operation).
 
 **Plan metadata:** committed alongside this SUMMARY (see final commit in this worktree)
 
@@ -72,17 +72,7 @@ None — Tasks 1 and 2 executed exactly as written. Task 3 was attempted as writ
 
 ## Issues Encountered
 
-**Task 3 — Authentication gate (not a bug):** `npx supabase db push` failed with `Cannot find project ref. Have you run supabase link?`. The worktree has no `supabase/config.toml` (project not linked) and no `SUPABASE_ACCESS_TOKEN` is present in the environment. Direct read access to `.env.local` / `.env.local.example` is denied by the sandbox's permission settings, so the access token could not be located or sourced from within this execution context.
-
-Per the plan's Task 3 instructions, this is exactly the documented escalation path: *"If the push requires an interactive confirmation prompt that cannot be suppressed... stop and surface the exact command for the user to run manually rather than guessing at a flag."* The blocker here is upstream of that (no link/no token at all), so the same stop-and-surface action applies.
-
-**Manual action required before Phase 50 can be considered fully shipped:**
-1. From the repo root (not this worktree, which will be removed), set `SUPABASE_ACCESS_TOKEN` in the shell environment (obtain from the Supabase dashboard → Account → Access Tokens, or reuse the project's existing CI/deploy secret).
-2. Run `supabase link --project-ref <project-ref>` if not already linked.
-3. Run `supabase db push` from the repo root.
-4. Verify with `supabase migration list` that `20260617000000_renumber_onboarding_steps` shows as applied to the remote database.
-
-Until this push runs, in-flight `onboarding_draft` rows in the live database retain their pre-reorder `current_step` numbering. This does not block merging the code changes (Tasks 1-2), but the app-level renumber (50-02, when it ships) will not be fully correct for any in-flight drafts until the migration is applied live.
+**Task 3 — Authentication gate, resolved:** `npx supabase db push` initially failed with `Cannot find project ref. Have you run supabase link?`. The worktree had no `supabase/config.toml` (project not linked) and no `SUPABASE_ACCESS_TOKEN` was present in the environment; direct read access to `.env.local` was denied by sandbox permissions. The orchestrator escalated to the user per the checkpoint protocol, received a `SUPABASE_ACCESS_TOKEN`, ran `supabase link --project-ref odkrnesnmrpuegccgovy` and `supabase db push` from this worktree (where the new migration file lives pre-merge), and confirmed via `supabase migration list` that `20260617000000_renumber_onboarding_steps` is applied remotely.
 
 ## Known Stubs
 
@@ -94,12 +84,12 @@ None — both changes match the plan's `<threat_model>` exactly (T-50-01 mitigat
 
 ## User Setup Required
 
-**External service action required.** The live Supabase database push (Task 3) could not be completed from this execution environment. See "Issues Encountered" above for the exact manual steps (set `SUPABASE_ACCESS_TOKEN`, link project, `supabase db push`, verify with `supabase migration list`).
+None — the live Supabase database push (Task 3) was completed by the orchestrator with a user-supplied access token.
 
 ## Next Phase Readiness
 
-- Tasks 1-2 (migration file + route bounds check) are complete, committed, and type-check clean — 50-02 (the app-code reorder) can proceed independently of the live DB push.
-- Task 3 (live schema push) remains outstanding and requires a human with Supabase credentials to run `supabase db push` before in-flight production drafts are correctly renumbered. Flagging this clearly so it is not silently dropped when this worktree is removed.
+- All three tasks complete: migration file + route bounds check (committed, type-check clean) and the live schema push (verified via `supabase migration list`).
+- 50-02 (the app-code reorder) can proceed with no outstanding DB dependency.
 
 ---
 *Phase: 50-flow-uudelleenj-rjestys*
