@@ -51,6 +51,10 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
   // When brandColor is falsy the panel has no background and we leave text at their
   // default Tailwind classes.  When it is set we override text colour inline.
   const contrastText = brandColor ? getContrastColor(brandColor) : undefined
+  // Contrast-aware icon color for the accent-colored "show on map" button — accentColor can
+  // be dark (e.g. black) or light, so the icon must follow the same black/white contrast
+  // rule as brandColor's text, not a fixed color.
+  const accentContrastText = accentColor ? getContrastColor(accentColor) : undefined
   const { containerRef, measureRef, shouldMarquee } = useOverflowMarquee(priceItems?.join('\n') ?? null)
   const hasCoords    = paikka.latitude != null && paikka.longitude != null
 
@@ -244,8 +248,8 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
         <button
           onClick={e => { e.stopPropagation(); e.preventDefault(); onShowMap?.(paikka) }}
           aria-label={t('showOnMap')}
-          className="absolute bottom-2 left-2 z-20 w-7 h-7 glass-btn rounded-full flex items-center justify-center hover:text-[#111111] [transition:color_150ms_ease]"
-          style={{ color: accentColor ?? 'rgba(17,17,17,0.5)' }}
+          className={`absolute bottom-2 left-2 z-20 w-7 h-7 rounded-full flex items-center justify-center [transition:color_150ms_ease] ${accentColor ? '' : 'glass-btn text-[rgba(17,17,17,0.5)] hover:text-[#111111]'}`}
+          style={accentColor ? { backgroundColor: accentColor, color: accentContrastText } : undefined}
         >
           <MapPin className="w-3.5 h-3.5" />
         </button>

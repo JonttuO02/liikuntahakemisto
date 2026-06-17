@@ -22,6 +22,20 @@ const TEXT_CONTAINER_VARIANTS = {
   exit:  { transition: { staggerChildren: 0.014 } },
 }
 
+// Darkens a #rrggbb hex color by `amount` (0-1) — used to build the accent ring's
+// conic-gradient stops (light/mid/dark shades of a single user-picked color), mirroring
+// .pin-arc's light→dark→light blue sweep in globals.css but derived from one input color
+// instead of three hardcoded blues.
+function darkenHex(hex: string, amount: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
+  if (!m) return hex
+  const n = parseInt(m[1], 16)
+  const r = Math.round(((n >> 16) & 0xff) * (1 - amount))
+  const g = Math.round(((n >> 8) & 0xff) * (1 - amount))
+  const b = Math.round((n & 0xff) * (1 - amount))
+  return `#${[r, g, b].map(c => Math.max(0, Math.min(255, c)).toString(16).padStart(2, '0')).join('')}`
+}
+
 export default function CalloutCard({
   p,
   brandColor,
@@ -33,8 +47,9 @@ export default function CalloutCard({
    * prop. Omitted entirely on the live map today, so default rendering is unchanged. */
   brandColor?: string
   /** Optional user-selected accent color (Phase 48/onboarding follow-up). When provided,
-   * adds a pulsing "shining" ring behind the logo/avatar slot — same expanding-ring motif as
-   * the map's user-location pulse (Etusivu.tsx), recolored to the brand's accent. */
+   * adds a rotating conic-gradient ring around the card's outer edge — same technique as
+   * the map pin's `.pin-arc` (globals.css), recolored to the brand's accent and traced
+   * around the card's actual notched silhouette instead of a plain circle. */
   accentColor?: string
 }) {
   const t = useTranslations('PaikkaKortti')
@@ -86,66 +101,63 @@ export default function CalloutCard({
     ])
 
   return (
-    <div
-      ref={ref}
-      className="glass cursor-pointer"
-      style={{
-        width: 160,
-        height: 171,
-        paddingTop: 12,
-        paddingLeft: 12,
-        paddingRight: 12,
-        paddingBottom: 23,
-        clipPath: clipPath ? `path('${clipPath}')` : undefined,
-        borderRadius: clipPath ? 0 : 10,
-        // Override the FULL `background` (not just backgroundColor) so brandColor fully
-        // replaces .glass's white gradient background-image — setting backgroundColor alone
-        // leaves the gradient layered on top, visibly washing the brand color out toward
-        // white. The .glass class's border/box-shadow (gloss highlight, edge sheen) are
-        // untouched, so the card keeps its glossy feel without lightening the actual color.
-        ...(brandColor ? { background: brandColor } : {}),
-      }}
-    >
+    <div className="relative" style={{ width: 160, height: 171 }}>
+      {accentColor && clipPath && (
+        // Rotating conic-gradient ring traced around the card's actual silhouette (notch
+        // included) — same technique as the map pin's `.pin-arc` (globals.css): a
+        // light→dark→light sweep of one color, masked to the card's shape, then scaled up
+        // ~5% from center so only a thin ring peeks out from behind the card on top.
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            clipPath: `path('${clipPath}')`,
+            background: `conic-gradient(${accentColor}59 0deg, ${darkenHex(accentColor, 0.45)} 90deg, ${accentColor} 180deg, ${darkenHex(accentColor, 0.45)} 270deg, ${accentColor}59 360deg)`,
+            transform: 'scale(1.045)',
+            animation: 'spinOrbit 3s linear infinite',
+          }}
+        />
+      )}
+      <div
+        ref={ref}
+        className="glass cursor-pointer relative"
+        style={{
+          width: 160,
+          height: 171,
+          paddingTop: 12,
+          paddingLeft: 12,
+          paddingRight: 12,
+          paddingBottom: 23,
+          clipPath: clipPath ? `path('${clipPath}')` : undefined,
+          borderRadius: clipPath ? 0 : 10,
+          // Override the FULL `background` (not just backgroundColor) so brandColor fully
+          // replaces .glass's white gradient background-image — setting backgroundColor alone
+          // leaves the gradient layered on top, visibly washing the brand color out toward
+          // white. The .glass class's border/box-shadow (gloss highlight, edge sheen) are
+          // untouched, so the card keeps its glossy feel without lightening the actual color.
+          ...(brandColor ? { background: brandColor } : {}),
+        }}
+      >
       <div className="flex flex-col gap-2 h-full">
-        <div className="relative w-12 h-12 flex-shrink-0">
-          {accentColor && (
-            <>
-              {/* Soft static glow — gives the "shining gradient" feel behind the ring */}
-              <div
-                className="absolute pointer-events-none"
-                style={{ inset: -6, borderRadius: '50%', background: `radial-gradient(circle, ${accentColor}40 0%, transparent 70%)` }}
-              />
-              {/* Expanding pulse ring — same motif as the map's user-location pulse
-                  (Etusivu.tsx ~line 970), recolored from blue to the brand's accentColor. */}
-              <motion.div
-                className="absolute pointer-events-none"
-                style={{ inset: -6, borderRadius: '50%', border: `2px solid ${accentColor}` }}
-                animate={{ scale: [0.7, 1.6], opacity: [0.6, 0] }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
-              />
-            </>
-          )}
-          {p.logo_url ? (
-            // rounded-xl + object-contain (not rounded-full + object-cover) so logos of any
-            // aspect ratio are always shown in full, never cropped to fill a circular mask —
-            // padding gives differently-shaped logos breathing room against the box edge.
-            <div className="relative w-12 h-12 rounded-xl flex items-center justify-center bg-[rgba(0,0,0,0.06)] overflow-hidden p-1">
-              <img
-                src={p.logo_url}
-                alt=""
-                aria-hidden
-                className="max-w-full max-h-full object-contain"
-              />
-            </div>
-          ) : (
-            <div
-              className="relative w-12 h-12 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: sportColor }}
-            >
-              <span className="text-base font-bold text-white">{p.nimi[0]?.toUpperCase() ?? '?'}</span>
-            </div>
-          )}
-        </div>
+        {p.logo_url ? (
+          // rounded-xl + object-contain (not rounded-full + object-cover) so logos of any
+          // aspect ratio are always shown in full, never cropped to fill a circular mask —
+          // padding gives differently-shaped logos breathing room against the box edge.
+          <div className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center bg-[rgba(0,0,0,0.06)] overflow-hidden p-1">
+            <img
+              src={p.logo_url}
+              alt=""
+              aria-hidden
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+        ) : (
+          <div
+            className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center"
+            style={{ backgroundColor: sportColor }}
+          >
+            <span className="text-base font-bold text-white">{p.nimi[0]?.toUpperCase() ?? '?'}</span>
+          </div>
+        )}
         <div className="w-full overflow-hidden">
           <AnimatePresence mode="wait">
             {showName ? (
@@ -226,6 +238,7 @@ export default function CalloutCard({
             </>
           ) : null}
         </div>
+      </div>
       </div>
     </div>
   )
