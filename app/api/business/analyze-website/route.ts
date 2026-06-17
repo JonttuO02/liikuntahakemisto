@@ -112,6 +112,17 @@ async function runAnalysis(url: string, businessAccountId: string, paikkaId: num
           // BrandingResult type) expects Array<{hex, role}>.
           colors: result.colors,
           image_urls: galleryUrls,
+          // A re-analysis (same paikka_id, "Analysoi uudelleen") must not leave a PRIOR run's
+          // manual selections stuck in the row — selected_logo_url could point at a candidate
+          // that no longer exists in the new logo_candidates, and a stale selected_*_color
+          // would silently mask the new analysis's color candidates in AnalysoiSivusto's init
+          // logic. Reset only the columns that actually exist in the schema — *_color_source
+          // (background_color_source/accent_color_source) are PATCH-request-only fields, never
+          // persisted as columns (confirmed: no migration creates them, and the PATCH route's
+          // own updatePayload omits them) — including them here throws "column does not exist".
+          selected_logo_url: null,
+          selected_background_color: null,
+          selected_accent_color: null,
           // WR-02: use Claude's URL only if same hostname as submitted — prevents
           // prompt injection from storing an attacker-controlled external URL
           website_url: (() => {
@@ -249,7 +260,7 @@ export async function GET(request: Request) {
   // .maybeSingle() returns null (not PGRST116 error) when no row exists.
   const { data, error } = await supabaseAdmin
     .from('business_branding')
-    .select('status, logo_url, colors, logo_type, logo_candidates, image_urls, selected_background_color, selected_accent_color, raw_analysis, error_message, analyzed_at')
+    .select('status, logo_url, colors, logo_type, logo_candidates, image_urls, selected_logo_url, selected_background_color, selected_accent_color, raw_analysis, error_message, analyzed_at')
     .eq('business_account_id', user.id)
     .eq('paikka_id', paikkaId)
     .maybeSingle()

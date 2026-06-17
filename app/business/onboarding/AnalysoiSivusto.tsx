@@ -131,8 +131,11 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
     if (!brandingResult || selectionInitialisedRef.current) return
     selectionInitialisedRef.current = true
 
+    // selected_logo_url (the user's persisted pick) takes priority — falling straight to
+    // the first candidate ignored any earlier selection on every remount (e.g. navigating
+    // back to this step), always snapping back to candidate #1 regardless of what was picked.
     setSelectedLogoUrl(
-      brandingResult.logo_candidates?.[0]?.url ?? brandingResult.logo_url ?? null
+      brandingResult.selected_logo_url ?? brandingResult.logo_candidates?.[0]?.url ?? brandingResult.logo_url ?? null
     )
 
     // First 5 (or fewer) gallery images start checked, capped at 5 selected (D-05)
@@ -845,6 +848,19 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
             <button
               type="button"
               onClick={() => {
+                // "Analysoi uudelleen" re-runs analysis WITHOUT remounting this component, so
+                // selectionInitialisedRef would otherwise stay true from the FIRST result and
+                // the init effect would skip applying the new analysis's defaults entirely —
+                // resetting both the ref and the selection state here lets the new result's
+                // candidates/colors apply cleanly once analysis completes.
+                selectionInitialisedRef.current = false
+                setSelectedLogoUrl(null)
+                setBgColor(null)
+                setBgSource('ai')
+                setAccentColor(null)
+                setAccentSource('ai')
+                setArmedSlot(null)
+                setSelectedGallery([])
                 setBrandingResult(null)
                 setPhase('url-input')
               }}

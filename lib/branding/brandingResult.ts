@@ -38,6 +38,8 @@ export type BrandingResult = {
   logo_candidates: Array<{ url: string; type: string }> | null
   /** Scraped gallery image URLs (Supabase Storage, capped at MAX_GALLERY_UPLOADS) the user can pick from. */
   image_urls: string[] | null
+  /** User-selected logo URL, persisted via PATCH /api/business/branding. */
+  selected_logo_url: string | null
   /** User-selected background color, persisted via PATCH /api/business/branding. */
   selected_background_color: string | null
   /** User-selected accent color, persisted via PATCH /api/business/branding. */

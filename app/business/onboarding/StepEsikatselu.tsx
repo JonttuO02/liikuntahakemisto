@@ -36,7 +36,11 @@ export default function StepEsikatselu({
   // Per D-ES-01/D-ES-02: brandingData path requires paikkaInfo and a numeric paikka_id.
   const draftAsPaikka =
     brandingData && paikkaInfo && typeof draft?.paikka_id === 'number'
-      ? buildBrandingPreview(paikkaInfo, brandingData, draft.paikka_id)
+      // draft.media_urls.logo is the user's actual logo pick — page.tsx's handleConfirm
+      // persists it there before entering the wizard. Omitting this arg silently fell back
+      // to brandingData.logo_url (always the FIRST/primary detected logo) regardless of
+      // what the user picked in AnalysoiSivusto's logo picker.
+      ? buildBrandingPreview(paikkaInfo, brandingData, draft.paikka_id, draft.media_urls?.logo)
       : draft && paikkaInfo
         ? buildDraftAsPaikka(draft, paikkaInfo)
         : null
