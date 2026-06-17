@@ -173,7 +173,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
  (completed 2026-06-16)
 
 - [~] **Phase 48: Logo-, väri- ja galleriavalinta** — Multi-candidate logo picker, 2-color swatch picker, validated PATCH route, gallery prefill (executed 2026-06-16; gap closure 48-04 pending — CR-01/CR-02)
-- [ ] **Phase 49: Esikatselu- ja kontrastikorjaukset** — Step 6 CalloutCard swap + shared contrast-safe logo primitive *(2 plans, Wave 1×2 parallel)*
+- [x] **Phase 49: Esikatselu- ja kontrastikorjaukset** — Step 6 CalloutCard swap + shared contrast-safe logo primitive *(2 plans, Wave 1×2 parallel)* (completed 2026-06-17)
 - [ ] **Phase 50: Flow-uudelleenjärjestys & pikahyväksyntä** — StepPaikka before URL-analysis + quick-accept shortcut into admin queue
 - [ ] **Phase 51: Live-esikatselu velhossa** — Shared live-preview state, desktop split-view, mobile toggle
 
@@ -238,8 +238,9 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 
 **Plans**: 2 plans (Wave 1: 49-01 contrast-safe logo primitive + picker wiring; 49-02 Step 6 CalloutCard swap + i18n — both parallel, zero file overlap)
 
-- [ ] 49-01-PLAN.md — Shared ContrastSafeLogo primitive + wire into AnalysoiSivusto logo-candidate picker (PREV-03)
-- [ ] 49-02-PLAN.md — Step 6 CalloutCard swap (with null-coordinate type shim) + previewLabelCallout i18n key (PREV-02)
+- [x] 49-01-PLAN.md — Shared ContrastSafeLogo primitive + wire into AnalysoiSivusto logo-candidate picker (PREV-03)
+- [x] 49-02-PLAN.md — Step 6 CalloutCard swap (with null-coordinate type shim) + previewLabelCallout i18n key (PREV-02)
+
 **UI hint**: yes
 
 ### Phase 50: Flow-uudelleenjärjestys
@@ -324,6 +325,6 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 46. Pre-vaihe UI & velhointegraatio | v2.1 | 5/6 | Complete    | 2026-06-15 |
 | 47. Skeema & monisivuinen scraper-putki | v2.2 | 5/5 | Complete    | 2026-06-16 |
 | 48. Logo-, väri- ja galleriavalinta | v2.2 | 4/4 | Complete    | 2026-06-17 |
-| 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 0/2 | Not started | - |
+| 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 2/2 | Complete   | 2026-06-17 |
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 0/TBD | Not started | - |
 | 51. Live-esikatselu velhossa | v2.2 | 0/TBD | Not started | - |
