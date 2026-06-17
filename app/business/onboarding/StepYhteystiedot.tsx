@@ -121,7 +121,7 @@ export default function StepYhteystiedot({
         },
         body: JSON.stringify({
           paikka_id: paikkaId,
-          step: 5,
+          step: 4,
           field: 'yhteystiedot',
           value: {
             puhelin: puhelin.trim(),

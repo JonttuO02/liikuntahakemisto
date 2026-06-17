@@ -193,7 +193,7 @@ export default function StepHinnasto({
         },
         body: JSON.stringify({
           paikka_id: paikkaId,
-          step: 3,
+          step: 2,
           field: 'hinnasto',
           value: rows
             .filter(r => r.hinta.trim() !== '')
