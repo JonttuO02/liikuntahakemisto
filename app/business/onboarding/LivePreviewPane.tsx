@@ -8,9 +8,9 @@
  * the mobile preview-side content (Plan 03/04). Holds no data state of its own.
  *
  * Mirrors StepEsikatselu.tsx's existing two-card stack exactly (latitude/longitude `?? 0`
- * shim included), minus the PaikkaSheet section (LIVEPREV-04 explicitly excludes it) and
- * minus the 8-second timeout/error branch (live preview has placeholder data and no
- * network call — per 51-UI-SPEC.md's Error-state row).
+ * shim included), minus the third profile-preview section (LIVEPREV-04 explicitly
+ * excludes it) and minus the 8-second timeout/error branch (live preview has placeholder
+ * data and no network call — per 51-UI-SPEC.md's Error-state row).
  */
 
 import { useTranslations } from 'next-intl'
