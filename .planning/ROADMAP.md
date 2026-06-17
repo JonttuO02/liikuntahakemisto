@@ -255,8 +255,9 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 
 **Plans**: 2 plans (Wave 1: 50-01 migration + bounds + [BLOCKING] push; Wave 2: 50-02 app-code reorder/renumber)
 
-- [ ] 50-01-PLAN.md — One-time step-renumber migration + tightened save-step bounds; [BLOCKING] supabase db push (FLOW-04)
+- [x] 50-01-PLAN.md — One-time step-renumber migration + tightened save-step bounds; [BLOCKING] supabase db push (FLOW-04)
 - [ ] 50-02-PLAN.md — StepPaikka pre-phase reorder + 5-step wizard renumber + progress bar (FLOW-01, FLOW-04)
+
 **Note (2026-06-16):** FLOW-02/FLOW-03 (quick-accept) moved to Phase 48 at user request — see Phase 48's note.
 
 ### Phase 51: Live-esikatselu velhossa
@@ -329,5 +330,5 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 47. Skeema & monisivuinen scraper-putki | v2.2 | 5/5 | Complete    | 2026-06-16 |
 | 48. Logo-, väri- ja galleriavalinta | v2.2 | 4/4 | Complete    | 2026-06-17 |
 | 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 2/2 | Complete    | 2026-06-17 |
-| 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 0/2 | Planned | - |
+| 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 1/2 | In Progress|  |
 | 51. Live-esikatselu velhossa | v2.2 | 0/TBD | Not started | - |

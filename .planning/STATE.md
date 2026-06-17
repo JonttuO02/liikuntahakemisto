@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: Onboarding-tekoälyn parannukset
-status: planning
+status: executing
 stopped_at: Phase 50 context gathered
-last_updated: "2026-06-17T09:37:22.363Z"
-last_activity: 2026-06-17
+last_updated: "2026-06-17T10:01:42.898Z"
+last_activity: 2026-06-17 -- Phase 50 execution started
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 11
+  total_plans: 13
   completed_plans: 11
   percent: 60
 ---
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 50 — flow-uudelleenjärjestys
+**Current focus:** Phase 50 — flow-uudelleenj-rjestys
 
 ## Current Position
 
-Phase: 50
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-06-17
+Phase: 50 (flow-uudelleenj-rjestys) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 50
+Last activity: 2026-06-17 -- Phase 50 execution started
 
 Progress: [██████░░░░] 60%
 
