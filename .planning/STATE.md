@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: Onboarding-tekoälyn parannukset
-status: executing
-stopped_at: Phase 49 complete, ready to plan Phase 50
-last_updated: "2026-06-17T09:14:15.239Z"
+status: planning
+stopped_at: Phase 50 context gathered
+last_updated: "2026-06-17T09:37:22.363Z"
 last_activity: 2026-06-17
 progress:
   total_phases: 5
@@ -92,9 +92,9 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
 
 ## Session Continuity
 
-Last session: 2026-06-17
-Stopped at: Phase 49 complete, ready to plan Phase 50
-Resume file: None
+Last session: 2026-06-17T09:37:22.357Z
+Stopped at: Phase 50 context gathered
+Resume file: .planning/phases/50-flow-uudelleenj-rjestys/50-CONTEXT.md
 
 ## Performance Metrics
 
