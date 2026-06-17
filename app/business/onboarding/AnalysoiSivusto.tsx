@@ -302,7 +302,7 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ paikka_id: paikkaId, step: 6, field, value }),
+          body: JSON.stringify({ paikka_id: paikkaId, step: 5, field, value }),
         })
 
         if (!res.ok) {

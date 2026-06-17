@@ -188,7 +188,7 @@ export default function StepMediat({
         },
         body: JSON.stringify({
           paikka_id: paikkaId,
-          step: 2,
+          step: 1,
           field: 'media_urls',
           value: { logo: logoUrl, photos: photoUrls },
         }),

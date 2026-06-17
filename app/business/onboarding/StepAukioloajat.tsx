@@ -179,7 +179,7 @@ export default function StepAukioloajat({
         },
         body: JSON.stringify({
           paikka_id: paikkaId,
-          step: 4,
+          step: 3,
           field: 'aukioloajat',
           value: openDaysObject,
         }),

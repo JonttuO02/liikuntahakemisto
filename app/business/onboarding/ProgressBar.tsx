@@ -14,7 +14,6 @@ export default function ProgressBar({ currentStep, completedSteps, onStepClick }
   const t = useTranslations('Business')
 
   const stepLabels = [
-    t('stepPlaceName'),
     t('stepMedia'),
     t('stepPricing'),
     t('stepHours'),
