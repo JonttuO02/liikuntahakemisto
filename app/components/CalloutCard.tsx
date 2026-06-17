@@ -38,6 +38,20 @@ function darkenHex(hex: string, amount: number): string {
   return `#${[r, g, b].map(c => Math.max(0, Math.min(255, c)).toString(16).padStart(2, '0')).join('')}`
 }
 
+// Lightens a #rrggbb hex color by `amount` (0-1) toward white — used for the ring's
+// "highlight" gradient stops. Critically this stays fully OPAQUE (unlike an alpha-
+// transparent version of accentColor), which would wash out to near-invisible against the
+// page's plain white background and look like a gap in the ring rather than a highlight.
+function lightenHex(hex: string, amount: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
+  if (!m) return hex
+  const n = parseInt(m[1], 16)
+  const r = Math.round(((n >> 16) & 0xff) + (255 - ((n >> 16) & 0xff)) * amount)
+  const g = Math.round(((n >> 8) & 0xff) + (255 - ((n >> 8) & 0xff)) * amount)
+  const b = Math.round((n & 0xff) + (255 - (n & 0xff)) * amount)
+  return `#${[r, g, b].map(c => Math.max(0, Math.min(255, c)).toString(16).padStart(2, '0')).join('')}`
+}
+
 export default function CalloutCard({
   p,
   brandColor,
@@ -118,7 +132,7 @@ export default function CalloutCard({
           className="absolute inset-0 pointer-events-none"
           style={{
             clipPath: `path('${clipPath}')`,
-            background: `conic-gradient(from var(--ring-angle), ${accentColor}59 0deg, ${darkenHex(accentColor, 0.45)} 90deg, ${accentColor} 180deg, ${darkenHex(accentColor, 0.45)} 270deg, ${accentColor}59 360deg)`,
+            background: `conic-gradient(from var(--ring-angle), ${lightenHex(accentColor, 0.55)} 0deg, ${darkenHex(accentColor, 0.45)} 90deg, ${accentColor} 180deg, ${darkenHex(accentColor, 0.45)} 270deg, ${lightenHex(accentColor, 0.55)} 360deg)`,
             transform: `scale(${1 + RING_WIDTH / 80})`,
             animation: 'ringAngleSpin 3s linear infinite',
           } as React.CSSProperties}
