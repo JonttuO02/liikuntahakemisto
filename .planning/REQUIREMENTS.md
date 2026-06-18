@@ -47,6 +47,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **LIVEPREV-03**: Mobile shows a toggle between edit form and live preview (no side-by-side)
 - [ ] **LIVEPREV-04**: Live preview renders via `CalloutCard`/`DiagonaalKortti` using current in-progress (unsaved) field values, in both onboarding mode and EditMode
 
+**D-03 scope correction (2026-06-18, Phase 51 discussion):** EditMode's `PreviewModal.tsx` click-to-open flow (`PaikkaKortti`/`DiagonaalKortti`/`PaikkaSheet`) is replaced by the same live `CalloutCard`/`DiagonaalKortti` preview used in onboarding — EditMode is explicitly in scope for LIVEPREV-02/03/04, not excluded. `PreviewModal.tsx` itself is kept (the `/business` dashboard at `app/business/page.tsx` still renders it independently) but its only call site inside `WizardInner.tsx`'s EditMode is removed.
+
 ## Out of Scope
 
 | Feature | Reason |

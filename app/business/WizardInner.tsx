@@ -347,7 +347,9 @@ function EditMode({ paikka, paikkaId }: { paikka: Liikuntapaikka; paikkaId: numb
   const t = useTranslations('Business')
   const searchParams = useSearchParams()
   const router = useRouter()
-  const [previewOpen, setPreviewOpen] = useState(false)
+
+  // Mobile Muokkaa/Esikatselu toggle (D-07) — same pattern as OnboardingMode (D-08).
+  const [activeView, setActiveView] = useState<'edit' | 'preview'>('edit')
 
   // Local state that persists step data across tab-bar navigation.
   // Initialized from paikka (server snapshot); updated via onSaveComplete after each save.
@@ -366,6 +368,11 @@ function EditMode({ paikka, paikkaId }: { paikka: Liikuntapaikka; paikkaId: numb
 
   const currentStep = searchParams.get('step') ?? '1'
 
+  // Reset the mobile Muokkaa/Esikatselu toggle to 'edit' on every tab change (D-08).
+  useEffect(() => {
+    setActiveView('edit')
+  }, [currentStep])
+
   function tabLabel(n: number): string {
     switch (n) {
       case 1: return t('stepPlaceName')
@@ -378,56 +385,76 @@ function EditMode({ paikka, paikkaId }: { paikka: Liikuntapaikka; paikkaId: numb
   }
 
   return (
-    <>
-      {/* Preview modal */}
-      <AnimatePresence>
-        {previewOpen && (
-          <PreviewModal
-            paikka={{ ...paikka, logo_url: localLogoUrl, photo_urls: localPhotoUrls }}
-            onClose={() => setPreviewOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <div className="flex flex-col gap-6">
-        {/* Back link */}
-        <a
-          href="/business"
-          className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms] inline-block"
-        >
-          {t('editBackToList')}
-        </a>
-
-        {/* Title */}
-        <h1 className="text-xl font-bold text-[#111111]">{t('editTitle')}</h1>
-
-        {/* Tab bar with preview button */}
-        <div className="flex gap-2 flex-wrap items-center">
-          {[1, 2, 3, 4, 5].map(n => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => router.push('/business/' + paikkaId + '?step=' + n)}
-              className={`text-sm font-bold rounded-full px-4 py-2 [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)] ${
-                currentStep === String(n)
-                  ? 'bg-[#111111] text-white'
-                  : 'text-[rgba(17,17,17,0.45)] hover:text-[#111111]'
-              }`}
-            >
-              {tabLabel(n)}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => setPreviewOpen(true)}
-            className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] underline-offset-2 hover:underline transition-colors ml-auto"
+    <LivePreviewProvider
+      paikkaInfo={{
+        nimi: paikka.nimi,
+        laji: paikka.laji,
+        osoite: paikka.osoite,
+        kaupunki: paikka.kaupunki,
+        latitude: paikka.latitude,
+        longitude: paikka.longitude,
+        aukioloajat: paikka.aukioloajat as Record<string, { open: string; close: string }> | null,
+      }}
+      paikkaId={paikkaId}
+      brandingData={null}
+      initialDraft={{
+        paikka_id: paikkaId,
+        hinnasto: localHinnasto ?? undefined,
+        aukioloajat: localAukioloajat ?? undefined,
+        yhteystiedot: localYhteystiedot,
+        media_urls: { logo: localLogoUrl, photos: localPhotoUrls },
+      }}
+    >
+      <div className="flex gap-6 items-start justify-center">
+        <div className="flex flex-col gap-6">
+          {/* Back link */}
+          <a
+            href="/business"
+            className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms] inline-block"
           >
-            {t('previewCta')}
-          </button>
-        </div>
+            {t('editBackToList')}
+          </a>
 
-        {/* Step content */}
-        <div>
+          {/* Title */}
+          <h1 className="text-xl font-bold text-[#111111]">{t('editTitle')}</h1>
+
+          {/* Tab bar */}
+          <div className="flex gap-2 flex-wrap items-center">
+            {[1, 2, 3, 4, 5].map(n => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => router.push('/business/' + paikkaId + '?step=' + n)}
+                className={`text-sm font-bold rounded-full px-4 py-2 [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)] ${
+                  currentStep === String(n)
+                    ? 'bg-[#111111] text-white'
+                    : 'text-[rgba(17,17,17,0.45)] hover:text-[#111111]'
+                }`}
+              >
+                {tabLabel(n)}
+              </button>
+            ))}
+          </div>
+
+          <div className="lg:hidden">
+            <LivePreviewToggle activeView={activeView} onChange={setActiveView} />
+          </div>
+
+          {/* Step content */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${currentStep}-${activeView}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+          {activeView === 'preview' ? (
+            <div className="lg:hidden">
+              <LivePreviewPane />
+            </div>
+          ) : (
+          <div>
           {currentStep === '1' && (
             <div className="glass rounded-2xl p-6 flex flex-col gap-4">
               <div className="flex flex-col gap-1">
@@ -479,9 +506,17 @@ function EditMode({ paikka, paikkaId }: { paikka: Liikuntapaikka; paikkaId: numb
               onSaveComplete={setLocalYhteystiedot}
             />
           )}
+          </div>
+          )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="hidden lg:flex flex-col gap-4 w-[360px] flex-shrink-0 sticky top-6">
+          <LivePreviewPane />
         </div>
       </div>
-    </>
+    </LivePreviewProvider>
   )
 }
 
