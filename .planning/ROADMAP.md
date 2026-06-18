@@ -273,11 +273,11 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
   4. The live preview renders via `CalloutCard`/`DiagonaalKortti` using the current in-progress (unsaved) field values, not stale data from the last save
   5. EditMode's existing-venue tabs get the same live preview pattern, replacing the current click-to-open `PreviewModal`
 
-**Plans**: 4/5 plans complete
+**Plans**: 5/5 plans complete
 **Wave 1**
 
 - [x] 51-01-PLAN.md — Shared LivePreviewProvider/reducer + useDebouncedValue (LIVEPREV-01/04)
-- [ ] 51-05-PLAN.md — Gap closure (CR-01): unmount-time non-blob SET_MEDIA fallback in StepMediat so staged blob: URLs never go stale in the live preview (LIVEPREV-04)
+- [x] 51-05-PLAN.md — Gap closure (CR-01): unmount-time non-blob SET_MEDIA fallback in StepMediat so staged blob: URLs never go stale in the live preview (LIVEPREV-04)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -346,4 +346,4 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 48. Logo-, väri- ja galleriavalinta | v2.2 | 4/4 | Complete    | 2026-06-17 |
 | 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 2/2 | Complete    | 2026-06-17 |
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 2/2 | Complete   | 2026-06-17 |
-| 51. Live-esikatselu velhossa | v2.2 | 4/4 | Complete   | 2026-06-18 |
+| 51. Live-esikatselu velhossa | v2.2 | 5/5 | Complete   | 2026-06-18 |
