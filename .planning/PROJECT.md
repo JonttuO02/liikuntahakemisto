@@ -272,6 +272,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **LIVEPREV-02**: Desktopilla live-esikatselu näkyy rinnakkain aktiivisen vaiheen muokkauslomakkeen kanssa — v2.2 (Phase 51)
 - ✓ **LIVEPREV-03**: Mobiilissa toggle muokkauslomakkeen ja live-esikatselun välillä (ei rinnakkainasettelua) — v2.2 (Phase 51)
 - ✓ **LIVEPREV-04**: Live-esikatselu renderöityy `CalloutCard`/`DiagonaalKortti`:lla käyttäen nykyisiä, tallentamattomia kentän arvoja — sekä onboarding- että EditModessa, mukaan lukien AI-sivuanalyysi-poluilla (kolme korjauskierrosta: CR-01 blob-URL-staleness, WR-01 EditModen save-then-navigate-staleness, toinen CR-01 brändipolun hinnasto/aukioloajat/yhteystiedot-ohitus) — v2.2 (Phase 51)
+- ✓ **Live-esikatselu AnalysoiSivusto-näytöllä** (ei muodollista REQ-ID:tä — Phase 51:n alun perin rajaama puute, havaittu käyttäjän testissä): "Analysoi sivustosi" -tulosnäyttö (jossa pikahyväksyntä tapahtuu) näyttää nyt saman live-esikatselun kuin velho — logo/väri/galleria-valinnat päivittyvät reaaliajassa ennen "Hyväksy ja lähetä" -painiketta — v2.2 (Phase 51.1)
 
 ### Future (deferred from v1.1 + v1.7)
 
@@ -375,4 +376,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-18 — Phase 51 (Live-esikatselu velhossa) complete, last phase of v2.2*
+*Last updated: 2026-06-19 — Phase 51.1 (Live preview on AnalysoiSivusto) complete, v2.2 is now feature-complete*
