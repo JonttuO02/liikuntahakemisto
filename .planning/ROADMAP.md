@@ -349,3 +349,14 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 2/2 | Complete    | 2026-06-17 |
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 2/2 | Complete   | 2026-06-17 |
 | 51. Live-esikatselu velhossa | v2.2 | 7/7 | Complete    | 2026-06-18 |
+
+### Phase 51.1: Live preview on AnalysoiSivusto analyze/quick-accept results screen (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 51
+**Plans:** 0 plans
+
+Plans:
+
+- [ ] TBD (run /gsd-plan-phase 51.1 to break down)

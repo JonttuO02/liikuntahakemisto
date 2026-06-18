@@ -5,16 +5,16 @@ milestone_name: Onboarding-tekoälyn parannukset
 current_phase: 51
 status: executing
 stopped_at: Phase 51 planned and verified
-last_updated: "2026-06-18T11:49:06.243Z"
+last_updated: "2026-06-18T12:10:35.532Z"
 last_activity: 2026-06-18
 last_activity_desc: Phase 51 complete
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 5
   total_plans: 20
   completed_plans: 20
-  percent: 100
-current_phase_name: live-esikatselu-velhossa
+  percent: 83
+current_phase_name: live-preview-on-analysoisivusto-analyze-quick-accept-results
 ---
 
 # Project State
@@ -109,3 +109,9 @@ Resume file: .planning/phases/51-live-esikatselu-velhossa/51-04-PLAN.md
 
 - [Phase ?]: 48-04: handleConfirm save-step writes step:1 so WizardInner lands on Step 2 (Media), not skipping it
 - [Phase ?]: 48-04: StepEsikatselu brandColor fallback uses colors.find(role==='background') instead of colors[0], mirroring AnalysoiSivusto
+
+## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 51.1 inserted after Phase 51: Live preview missing on AnalysoiSivusto analyze/quick-accept results screen — flagged by Phase 50 summary, scoped out of Phase 51 CONTEXT.md by mistake (the preview sub-phase has brandingResult data available, contrary to the blanket pre-phase exclusion reasoning) (URGENT)
