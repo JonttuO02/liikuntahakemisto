@@ -355,12 +355,12 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 **Goal:** Add the wizard's live CalloutCard/DiagonaalKortti preview to the pre-wizard AnalysoiSivusto `preview` phase, so the user sees the venue card (reflecting their logo/color/gallery picks) before quick-submitting or continuing to the wizard.
 **Requirements**: None (scoping-gap fix discovered after Phase 51 shipped — no formal REQ-ID)
 **Depends on:** Phase 51
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 51.1-01-PLAN.md — Thread full PaikkaBase (nimi/laji/osoite/kaupunki/latitude/longitude) from StepPaikkaPrePhase through OnboardingWizardPage state into AnalysoiSivusto as a new paikkaInfo prop (page.tsx prop threading)
+- [x] 51.1-01-PLAN.md — Thread full PaikkaBase (nimi/laji/osoite/kaupunki/latitude/longitude) from StepPaikkaPrePhase through OnboardingWizardPage state into AnalysoiSivusto as a new paikkaInfo prop (page.tsx prop threading)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 

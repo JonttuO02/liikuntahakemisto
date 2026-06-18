@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: Onboarding-tekoälyn parannukset
-current_phase: 51
+current_phase: 51.1
+current_phase_name: live-preview-on-analysoisivusto-analyze-quick-accept-results
 status: executing
 stopped_at: Phase 51.1 context gathered
-last_updated: "2026-06-18T12:26:41.777Z"
+last_updated: "2026-06-18T12:27:09.139Z"
 last_activity: 2026-06-18
-last_activity_desc: Phase 51 complete
+last_activity_desc: Phase 51.1 execution started
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 20
+  total_plans: 22
   completed_plans: 20
   percent: 83
-current_phase_name: live-preview-on-analysoisivusto-analyze-quick-accept-results
 ---
 
 # Project State
@@ -24,14 +24,14 @@ current_phase_name: live-preview-on-analysoisivusto-analyze-quick-accept-results
 See: .planning/PROJECT.md (updated 2026-06-16)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 51 — live-esikatselu-velhossa
+**Current focus:** Phase 51.1 — live-preview-on-analysoisivusto-analyze-quick-accept-results
 
 ## Current Position
 
-Phase: 51
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-18 — Phase 51 complete
+Phase: 51.1 (live-preview-on-analysoisivusto-analyze-quick-accept-results) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 51.1
+Last activity: 2026-06-18 — Phase 51.1 execution started
 
 Progress: [██████░░░░] 60%
 
