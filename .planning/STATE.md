@@ -4,8 +4,8 @@ milestone: v2.2
 milestone_name: Onboarding-tekoälyn parannukset
 current_phase: 51
 status: executing
-stopped_at: Phase 51 planned and verified
-last_updated: "2026-06-18T12:10:35.532Z"
+stopped_at: Phase 51.1 context gathered
+last_updated: "2026-06-18T12:16:39.604Z"
 last_activity: 2026-06-18
 last_activity_desc: Phase 51 complete
 progress:
@@ -95,9 +95,9 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
 
 ## Session Continuity
 
-Last session: 2026-06-17T22:23:19.421Z
-Stopped at: Phase 51 planned and verified
-Resume file: .planning/phases/51-live-esikatselu-velhossa/51-04-PLAN.md
+Last session: 2026-06-18T12:16:39.590Z
+Stopped at: Phase 51.1 context gathered
+Resume file: .planning/phases/51.1-live-preview-on-analysoisivusto-analyze-quick-accept-results/51.1-CONTEXT.md
 
 ## Performance Metrics
 
