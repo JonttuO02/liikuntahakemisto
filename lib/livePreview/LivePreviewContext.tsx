@@ -21,7 +21,12 @@ import {
   type Dispatch,
   type ReactNode,
 } from 'react'
-import { buildDraftAsPaikka, type OnboardingDraft, type PaikkaBase } from '@/lib/onboardingUtils'
+import {
+  buildDraftAsPaikka,
+  hinnastaToHintaKuvaus,
+  type OnboardingDraft,
+  type PaikkaBase,
+} from '@/lib/onboardingUtils'
 import { type BrandingResult, buildBrandingPreview } from '@/lib/branding/brandingResult'
 import type { Liikuntapaikka } from '@/lib/types'
 
@@ -137,7 +142,15 @@ export function LivePreviewProvider({
   // buildDraftAsPaikka, else null.
   const livePreviewPaikka = useMemo<Liikuntapaikka | null>(() => {
     if (brandingData && paikkaInfo && typeof state.paikka_id === 'number') {
-      return buildBrandingPreview(paikkaInfo, brandingData, state.paikka_id, state.media_urls?.logo)
+      const base = buildBrandingPreview(paikkaInfo, brandingData, state.paikka_id, state.media_urls?.logo)
+      return {
+        ...base,
+        hinta_kuvaus: state.hinnasto?.length ? hinnastaToHintaKuvaus(state.hinnasto) : base.hinta_kuvaus,
+        aukioloajat: state.aukioloajat ?? base.aukioloajat,
+        puhelin: state.yhteystiedot?.puhelin ?? base.puhelin,
+        kuvaus: state.yhteystiedot?.kuvaus ?? base.kuvaus,
+        varauslinkki: state.yhteystiedot?.website ?? base.varauslinkki,
+      }
     }
     if (paikkaInfo) {
       return buildDraftAsPaikka(state as OnboardingDraft, paikkaInfo)
