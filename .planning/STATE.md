@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: Onboarding-tekoälyn parannukset
 current_phase: 51.1
-status: executing
-stopped_at: Phase 51.1 context gathered
-last_updated: "2026-06-18T22:02:51.191Z"
-last_activity: 2026-06-18
-last_activity_desc: Phase 51.1 complete
+status: milestone_complete
+stopped_at: v2.2 milestone complete — all 6 phases finished, ready to archive
+last_updated: "2026-06-19T00:15:00.000Z"
+last_activity: 2026-06-19
+last_activity_desc: Phase 51.1 verified and complete; v2.2 is 100% done
 progress:
   total_phases: 6
   completed_phases: 6
@@ -21,19 +21,19 @@ current_phase_name: live-preview-on-analysoisivusto-analyze-quick-accept-results
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-16)
+See: .planning/PROJECT.md (updated 2026-06-19)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 51.1 — live-preview-on-analysoisivusto-analyze-quick-accept-results
+**Current focus:** v2.2 milestone complete — ready to archive via /gsd-complete-milestone
 
 ## Current Position
 
-Phase: 51.1
-Plan: Not started
-Status: Executing Phase 51.1
-Last activity: 2026-06-18 — Phase 51.1 complete
+Phase: 51.1 (final phase of v2.2) — COMPLETE
+Plan: 2/2 complete
+Status: v2.2 milestone 100% complete (6/6 phases, 22/22 plans)
+Last activity: 2026-06-19 — Phase 51.1 verified (UAT 2/2 passed), v2.2 done
 
-Progress: [██████░░░░] 60%
+Progress: [██████████] 100%
 
 ## v2.2 Roadmap Summary
 
@@ -95,9 +95,9 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
 
 ## Session Continuity
 
-Last session: 2026-06-18T12:16:39.590Z
-Stopped at: Phase 51.1 context gathered
-Resume file: .planning/phases/51.1-live-preview-on-analysoisivusto-analyze-quick-accept-results/51.1-CONTEXT.md
+Last session: 2026-06-19T00:15:00.000Z
+Stopped at: v2.2 milestone complete (Phase 51.1 verified, all 6 phases done) — ready for /gsd-complete-milestone
+Resume file: None
 
 ## Performance Metrics
 
