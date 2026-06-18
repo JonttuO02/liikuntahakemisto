@@ -355,7 +355,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 **Goal:** Add the wizard's live CalloutCard/DiagonaalKortti preview to the pre-wizard AnalysoiSivusto `preview` phase, so the user sees the venue card (reflecting their logo/color/gallery picks) before quick-submitting or continuing to the wizard.
 **Requirements**: None (scoping-gap fix discovered after Phase 51 shipped — no formal REQ-ID)
 **Depends on:** Phase 51
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 **Wave 1**
@@ -364,4 +364,4 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 51.1-02-PLAN.md — Wrap AnalysoiSivusto's preview phase in LivePreviewProvider + WizardInner's split-view/toggle; dispatch SET_MEDIA on logo/gallery picks; pass merged brandingData override for live colors
+- [x] 51.1-02-PLAN.md — Wrap AnalysoiSivusto's preview phase in LivePreviewProvider + WizardInner's split-view/toggle; dispatch SET_MEDIA on logo/gallery picks; pass merged brandingData override for live colors
