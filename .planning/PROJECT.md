@@ -266,6 +266,13 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **ONBOARD-13**: Verkkosivun URL esitäyttää Yhteystiedot-vaiheen (step 5) website-kentän — v2.1
 - ✓ **PREV-01**: Esikatselu (step 6) renderöi `CalloutCard`:n ja `DiagonaalKortti`:n poimitulla logolla ja brändiväreillä kun brändidataa on saatavilla; fallback olemassa olevaan renderöintiin jos dataa ei ole — v2.1
 
+### Validated (v2.2)
+
+- ✓ **LIVEPREV-01**: Jokainen velhon vaihe päivittää jaettua live-esikatselun tilaa kentän muuttuessa — v2.2 (Phase 51)
+- ✓ **LIVEPREV-02**: Desktopilla live-esikatselu näkyy rinnakkain aktiivisen vaiheen muokkauslomakkeen kanssa — v2.2 (Phase 51)
+- ✓ **LIVEPREV-03**: Mobiilissa toggle muokkauslomakkeen ja live-esikatselun välillä (ei rinnakkainasettelua) — v2.2 (Phase 51)
+- ✓ **LIVEPREV-04**: Live-esikatselu renderöityy `CalloutCard`/`DiagonaalKortti`:lla käyttäen nykyisiä, tallentamattomia kentän arvoja — sekä onboarding- että EditModessa, mukaan lukien AI-sivuanalyysi-poluilla (kolme korjauskierrosta: CR-01 blob-URL-staleness, WR-01 EditModen save-then-navigate-staleness, toinen CR-01 brändipolun hinnasto/aukioloajat/yhteystiedot-ohitus) — v2.2 (Phase 51)
+
 ### Future (deferred from v1.1 + v1.7)
 
 - Automaattinen väriteemat kuvista (color extraction Hero + kortit)
@@ -368,4 +375,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-16 — v2.2 milestone started (Onboarding-tekoälyn parannukset)*
+*Last updated: 2026-06-18 — Phase 51 (Live-esikatselu velhossa) complete, last phase of v2.2*
