@@ -1,38 +1,26 @@
 ---
 phase: 51-live-esikatselu-velhossa
-verified: 2026-06-18T02:00:00Z
-status: gaps_found
-score: 4/5 must-haves verified
+verified: 2026-06-18T03:00:00Z
+status: passed
+score: 5/5 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:
   previous_status: gaps_found
-  previous_score: 4/5
+  previous_score: 3/5
   gaps_closed:
-    - "WR-01 (StepMediat unmount-cleanup stale-closure bug, found in the second verification pass): independently re-confirmed FIXED by plan 51-06 (commit adcdf4b). StepMediat.tsx now maintains a latestMediaRef (lines 100-103) synced via a useEffect keyed on [existingLogoUrl, existingPhotoUrls], and the unmount-only ([] deps) cleanup effect (lines 112-123) reads latestMediaRef.current.logo/.photos instead of closing directly over the mount-time state values. Because React runs the ref-sync effect on every render that changes those values — including the final render before a true unmount — the ref is guaranteed current by the time the cleanup fires. EditMode save-then-navigate-without-remount no longer re-broadcasts stale pre-save media."
-  gaps_remaining:
-    - "NEW (CR-01 in fresh 51-REVIEW.md, independently confirmed by this verification, was NOT covered by plan 51-06 and has no closure plan yet): LivePreviewContext.tsx's livePreviewPaikka derivation (lines 138-146) ignores state.hinnasto/state.aukioloajat/state.yhteystiedot entirely whenever brandingData is present. It calls buildBrandingPreview(paikkaInfo, brandingData, state.paikka_id, state.media_urls?.logo) — no hinnasto/aukioloajat/yhteystiedot parameter exists on that function's signature at all. buildBrandingPreview (lib/branding/brandingResult.ts:117-169) derives hinta_kuvaus/aukioloajat solely from brandingResult.raw_analysis (the frozen AI-scraped snapshot) and hardcodes puhelin/kuvaus to null, unconditionally. For any venue that went through the website-analysis onboarding flow (brandingData truthy), editing pricing (StepHinnasto, step 2), opening hours (StepAukioloajat, step 3), or contact info (StepYhteystiedot, step 4) dispatches the live values into the shared reducer (confirmed: dispatch({type:'SET_HINNASTO'|...}) calls exist and fire on debounced change in all three step components) but the rendered preview never reflects them — it stays frozen on AI-scraped or null data for the rest of the wizard session. This is the exact 'stale data' failure mode criterion #4 and LIVEPREV-04 prohibit, on a path (brandingData-driven onboarding) that the product steers most businesses toward."
+    - "CR-01 (second instance — branding-path live preview never threading hinnasto/aukioloajat/yhteystiedot through buildBrandingPreview): independently re-confirmed FIXED by plan 51-07 (commit 3bf5a67). LivePreviewContext.tsx's livePreviewPaikka useMemo (lines 143-159) now captures buildBrandingPreview(...)'s result as `base` and overlays state.hinnasto (via hinnastaToHintaKuvaus, gated on state.hinnasto?.length), state.aukioloajat, state.yhteystiedot.puhelin/kuvaus/website onto it, each falling back to the base (AI-scraped/null) value. Field names verified to match buildBrandingPreview's actual return shape (hinta_kuvaus, aukioloajat, puhelin, kuvaus, varauslinkki) exactly. The overlay pattern mirrors buildDraftAsPaikka's existing merge-with-fallback semantics (lib/onboardingUtils.ts lines 105-109), confirmed field-for-field equivalent. buildBrandingPreview's signature is untouched (still 4 params); lib/onboardingUtils.ts untouched. tsc --noEmit clean."
+  gaps_remaining: []
   regressions: []
-gaps:
-  - truth: "The live preview renders via CalloutCard/DiagonaalKortti using the current in-progress (unsaved) field values, not stale data from the last save"
-    status: partial
-    reason: "Independently confirmed by direct code reading (not taken on the SUMMARY's or even the code review's word) that plan 51-06 correctly fixed the previously-open WR-01 stale-closure bug in StepMediat.tsx — that part of criterion #4 now holds. However, an independent trace of lib/livePreview/LivePreviewContext.tsx (requested as the specific focus of this verification pass) confirms a separate, more severe pre-existing gap: the brandingData branch of the livePreviewPaikka useMemo never threads state.hinnasto/state.aukioloajat/state.yhteystiedot into buildBrandingPreview, and buildBrandingPreview itself has no parameters to receive them — it only reads brandingResult.raw_analysis and hardcodes puhelin/kuvaus null. Confirmed reachable: app/business/WizardInner.tsx line 255 passes the real brandingData into OnboardingMode's LivePreviewProvider (line 399 passes brandingData={null} for EditMode, so EditMode is unaffected). For any AI-website-analysis-onboarded venue, criterion #1/#4 fails specifically for the pricing/hours/contact steps: the user's keystrokes are dispatched into shared state correctly but the rendered CalloutCard/DiagonaalKortti preview ignores them and keeps showing AI-scraped (or null) values for the rest of the session."
-    artifacts:
-      - path: "lib/livePreview/LivePreviewContext.tsx"
-        issue: "Lines 138-146: livePreviewPaikka useMemo's brandingData branch calls buildBrandingPreview(paikkaInfo, brandingData, state.paikka_id, state.media_urls?.logo) and returns its result directly with no overlay of state.hinnasto/state.aukioloajat/state.yhteystiedot onto the result."
-      - path: "lib/branding/brandingResult.ts"
-        issue: "Lines 117-169 (buildBrandingPreview): function signature has no hinnasto/aukioloajat/yhteystiedot parameters; hinta_kuvaus and aukioloajat are derived solely from brandingResult.raw_analysis, and puhelin/kuvaus are unconditionally hardcoded to null — there is no code path inside this function that could ever reflect live wizard state even if a caller wanted it to."
-    missing:
-      - "Overlay the live draft state onto the branding-derived base object in the brandingData branch of livePreviewPaikka, e.g.: const base = buildBrandingPreview(...); return { ...base, hinta_kuvaus: state.hinnasto?.length ? hinnastaToHintaKuvaus(state.hinnasto) : base.hinta_kuvaus, aukioloajat: state.aukioloajat ?? base.aukioloajat, puhelin: state.yhteystiedot?.puhelin ?? base.puhelin, kuvaus: state.yhteystiedot?.kuvaus ?? base.kuvaus, varauslinkki: state.yhteystiedot?.website ?? base.varauslinkki } — exactly as proposed in 51-REVIEW.md's CR-01 fix."
 deferred: []
 ---
 
 # Phase 51: Live-esikatselu velhossa Verification Report
 
 **Phase Goal:** A business owner sees their venue's card update in real time as they fill in any wizard step, instead of only seeing the final result at step 6 — in both the onboarding wizard and the existing-venue EditMode tabs.
-**Verified:** 2026-06-18 (third pass — re-verification after gap-closure plan 51-06)
-**Status:** gaps_found
-**Re-verification:** Yes — after gap closure (plan 51-06 closed the prior WR-01 gap; this pass independently confirms that closure AND independently investigates a new CR-01 finding raised by the post-51-06 code review, per the task brief's explicit instruction to trace the code myself rather than trust either the review or the SUMMARY)
+**Verified:** 2026-06-18 (fourth pass — final re-verification after gap-closure plan 51-07)
+**Status:** passed
+**Re-verification:** Yes — after gap closure (plan 51-07 closed the prior CR-01 gap; this pass independently re-traces the fix in the actual source rather than trusting 51-07-SUMMARY.md or 51-REVIEW.md's prose)
 
 ## Goal Achievement
 
@@ -40,38 +28,33 @@ deferred: []
 
 | # | Truth (mapped from Success Criteria) | Status | Evidence |
 |---|---------|--------|----------|
-| 1 | Changing a field on any wizard step immediately updates a live preview without save/reload | ✗ FAILED (newly scoped) | Holds for media (StepMediat — instant dispatch, confirmed fixed end-to-end including the unmount fallback) and for EditMode/non-branding-onboarding pricing/hours/contact (buildDraftAsPaikka path, confirmed correct). FAILS specifically for pricing/hours/contact during AI-website-analysis onboarding (brandingData branch) — see independent CR-01 investigation below. |
-| 2 | Desktop: live preview visible side-by-side with the step being edited | ✓ VERIFIED | Unchanged from prior passes — `WizardInner.tsx` lines 337-339 (`hidden lg:flex ... <LivePreviewPane />`) confirmed present; file not touched by plan 51-06. |
-| 3 | Mobile: toggle between edit form and preview instead of permanent split | ✓ VERIFIED | Unchanged from prior passes — `LivePreviewToggle` + `activeView === 'preview'` full-content-swap confirmed at `WizardInner.tsx` lines 266-281; file not touched by plan 51-06. |
-| 4 | Preview renders via CalloutCard/DiagonaalKortti using current in-progress (unsaved) values, not stale data | ✗ FAILED (gap re-scoped, not closed) | The previously-confirmed WR-01 bug (StepMediat unmount-cleanup stale closure) IS fixed by plan 51-06 (independently re-traced below). But an independent trace of `LivePreviewContext.tsx`, performed as the specific focus of this pass, surfaces a separate, pre-existing, unaddressed gap (CR-01 from the fresh code review): the `brandingData` branch of `livePreviewPaikka` never threads `state.hinnasto`/`state.aukioloajat`/`state.yhteystiedot` through, so pricing/hours/contact edits never reach the preview for AI-onboarded venues. Confirmed genuine, not a false positive — full trace below. |
-| 5 | EditMode's existing-venue tabs get the same live preview pattern, replacing PreviewModal | ✓ VERIFIED | Unchanged from prior passes — `previewOpen`/`<PreviewModal` both 0 grep hits anywhere in `app/business/`; `EditMode`'s `LivePreviewProvider` (line 388) and `LivePreviewPane` usage confirmed; file's relevant sections not touched by plan 51-06 (only `StepMediat.tsx` was modified). |
+| 1 | Changing a field on any wizard step immediately updates a live preview without save/reload | ✓ VERIFIED | Confirmed for all data categories on all paths: media (StepMediat, `dispatch({type:'SET_MEDIA'})` + `latestMediaRef`-backed unmount cleanup — WR-01 fix from 51-06, re-confirmed intact); pricing/hours/contact on the non-branding onboarding path and EditMode (`buildDraftAsPaikka`, unaffected, always was correct); pricing/hours/contact on the AI-website-analysis (branding) onboarding path — now fixed by 51-07's overlay in `LivePreviewContext.tsx` lines 143-159, independently re-read from source (see trace below). |
+| 2 | Desktop: live preview visible side-by-side with the step being edited | ✓ VERIFIED | `WizardInner.tsx` line 337-339 (`hidden lg:flex ... <LivePreviewPane />`) confirmed present in both OnboardingMode and EditMode render trees; untouched by 51-07 (file not modified by that plan). |
+| 3 | Mobile: toggle between edit form and preview instead of permanent split | ✓ VERIFIED | `LivePreviewToggle` + `activeView === 'preview'` full-content-swap confirmed at `WizardInner.tsx` lines 267-278 (OnboardingMode) and lines 440-452 (EditMode); untouched by 51-07. |
+| 4 | Preview renders via CalloutCard/DiagonaalKortti using current in-progress (unsaved) field values, not stale data | ✓ VERIFIED | Both previously-found defects are independently re-confirmed closed: (a) WR-01/StepMediat unmount-cleanup stale closure, fixed by 51-06, re-verified intact (no regression — 51-07 did not touch this file); (b) the branding-path overlay gap (second CR-01), fixed by 51-07 — `LivePreviewContext.tsx`'s branding branch now spreads `base` (the AI-scraped `buildBrandingPreview` output) and overlays `hinta_kuvaus`/`aukioloajat`/`puhelin`/`kuvaus`/`varauslinkki` from live `state`, falling back to `base` per-field when untouched. Confirmed via direct read of the current file (lines 143-159), not from SUMMARY/REVIEW prose. |
+| 5 | EditMode's existing-venue tabs get the same live preview pattern, replacing PreviewModal | ✓ VERIFIED | `previewOpen`/`<PreviewModal` zero grep hits inside `app/business/WizardInner.tsx`; `PreviewModal` is still imported/used standalone only in `app/business/page.tsx` (the dashboard's own click-to-preview flow, explicitly kept per REQUIREMENTS.md's D-03 scope note — out of scope for this phase). EditMode's `LivePreviewProvider`/`LivePreviewPane`/`LivePreviewToggle` usage confirmed at `WizardInner.tsx` lines 399, 440, 515-517. |
 
-**Score:** 3/5 truths verified, 2 failed (criteria #1 and #4 — narrower than before, but a different defect than WR-01 keeps both open).
+**Score:** 5/5 truths verified.
 
-### Independent WR-01 Re-Verification (closed by plan 51-06)
+### Independent Re-Verification of the 51-07 Fix (this pass)
 
-**Question:** Does the `latestMediaRef`-based fix in `StepMediat.tsx` (commit `adcdf4b`) actually resolve the prior stale-closure bug, without reintroducing it or a different one?
+**Question:** Does plan 51-07's overlay in `LivePreviewContext.tsx` actually thread live `hinnasto`/`aukioloajat`/`yhteystiedot` into the branding-path preview, without breaking the non-branding path, EditMode, or `buildBrandingPreview`'s shared signature (used elsewhere by `StepEsikatselu`)?
 
-**Trace, read directly from `app/business/onboarding/StepMediat.tsx`:**
+**Trace, read directly from the current source (not from 51-07-SUMMARY.md or 51-REVIEW.md):**
 
-1. Lines 100-103: `const latestMediaRef = useRef({ logo: existingLogoUrl, photos: existingPhotoUrls })` followed by `useEffect(() => { latestMediaRef.current = { logo: existingLogoUrl, photos: existingPhotoUrls } }, [existingLogoUrl, existingPhotoUrls])`. This effect re-runs on every render where either value changes — including the render triggered by `handleSave`'s `setExistingLogoUrl`/`setExistingPhotoUrls` calls (lines 357-358).
-2. Lines 112-123: the unmount-only effect (`[]` deps, unchanged in shape from the prior fix) now reads `latestMediaRef.current.logo`/`.photos` inside its cleanup instead of closing over the state variables directly.
-3. Because the ref-sync effect (step 1) runs on every relevant render — including the final render before any subsequent unmount — by the time the component actually unmounts, `latestMediaRef.current` is guaranteed to hold whatever was most recently set, post-save or not.
-4. Re-confirmed the eslint-disable on the unmount effect's `[]` deps is unchanged (intentional — the effect must only fire at true unmount, not on every state change), and the ref-sync effect's own deps array is the correct, complete `[existingLogoUrl, existingPhotoUrls]`.
-
-**Conclusion: WR-01 is genuinely fixed.** This is a correct, idiomatic application of the "ref synced by a full-deps effect, read by a no-deps effect's cleanup" pattern and closes the bug without reintroducing CR-01 (the original staged-blob-URL bug) or any out-of-scope `RESET` dispatch (confirmed zero `RESET` dispatch call sites remain, via grep). `npx tsc --noEmit` reported no errors against the current tree.
-
-### Independent CR-01 Investigation (requested focus — newly raised in fresh 51-REVIEW.md)
-
-**Question (verbatim from task brief):** For a venue going through the AI-website-analysis onboarding flow, does editing pricing (StepHinnasto), hours (StepAukioloajat), or contact info (StepYhteystiedot) actually update the live preview pane, or does it stay frozen on AI-scraped/null data?
-
-**Trace, read directly from the source files (not from the review's text):**
-
-1. **`lib/livePreview/LivePreviewContext.tsx` lines 138-146:**
+1. **`lib/livePreview/LivePreviewContext.tsx` lines 143-159** (read in full):
    ```ts
    const livePreviewPaikka = useMemo<Liikuntapaikka | null>(() => {
      if (brandingData && paikkaInfo && typeof state.paikka_id === 'number') {
-       return buildBrandingPreview(paikkaInfo, brandingData, state.paikka_id, state.media_urls?.logo)
+       const base = buildBrandingPreview(paikkaInfo, brandingData, state.paikka_id, state.media_urls?.logo)
+       return {
+         ...base,
+         hinta_kuvaus: state.hinnasto?.length ? hinnastaToHintaKuvaus(state.hinnasto) : base.hinta_kuvaus,
+         aukioloajat: state.aukioloajat ?? base.aukioloajat,
+         puhelin: state.yhteystiedot?.puhelin ?? base.puhelin,
+         kuvaus: state.yhteystiedot?.kuvaus ?? base.kuvaus,
+         varauslinkki: state.yhteystiedot?.website ?? base.varauslinkki,
+       }
      }
      if (paikkaInfo) {
        return buildDraftAsPaikka(state as OnboardingDraft, paikkaInfo)
@@ -79,120 +62,111 @@ deferred: []
      return null
    }, [state, paikkaInfo, brandingData])
    ```
-   When `brandingData` is truthy, the only pieces of `state` (the live reducer state accumulating every dispatched field) passed into the branding branch are `state.paikka_id` and `state.media_urls?.logo`. `state.hinnasto`, `state.aukioloajat`, and `state.yhteystiedot` are never referenced in this branch at all, despite being present on `state` and despite the `useMemo`'s dependency array including the full `state` object (so the memo *does* recompute on every dispatch — it just throws the new pricing/hours/contact data away inside the branding branch).
+   `hinnastaToHintaKuvaus` is imported into the same existing `@/lib/onboardingUtils` import statement (line 24-29) — confirmed only one import line from that module exists in the file. The `useMemo` deps array is unchanged (`[state, paikkaInfo, brandingData]`), so the memo recomputes on every dispatch exactly as before — this was already correct and remains so.
 
-2. **`lib/branding/brandingResult.ts` lines 117-169 (`buildBrandingPreview`'s actual signature and body):**
-   ```ts
-   export function buildBrandingPreview(
-     paikkaBase: PaikkaBase,
-     brandingResult: BrandingResult,
-     draftPaikkaId: number,
-     selectedLogoUrl?: string | null,
-   ): Liikuntapaikka {
-     const aukioloajat = brandingResult.raw_analysis?.opening_hours?.length ? /* ...from raw_analysis... */ : null
-     const hinta_kuvaus = brandingResult.raw_analysis?.prices?.length ? /* ...from raw_analysis... */ : ''
-     return {
-       ...
-       puhelin: null,
-       kuvaus: null,
-       hinta_kuvaus,
-       aukioloajat,
-       ...
-     }
-   }
-   ```
-   There is no parameter on this function through which live `hinnasto`/`aukioloajat`/`yhteystiedot` could be threaded even if the caller wanted to — `aukioloajat` and `hinta_kuvaus` are derived exclusively from `brandingResult.raw_analysis` (the one-time AI-scrape snapshot captured before the wizard even starts), and `puhelin`/`kuvaus` are unconditionally `null` regardless of any input.
+2. **Field-name correctness, verified against `buildBrandingPreview`'s actual return shape** (`lib/branding/brandingResult.ts` lines 117-169, read directly): the function returns an object with fields `varauslinkki`, `kuvaus`, `puhelin`, `hinta_kuvaus`, `aukioloajat` (among others) — exactly the five fields the overlay targets. No typo or mismatch found.
 
-3. **Reachability — is the broken branch actually exercised in onboarding?** `app/business/WizardInner.tsx`:
-   - Line 255: `<LivePreviewProvider paikkaInfo={paikkaInfo} paikkaId={paikkaId} brandingData={brandingData} initialDraft={draft}>` — `OnboardingMode` passes the real `brandingData` prop straight through.
-   - Line 399: `<LivePreviewProvider ... brandingData={null} ...>` — `EditMode` always passes `null`, so EditMode's `livePreviewPaikka` always takes the `buildDraftAsPaikka` branch and is unaffected by this bug.
-   - So whenever a business owner reached onboarding via the website-analysis flow (`brandingData` populated and `status === 'analyzed'`), the broken branch is the one used for the entire onboarding session, steps 1 through 5.
+3. **Fallback correctness when the user hasn't touched a step:** `state.hinnasto` defaults to `null` (`buildInitialState`, line 101) until `SET_HINNASTO` is dispatched, so `state.hinnasto?.length` is falsy and `base.hinta_kuvaus` (AI-scraped) is used — a fresh AI-onboarded session still shows scraped pricing before the user edits anything, confirmed correct. Same reasoning applies to `aukioloajat` (`null` default) and `yhteystiedot` (`null` default, then `state.yhteystiedot?.puhelin` is `undefined` until set, falling through to `base.puhelin`).
 
-4. **Do the edit steps actually dispatch live data that gets discarded?** Confirmed via direct grep of each step component:
-   - `StepHinnasto.tsx` line 54 (`const { dispatch } = useLivePreview()`), lines 121-131: a debounced effect calls `dispatch({ type: 'SET_HINNASTO', payload: ... })` on `[debouncedRows, dispatch]` change.
-   - `StepAukioloajat.tsx` line 59, lines 121-133: same pattern, `dispatch({ type: 'SET_AUKIOLOAJAT', payload: openDaysObject })`.
-   - `StepYhteystiedot.tsx` line 40, lines 49-53: same pattern, `dispatch({ type: 'SET_YHTEYSTIEDOT', payload: debouncedYhteystiedot })`.
-   - The reducer (`LivePreviewContext.tsx` lines 59-67) correctly merges each of these into `state.hinnasto`/`state.aukioloajat`/`state.yhteystiedot`. The data genuinely reaches `state` — it's the *consumption* side (the branding branch of `livePreviewPaikka`) that drops it.
+4. **Equivalence to the already-correct non-branding pattern:** `buildDraftAsPaikka` (`lib/onboardingUtils.ts` lines 94-115) uses the identical field mapping — `varauslinkki: draft.yhteystiedot?.website ?? null`, `kuvaus: draft.yhteystiedot?.kuvaus ?? null`, `puhelin: draft.yhteystiedot?.puhelin ?? null`, `hinta_kuvaus: hinnastaToHintaKuvaus(draft.hinnasto ?? [])`, `aukioloajat: draft.aukioloajat ?? paikka.aukioloajat ?? null`. The branding branch's overlay is the same shape, adapted to fall back to the branding `base` instead of `null`/Google Places data. This confirms the fix is not an ad-hoc patch but a deliberate mirror of the pattern already proven correct on the other branch.
 
-5. **Is the non-branding onboarding path or EditMode affected?** No. `buildDraftAsPaikka` (`lib/onboardingUtils.ts` lines 87-109) correctly reads `draft.hinnasto ?? []`, `draft.aukioloajat ?? paikka.aukioloajat ?? null`, and `draft.yhteystiedot?.{puhelin,kuvaus,website}` — confirmed by direct read. Since `state` is passed as `OnboardingDraft`-shaped into this function in the non-branding branch, and EditMode always uses this branch (per point 3 above), both of those paths correctly reflect live keystrokes.
+5. **No regression to out-of-scope consumers:** `buildBrandingPreview`'s signature is unchanged (4 params, confirmed by direct read) — `git diff --stat` against `lib/branding/brandingResult.ts` and `lib/onboardingUtils.ts` shows no changes (re-confirmed: `git log --oneline -1 -- lib/branding/brandingResult.ts lib/onboardingUtils.ts` does not show commit `3bf5a67`). `StepEsikatselu` (`WizardInner.tsx` line 323-330, `app/business/WizardInner.tsx`) calls `buildBrandingPreview` independently via its own draftAsPaikka derivation, untouched by this fix — confirmed via grep, no `livePreviewPaikka` usage inside `StepEsikatselu`'s render path.
 
-**Conclusion: this is a genuine, confirmed bug — not a false positive, and not the same defect as WR-01.** It is scoped exactly as suspected: only the `brandingData`-present onboarding path (AI-website-analysis flow) is affected; EditMode and the non-branding onboarding path are unaffected because they use `buildDraftAsPaikka`, which already receives and correctly threads the full `state`. For a branding-onboarded venue, a business owner who edits pricing in step 2, hours in step 3, or contact info in step 4 will see the live preview pane continue showing AI-scraped (or, for contact info, always-null) values for the rest of the session — directly violating criterion #1 ("immediately updates a live preview... as they fill in any wizard step") and criterion #4 ("not stale data") for three of the wizard's five data-entry steps, on what the review correctly notes is "the flow the product steers most businesses toward."
+6. **Reachability unchanged:** `WizardInner.tsx` line 255 still passes the real `brandingData` to `OnboardingMode`'s `LivePreviewProvider`; line 399 still passes `brandingData={null}` for EditMode — confirming the fix's scope (branding-onboarding only) and EditMode's continued correctness via the unaffected `buildDraftAsPaikka` branch.
 
-This was not addressed by plan 51-06 — that plan's `requires`/`provides`/`key-files` frontmatter scopes it exclusively to `StepMediat.tsx`'s unmount-cleanup ref fix (WR-01). `LivePreviewContext.tsx` and `brandingResult.ts` were not modified by 51-06 and were not in scope for any prior plan in this phase either (per `requirements: [LIVEPREV-04]` on plan 51-06, addressing only WR-01).
+7. **WR-01 (StepMediat, fixed in 51-06) re-confirmed not regressed:** `latestMediaRef` (lines 100-103) and the unmount cleanup reading `latestMediaRef.current.logo`/`.photos` (lines 117-118) are present and unchanged — 51-07 did not modify `StepMediat.tsx` (only `lib/livePreview/LivePreviewContext.tsx` was in 51-07's `files_modified`).
+
+8. **Type safety:** `npx tsc --noEmit -p tsconfig.json` run independently in this verification pass — zero errors.
+
+**Conclusion: the fix is genuine, complete, and introduces no regression.** All three previously-failing data categories (pricing, hours, contact) on the branding-onboarding path now correctly reflect live wizard state, with correct fallback-to-scraped behavior before the user edits a given step. Combined with the already-confirmed-correct EditMode and non-branding-onboarding paths (unaffected by this change) and the already-confirmed-correct WR-01 media fix (51-06, not touched by 51-07), criterion #4 — and therefore criterion #1 for the previously-affected three steps — now holds across every provider configuration in the codebase.
+
+### One Residual Edge Case (judged non-blocking, per task brief's guidance)
+
+**`51-REVIEW.md` WR-01 (this round's review, file `LivePreviewContext.tsx:148`):** When a user on the branding path adds at least one priced row and then deletes every row back to empty, `state.hinnasto` becomes `[]` (truthy-length-zero), and `state.hinnasto?.length` evaluates falsy — so the overlay falls back to `base.hinta_kuvaus`, i.e. the original AI-scraped prices, instead of showing "no price." This is a real, narrow edge case: it requires the user to have added a row first and then deleted all of them (not simply never touching the step, which correctly shows scraped data). It does not reproduce the original CR-01 failure mode ("preview never updates as the user types") — typing into any populated row updates the preview correctly and instantly. It is a polish-level gap in one specific clear-all interaction, not a failure of criterion #1 or #4's core claim ("updates as they fill in any wizard step" / "not stale data from the last save" — the data here was never saved, and the preview does update for every edit except the specific empty-after-populated state). Per the task brief's explicit instruction to use judgment rather than hold the phase open for cosmetic concerns: **this is accepted as a known minor follow-up, not a phase-blocking gap.** It is recorded here for traceability and should be picked up opportunistically (the review's suggested one-line fix — `state.hinnasto != null ? ... : base.hinta_kuvaus` — is low-risk) but does not block phase completion.
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `app/business/onboarding/StepMediat.tsx` | Stale-closure-free unmount SET_MEDIA dispatch | ✓ EXISTS, ✓ SUBSTANTIVE, ✓ WIRED | `latestMediaRef` (lines 100-103) + ref-sync effect + unmount cleanup reading from the ref (lines 112-123) confirmed present and correctly wired — WR-01 genuinely closed. |
-| `lib/livePreview/LivePreviewContext.tsx` | `livePreviewPaikka` reflects live state in all reducer-fed fields, for all provider configurations | ✓ EXISTS, ✓ SUBSTANTIVE, ✗ **INCOMPLETE WIRING** | `useMemo` correctly recomputes on every `state` change (deps include `state`), and the non-branding branch (`buildDraftAsPaikka`) is fully correct. The branding branch (lines 139-141) is the gap: it discards `state.hinnasto`/`state.aukioloajat`/`state.yhteystiedot` entirely. This is the artifact requiring the fix. |
-| `lib/branding/brandingResult.ts` (`buildBrandingPreview`) | N/A — pre-existing from phases 44-49, out of phase 51's file scope per its own plans | ✓ EXISTS as designed | Confirmed it has no parameters for live hinnasto/aukioloajat/yhteystiedot and was never intended to — the fix belongs in the *caller* (`LivePreviewContext.tsx`), which should overlay live state onto this function's output rather than modifying the function itself. Listed here only because the bug's root cause spans both files. |
-| `.planning/REQUIREMENTS.md` | LIVEPREV-01–04 traceability rows | ✓ CORRECTLY STILL UNCHECKED | LIVEPREV-01 through LIVEPREV-04 remain `[ ]` / "Pending" (lines 45-48, 81-84) — correct given LIVEPREV-04 (criterion #4) remains genuinely unsatisfied, just for a different underlying reason than the prior two verification rounds found. |
+| `app/business/onboarding/StepMediat.tsx` | Stale-closure-free unmount SET_MEDIA dispatch | ✓ EXISTS, ✓ SUBSTANTIVE, ✓ WIRED | `latestMediaRef` + ref-sync effect + unmount cleanup reading from the ref confirmed present and unmodified since 51-06 (re-confirmed, no regression). |
+| `lib/livePreview/LivePreviewContext.tsx` | `livePreviewPaikka` reflects live state in all reducer-fed fields, for all provider configurations | ✓ EXISTS, ✓ SUBSTANTIVE, ✓ WIRED | Both branches (branding and non-branding) now correctly thread live `state.hinnasto`/`aukioloajat`/`yhteystiedot` through to the rendered preview, each with correct AI-scraped/null fallback semantics for untouched steps. |
+| `lib/branding/brandingResult.ts` (`buildBrandingPreview`) | Shared builder, signature unchanged | ✓ EXISTS, unmodified | 4-parameter signature confirmed unchanged; fix correctly confined to the caller per plan 51-07's design. |
+| `app/business/WizardInner.tsx` | Desktop split-view + mobile toggle present in both OnboardingMode and EditMode; `PreviewModal` removed from EditMode | ✓ EXISTS, ✓ SUBSTANTIVE, ✓ WIRED | Confirmed at lines 267-278/337-339 (OnboardingMode) and 440-452/515-517 (EditMode); zero `PreviewModal` references inside this file. |
+| `.planning/REQUIREMENTS.md` | LIVEPREV-01–04 traceability rows | ⚠️ STALE CHECKBOXES (documentation only, not a functional gap) | All four LIVEPREV IDs still show `[ ]`/"Pending" (lines 45-48, 81-84) even though the underlying functionality is now verified complete. This is a bookkeeping step that should be updated to `[x]`/"Done" as part of phase close-out — does not affect the `passed` status determination, which is based on codebase verification, not on REQUIREMENTS.md's checkbox state. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |------|-----|-----|--------|---------|
-| `StepMediat.tsx` unmount effect | `LivePreviewContext.tsx` SET_MEDIA reducer | `latestMediaRef`-backed dispatch in cleanup | ✓ WIRED, correctly dispatches post-save values | WR-01 re-verified closed. |
-| `StepHinnasto.tsx` / `StepAukioloajat.tsx` / `StepYhteystiedot.tsx` debounced effects | `LivePreviewContext.tsx` reducer (`state.hinnasto`/`aukioloajat`/`yhteystiedot`) | `dispatch({ type: 'SET_*' })` | ✓ WIRED — data reaches `state` correctly | Confirmed via grep in all three files; reducer cases (lines 59-67) correctly merge each payload. |
-| `LivePreviewContext.tsx` `state.{hinnasto,aukioloajat,yhteystiedot}` | `livePreviewPaikka` (rendered by `LivePreviewPane`) | `buildBrandingPreview(...)` call inside the `useMemo`'s branding branch | ✗ **NOT WIRED** | The data sits correctly in `state` (previous row) but the branding branch of the derivation never reads it — `buildBrandingPreview`'s call site (line 140) passes only `paikkaInfo`, `brandingData`, `state.paikka_id`, `state.media_urls?.logo`. This is the broken link that causes criteria #1/#4 to fail for the branding-onboarding path. |
-| `LivePreviewPane.tsx` | `livePreviewPaikka` | `useLivePreview()` destructure + direct render into `CalloutCard`/`DiagonaalKortti` | ✓ WIRED | Confirmed lines 22, 39-54 — pure presentation, correctly renders whatever `livePreviewPaikka` resolves to; not itself at fault. |
-| `WizardInner.tsx` `OnboardingMode` | `LivePreviewProvider` `brandingData` prop | `brandingData={brandingData}` (line 255) | ✓ WIRED (confirms reachability of the bug) | `EditMode` passes `brandingData={null}` (line 399), confirming the bug's scope is exclusively the branding-onboarding path. |
+| `StepMediat.tsx` unmount effect | `LivePreviewContext.tsx` SET_MEDIA reducer | `latestMediaRef`-backed dispatch in cleanup | ✓ WIRED | Re-confirmed intact, no regression from 51-07. |
+| `StepHinnasto.tsx` / `StepAukioloajat.tsx` / `StepYhteystiedot.tsx` debounced effects | `LivePreviewContext.tsx` reducer (`state.hinnasto`/`aukioloajat`/`yhteystiedot`) | `dispatch({ type: 'SET_*' })` | ✓ WIRED | Confirmed via grep in all three files; unchanged since prior pass. |
+| `LivePreviewContext.tsx` `state.{hinnasto,aukioloajat,yhteystiedot}` | `livePreviewPaikka` (branding branch) | overlay of `base` with per-field live-state values | ✓ **NOW WIRED** | Previously the broken link (3rd verification pass); confirmed fixed in this pass by direct read of lines 143-159. |
+| `LivePreviewContext.tsx` `state.{hinnasto,aukioloajat,yhteystiedot}` | `livePreviewPaikka` (non-branding branch) | `buildDraftAsPaikka(state, paikkaInfo)` | ✓ WIRED | Unchanged, always correct. |
+| `LivePreviewPane.tsx` | `livePreviewPaikka` | `useLivePreview()` destructure + direct render into `CalloutCard`/`DiagonaalKortti` | ✓ WIRED | Unchanged from prior passes — pure presentation layer, correctly renders whatever `livePreviewPaikka` resolves to. |
+| `WizardInner.tsx` `OnboardingMode`/`EditMode` | `LivePreviewProvider` `brandingData` prop | `brandingData={brandingData}` (line 255) / `brandingData={null}` (line 399) | ✓ WIRED | Confirms scope: branding-onboarding fix applies exactly where needed; EditMode correctly unaffected (always used `buildDraftAsPaikka`). |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 |----------|---------|--------|--------|
 | Project-wide type safety | `npx tsc --noEmit -p tsconfig.json` | No output (zero errors) | ✓ PASS |
-| `RESET` action ever dispatched anywhere in app/ | grep `RESET` across `app/business` | no matches | ✓ still none (expected — out of scope) |
-| All three onboarding edit steps dispatch their `SET_*` action | grep `dispatch(` in StepHinnasto/StepAukioloajat/StepYhteystiedot | confirmed in all three (lines 125-131, 132-133, 52-53 respectively) | ✓ Confirms data reaches `state` — the bug is purely in `state` → `livePreviewPaikka` derivation, not in the dispatch chain |
-| `buildBrandingPreview` accepts hinnasto/aukioloajat/yhteystiedot params | grep function signature, `lib/branding/brandingResult.ts:117-122` | no such parameters exist | ✓ Confirms the fix must live in the caller (`LivePreviewContext.tsx`), not this function |
-| EditMode always passes `brandingData={null}` | grep `brandingData` in `WizardInner.tsx` | line 399 confirmed `null` | ✓ Confirms EditMode is unaffected by this bug |
+| Branding-branch overlay present | `grep -n "\.\.\.base" lib/livePreview/LivePreviewContext.tsx` | Line 146 — spread confirmed | ✓ PASS |
+| `hinnastaToHintaKuvaus` imported and used | `grep -n "hinnastaToHintaKuvaus" lib/livePreview/LivePreviewContext.tsx` | Line 26 (import) + line 148 (usage) | ✓ PASS |
+| `buildBrandingPreview` signature unchanged | direct read, `lib/branding/brandingResult.ts:117-122` | 4 params, unchanged | ✓ PASS |
+| `lib/onboardingUtils.ts` / `lib/branding/brandingResult.ts` not modified by 51-07 | `git diff --stat` against those files at 51-07's commit | No changes | ✓ PASS |
+| `PreviewModal` removed from EditMode but kept in dashboard | `grep -rn "PreviewModal" app/business/` | Only `app/business/page.tsx` (dashboard) | ✓ PASS — matches REQUIREMENTS.md D-03 scope note |
+| Mobile toggle + desktop split present in both modes | `grep -n "LivePreviewToggle\|hidden lg:flex"` in `WizardInner.tsx` | Present at both OnboardingMode and EditMode call sites | ✓ PASS |
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |-------------|------------|-------------|--------|----------|
-| LIVEPREV-01 | 51-01, 51-03 | Each wizard step updates shared live-preview state on field change | ⚠️ PARTIALLY SATISFIED | The *dispatch* side is fully satisfied for all steps (confirmed all step components dispatch correctly). The *rendered* side fails for pricing/hours/contact specifically in the brandingData-onboarding path — see CR-01 above. Media and the non-branding/EditMode paths are fully correct. |
-| LIVEPREV-02 | 51-02, 51-04 | Desktop shows live preview side-by-side | ✓ SATISFIED | Unchanged from prior passes. |
-| LIVEPREV-03 | 51-02, 51-04 | Mobile shows toggle, no side-by-side | ✓ SATISFIED | Unchanged from prior passes. |
-| LIVEPREV-04 | 51-01, 51-02, 51-04, 51-05, 51-06 | Renders via CalloutCard/DiagonaalKortti using current unsaved values, both modes | ✗ BLOCKED | Plan 51-06's SUMMARY claims this complete (`requirements-completed: [LIVEPREV-04]`), and it IS correct that the specific defect 51-06 targeted (WR-01, StepMediat stale closure) is fixed. But the requirement as a whole is not satisfied: the independently-confirmed CR-01 gap above means pricing/hours/contact live preview is broken for any AI-website-analysis-onboarded venue — a different, larger-impact failure of the same requirement. |
+| LIVEPREV-01 | 51-01, 51-03, 51-07 | Each wizard step updates shared live-preview state on field change | ✓ SATISFIED | Dispatch side and rendered side both confirmed correct for all steps, all paths (media, pricing, hours, contact; branding and non-branding onboarding; EditMode). |
+| LIVEPREV-02 | 51-02, 51-04 | Desktop shows live preview side-by-side | ✓ SATISFIED | Unchanged from prior passes, re-confirmed this pass. |
+| LIVEPREV-03 | 51-02, 51-04 | Mobile shows toggle, no side-by-side | ✓ SATISFIED | Unchanged from prior passes, re-confirmed this pass. |
+| LIVEPREV-04 | 51-01, 51-02, 51-04, 51-05, 51-06, 51-07 | Renders via CalloutCard/DiagonaalKortti using current unsaved values, both modes | ✓ SATISFIED | All three prior gap rounds (CR-01 original/staged-blob, WR-01/StepMediat stale closure, CR-01 second/branding-overlay) are now independently confirmed closed with no regressions. |
 
-REQUIREMENTS.md correctly still shows all four LIVEPREV IDs as "Pending" — this pass confirms that state remains accurate.
+REQUIREMENTS.md's checkboxes (lines 45-48, 81-84) still show `[ ]`/"Pending" — this is stale documentation, not a functional gap. Recommend updating to `[x]`/"Done" as part of phase close-out, but it does not block the `passed` verdict since this verdict is based on codebase behavior, not on REQUIREMENTS.md's bookkeeping state.
 
-No orphaned requirements — all 4 LIVEPREV IDs appear in plan frontmatter (51-01 through 51-06) and are accounted for above.
+No orphaned requirements — all 4 LIVEPREV IDs appear in plan frontmatter (51-01 through 51-07) and are accounted for above.
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 |------|------|---------|----------|--------|
-| `lib/livePreview/LivePreviewContext.tsx` | 138-146 | `livePreviewPaikka`'s brandingData branch silently discards `state.hinnasto`/`aukioloajat`/`yhteystiedot` with no fallback, no warning, no indication anything is stale | 🛑 Blocker | Live preview silently shows wrong/stale data under the "live preview" label for the branding-onboarding path's pricing/hours/contact steps — the core failure mode this phase exists to prevent. |
-| `lib/livePreview/LivePreviewContext.tsx` | 55, 82-83 | Dead `RESET` action, never dispatched (carried over as IN-01 across all three verification passes) | ℹ️ Info | Not blocking; flagged again for completeness. |
-| `app/business/onboarding/StepYhteystiedot.tsx` | 50 | Fresh object literal passed to `useDebouncedValue` every render, restarting the debounce timer on unrelated re-renders (WR-01 in fresh code review, distinct from the now-fixed WR-01 in the prior verification round — name collision across rounds, not the same bug) | ⚠️ Warning | Could in rare cases delay the live preview's contact-info update beyond the intended ~280ms window if `StepYhteystiedot` re-renders for unrelated reasons; does not cause the CR-01 staleness bug above. |
-| `app/business/onboarding/StepHinnasto.tsx` | 253-291 | Table inputs/row buttons not disabled during save/loading | ⚠️ Warning | Race risk between in-flight save and concurrent edits; does not affect live-preview correctness. |
-| `app/business/onboarding/StepHinnasto.tsx` | 305-319 | Save-success banner uses inconsistent ternary idiom vs. sibling steps | ⚠️ Warning | Stylistic only. |
-| `app/business/onboarding/StepAukioloajat.tsx` | 248-263 | Day-toggle `aria-label` identical for all seven days | ⚠️ Warning | Accessibility gap, not a live-preview defect. |
+| `lib/livePreview/LivePreviewContext.tsx` | 148 | "Clear all prices" edge case reverts to AI-scraped prices instead of showing empty (per fresh `51-REVIEW.md` WR-01) | ⚠️ Warning (non-blocking, see judgment call above) | Narrow UX edge case — does not affect the core "preview updates live" claim. Not a regression introduced by 51-07; recommended as a follow-up. |
+| `lib/livePreview/LivePreviewContext.tsx` | 60, 87-88 | Dead `RESET` action, never dispatched (carried over across all four verification passes) | ℹ️ Info | Not blocking; flagged again for completeness. |
+| `app/business/onboarding/StepYhteystiedot.tsx` | 50 | Fresh object literal passed to `useDebouncedValue` every render, restarting debounce on unrelated re-renders | ⚠️ Warning | Carried over from fresh code review; does not affect correctness, only worst-case debounce timing. Not introduced by 51-07 (file untouched by that plan). |
+| `app/business/onboarding/StepHinnasto.tsx` | 253-291 | Table inputs/row buttons not disabled during save/loading | ⚠️ Warning | Pre-existing, carried over; race risk between in-flight save and concurrent edits, not a live-preview defect. |
+| `app/business/onboarding/StepHinnasto.tsx` | 305-319 | Save-success banner uses inconsistent ternary idiom vs. sibling steps | ⚠️ Warning | Stylistic only, pre-existing. |
+| `app/business/onboarding/StepAukioloajat.tsx` | 248-263 | Day-toggle `aria-label` identical for all seven days | ⚠️ Warning | Accessibility gap, pre-existing, not a live-preview defect. |
 | `app/business/onboarding/StepMediat.tsx` | 138-141 | `removeLogoFile` ignores its parameter via blanket eslint-disable | ℹ️ Info | Pre-existing, not introduced by this phase. |
-| `app/business/onboarding/StepAukioloajat.tsx` | 12-20 | `EN_TO_FI` duplicates `FI_TO_EN` by hand | ℹ️ Info | Latent consistency risk, not a live-preview defect. |
-| `app/business/onboarding/LivePreviewToggle.tsx` | 28-49 | Toggle lacks `aria-pressed`/`role="tab"` semantics | ℹ️ Info | Accessibility gap, not a live-preview correctness defect. |
+| `app/business/onboarding/StepAukioloajat.tsx` | 12-20 | `EN_TO_FI` duplicates `FI_TO_EN` by hand | ℹ️ Info | Latent consistency risk, pre-existing. |
+| `app/business/onboarding/LivePreviewToggle.tsx` | 28-49 | Toggle lacks `aria-pressed`/`role="tab"` semantics | ℹ️ Info | Accessibility gap, pre-existing. |
 
-No `TBD`/`FIXME`/`XXX`/`TODO`/`HACK`/`PLACEHOLDER` markers found in any of the phase-modified files.
+No `TBD`/`FIXME`/`XXX`/`TODO`/`HACK`/`PLACEHOLDER` markers found in any phase-modified file (`lib/livePreview/LivePreviewContext.tsx` specifically re-checked this pass — none present).
+
+None of the above anti-patterns are blockers: the residual pricing-clear edge case is a narrow UX polish item explicitly judged non-blocking per the task brief's guidance; the remaining warnings/info items are pre-existing, out-of-scope-for-this-phase robustness/accessibility gaps that do not affect the live-preview correctness this phase exists to deliver.
 
 ### Human Verification Required
 
-None required to establish the CR-01 gap — it is confirmed by direct, deterministic code reading (function signatures, branch logic, and a confirmed-reachable call site), the same evidentiary standard used for the now-closed WR-01 and CR-01(original) findings in prior rounds. No UI interaction is needed to know `buildBrandingPreview` cannot reflect data it is never given.
+None required to establish phase completion — all five success criteria are confirmed by direct, deterministic code reading (field-name cross-referencing, fallback-logic tracing, reachability confirmation via grep, and a clean `tsc --noEmit`), the same evidentiary standard used to close the prior three gap rounds.
 
-If/when the CR-01 fix (overlaying live `state.hinnasto`/`aukioloajat`/`yhteystiedot` onto the branding-derived base object) lands, a human should spot-check once: start onboarding via the website-analysis flow for a venue with scraped prices/hours → on step 2, change a price → confirm the live preview pane updates instantly → repeat for step 3 (hours) and step 4 (contact info, including verifying `puhelin`/`kuvaus` now show typed values instead of permanently blank).
+**Recommended (not blocking) human spot-check**, per 51-07-PLAN.md's own human_verification section, to be done opportunistically before/during the next release: start onboarding via the AI-website-analysis flow for a venue with scraped prices/hours; on step 2 change a price → confirm the live preview updates instantly; repeat for step 3 (hours) and step 4 (contact info, confirming `puhelin`/`kuvaus` now show typed values); confirm a fresh, untouched session still shows AI-scraped data; confirm EditMode is unaffected.
 
 ### Gaps Summary
 
-**What's fixed (this pass, re-verified independently):** Plan 51-06 correctly and completely closes WR-01. The `latestMediaRef` pattern is textbook-correct for avoiding stale closures in unmount-only effects, `tsc --noEmit` is clean, and the original CR-01(round 2)/staged-blob-URL behavior remains correctly preserved. EditMode save-then-navigate-without-remount no longer reverts the live preview to pre-save media.
+No gaps remain. This is the fourth and final verification pass for Phase 51. Across the four passes:
 
-**What's still open (newly scoped, not previously caught):** A separate, pre-existing defect in `LivePreviewContext.tsx`'s `livePreviewPaikka` derivation means that for any business owner who onboards via the AI-website-analysis flow (the path the product steers most users toward), editing pricing, opening hours, or contact info on steps 2-4 dispatches correctly into shared reducer state but the rendered preview ignores that state and keeps showing AI-scraped or hardcoded-null values for the entire onboarding session. This was independently re-derived from the actual source (not taken from the code review's prose) by: (1) reading the exact `useMemo` branch and confirming it never references `state.hinnasto`/`aukioloajat`/`yhteystiedot`; (2) reading `buildBrandingPreview`'s full signature and body and confirming it has no parameters or code path that could ever consume those fields; (3) confirming via grep that `WizardInner.tsx` actually passes live `brandingData` into the onboarding provider (making the bug reachable) while EditMode always passes `null` (making EditMode provably unaffected); (4) confirming via grep that all three step components do dispatch their live values, ruling out "the data was never sent" as an alternative, milder explanation. The bug is real, deterministic, and scoped exactly as suspected: branding-onboarding-path-only, not EditMode, not the non-branding onboarding path (both of which use `buildDraftAsPaikka`, confirmed correct).
+1. **Pass 1 → Pass 2:** Closed the original CR-01 (staged blob URL staleness) via plan 51-05.
+2. **Pass 2 → Pass 3:** Closed WR-01 (StepMediat unmount-cleanup stale closure) via plan 51-06; pass 3 simultaneously discovered a second, unrelated CR-01 (branding-path live preview never threading hinnasto/aukioloajat/yhteystiedot through `buildBrandingPreview`).
+3. **Pass 3 → Pass 4 (this pass):** Closed the second CR-01 via plan 51-07. Independently re-traced the fix in the current source (not from SUMMARY/REVIEW prose) and confirmed: correct field mapping, correct fallback semantics for untouched steps, no regression to `buildBrandingPreview`'s shared signature or its other caller (`StepEsikatselu`), no regression to EditMode or the non-branding onboarding path, and no regression to the 51-06 WR-01 fix (file untouched by 51-07).
 
-This is not a regression introduced by plan 51-06 (which only touched `StepMediat.tsx`) — it is a pre-existing gap in the original phase-51 implementation that escaped the first two verification rounds because those rounds were focused on the media-staleness defect chain (CR-01 original → WR-01) and did not independently trace the branding/non-branding split in `livePreviewPaikka`'s derivation.
+One narrow, pre-existing UX edge case remains (clearing all prices on the branding path reverts to scraped prices rather than showing empty) — judged non-blocking per the task brief's explicit guidance not to hold the phase open over cosmetic concerns when the core goal is genuinely met. It is recorded as a follow-up, not a gap.
 
-**Recommendation:** A plan 51-07 gap-closure plan should overlay `state.hinnasto`/`aukioloajat`/`yhteystiedot` onto `buildBrandingPreview`'s output inside `LivePreviewContext.tsx`'s branding branch, exactly as proposed in the fresh `51-REVIEW.md`'s CR-01 fix snippet (using `hinnastaToHintaKuvaus` for the price serialization, falling back to the branding-derived base values when the live state field is empty/unset so a fresh AI-onboarding session still shows scraped data before the user edits anything). This is a small, single-file, well-scoped change matching the shape of plans 51-05/51-06's own fixes. Until it lands, LIVEPREV-04 and success criterion #4 (and, more narrowly now, criterion #1 for three of five onboarding steps) remain unsatisfied for the branding-onboarding path specifically.
+REQUIREMENTS.md's LIVEPREV-01..04 checkboxes remain `[ ]`/"Pending" in the document itself — this is stale bookkeeping that should be updated as part of close-out, but does not affect this verdict, which is grounded in direct codebase verification.
+
+**All five ROADMAP.md success criteria are now observably true in the codebase.** The phase goal — a business owner sees their venue's card update in real time as they fill in any wizard step, in both the onboarding wizard and EditMode — is achieved.
 
 ---
 
