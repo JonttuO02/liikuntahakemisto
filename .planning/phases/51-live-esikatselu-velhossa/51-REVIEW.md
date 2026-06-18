@@ -4,22 +4,22 @@ reviewed: 2026-06-18T00:00:00Z
 depth: standard
 files_reviewed: 11
 files_reviewed_list:
-  - lib/livePreview/LivePreviewContext.tsx
-  - lib/livePreview/useDebouncedPreviewField.ts
+  - app/business/WizardInner.tsx
   - app/business/onboarding/LivePreviewPane.tsx
   - app/business/onboarding/LivePreviewToggle.tsx
-  - messages/fi.json
-  - messages/en.json
+  - app/business/onboarding/StepAukioloajat.tsx
   - app/business/onboarding/StepHinnasto.tsx
   - app/business/onboarding/StepMediat.tsx
-  - app/business/onboarding/StepAukioloajat.tsx
   - app/business/onboarding/StepYhteystiedot.tsx
-  - app/business/WizardInner.tsx
+  - lib/livePreview/LivePreviewContext.tsx
+  - lib/livePreview/useDebouncedPreviewField.ts
+  - messages/en.json
+  - messages/fi.json
 findings:
-  critical: 1
-  warning: 4
+  critical: 0
+  warning: 3
   info: 3
-  total: 8
+  total: 6
 status: issues_found
 ---
 
@@ -32,24 +32,19 @@ status: issues_found
 
 ## Summary
 
-Phase 51 wires a shared `LivePreviewContext` (reducer + derived `Liikuntapaikka`) into four wizard step components and renders it via `LivePreviewPane`/`LivePreviewToggle`. The architecture is sound and the field-mapping mirrors `StepEsikatselu`'s existing derivation closely, which limits divergence risk. However, the media step's instant (non-debounced) live-preview wiring has a real lifecycle bug: it dispatches local `URL.createObjectURL` blob URLs into the shared context and then revokes those same URLs on unmount/change without ever clearing them from context state, leaving the preview pane holding broken image references once the user leaves the Media step. There are also several smaller robustness and dead-code issues: an unused `RESET` action, an unguarded regex-based storage path parse, and reducer state that is never reset across venue/paikka switches in `EditMode`.
+This review supersedes the prior 51-REVIEW.md pass (CR-01 blob URL staleness, now fixed by gap-closure plan 51-05). The current state of all 5 plans' files was reviewed fresh: the live-preview context/reducer, the debounce hook, the four step components' wiring into it, the wizard shell (`WizardInner.tsx`), and the toggle/pane presentation components.
 
-## Critical Issues
+The architecture is sound — pure reducer derivation with no network calls in the preview path, consistent `buildDraftAsPaikka`/`buildBrandingPreview` reuse, and the previously-identified blob-URL staleness bug (CR-01) appears correctly addressed by the unmount-time fallback effect in `StepMediat.tsx`. However, that same fallback effect has a subtler staleness bug of its own (see WR-01) — it captures `existingLogoUrl`/`existingPhotoUrls` at mount time via an empty-dependency-array cleanup, so if the user saves new media and *then* navigates away in edit mode, the unmount cleanup re-broadcasts the stale pre-save URLs instead of the just-saved ones, momentarily reverting the live preview.
 
-### CR-01: Blob URLs dispatched to shared LivePreviewContext are revoked while still referenced, leaving the preview pane with broken images
+No critical security or data-loss issues were found. The remaining findings are robustness/consistency gaps that should be fixed but do not block shipping.
 
-**File:** `app/business/onboarding/StepMediat.tsx:60-90`
-**Issue:** `stagedPreviewUrls` and `logoPreviewUrl` are `URL.createObjectURL(...)` blob URLs created via `useMemo`. They are dispatched into the shared `LivePreviewContext` via `SET_MEDIA` (lines 82-90) with no debounce, and the context reducer copies the URL strings into `state.media_urls` (`LivePreviewContext.tsx:68-81`), where they persist as long-lived preview state consumed by `LivePreviewPane`/`CalloutCard`/`DiagonaalKortti`.
+## Warnings
 
-Separately, two cleanup effects revoke these exact blob URLs whenever the memoized array/value changes or the component unmounts (`StepMediat.tsx:65-67`, `74-76`). This includes the case where the user navigates away from the Mediat step (component unmount) while a staged photo/logo is still selected — the blob URL is revoked immediately, but `LivePreviewContext`'s `state.media_urls` is never updated to drop or replace the now-invalid URL. The live preview pane (visible in the desktop split-view sidebar at all times, and in the mobile preview toggle) will then render `<img src="blob:...">` for a revoked blob, producing a broken image until the user re-enters the Mediat step.
+### WR-01: Unmount fallback in StepMediat re-broadcasts stale media URLs after a save
 
-This also affects normal usage: selecting a new photo replaces the array reference, triggering the cleanup of the *previous* `stagedPreviewUrls` value — if the dispatch effect (line 82) for the new value hasn't committed yet relative to render timing in React 18 strict/concurrent paths, there is a window where context can reference a just-revoked URL. The unmount case is the deterministic, always-reproducible failure: step 1 (Mediat) → step 2 (Hinnasto) navigation guarantees a broken logo/photo thumbnail in the sidebar preview for the rest of the onboarding flow (existing uploaded URLs are unaffected since those come from Supabase Storage, but any *staged, not-yet-uploaded* file's blob preview is permanently broken in the context after leaving the step).
-
-**Fix:** Either (a) dispatch a clearing/replacement action on unmount that drops blob URLs from context state, or (b) avoid revoking on unmount and instead revoke only when superseded by a newer URL for the same slot, or (c) simplest — don't persist blob URLs into the cross-step context at all; only dispatch them while the Mediat step is mounted and have the reducer/consumer fall back to last-known persisted (non-blob) URLs once the step unmounts:
-
+**File:** `app/business/onboarding/StepMediat.tsx:99-110`
+**Issue:** The unmount cleanup effect that's meant to prevent a dead blob: URL from lingering in the shared preview is registered with an empty dependency array:
 ```tsx
-// StepMediat.tsx — clear blob URLs from shared context on unmount instead of
-// letting them dangle as revoked references.
 useEffect(() => {
   return () => {
     dispatch({
@@ -60,70 +55,66 @@ useEffect(() => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [])
 ```
-
-## Warnings
-
-### WR-01: `RESET` action defined and exported but never dispatched — dead reducer branch with no reset path on venue switch
-
-**File:** `lib/livePreview/LivePreviewContext.tsx:55, 82-83`
-**Issue:** `LivePreviewAction` includes a `RESET` case that fully replaces state, but no caller in the reviewed files ever dispatches it. In `WizardInner.tsx`'s `EditMode`, `LivePreviewProvider`'s `initialDraft` prop is recomputed from `localHinnasto`/`localAukioloajat`/`localYhteystiedot`/`localLogoUrl`/`localPhotoUrls` on every render, but `useReducer`'s initializer (`buildInitialState`) only runs once on mount — so if `paikkaId` ever changes after mount (e.g. a future multi-venue switch without remounting `LivePreviewProvider`), the reducer state would not pick up the new `initialDraft`/`paikkaId` since there's no `RESET` dispatch wired to such a transition. Currently this is masked because `WizardInner` always remounts the whole tree per route, but the action's existence without a call site signals either an incomplete wiring or speculative/dead code.
-**Fix:** Either wire a `useEffect` that dispatches `RESET` when `paikkaId` changes, or remove the unused action and its branch if no caller is planned:
+Because the effect only runs once (on mount), its cleanup closure captures `existingLogoUrl`/`existingPhotoUrls` as they were **at mount time** — not their latest values. In edit mode, if the user uploads a new logo/photo and clicks "Tallenna" (`handleSave` calls `setExistingLogoUrl(finalLogoUrl)` / `setExistingPhotoUrls(finalPhotoUrls)`), then switches to a different tab (unmounting `StepMediat`), the cleanup fires with the **original, pre-save** URLs, not the freshly-saved ones. This momentarily (or permanently, until another field re-dispatches) reverts the live preview's media to stale data, undermining the very gap-closure fix (CR-01) this effect was added for.
+**Fix:** Use a ref to track the latest values so the cleanup closure always sees current data:
 ```tsx
+const latestMediaRef = useRef({ logo: existingLogoUrl, photos: existingPhotoUrls })
 useEffect(() => {
-  dispatch({ type: 'RESET', payload: buildInitialState(paikkaId, initialDraft) })
-}, [paikkaId])
+  latestMediaRef.current = { logo: existingLogoUrl, photos: existingPhotoUrls }
+}, [existingLogoUrl, existingPhotoUrls])
+
+useEffect(() => {
+  return () => {
+    dispatch({
+      type: 'SET_MEDIA',
+      payload: {
+        logo: latestMediaRef.current.logo ?? null,
+        photos: latestMediaRef.current.photos,
+      },
+    })
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [])
 ```
 
-### WR-02: `useDebouncedValue` is called with a fresh object literal every render, restarting the debounce timer on unrelated re-renders
+### WR-02: StepHinnasto inputs and row controls are not disabled during save/loading
 
-**File:** `app/business/onboarding/StepYhteystiedot.tsx:50`
-**Issue:** `useDebouncedValue({ puhelin, email, website, kuvaus }, 280)` constructs a brand-new object on every render. Since `useDebouncedValue`'s effect dependency is `value` (by reference, `lib/livePreview/useDebouncedPreviewField.ts:29-35`), any re-render of `StepYhteystiedot` — not just ones caused by these four fields changing — resets the 280ms debounce timer. If a parent re-render (e.g. triggered by `LivePreviewProvider`'s `value` memo updating from a sibling step's dispatch, or React 18 batching artifacts) happens to coincide with continuous typing, the debounced value may never settle long enough to fire, delaying the live-preview update indefinitely during fast typing.
-**Fix:** Memoize the object before passing it to the hook so identity is stable across renders that don't change the underlying fields:
-```tsx
-const yhteystiedotValue = useMemo(() => ({ puhelin, email, website, kuvaus }), [puhelin, email, website, kuvaus])
-const debouncedYhteystiedot = useDebouncedValue(yhteystiedotValue, 280)
-```
+**File:** `app/business/onboarding/StepHinnasto.tsx:253-291`
+**Issue:** Unlike `StepYhteystiedot` (whose `<input>`/`<textarea>` elements are `disabled={loading}`), none of `StepHinnasto`'s table inputs (`kategoria`, `hinta`, `lisatieto`) or the add-row/remove-row buttons are disabled while `saving` or `loading` is true. A user can add/remove/edit pricing rows while a save request is in flight, which can produce a race between the in-flight request's snapshot of `rows` and the user's subsequent edits, and is inconsistent with the rest of the wizard's pattern of disabling inputs during async operations.
+**Fix:** Gate the table inputs and row buttons on `saving || loading` (mirroring `StepYhteystiedot`'s `disabled={loading}` pattern), e.g. `disabled={saving || loading}` on each `<input>` and on `addPriceRow`/`removeRow` buttons.
 
-### WR-03: `handleDeleteExistingPhoto`'s storage-path regex silently no-ops on unexpected URL shapes, leaving orphaned storage objects
+### WR-03: StepHinnasto's editMode save-success banner uses a different idiom than the other two save-success banners
 
-**File:** `app/business/onboarding/StepMediat.tsx:114-128`
-**Issue:** `pathMatch` extracts the storage path via a hardcoded regex assuming the public Supabase Storage URL format. If `url` doesn't match (e.g. a CDN-rewritten URL, a different bucket, or any future URL shape change), `storagePath` is `undefined` and the function silently skips the storage delete (`if (storagePath) { ... }`) while still removing the entry from `existingPhotoUrls` state (line 127) and, on next save, from `finalPhotoUrls`. The net effect is the photo disappears from the UI but the underlying Storage object is never deleted — an orphaned, unbounded file accumulating in the bucket with no error surfaced to the user or any log.
-**Fix:** Log or surface a warning when the regex fails to match, so silent storage-orphan accumulation is at least observable:
-```ts
-const storagePath = pathMatch?.[1]
-if (storagePath) {
-  const supabase = createBusinessBrowserClient()
-  await supabase.storage.from('business-media').remove([storagePath])
-} else {
-  console.warn('handleDeleteExistingPhoto: could not derive storage path from URL', url)
-}
-```
-
-### WR-04: `EditMode`'s `LivePreviewProvider initialDraft` is reconstructed as a new object every render with no memoization
-
-**File:** `app/business/WizardInner.tsx:400-406`
-**Issue:** The `initialDraft` prop passed to `LivePreviewProvider` in `EditMode` is a new literal object on every render of `EditMode`. While `LivePreviewProvider`'s `useReducer` initializer only consumes this on first mount (so there's no functional bug today), this is a fragile pattern: any future refactor that makes `LivePreviewProvider` re-derive state from `initialDraft` via a `useEffect` (a natural next step, see WR-01) would immediately start firing on every parent re-render because the object reference is never stable, causing render loops or redundant resets.
-**Fix:** Wrap in `useMemo` keyed on the underlying primitive/array values, or accept that `initialDraft` is mount-only and document it explicitly with a comment at the `LivePreviewProvider` prop type to prevent future misuse.
+**File:** `app/business/onboarding/StepHinnasto.tsx:305-319`
+**Issue:** The save-success banner condition is written as `(editMode ? saveSuccessVisible : false)`, which is functionally fine, but it's the only one of the four step components written with this ternary-wrapping-a-boolean idiom instead of the simpler `editMode && saveSuccessVisible` used by `StepAukioloajat` (line 300) and `StepYhteystiedot` (line 219). This is a stylistic inconsistency that increases the chance of a future edit introducing a logic error (e.g. someone "simplifying" it to `saveSuccessVisible` without checking `editMode`, since the false branch is already implicit elsewhere).
+**Fix:** Align with the other two components: `{editMode && saveSuccessVisible && ( ... )}`.
 
 ## Info
 
-### IN-01: Inconsistent `'use client'` placement style note left only as a comment, not enforced
+### IN-01: RESET action defined and handled but never dispatched
 
-**File:** `lib/livePreview/useDebouncedPreviewField.ts:11-13`
-**Issue:** The module relies on a comment-only contract ("must only be imported by client components") rather than any lint rule or runtime guard. This is fine for a small surface today, but nothing prevents a future server component from importing `useDebouncedValue` and crashing at build/runtime with a unhelpful error, since `useState`/`useEffect` would simply be unavailable in a server context. Not a current bug — purely a maintainability note.
-**Fix:** Consider an ESLint rule (e.g. `eslint-plugin-react-hooks` server-component awareness, or a project-specific lint rule restricting imports of this module to files with `'use client'`) if this pattern recurs elsewhere.
+**File:** `lib/livePreview/LivePreviewContext.tsx:55,82-83`
+**Issue:** `LivePreviewAction` includes a `RESET` variant and `livePreviewReducer` handles it, but no component in the reviewed file set (or elsewhere in `app/business`) ever dispatches `{ type: 'RESET', ... }`. This is dead code — either unused scaffolding for a future use case or a sign that an intended reset-on-paikka-change behavior was never wired up.
+**Fix:** Either remove the `RESET` action/case until it has a caller, or wire it up where it's needed (e.g. when `paikkaId` changes in `OnboardingMode`/`EditMode`) and document why.
 
-### IN-02: Duplicate inline `aria-live`/error-message JSX block repeated near-verbatim across all four step components
+### IN-02: `removeLogoFile` ignores its parameter via blanket eslint-disable
 
-**File:** `app/business/onboarding/StepHinnasto.tsx:305-334`, `app/business/onboarding/StepAukioloajat.tsx:299-328`, `app/business/onboarding/StepYhteystiedot.tsx:218-247`, `app/business/onboarding/StepMediat.tsx:504-551`
-**Issue:** Each step component repeats nearly identical `AnimatePresence` + success/error `<motion.p>` markup (same classNames, same `role`/`aria-live` attributes, same conditional `editMode ? saveError : error` pattern). This isn't new to Phase 51 (pre-existing pattern from prior phases), but the new step-level live-preview wiring (`useDebouncedValue` + `useEffect` dispatch) was added to all four files with the same boilerplate shape too, compounding the duplication. A shared `<StepFeedback editMode error saveError saveSuccessVisible />` component would reduce the maintenance surface for both concerns.
-**Fix:** Extract a shared feedback component; out of scope for this phase's correctness review but worth flagging for the next refactor pass.
+**File:** `app/business/onboarding/StepMediat.tsx:125-128`
+**Issue:**
+```tsx
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function removeLogoFile(_i: number) {
+  setLogoFiles([])
+}
+```
+The function signature accepts an index parameter (to match `UploadDropZone`'s `onRemove` contract) but never uses it, papering over the mismatch with a suppression comment rather than a type that reflects the real contract (a no-arg reset). This is fine functionally (there's only ever one logo file) but the suppressed lint hides intent — a future change to support removing a specific logo slot could silently do the wrong thing.
+**Fix:** Either type `onRemove` as accepting no arguments where used for single-file zones, or keep the parameter but assert there is at most one file (e.g. only clear if `_i === 0`) to make the no-op explicit instead of unconditional.
 
-### IN-03: `StepYhteystiedot`'s dispatched preview field is named `website` while the persisted/save payload field is `varauslinkki`
+### IN-03: EN_TO_FI mapping duplicates FI_TO_EN from onboardingUtils without reuse
 
-**File:** `app/business/onboarding/StepYhteystiedot.tsx:50-52, 79-89`
-**Issue:** The live-preview dispatch payload uses `{ puhelin, email, website, kuvaus }` (matching `OnboardingDraft.yhteystiedot.website`, which `buildDraftAsPaikka` reads as `draft.yhteystiedot?.website` for the `varauslinkki` field), while `handleSave`'s actual persistence payload renames it to `varauslinkki` for the `update-paikka` API. This is consistent and correct (verified against `lib/onboardingUtils.ts:105`), but the two different field names for the same logical value, used a few lines apart in the same file, is a readability trap for future edits — a future engineer renaming one without checking the other could silently desync the live preview from the persisted value.
-**Fix:** No functional change needed; consider a code comment at the dispatch site noting the field is persisted server-side as `varauslinkki`.
+**File:** `app/business/onboarding/StepAukioloajat.tsx:12-20`
+**Issue:** `StepAukioloajat` defines its own `EN_TO_FI` display map, while `lib/onboardingUtils.ts` already exports a `FI_TO_EN` map for the inverse direction. The two maps must be kept in sync by hand (same 7 day keys, inverted) — there's no shared source of truth enforcing that. This isn't currently broken, but it's a latent consistency risk: if a day key is ever added/renamed in one map, the other won't be type-checked against it.
+**Fix:** Derive `EN_TO_FI` from `FI_TO_EN` programmatically (e.g. `Object.fromEntries(Object.entries(FI_TO_EN).map(([fi, en]) => [en, fi]))`) in a shared location, or move both maps into `lib/onboardingUtils.ts` next to `ORDERED_DAYS`.
 
 ---
 
