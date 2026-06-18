@@ -16,10 +16,10 @@ files_reviewed_list:
   - messages/en.json
   - messages/fi.json
 findings:
-  critical: 0
-  warning: 3
-  info: 3
-  total: 6
+  critical: 1
+  warning: 4
+  info: 4
+  total: 9
 status: issues_found
 ---
 
@@ -32,61 +32,100 @@ status: issues_found
 
 ## Summary
 
-This review supersedes the prior 51-REVIEW.md pass (CR-01 blob URL staleness, now fixed by gap-closure plan 51-05). The current state of all 5 plans' files was reviewed fresh: the live-preview context/reducer, the debounce hook, the four step components' wiring into it, the wizard shell (`WizardInner.tsx`), and the toggle/pane presentation components.
+This review supersedes the prior 51-REVIEW.md pass and was performed against the current state of all 6 plans' files, including plan 51-06's gap-closure fix for WR-01 (StepMediat unmount-cleanup staleness).
 
-The architecture is sound — pure reducer derivation with no network calls in the preview path, consistent `buildDraftAsPaikka`/`buildBrandingPreview` reuse, and the previously-identified blob-URL staleness bug (CR-01) appears correctly addressed by the unmount-time fallback effect in `StepMediat.tsx`. However, that same fallback effect has a subtler staleness bug of its own (see WR-01) — it captures `existingLogoUrl`/`existingPhotoUrls` at mount time via an empty-dependency-array cleanup, so if the user saves new media and *then* navigates away in edit mode, the unmount cleanup re-broadcasts the stale pre-save URLs instead of the just-saved ones, momentarily reverting the live preview.
+**WR-01 re-verification (required by task brief):** the `latestMediaRef` + sync-effect fix in `StepMediat.tsx` (commit `adcdf4b`) is correct. The ref is refreshed via a `useEffect` keyed on `[existingLogoUrl, existingPhotoUrls]`, and the unmount-only cleanup effect reads `latestMediaRef.current` instead of closing over mount-time state. Because React commits effects in declaration order on every render — including the final render before unmount — the ref is guaranteed to hold the latest persisted media by the time the cleanup can possibly run. This resolves the original bug (cleanup re-broadcasting pre-save URLs after a successful edit-mode save) without introducing a new staleness or stale-ref issue. No further action needed on WR-01.
 
-No critical security or data-loss issues were found. The remaining findings are robustness/consistency gaps that should be fixed but do not block shipping.
+However, this pass found a **new, more severe defect of the same class** in `LivePreviewContext.tsx`: the `buildBrandingPreview` derivation branch never threads the reducer's live `hinnasto`/`aukioloajat`/`yhteystiedot` state through, so the entire live-preview feature silently fails to reflect pricing/hours/contact edits for any venue that went through the website-analysis (branding) onboarding path — which is the flow the product steers most businesses toward. This is classified as a blocker (CR-01) because it doesn't just omit data, it displays stale/wrong data under the "live preview" label with no indication anything is wrong.
+
+The remaining findings (carried over from the prior pass, re-verified as still present in the current code, plus two new ones) are robustness/consistency/accessibility gaps.
+
+## Critical Issues
+
+### CR-01: Live preview ignores pricing/hours/contact edits whenever brandingData is present
+
+**File:** `lib/livePreview/LivePreviewContext.tsx:138-146`
+**Issue:** The `livePreviewPaikka` derivation:
+
+```ts
+const livePreviewPaikka = useMemo<Liikuntapaikka | null>(() => {
+  if (brandingData && paikkaInfo && typeof state.paikka_id === 'number') {
+    return buildBrandingPreview(paikkaInfo, brandingData, state.paikka_id, state.media_urls?.logo)
+  }
+  if (paikkaInfo) {
+    return buildDraftAsPaikka(state as OnboardingDraft, paikkaInfo)
+  }
+  return null
+}, [state, paikkaInfo, brandingData])
+```
+
+When `brandingData` is truthy, `buildBrandingPreview` is called with only `paikkaInfo`, `brandingData`, `state.paikka_id`, and `state.media_urls?.logo`. Per its implementation (`lib/branding/brandingResult.ts:117-169`), pricing (`hinta_kuvaus`) and opening hours (`aukioloajat`) are always derived solely from `brandingResult.raw_analysis`, and contact fields (`puhelin`, `kuvaus`) are hardcoded to `null`. None of the reducer's `SET_HINNASTO` / `SET_AUKIOLOAJAT` / `SET_YHTEYSTIEDOT` payloads — dispatched on every debounced keystroke by `StepHinnasto`, `StepAukioloajat`, and `StepYhteystiedot` — ever reach the rendered preview in this branch.
+
+Concretely: a branding-onboarded business edits pricing in Step 2. The `CalloutCard`/`DiagonaalKortti` stack in `LivePreviewPane` keeps showing the AI-scraped prices (or nothing, if none were scraped) and never reflects what the user is typing. The same applies to opening-hours and contact-info edits — only the `buildDraftAsPaikka` branch (used when `brandingData` is absent) correctly threads `state` through. This silently breaks the feature's core purpose for the most common onboarding path, with no visual indication the preview is stale.
+
+**Fix:** Overlay the live draft state onto the branding-derived base object:
+
+```ts
+const livePreviewPaikka = useMemo<Liikuntapaikka | null>(() => {
+  if (brandingData && paikkaInfo && typeof state.paikka_id === 'number') {
+    const base = buildBrandingPreview(paikkaInfo, brandingData, state.paikka_id, state.media_urls?.logo)
+    return {
+      ...base,
+      hinta_kuvaus: state.hinnasto?.length ? hinnastaToHintaKuvaus(state.hinnasto) : base.hinta_kuvaus,
+      aukioloajat: state.aukioloajat ?? base.aukioloajat,
+      puhelin: state.yhteystiedot?.puhelin ?? base.puhelin,
+      kuvaus: state.yhteystiedot?.kuvaus ?? base.kuvaus,
+      varauslinkki: state.yhteystiedot?.website ?? base.varauslinkki,
+    }
+  }
+  if (paikkaInfo) {
+    return buildDraftAsPaikka(state as OnboardingDraft, paikkaInfo)
+  }
+  return null
+}, [state, paikkaInfo, brandingData])
+```
+
+Note: `StepEsikatselu.tsx` (the existing final-step preview) has the same gap in its own `buildBrandingPreview` call, but it re-fetches `draft` from Supabase on each visit rather than tracking live keystrokes, so its practical impact is "reflects last save, not last keystroke" — much less severe than the live-preview pane never updating during steps 2-4 at all. Consider applying the same fix there for consistency, though it is out of this phase's file scope.
 
 ## Warnings
 
-### WR-01: Unmount fallback in StepMediat re-broadcasts stale media URLs after a save
+### WR-01: useDebouncedValue resets its timer on every render in StepYhteystiedot, not just on field edits
 
-**File:** `app/business/onboarding/StepMediat.tsx:99-110`
-**Issue:** The unmount cleanup effect that's meant to prevent a dead blob: URL from lingering in the shared preview is registered with an empty dependency array:
-```tsx
-useEffect(() => {
-  return () => {
-    dispatch({
-      type: 'SET_MEDIA',
-      payload: { logo: existingLogoUrl ?? null, photos: existingPhotoUrls },
-    })
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [])
+**File:** `app/business/onboarding/StepYhteystiedot.tsx:50`
+**Issue:**
+```ts
+const debouncedYhteystiedot = useDebouncedValue({ puhelin, email, website, kuvaus }, 280)
 ```
-Because the effect only runs once (on mount), its cleanup closure captures `existingLogoUrl`/`existingPhotoUrls` as they were **at mount time** — not their latest values. In edit mode, if the user uploads a new logo/photo and clicks "Tallenna" (`handleSave` calls `setExistingLogoUrl(finalLogoUrl)` / `setExistingPhotoUrls(finalPhotoUrls)`), then switches to a different tab (unmounting `StepMediat`), the cleanup fires with the **original, pre-save** URLs, not the freshly-saved ones. This momentarily (or permanently, until another field re-dispatches) reverts the live preview's media to stale data, undermining the very gap-closure fix (CR-01) this effect was added for.
-**Fix:** Use a ref to track the latest values so the cleanup closure always sees current data:
-```tsx
-const latestMediaRef = useRef({ logo: existingLogoUrl, photos: existingPhotoUrls })
-useEffect(() => {
-  latestMediaRef.current = { logo: existingLogoUrl, photos: existingPhotoUrls }
-}, [existingLogoUrl, existingPhotoUrls])
-
-useEffect(() => {
-  return () => {
-    dispatch({
-      type: 'SET_MEDIA',
-      payload: {
-        logo: latestMediaRef.current.logo ?? null,
-        photos: latestMediaRef.current.photos,
-      },
-    })
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [])
+A fresh object literal is constructed every render of `StepYhteystiedot`. `useDebouncedValue`'s internal effect has dependency array `[value, delayMs]` (`lib/livePreview/useDebouncedPreviewField.ts:29-35`); a new object reference is a new dependency on every render, so the debounce timer restarts whenever `StepYhteystiedot` re-renders for *any* reason (not only when the user edits a field) — e.g. a parent state change bubbling down from `WizardInner`. In the worst case the debounced value may never settle within the intended 250-300ms window. `StepHinnasto` and `StepAukioloajat` don't have this problem because they pass their `rows`/`hours` state directly rather than a freshly-constructed literal.
+**Fix:**
+```ts
+const yhteystiedotValue = useMemo(
+  () => ({ puhelin, email, website, kuvaus }),
+  [puhelin, email, website, kuvaus]
+)
+const debouncedYhteystiedot = useDebouncedValue(yhteystiedotValue, 280)
 ```
 
 ### WR-02: StepHinnasto inputs and row controls are not disabled during save/loading
 
 **File:** `app/business/onboarding/StepHinnasto.tsx:253-291`
-**Issue:** Unlike `StepYhteystiedot` (whose `<input>`/`<textarea>` elements are `disabled={loading}`), none of `StepHinnasto`'s table inputs (`kategoria`, `hinta`, `lisatieto`) or the add-row/remove-row buttons are disabled while `saving` or `loading` is true. A user can add/remove/edit pricing rows while a save request is in flight, which can produce a race between the in-flight request's snapshot of `rows` and the user's subsequent edits, and is inconsistent with the rest of the wizard's pattern of disabling inputs during async operations.
-**Fix:** Gate the table inputs and row buttons on `saving || loading` (mirroring `StepYhteystiedot`'s `disabled={loading}` pattern), e.g. `disabled={saving || loading}` on each `<input>` and on `addPriceRow`/`removeRow` buttons.
+**Issue:** Unlike `StepYhteystiedot` (whose `<input>`/`<textarea>` elements are `disabled={loading}`), none of `StepHinnasto`'s table inputs (`kategoria`, `hinta`, `lisatieto`) or the add-row/remove-row buttons are disabled while `saving` or `loading` is true. A user can add/remove/edit pricing rows while a save request is in flight, racing the in-flight request's snapshot of `rows` against the user's subsequent edits — inconsistent with the rest of the wizard's pattern of disabling inputs during async operations.
+**Fix:** Gate the table inputs and row buttons on `saving || loading`, mirroring `StepYhteystiedot`'s pattern, e.g. `disabled={saving || loading}` on each `<input>` and on `addPriceRow`/`removeRow`.
 
-### WR-03: StepHinnasto's editMode save-success banner uses a different idiom than the other two save-success banners
+### WR-03: Day-toggle aria-label is identical for all seven days in StepAukioloajat
+
+**File:** `app/business/onboarding/StepAukioloajat.tsx:248-263`
+**Issue:** Every day's open/closed toggle switch uses the same static `aria-label={t('hoursToggleLabel')}` with no day name interpolated. A screen-reader user tabbing through the seven switches hears the identical label seven times with no way to distinguish which day's switch has focus — the preceding `<span>{EN_TO_FI[dayKey]}</span>` is a visual sibling, not referenced via `aria-labelledby`, so it isn't part of the button's accessible name.
+**Fix:**
+```ts
+aria-label={`${t('hoursToggleLabel')} – ${EN_TO_FI[dayKey]}`}
+```
+or use `aria-labelledby` pointing at an id on the day-abbreviation span.
+
+### WR-04: StepHinnasto's editMode save-success banner uses an inconsistent conditional idiom
 
 **File:** `app/business/onboarding/StepHinnasto.tsx:305-319`
-**Issue:** The save-success banner condition is written as `(editMode ? saveSuccessVisible : false)`, which is functionally fine, but it's the only one of the four step components written with this ternary-wrapping-a-boolean idiom instead of the simpler `editMode && saveSuccessVisible` used by `StepAukioloajat` (line 300) and `StepYhteystiedot` (line 219). This is a stylistic inconsistency that increases the chance of a future edit introducing a logic error (e.g. someone "simplifying" it to `saveSuccessVisible` without checking `editMode`, since the false branch is already implicit elsewhere).
+**Issue:** The condition is written as `(editMode ? saveSuccessVisible : false)` — functionally equivalent to `editMode && saveSuccessVisible`, but it's the only one of the four step components written this way; `StepAukioloajat` (line 300) and `StepYhteystiedot` (line 219) both use the simpler `editMode && saveSuccessVisible` form. The inconsistency raises the risk that a future edit "simplifies" this one differently (e.g. to bare `saveSuccessVisible`) without noticing the `editMode` guard is meant to be preserved.
 **Fix:** Align with the other two components: `{editMode && saveSuccessVisible && ( ... )}`.
 
 ## Info
@@ -94,12 +133,12 @@ useEffect(() => {
 ### IN-01: RESET action defined and handled but never dispatched
 
 **File:** `lib/livePreview/LivePreviewContext.tsx:55,82-83`
-**Issue:** `LivePreviewAction` includes a `RESET` variant and `livePreviewReducer` handles it, but no component in the reviewed file set (or elsewhere in `app/business`) ever dispatches `{ type: 'RESET', ... }`. This is dead code — either unused scaffolding for a future use case or a sign that an intended reset-on-paikka-change behavior was never wired up.
-**Fix:** Either remove the `RESET` action/case until it has a caller, or wire it up where it's needed (e.g. when `paikkaId` changes in `OnboardingMode`/`EditMode`) and document why.
+**Issue:** `LivePreviewAction` includes a `RESET` variant and `livePreviewReducer` handles it, but no component in the reviewed file set ever dispatches `{ type: 'RESET', ... }`. This is dead code — either unused scaffolding for a future use case (e.g. resetting preview state when `paikkaId` changes) or a sign an intended behavior was never wired up.
+**Fix:** Either remove the `RESET` action/case until it has a caller, or wire it up where needed and document why.
 
-### IN-02: `removeLogoFile` ignores its parameter via blanket eslint-disable
+### IN-02: removeLogoFile ignores its parameter via blanket eslint-disable
 
-**File:** `app/business/onboarding/StepMediat.tsx:125-128`
+**File:** `app/business/onboarding/StepMediat.tsx:138-141`
 **Issue:**
 ```tsx
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -107,14 +146,20 @@ function removeLogoFile(_i: number) {
   setLogoFiles([])
 }
 ```
-The function signature accepts an index parameter (to match `UploadDropZone`'s `onRemove` contract) but never uses it, papering over the mismatch with a suppression comment rather than a type that reflects the real contract (a no-arg reset). This is fine functionally (there's only ever one logo file) but the suppressed lint hides intent — a future change to support removing a specific logo slot could silently do the wrong thing.
-**Fix:** Either type `onRemove` as accepting no arguments where used for single-file zones, or keep the parameter but assert there is at most one file (e.g. only clear if `_i === 0`) to make the no-op explicit instead of unconditional.
+The function accepts an index parameter (to match `UploadDropZone`'s `onRemove` contract) but never uses it, suppressing the lint instead of fixing the type mismatch. Functionally fine today (there's only ever one logo file), but it hides intent — a future change supporting multiple logo slots could silently do the wrong thing here without the type system flagging it.
+**Fix:** Type `onRemove` to accept no arguments for single-file zones, or keep the parameter and make the no-op explicit (e.g. `if (_i === 0) setLogoFiles([])`).
 
 ### IN-03: EN_TO_FI mapping duplicates FI_TO_EN from onboardingUtils without reuse
 
 **File:** `app/business/onboarding/StepAukioloajat.tsx:12-20`
-**Issue:** `StepAukioloajat` defines its own `EN_TO_FI` display map, while `lib/onboardingUtils.ts` already exports a `FI_TO_EN` map for the inverse direction. The two maps must be kept in sync by hand (same 7 day keys, inverted) — there's no shared source of truth enforcing that. This isn't currently broken, but it's a latent consistency risk: if a day key is ever added/renamed in one map, the other won't be type-checked against it.
-**Fix:** Derive `EN_TO_FI` from `FI_TO_EN` programmatically (e.g. `Object.fromEntries(Object.entries(FI_TO_EN).map(([fi, en]) => [en, fi]))`) in a shared location, or move both maps into `lib/onboardingUtils.ts` next to `ORDERED_DAYS`.
+**Issue:** `StepAukioloajat` defines its own `EN_TO_FI` display map while `lib/onboardingUtils.ts` already exports the inverse `FI_TO_EN` map. The two must be kept in sync by hand (same 7 day keys, inverted), with no shared source of truth enforcing consistency between them.
+**Fix:** Derive `EN_TO_FI` from `FI_TO_EN` programmatically, e.g. `Object.fromEntries(Object.entries(FI_TO_EN).map(([fi, en]) => [en, fi]))`, ideally co-located in `lib/onboardingUtils.ts` next to `ORDERED_DAYS`.
+
+### IN-04: LivePreviewToggle segmented control lacks ARIA active-state semantics
+
+**File:** `app/business/onboarding/LivePreviewToggle.tsx:28-49`
+**Issue:** The Muokkaa/Esikatselu toggle buttons convey active state only via background color, with no `aria-pressed`, `role="tab"`/`aria-selected`, or equivalent attribute for assistive technology to determine which view is currently active.
+**Fix:** Add `aria-pressed={activeView === 'edit'}` and `aria-pressed={activeView === 'preview'}` to the respective buttons (simplest fix given the current non-tablist markup), or restructure as a `role="tablist"`/`role="tab"` pattern with `aria-selected` if preferred.
 
 ---
 
