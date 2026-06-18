@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import { ORDERED_DAYS } from '@/lib/onboardingUtils'
+import { useLivePreview } from '@/lib/livePreview/LivePreviewContext'
+import { useDebouncedValue } from '@/lib/livePreview/useDebouncedPreviewField'
 
 // Display-only mapping: English storage keys → Finnish abbreviations
 const EN_TO_FI: Record<string, string> = {
@@ -54,6 +56,7 @@ export default function StepAukioloajat({
   onSaveComplete,
 }: Props) {
   const t = useTranslations('Business')
+  const { dispatch } = useLivePreview()
 
   const [hours, setHours] = useState<HoursState>(defaultHours)
   const [wasPreFilled, setWasPreFilled] = useState(false)
@@ -114,6 +117,20 @@ export default function StepAukioloajat({
     }
     return openDaysObject
   }
+
+  // Live-preview wiring (LIVEPREV-01/04): debounced SET_AUKIOLOAJAT dispatch,
+  // mirroring buildOpenDaysObject's serialization of open days.
+  const debouncedHours = useDebouncedValue(hours, 280)
+  useEffect(() => {
+    const openDaysObject: Record<string, { open: string; close: string }> = {}
+    for (const dayKey of ORDERED_DAYS) {
+      const day = debouncedHours[dayKey]
+      if (day?.isOpen && day.open && day.close) {
+        openDaysObject[dayKey] = { open: day.open, close: day.close }
+      }
+    }
+    dispatch({ type: 'SET_AUKIOLOAJAT', payload: openDaysObject })
+  }, [debouncedHours, dispatch])
 
   async function handleSave() {
     if (saving) return
