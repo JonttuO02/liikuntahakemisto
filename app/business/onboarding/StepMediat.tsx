@@ -89,6 +89,26 @@ export default function StepMediat({
     })
   }, [logoPreviewUrl, stagedPreviewUrls, existingLogoUrl, existingPhotoUrls, dispatch])
 
+  // Unmount-time fallback (LIVEPREV-04 / CR-01 gap closure): if the user
+  // navigates away from this step with a staged blob: URL still in
+  // LivePreviewContext, the two revocation effects above will revoke that
+  // blob right after unmount, leaving the shared preview pointing at a dead
+  // URL. Replace the preview's media with the last-known persisted
+  // (non-blob) URLs BEFORE revocation takes effect, so the preview falls
+  // back to real data instead of a broken image.
+  useEffect(() => {
+    return () => {
+      dispatch({
+        type: 'SET_MEDIA',
+        payload: {
+          logo: existingLogoUrl ?? null,
+          photos: existingPhotoUrls,
+        },
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   function handleLogoFilesSelected(files: File[]) {
     // Logo zone: only the first file
     setLogoFiles(files.slice(0, 1))
