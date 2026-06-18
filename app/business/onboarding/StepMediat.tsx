@@ -89,6 +89,19 @@ export default function StepMediat({
     })
   }, [logoPreviewUrl, stagedPreviewUrls, existingLogoUrl, existingPhotoUrls, dispatch])
 
+  // Latest persisted media, tracked via ref (WR-01 gap closure): the
+  // unmount-only cleanup below is created once at mount and would otherwise
+  // permanently close over the mount-time existingLogoUrl/existingPhotoUrls
+  // values. In EditMode, handleSave updates those state values after a
+  // successful save, but the cleanup's closure never observes that update.
+  // This ref is refreshed on every render where the persisted media changes,
+  // so the cleanup can read the latest value at actual unmount time instead
+  // of the stale mount-time snapshot.
+  const latestMediaRef = useRef({ logo: existingLogoUrl, photos: existingPhotoUrls })
+  useEffect(() => {
+    latestMediaRef.current = { logo: existingLogoUrl, photos: existingPhotoUrls }
+  }, [existingLogoUrl, existingPhotoUrls])
+
   // Unmount-time fallback (LIVEPREV-04 / CR-01 gap closure): if the user
   // navigates away from this step with a staged blob: URL still in
   // LivePreviewContext, the two revocation effects above will revoke that
@@ -101,8 +114,8 @@ export default function StepMediat({
       dispatch({
         type: 'SET_MEDIA',
         payload: {
-          logo: existingLogoUrl ?? null,
-          photos: existingPhotoUrls,
+          logo: latestMediaRef.current.logo ?? null,
+          photos: latestMediaRef.current.photos,
         },
       })
     }
