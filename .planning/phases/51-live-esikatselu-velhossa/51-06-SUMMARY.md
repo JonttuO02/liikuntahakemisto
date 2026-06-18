@@ -86,3 +86,10 @@ None - no external service configuration required.
 ---
 *Phase: 51-live-esikatselu-velhossa*
 *Completed: 2026-06-18*
+
+## Self-Check: PASSED
+
+- FOUND: app/business/onboarding/StepMediat.tsx
+- FOUND: .planning/phases/51-live-esikatselu-velhossa/51-06-SUMMARY.md
+- FOUND commit: adcdf4b
+- FOUND commit: 5ac7acb
