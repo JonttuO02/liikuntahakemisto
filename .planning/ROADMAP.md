@@ -358,6 +358,10 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 **Plans:** 2 plans
 
 Plans:
+**Wave 1**
 
 - [ ] 51.1-01-PLAN.md — Thread full PaikkaBase (nimi/laji/osoite/kaupunki/latitude/longitude) from StepPaikkaPrePhase through OnboardingWizardPage state into AnalysoiSivusto as a new paikkaInfo prop (page.tsx prop threading)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 51.1-02-PLAN.md — Wrap AnalysoiSivusto's preview phase in LivePreviewProvider + WizardInner's split-view/toggle; dispatch SET_MEDIA on logo/gallery picks; pass merged brandingData override for live colors
