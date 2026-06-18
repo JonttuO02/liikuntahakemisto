@@ -182,6 +182,8 @@
     "previewLabelCallout": "MAP CALLOUT",
     "previewLabelDiag": "DIAGONAL CARD",
     "previewLabelSheet": "VENUE PAGE",
+    "previewToggleEdit": "Edit",
+    "previewToggleLive": "Preview",
     "errorNoPriceRow": "Add at least one price row before continuing.",
     "errorUploadFailed": "File upload failed. Please try again.",
     "errorFileTooLarge": "File is too large (max {max} MB).",

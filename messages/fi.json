@@ -182,6 +182,8 @@
     "previewLabelCallout": "KARTTAKORTTI",
     "previewLabelDiag": "DIAGONAALIKORTTI",
     "previewLabelSheet": "PROFIILISIVU",
+    "previewToggleEdit": "Muokkaa",
+    "previewToggleLive": "Esikatselu",
     "errorNoPriceRow": "Lisää vähintään yksi hintarivi ennen jatkamista.",
     "errorUploadFailed": "Tiedoston lataus epäonnistui. Yritä uudelleen.",
     "errorFileTooLarge": "Tiedosto on liian suuri (max {max} MB).",
