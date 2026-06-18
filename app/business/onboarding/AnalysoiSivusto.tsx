@@ -6,6 +6,10 @@ import { Check } from 'lucide-react'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import type { BrandingResult } from '@/lib/branding/brandingResult'
 import ContrastSafeLogo from '@/app/components/ContrastSafeLogo'
+import { LivePreviewProvider, useLivePreview } from '@/lib/livePreview/LivePreviewContext'
+import LivePreviewPane from '@/app/business/onboarding/LivePreviewPane'
+import LivePreviewToggle from '@/app/business/onboarding/LivePreviewToggle'
+import { type PaikkaBase } from '@/lib/onboardingUtils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -13,6 +17,7 @@ type Phase = 'checking' | 'url-input' | 'analyzing' | 'preview' | 'error' | 'tim
 
 interface AnalysoiSivustoProps {
   paikkaId: number
+  paikkaInfo: PaikkaBase | null
   onConfirm: (
     brandingData: BrandingResult,
     selections: { logoUrl: string | null; gallery: string[] }
@@ -93,7 +98,7 @@ function MutedButton({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: AnalysoiSivustoProps) {
+export default function AnalysoiSivusto({ paikkaId, paikkaInfo, onConfirm, onSkip }: AnalysoiSivustoProps) {
   const router = useRouter()
   const [phase, setPhase] = useState<Phase>('checking')
   const [url, setUrl] = useState('')
@@ -120,6 +125,9 @@ export default function AnalysoiSivusto({ paikkaId, onConfirm, onSkip }: Analyso
 
   // ── Gallery selection state (D-04/D-05/D-06, ONBOARD-16) ────────────────────
   const [selectedGallery, setSelectedGallery] = useState<string[]>([])
+
+  // ── Live preview split-view / mobile toggle state (LIVEPREV) ───────────────
+  const [activeView, setActiveView] = useState<'edit' | 'preview'>('edit')
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const tryCountRef = useRef<number>(0)
