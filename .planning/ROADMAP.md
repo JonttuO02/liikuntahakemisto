@@ -273,11 +273,12 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
   4. The live preview renders via `CalloutCard`/`DiagonaalKortti` using the current in-progress (unsaved) field values, not stale data from the last save
   5. EditMode's existing-venue tabs get the same live preview pattern, replacing the current click-to-open `PreviewModal`
 
-**Plans**: 5/5 plans complete
+**Plans**: 5/6 plans complete
 **Wave 1**
 
 - [x] 51-01-PLAN.md — Shared LivePreviewProvider/reducer + useDebouncedValue (LIVEPREV-01/04)
 - [x] 51-05-PLAN.md — Gap closure (CR-01): unmount-time non-blob SET_MEDIA fallback in StepMediat so staged blob: URLs never go stale in the live preview (LIVEPREV-04)
+- [ ] 51-06-PLAN.md — Gap closure (WR-01): read the unmount fallback's media through a latestMediaRef so EditMode save-then-navigate dispatches post-save media, not the stale mount-time values (LIVEPREV-04)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
