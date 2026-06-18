@@ -348,4 +348,4 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 48. Logo-, väri- ja galleriavalinta | v2.2 | 4/4 | Complete    | 2026-06-17 |
 | 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 2/2 | Complete    | 2026-06-17 |
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 2/2 | Complete   | 2026-06-17 |
-| 51. Live-esikatselu velhossa | v2.2 | 7/7 | Complete   | 2026-06-18 |
+| 51. Live-esikatselu velhossa | v2.2 | 7/7 | Complete    | 2026-06-18 |

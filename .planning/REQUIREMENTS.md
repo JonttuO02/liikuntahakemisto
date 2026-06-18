@@ -42,10 +42,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Live Preview
 
-- [ ] **LIVEPREV-01**: Each wizard step updates a shared live-preview state on field change
-- [ ] **LIVEPREV-02**: Desktop shows the live preview side-by-side with the active step's edit form
-- [ ] **LIVEPREV-03**: Mobile shows a toggle between edit form and live preview (no side-by-side)
-- [ ] **LIVEPREV-04**: Live preview renders via `CalloutCard`/`DiagonaalKortti` using current in-progress (unsaved) field values, in both onboarding mode and EditMode
+- [x] **LIVEPREV-01**: Each wizard step updates a shared live-preview state on field change
+- [x] **LIVEPREV-02**: Desktop shows the live preview side-by-side with the active step's edit form
+- [x] **LIVEPREV-03**: Mobile shows a toggle between edit form and live preview (no side-by-side)
+- [x] **LIVEPREV-04**: Live preview renders via `CalloutCard`/`DiagonaalKortti` using current in-progress (unsaved) field values, in both onboarding mode and EditMode
 
 **D-03 scope correction (2026-06-18, Phase 51 discussion):** EditMode's `PreviewModal.tsx` click-to-open flow (`PaikkaKortti`/`DiagonaalKortti`/`PaikkaSheet`) is replaced by the same live `CalloutCard`/`DiagonaalKortti` preview used in onboarding — EditMode is explicitly in scope for LIVEPREV-02/03/04, not excluded. `PreviewModal.tsx` itself is kept (the `/business` dashboard at `app/business/page.tsx` still renders it independently) but its only call site inside `WizardInner.tsx`'s EditMode is removed.
 
@@ -78,10 +78,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 | FLOW-02 | Phase 48 | Complete |
 | FLOW-03 | Phase 48 | Complete |
 | FLOW-04 | Phase 50 | Complete |
-| LIVEPREV-01 | Phase 51 | Pending |
-| LIVEPREV-02 | Phase 51 | Pending |
-| LIVEPREV-03 | Phase 51 | Pending |
-| LIVEPREV-04 | Phase 51 | Pending |
+| LIVEPREV-01 | Phase 51 | Complete |
+| LIVEPREV-02 | Phase 51 | Complete |
+| LIVEPREV-03 | Phase 51 | Complete |
+| LIVEPREV-04 | Phase 51 | Complete |
 
 **Coverage:**
 
