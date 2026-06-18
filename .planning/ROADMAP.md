@@ -175,7 +175,7 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 - [~] **Phase 48: Logo-, väri- ja galleriavalinta** — Multi-candidate logo picker, 2-color swatch picker, validated PATCH route, gallery prefill (executed 2026-06-16; gap closure 48-04 pending — CR-01/CR-02)
 - [x] **Phase 49: Esikatselu- ja kontrastikorjaukset** — Step 6 CalloutCard swap + shared contrast-safe logo primitive *(2 plans, Wave 1×2 parallel)* (completed 2026-06-17)
 - [x] **Phase 50: Flow-uudelleenjärjestys & pikahyväksyntä** — StepPaikka before URL-analysis + quick-accept shortcut into admin queue (completed 2026-06-17)
-- [ ] **Phase 51: Live-esikatselu velhossa** — Shared live-preview state, desktop split-view, mobile toggle
+- [x] **Phase 51: Live-esikatselu velhossa** — Shared live-preview state, desktop split-view, mobile toggle (completed 2026-06-18)
 
 ## Phase Details
 
@@ -273,12 +273,12 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
   4. The live preview renders via `CalloutCard`/`DiagonaalKortti` using the current in-progress (unsaved) field values, not stale data from the last save
   5. EditMode's existing-venue tabs get the same live preview pattern, replacing the current click-to-open `PreviewModal`
 
-**Plans**: 3/4 plans executed
+**Plans**: 4/4 plans complete
 
 - [x] 51-01-PLAN.md — Shared LivePreviewProvider/reducer + useDebouncedValue (LIVEPREV-01/04)
 - [x] 51-02-PLAN.md — LivePreviewPane + LivePreviewToggle components + i18n keys (LIVEPREV-02/03/04)
 - [x] 51-03-PLAN.md — Wire 4 step components to dispatch debounced/instant field updates (LIVEPREV-01/04)
-- [ ] 51-04-PLAN.md — WizardInner provider mount + desktop split/mobile toggle (both modes) + remove EditMode PreviewModal + D-03 REQUIREMENTS fix (LIVEPREV-02/03/04)
+- [x] 51-04-PLAN.md — WizardInner provider mount + desktop split/mobile toggle (both modes) + remove EditMode PreviewModal + D-03 REQUIREMENTS fix (LIVEPREV-02/03/04)
 
 **UI hint**: yes
 
@@ -338,4 +338,4 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 | 48. Logo-, väri- ja galleriavalinta | v2.2 | 4/4 | Complete    | 2026-06-17 |
 | 49. Esikatselu- ja kontrastikorjaukset | v2.2 | 2/2 | Complete    | 2026-06-17 |
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 2/2 | Complete   | 2026-06-17 |
-| 51. Live-esikatselu velhossa | v2.2 | 3/4 | In Progress|  |
+| 51. Live-esikatselu velhossa | v2.2 | 4/4 | Complete   | 2026-06-18 |
