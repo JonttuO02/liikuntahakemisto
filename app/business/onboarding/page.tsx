@@ -7,6 +7,7 @@ import AnalysoiSivusto from './AnalysoiSivusto'
 import StepPaikka from './StepPaikka'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { type BrandingResult } from '@/lib/branding/brandingResult'
+import { type PaikkaBase } from '@/lib/onboardingUtils'
 
 type PagePhase = 'paikka' | 'analyze' | 'wizard'
 
@@ -25,17 +26,15 @@ function PreVaiheSpinner() {
 function StepPaikkaPrePhase({
   onNext,
   onPaikkaIdResolved,
+  onPaikkaInfoResolved,
 }: {
   onNext: () => void
   onPaikkaIdResolved: (paikkaId: number) => void
+  onPaikkaInfoResolved: (info: PaikkaBase) => void
 }) {
   const searchParams = useSearchParams()
   const [paikkaId, setPaikkaId] = useState<number | null>(null)
-  const [paikkaInfo, setPaikkaInfo] = useState<{
-    nimi: string
-    osoite: string | null
-    kaupunki: string | null
-  } | null>(null)
+  const [paikkaInfo, setPaikkaInfo] = useState<PaikkaBase | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -70,11 +69,12 @@ function StepPaikkaPrePhase({
       if (resolved !== null) {
         const { data: paikka } = await supabase
           .from('liikuntapaikat')
-          .select('nimi, osoite, kaupunki')
+          .select('nimi, laji, osoite, kaupunki, latitude, longitude')
           .eq('id', resolved)
           .single()
         if (!cancelled && paikka) {
-          setPaikkaInfo(paikka as { nimi: string; osoite: string | null; kaupunki: string | null })
+          setPaikkaInfo(paikka as PaikkaBase)
+          onPaikkaInfoResolved(paikka as PaikkaBase)
         }
       }
     }
@@ -99,11 +99,13 @@ function StepPaikkaPrePhase({
 // still works as a defensive fallback / for direct deep-links into the analyze phase.
 function PrePhase({
   paikkaId: knownPaikkaId,
+  paikkaInfo,
   onConfirm,
   onSkip,
   onPaikkaIdResolved,
 }: {
   paikkaId: number | null
+  paikkaInfo: PaikkaBase | null
   onConfirm: (
     result: BrandingResult,
     selections: { logoUrl: string | null; gallery: string[] }
@@ -157,13 +159,14 @@ function PrePhase({
     return <PreVaiheSpinner />
   }
 
-  return <AnalysoiSivusto paikkaId={paikkaId} onConfirm={onConfirm} onSkip={onSkip} />
+  return <AnalysoiSivusto paikkaId={paikkaId} paikkaInfo={paikkaInfo} onConfirm={onConfirm} onSkip={onSkip} />
 }
 
 export default function OnboardingWizardPage() {
   const [pagePhase, setPagePhase] = useState<PagePhase>('paikka')
   const [brandingData, setBrandingData] = useState<BrandingResult | null>(null)
   const [paikkaId, setPaikkaId] = useState<number | null>(null)
+  const [paikkaInfo, setPaikkaInfo] = useState<PaikkaBase | null>(null)
 
   async function handleConfirm(
     result: BrandingResult,
@@ -227,6 +230,7 @@ export default function OnboardingWizardPage() {
             <StepPaikkaPrePhase
               onNext={() => setPagePhase('analyze')}
               onPaikkaIdResolved={setPaikkaId}
+              onPaikkaInfoResolved={setPaikkaInfo}
             />
           </Suspense>
         )}
@@ -234,6 +238,7 @@ export default function OnboardingWizardPage() {
           <Suspense fallback={<PreVaiheSpinner />}>
             <PrePhase
               paikkaId={paikkaId}
+              paikkaInfo={paikkaInfo}
               onConfirm={handleConfirm}
               onSkip={handleSkip}
               onPaikkaIdResolved={setPaikkaId}
