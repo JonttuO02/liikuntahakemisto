@@ -352,11 +352,12 @@ Full archive: .planning/milestones/v2.1-ROADMAP.md
 
 ### Phase 51.1: Live preview on AnalysoiSivusto analyze/quick-accept results screen (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** Add the wizard's live CalloutCard/DiagonaalKortti preview to the pre-wizard AnalysoiSivusto `preview` phase, so the user sees the venue card (reflecting their logo/color/gallery picks) before quick-submitting or continuing to the wizard.
+**Requirements**: None (scoping-gap fix discovered after Phase 51 shipped — no formal REQ-ID)
 **Depends on:** Phase 51
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
 
-- [ ] TBD (run /gsd-plan-phase 51.1 to break down)
+- [ ] 51.1-01-PLAN.md — Thread full PaikkaBase (nimi/laji/osoite/kaupunki/latitude/longitude) from StepPaikkaPrePhase through OnboardingWizardPage state into AnalysoiSivusto as a new paikkaInfo prop (page.tsx prop threading)
+- [ ] 51.1-02-PLAN.md — Wrap AnalysoiSivusto's preview phase in LivePreviewProvider + WizardInner's split-view/toggle; dispatch SET_MEDIA on logo/gallery picks; pass merged brandingData override for live colors
