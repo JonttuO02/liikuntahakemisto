@@ -8,13 +8,15 @@ import { useTranslations } from 'next-intl'
 import type { OnboardingDraft } from '@/lib/onboardingUtils'
 import type { Liikuntapaikka } from '@/lib/types'
 import { type BrandingResult } from '@/lib/branding/brandingResult'
-import PreviewModal from '@/app/components/PreviewModal'
 import ProgressBar from './onboarding/ProgressBar'
 import StepMediat from './onboarding/StepMediat'
 import StepHinnasto from './onboarding/StepHinnasto'
 import StepAukioloajat from './onboarding/StepAukioloajat'
 import StepYhteystiedot from './onboarding/StepYhteystiedot'
 import StepEsikatselu from './onboarding/StepEsikatselu'
+import { LivePreviewProvider } from '@/lib/livePreview/LivePreviewContext'
+import LivePreviewPane from './onboarding/LivePreviewPane'
+import LivePreviewToggle from './onboarding/LivePreviewToggle'
 
 type PaikkaInfo = {
   nimi: string
@@ -49,6 +51,10 @@ function OnboardingMode({
   // blocking natural forward navigation (draft.current_step alone would block step 2 when
   // no draft exists yet, since StepPaikka saves nothing).
   const [maxReachedStep, setMaxReachedStep] = useState(0)
+
+  // Mobile Muokkaa/Esikatselu toggle (D-07). Local UI state, separate from the
+  // shared live-preview data context — resets to 'edit' on every step change (D-08).
+  const [activeView, setActiveView] = useState<'edit' | 'preview'>('edit')
 
   // URL-based step routing (D-02)
   const rawStep = parseInt(searchParams.get('step') ?? '1', 10)
@@ -192,6 +198,11 @@ function OnboardingMode({
     }
   }, [step, maxReachedStep, loading, router])
 
+  // Reset the mobile Muokkaa/Esikatselu toggle to 'edit' on every step change (D-08).
+  useEffect(() => {
+    setActiveView('edit')
+  }, [step])
+
   // Re-fetch draft when user navigates to step 6 so the preview is always up to date.
   useEffect(() => {
     if (step !== 5) return
@@ -238,73 +249,96 @@ function OnboardingMode({
   }
 
   return (
-    <>
-      <div className="w-full max-w-xl">
-        <ProgressBar
-          currentStep={step}
-          completedSteps={completedSteps}
-          onStepClick={goToStep}
-        />
+    <LivePreviewProvider
+      paikkaInfo={paikkaInfo}
+      paikkaId={paikkaId}
+      brandingData={brandingData}
+      initialDraft={draft}
+    >
+      <div className="flex gap-6 items-start justify-center">
+        <div className="w-full max-w-xl">
+          <ProgressBar
+            currentStep={step}
+            completedSteps={completedSteps}
+            onStepClick={goToStep}
+          />
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            {step === 1 && paikkaId !== null && (
-              <StepMediat
-                paikkaId={paikkaId}
-                initialDraft={draft}
-                onNext={() => saveAndAdvance(1)}
-                // Step 1 is the wizard's first step (StepPaikka moved to page.tsx as a
-                // pre-phase) — there is no previous wizard step, so "back" returns to the
-                // page-level analyze pre-phase instead of navigating within the wizard.
-                onPrev={() => onBackToAnalyze?.()}
-              />
-            )}
-            {step === 2 && paikkaId !== null && (
-              <StepHinnasto
-                paikkaId={paikkaId}
-                initialHinnasto={draft?.hinnasto}
-                initialBrandingHinnasto={brandingPrices}
-                onNext={() => saveAndAdvance(2)}
-                onPrev={() => goToStep(1)}
-              />
-            )}
-            {step === 3 && paikkaId !== null && (
-              <StepAukioloajat
-                paikkaId={paikkaId}
-                existingAukioloajat={paikkaInfo?.aukioloajat}
-                initialDraftAukioloajat={draft?.aukioloajat}
-                initialBrandingAukioloajat={brandingHours}
-                onNext={() => saveAndAdvance(3)}
-                onPrev={() => goToStep(2)}
-              />
-            )}
-            {step === 4 && paikkaId !== null && (
-              <StepYhteystiedot
-                paikkaId={paikkaId}
-                initialYhteystiedot={draft?.yhteystiedot}
-                initialBrandingWebsite={brandingWebsite}
-                onNext={() => saveAndAdvance(4)}
-                onPrev={() => goToStep(3)}
-              />
-            )}
-            {step === 5 && (
-              <StepEsikatselu
-                draft={draft}
-                paikkaInfo={paikkaInfo}
-                brandingData={brandingData}
-                onPrev={() => goToStep(4)}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
+          <div className="lg:hidden">
+            <LivePreviewToggle activeView={activeView} onChange={setActiveView} />
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${step}-${activeView}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {activeView === 'preview' ? (
+                <div className="lg:hidden">
+                  <LivePreviewPane />
+                </div>
+              ) : (
+                <>
+                  {step === 1 && paikkaId !== null && (
+                    <StepMediat
+                      paikkaId={paikkaId}
+                      initialDraft={draft}
+                      onNext={() => saveAndAdvance(1)}
+                      // Step 1 is the wizard's first step (StepPaikka moved to page.tsx as a
+                      // pre-phase) — there is no previous wizard step, so "back" returns to the
+                      // page-level analyze pre-phase instead of navigating within the wizard.
+                      onPrev={() => onBackToAnalyze?.()}
+                    />
+                  )}
+                  {step === 2 && paikkaId !== null && (
+                    <StepHinnasto
+                      paikkaId={paikkaId}
+                      initialHinnasto={draft?.hinnasto}
+                      initialBrandingHinnasto={brandingPrices}
+                      onNext={() => saveAndAdvance(2)}
+                      onPrev={() => goToStep(1)}
+                    />
+                  )}
+                  {step === 3 && paikkaId !== null && (
+                    <StepAukioloajat
+                      paikkaId={paikkaId}
+                      existingAukioloajat={paikkaInfo?.aukioloajat}
+                      initialDraftAukioloajat={draft?.aukioloajat}
+                      initialBrandingAukioloajat={brandingHours}
+                      onNext={() => saveAndAdvance(3)}
+                      onPrev={() => goToStep(2)}
+                    />
+                  )}
+                  {step === 4 && paikkaId !== null && (
+                    <StepYhteystiedot
+                      paikkaId={paikkaId}
+                      initialYhteystiedot={draft?.yhteystiedot}
+                      initialBrandingWebsite={brandingWebsite}
+                      onNext={() => saveAndAdvance(4)}
+                      onPrev={() => goToStep(3)}
+                    />
+                  )}
+                  {step === 5 && (
+                    <StepEsikatselu
+                      draft={draft}
+                      paikkaInfo={paikkaInfo}
+                      brandingData={brandingData}
+                      onPrev={() => goToStep(4)}
+                    />
+                  )}
+                </>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="hidden lg:flex flex-col gap-4 w-[360px] flex-shrink-0 sticky top-6">
+          <LivePreviewPane />
+        </div>
       </div>
-    </>
+    </LivePreviewProvider>
   )
 }
 
@@ -313,7 +347,9 @@ function EditMode({ paikka, paikkaId }: { paikka: Liikuntapaikka; paikkaId: numb
   const t = useTranslations('Business')
   const searchParams = useSearchParams()
   const router = useRouter()
-  const [previewOpen, setPreviewOpen] = useState(false)
+
+  // Mobile Muokkaa/Esikatselu toggle (D-07) — same pattern as OnboardingMode (D-08).
+  const [activeView, setActiveView] = useState<'edit' | 'preview'>('edit')
 
   // Local state that persists step data across tab-bar navigation.
   // Initialized from paikka (server snapshot); updated via onSaveComplete after each save.
@@ -332,6 +368,11 @@ function EditMode({ paikka, paikkaId }: { paikka: Liikuntapaikka; paikkaId: numb
 
   const currentStep = searchParams.get('step') ?? '1'
 
+  // Reset the mobile Muokkaa/Esikatselu toggle to 'edit' on every tab change (D-08).
+  useEffect(() => {
+    setActiveView('edit')
+  }, [currentStep])
+
   function tabLabel(n: number): string {
     switch (n) {
       case 1: return t('stepPlaceName')
@@ -344,56 +385,76 @@ function EditMode({ paikka, paikkaId }: { paikka: Liikuntapaikka; paikkaId: numb
   }
 
   return (
-    <>
-      {/* Preview modal */}
-      <AnimatePresence>
-        {previewOpen && (
-          <PreviewModal
-            paikka={{ ...paikka, logo_url: localLogoUrl, photo_urls: localPhotoUrls }}
-            onClose={() => setPreviewOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <div className="flex flex-col gap-6">
-        {/* Back link */}
-        <a
-          href="/business"
-          className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms] inline-block"
-        >
-          {t('editBackToList')}
-        </a>
-
-        {/* Title */}
-        <h1 className="text-xl font-bold text-[#111111]">{t('editTitle')}</h1>
-
-        {/* Tab bar with preview button */}
-        <div className="flex gap-2 flex-wrap items-center">
-          {[1, 2, 3, 4, 5].map(n => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => router.push('/business/' + paikkaId + '?step=' + n)}
-              className={`text-sm font-bold rounded-full px-4 py-2 [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)] ${
-                currentStep === String(n)
-                  ? 'bg-[#111111] text-white'
-                  : 'text-[rgba(17,17,17,0.45)] hover:text-[#111111]'
-              }`}
-            >
-              {tabLabel(n)}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => setPreviewOpen(true)}
-            className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] underline-offset-2 hover:underline transition-colors ml-auto"
+    <LivePreviewProvider
+      paikkaInfo={{
+        nimi: paikka.nimi,
+        laji: paikka.laji,
+        osoite: paikka.osoite,
+        kaupunki: paikka.kaupunki,
+        latitude: paikka.latitude,
+        longitude: paikka.longitude,
+        aukioloajat: paikka.aukioloajat as Record<string, { open: string; close: string }> | null,
+      }}
+      paikkaId={paikkaId}
+      brandingData={null}
+      initialDraft={{
+        paikka_id: paikkaId,
+        hinnasto: localHinnasto ?? undefined,
+        aukioloajat: localAukioloajat ?? undefined,
+        yhteystiedot: localYhteystiedot,
+        media_urls: { logo: localLogoUrl, photos: localPhotoUrls },
+      }}
+    >
+      <div className="flex gap-6 items-start justify-center">
+        <div className="flex flex-col gap-6">
+          {/* Back link */}
+          <a
+            href="/business"
+            className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms] inline-block"
           >
-            {t('previewCta')}
-          </button>
-        </div>
+            {t('editBackToList')}
+          </a>
 
-        {/* Step content */}
-        <div>
+          {/* Title */}
+          <h1 className="text-xl font-bold text-[#111111]">{t('editTitle')}</h1>
+
+          {/* Tab bar */}
+          <div className="flex gap-2 flex-wrap items-center">
+            {[1, 2, 3, 4, 5].map(n => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => router.push('/business/' + paikkaId + '?step=' + n)}
+                className={`text-sm font-bold rounded-full px-4 py-2 [transition:background-color_150ms_var(--ease-out),color_150ms_var(--ease-out)] ${
+                  currentStep === String(n)
+                    ? 'bg-[#111111] text-white'
+                    : 'text-[rgba(17,17,17,0.45)] hover:text-[#111111]'
+                }`}
+              >
+                {tabLabel(n)}
+              </button>
+            ))}
+          </div>
+
+          <div className="lg:hidden">
+            <LivePreviewToggle activeView={activeView} onChange={setActiveView} />
+          </div>
+
+          {/* Step content */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${currentStep}-${activeView}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+          {activeView === 'preview' ? (
+            <div className="lg:hidden">
+              <LivePreviewPane />
+            </div>
+          ) : (
+          <div>
           {currentStep === '1' && (
             <div className="glass rounded-2xl p-6 flex flex-col gap-4">
               <div className="flex flex-col gap-1">
@@ -445,9 +506,17 @@ function EditMode({ paikka, paikkaId }: { paikka: Liikuntapaikka; paikkaId: numb
               onSaveComplete={setLocalYhteystiedot}
             />
           )}
+          </div>
+          )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="hidden lg:flex flex-col gap-4 w-[360px] flex-shrink-0 sticky top-6">
+          <LivePreviewPane />
         </div>
       </div>
-    </>
+    </LivePreviewProvider>
   )
 }
 
