@@ -24,7 +24,11 @@
       "Skill(gsd-secure-phase)",
       "Skill(gsd-validate-phase)",
       "Skill(gsd-audit-milestone)",
-      "Skill(gsd-pause-work)"
+      "Skill(gsd-pause-work)",
+      "Skill(gsd-debug)"
     ]
+  },
+  "worktree": {
+    "baseRef": "head"
   }
 }
