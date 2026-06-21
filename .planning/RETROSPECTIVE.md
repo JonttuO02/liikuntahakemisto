@@ -285,6 +285,48 @@
 
 ---
 
+## Milestone: v2.2 — Onboarding-tekoälyn parannukset
+
+**Shipped:** 2026-06-21
+**Phases:** 6 (phases 47–51.1) | **Plans:** 22 | **Timeline:** 3 days (2026-06-16 → 2026-06-19)
+
+### What Was Built
+- Multi-page scraper crawl (homepage + up to 4 keyword-matched subpages) with a redirect-revalidating SSRF guard, replacing the single-page v2.1 pipeline
+- Plural branding schema: `logo_candidates`/`image_urls`/separate background+accent color columns, re-keyed UNIQUE constraint to `(business_account_id, paikka_id)`
+- Logo + 2-color selection UI with a validated `PATCH /api/business/branding` autosave route, gallery picker prefilling the Mediat step
+- Quick-accept path: AI results map into the existing `onboarding_draft` and reuse the unmodified submit route — no parallel write path
+- Step 6 preview swapped to `CalloutCard` + a shared `ContrastSafeLogo` primitive (fixes white/transparent logo invisibility)
+- `StepPaikka` moved to a pre-phase before URL analysis; wizard renumbered to 5 steps
+- Shared `LivePreviewProvider` context: every wizard step dispatches live updates, rendered via desktop split-view / mobile toggle, in both onboarding and EditMode — extended in a gap-closure sub-phase (51.1) to the pre-wizard AnalysoiSivusto results screen
+
+### What Worked
+- Sequencing live preview (Phase 51) last, after the data shape from Phases 47–49 settled — avoided rebuilding it mid-milestone
+- Gap-closure plans inserted directly into Phase 48 (48-04) and Phase 51 (51-05/06/07) caught verification-found regressions without renumbering
+- Shared `isUrlSafe` + redirect-revalidating fetch wrapper reused across every outbound fetch (page/subpage/CSS/logo) — one SSRF guard instead of N inline checks
+
+### What Was Inefficient
+- Two single-expression regressions shipped in Phase 48 (step-skip on confirm, array-position color fallback) and needed a same-day follow-up plan (48-04)
+- Live preview needed three separate gap-closure rounds in Phase 51 (CR-01 blob staleness, WR-01 EditMode stale-unmount, second CR-01 branding-path overlay) — the branding-path overlay gap specifically was only caught because a user tested an AI-onboarded venue, not by automated verification
+- Phase 51.1 itself exists because Phase 51's CONTEXT.md scoped out the AnalysoiSivusto results screen by mistake, despite that screen already having the branding data available
+
+### Patterns Established
+- `fetchWithSsrfGuard` wrapper re-validates every 3xx redirect hop against `isUrlSafe`, capped at 2 hops — the standard shape for any future outbound fetch in the scraping pipeline
+- React Context + reducer (no new state library) is sufficient for cross-step live-preview state at this scale
+- `cheerio` for DOM-based link/image discovery, replacing regex extraction
+
+### Key Lessons
+1. When a feature depends on the final shape of upstream data, sequence it last even if it delays visible progress — Phase 51 building live preview after 47-49 avoided a rebuild
+2. A verification report with `status: gaps_found` is not optional follow-up — Phase 48 and Phase 51 both got same-phase 04+/05+ gap-closure plans before moving on; Phases 23 and 30 (from earlier milestones) show what happens when that follow-up doesn't happen — both still carry unfixed `gaps_found` reports at v2.2 close
+3. Scope a sub-phase's CONTEXT.md by checking what data is actually available at each screen, not just by the screen's nominal place in the flow — Phase 51.1 only existed because Phase 51 assumed the pre-wizard screen lacked branding data it actually had
+4. Re-keying a UNIQUE constraint to include the correct scoping column (`paikka_id`) is worth doing as schema work before building selection UI on top of it — retrofitting later means a migration plus a backfill
+
+### Cost Observations
+- Model mix: Sonnet 4.6 throughout
+- Sessions: 3 days, multiple sessions per day during execution
+- Notable: 211 commits across 6 phases/22 plans — a higher commit-to-plan ratio than v1.7, driven by the gap-closure cycles in Phases 48 and 51
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
