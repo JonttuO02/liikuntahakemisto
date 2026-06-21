@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v2.2
 milestone_name: Onboarding-tekoälyn parannukset
-current_phase: 51.1
-status: milestone_complete
-stopped_at: v2.2 milestone complete — all 6 phases finished, ready to archive
-last_updated: "2026-06-19T00:15:00.000Z"
-last_activity: 2026-06-19
-last_activity_desc: Phase 51.1 verified and complete; v2.2 is 100% done
+current_phase: 2
+status: Awaiting next milestone
+stopped_at: v2.2 milestone complete (Phase 51.1 verified, all 6 phases done) — ready for /gsd-complete-milestone
+last_updated: "2026-06-21T13:06:35.668Z"
+last_activity: 2026-06-21
+last_activity_desc: Milestone v2.2 completed and archived
 progress:
   total_phases: 6
   completed_phases: 6
@@ -28,12 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-19)
 
 ## Current Position
 
-Phase: 51.1 (final phase of v2.2) — COMPLETE
-Plan: 2/2 complete
-Status: v2.2 milestone 100% complete (6/6 phases, 22/22 plans)
-Last activity: 2026-06-19 — Phase 51.1 verified (UAT 2/2 passed), v2.2 done
-
-Progress: [██████████] 100%
+Phase: Milestone v2.2 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-21 — Milestone v2.2 completed and archived
 
 ## v2.2 Roadmap Summary
 
@@ -86,6 +84,39 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
 - P45-DNS: DNS rebinding bypasses hostname SSRF guard — post-DNS IP validation deferred (relevant to Phase 47's SSRF re-validation work)
 - CR-01: `app/business/[id]/page.tsx` reads venue data without ownership check (pre-existing since Phase 38)
 - CR-02: `app/api/business/onboarding/submit/route.ts` doesn't filter by `paikka_id` (pre-existing since Phase 38)
+- **Cleanup phase candidate** — fold into a small early phase of the next milestone:
+  - P23-GAP (23-VERIFICATION.md, status gaps_found, never fixed): `AktiiviLogo.tsx` redesigned correctly but orphaned — not imported in `Etusivu.tsx` or anywhere else; bottom sheet still renders the old static SVG watermark (lines 906-933). Wiring attempt was reverted once before in Phase 16 per HANDOFF.json.
+  - P30-GAP (30-VERIFICATION.md, status gaps_found, never fixed): hardcoded Finnish strings still visible to EN-locale users in `AuthModal.tsx` (loading states + mode-toggle paragraph, lines 274/284-303), `Etusivu.tsx` CalloutCard (`'vain jäsenyys'` line 278, review overlay line 1262), `app/paikat/[id]/page.tsx` location row (lines 91/96), `DiagonaalKortti.tsx` aria-label (line 205).
+  - P30-BUG (same report): `AuthModal.tsx` line 27 operator-precedence bug — `A || B && C` should be `(A || B) && C` in error-message classification.
+
+## Deferred Items
+
+Items acknowledged and deferred at v2.2 milestone close on 2026-06-21 (pre-close audit — all from phases 20-44, pre-existing debt unrelated to v2.2 scope; v2.2's own phases 47-51.1 are clean):
+
+| Category | Item | Status |
+|----------|------|--------|
+| uat_gap | Phase 02: 02-UAT.md | unknown |
+| uat_gap | Phase 04: 04-UAT.md | in_progress |
+| uat_gap | Phase 20: 20-HUMAN-UAT.md | partial (4 pending scenarios) |
+| uat_gap | Phase 32: 32-HUMAN-UAT.md | partial (5 pending scenarios) |
+| uat_gap | Phase 33: 33-UAT.md | in_progress |
+| uat_gap | Phase 39: 39-HUMAN-UAT.md | partial (4 pending scenarios) |
+| uat_gap | Phase 42: 42-UAT.md | passed |
+| uat_gap | Phase 43: 43-UAT.md | passed |
+| verification_gap | Phase 20: 20-VERIFICATION.md | human_needed |
+| verification_gap | Phase 21: 21-VERIFICATION.md | human_needed |
+| verification_gap | Phase 22: 22-VERIFICATION.md | human_needed |
+| verification_gap | Phase 23: 23-VERIFICATION.md | gaps_found (see Carry-Forward — P23-GAP) |
+| verification_gap | Phase 25: 25-VERIFICATION.md | human_needed |
+| verification_gap | Phase 26: 26-VERIFICATION.md | human_needed |
+| verification_gap | Phase 27: 27-VERIFICATION.md | human_needed |
+| verification_gap | Phase 30: 30-VERIFICATION.md | gaps_found (see Carry-Forward — P30-GAP, P30-BUG) |
+| verification_gap | Phase 32: 32-VERIFICATION.md | human_needed |
+| verification_gap | Phase 34: 34-VERIFICATION.md | human_needed |
+| verification_gap | Phase 38: 38-VERIFICATION.md | human_needed |
+| verification_gap | Phase 39: 39-VERIFICATION.md | human_needed |
+| verification_gap | Phase 40: 40-VERIFICATION.md | human_needed |
+| verification_gap | Phase 44: 44-VERIFICATION.md | human_needed |
 
 ## Open Product Decisions (must resolve before relevant phase)
 
@@ -115,3 +146,7 @@ Resume file: None
 ### Roadmap Evolution
 
 - Phase 51.1 inserted after Phase 51: Live preview missing on AnalysoiSivusto analyze/quick-accept results screen — flagged by Phase 50 summary, scoped out of Phase 51 CONTEXT.md by mistake (the preview sub-phase has brandingResult data available, contrary to the blanket pre-phase exclusion reasoning) (URGENT)
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

@@ -1,5 +1,33 @@
 # Milestones — Liikuntahakemisto
 
+## v2.2 Onboarding-tekoälyn parannukset (Shipped: 2026-06-21)
+
+**Phases completed:** 6 phases, 22 plans, 48 tasks
+
+**Key accomplishments:**
+
+- Additive Postgres migration adding four plural-branding columns and a NOT-NULL `paikka_id` FK with deterministic backfill, re-keying `business_branding`'s UNIQUE constraint to `(business_account_id, paikka_id)`, pushed live and verified with three SQL evidence queries.
+- Extracted route.ts's inline SSRF check into a shared, pure `isUrlSafe(url)` validator and built a `fetchWithSsrfGuard` wrapper that re-validates every 3xx redirect hop against it with a 2-hop cap, closing the SSRF-via-redirect vector for the upcoming multi-page scraper.
+- Extended scraper.ts from a single-page scrape into a same-origin multi-page crawler (homepage + up to 4 keyword-matched subpages) with labeled per-page output, gallery image extraction distinct from logo candidates, and every outbound fetch (page/subpage/CSS/logo-image) routed through the SSRF-guarded redirect-revalidating wrapper from Plan 47-02.
+- Replaced the v2.1 branding prompt with the verbatim multi-page version, reshaped `analyzeWithClaude` to return array-based `logos`/`colors` with per-page `source_page` provenance and an optional homepage screenshot input, and added a fail-soft Playwright + `@sparticuz/chromium` screenshot module with Next.js 14.2 serverless-externalization config.
+- Rewired `app/api/business/analyze-website/route.ts` to ownership-checked, `(business_account_id, paikka_id)`-scoped UPSERTs/queries, replaced the inline SSRF block with the shared `isUrlSafe` validator, and threaded the new multi-page scraper/analyzer/screenshot pipeline through `runAnalysis` — closing the integration gap left by Plans 47-01 through 47-04.
+- Relaxed analyze-website's POST ownership check to ownership-only (unblocking the 'preview' phase for onboarding businesses), reshaped BrandingResult to mirror the plural GET response, and added a validated PATCH /api/business/branding autosave route enforcing logo/color/gallery membership checks.
+- Reworked the onboarding pre-vaihe's read-only branding preview into interactive logo/color pickers with immediate PATCH autosave, and fixed the pre-existing paikka_id gap (Suspense-safe resolution) that was silently breaking every analyze-website call.
+- Added an autosaving 5-cap gallery checkbox picker that reliably pre-fills the wizard's Mediat step (via an awaited save-step write that closes a draft-fetch race), and a "Hyväksy ja lähetä" quick-accept path that maps AI results + user selections into the existing onboarding_draft and reuses the unmodified submit route.
+- Fixed two single-expression regressions: the onboarding wizard now lands on Step 2 (Media) after analysis instead of skipping past it, and the Step 6 preview background color is selected by semantic role instead of array position.
+- `app/components/ContrastSafeLogo.tsx`
+- One-time SQL migration decrementing in-flight onboarding_draft.current_step values, plus a reconciled 0-5 input bounds check in save-step/route.ts. Schema pushed to the live database by the orchestrator after the executor hit a credentials gate.
+- StepPaikka moved to a page-level pre-phase before website analysis; wizard renumbered to 5 steps (StepMediat=1 ... StepEsikatselu=5); wizard step-1 back-button rewired to return to the analyze pre-phase after a UAT-caught dead-end bug.
+- 1. [Rule 1 - Bug] Removed literal "PaikkaSheet" string from LivePreviewPane.tsx doc comment
+- 1. [Rule 3 - Blocking issue] No literal Out-of-Scope exclusion row existed to remove for D-03
+- Unmount-time SET_MEDIA dispatch in StepMediat clears staged blob: URLs from LivePreviewContext before the existing revocation effects fire, closing the CR-01/LIVEPREV-04 verification gap
+- Added a latestMediaRef synced on every persisted-media change so StepMediat's unmount-only SET_MEDIA fallback dispatches post-save media instead of the stale mount-time snapshot (WR-01 gap closure for LIVEPREV-04).
+- Branding branch of `livePreviewPaikka` now overlays live `state.hinnasto`/`state.aukioloajat`/`state.yhteystiedot` onto `buildBrandingPreview`'s AI-scraped base, fixing CR-01 so AI-website-analysis-onboarded venues see live pricing/hours/contact edits in the wizard preview.
+- Extended StepPaikkaPrePhase's Supabase select to the full PaikkaBase column set and threaded the result through OnboardingWizardPage state into AnalysoiSivusto's new paikkaInfo prop.
+- Wrapped AnalysoiSivusto's preview phase in its own LivePreviewProvider instance with the WizardInner desktop split / mobile toggle layout, syncing logo and gallery picks into the live CalloutCard/DiagonaalKortti preview via SET_MEDIA effects while colors flow through a brandingData override.
+
+---
+
 ## v1.9 Auth-Separaatio & Cleanup — 2026-06-12
 
 **Shipped:** 2026-06-12
