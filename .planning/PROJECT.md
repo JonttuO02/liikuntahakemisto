@@ -1,18 +1,8 @@
 # Liikuntahakemisto
 
-## Current Milestone: v2.2 Onboarding-tekoälyn parannukset
+## Shipped: v2.2 Onboarding-tekoälyn parannukset (2026-06-21)
 
-**Goal:** Onboarding-velhon tekoälyanalyysi tuottaa parempaa dataa laajemmalla sivuston haulla, ja käyttäjä näkee/hyväksyy tulokset reaaliajassa — pienemmällä manuaalisella työllä.
-
-**Target features:**
-- Esikatselun korjaus: poistetaan käyttämätön `PaikkaKortti` step 6:sta, tilalle `CalloutCard`
-- Flow-uudelleenjärjestys: `StepPaikka` ennen URL-analyysiä; pikahyväksyntä ohittaa loput velhon vaiheet suoraan admin-jonoon
-- Parempi scraping-ohjeistus: Claude-prompt + scraper seuraavat etusivun linkkejä (hinnasto/aukioloajat/yhteystiedot-sivut)
-- Kuvien haku: muut sivun kuvat (ei vain logo) esitäyttävät Mediat-vaiheen
-- Useamman logon valinta käyttäjälle, jos kandidaatteja löytyy useita
-- Värien käyttö: käyttäjä valitsee 2 väriä paletista → tausta + korostusväri (ei vain tausta)
-- Bugikorjaus: valkoinen/läpinäkyvä logo ei erotu esikatselun valkoisesta taustasta
-- Live-esikatselu velhossa: kaikki vaiheet päivittävät esikatselun reaaliajassa; desktop preview+edit vierekkäin, mobiili toggle
+**Delivered:** Monisivuinen scraper-putki SSRF-uudelleenvalidoinnilla ja plural-skeemalla (logo_candidates, image_urls, värit); käyttäjä valitsee logon ja 2 väriä useista AI-kandidaateista validoidun PATCH-reitin kautta; galleriakuvat esitäyttävät Mediat-vaiheen; Step 6 -esikatselu vaihdettu `CalloutCard`:iin + kontrastiturvallinen logoprimitiivi; `StepPaikka` siirretty ennen URL-analyysiä + pikahyväksyntä admin-jonoon; jaettu live-esikatselun tila kaikissa velhon vaiheissa (desktop split-view, mobiili toggle) sekä onboarding- että EditModessa, ulottuen myös pre-wizard-analyysinäytölle (Phase 51.1 gap-fix). 21/21 vaatimusta toimitettu, 6 vaihetta, 22 plania, 211 committia, 3 päivää (2026-06-16 → 2026-06-19).
 
 ---
 
@@ -283,6 +273,13 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - Kartta: etäisyyspohjainen suodatus
 - Käyttäjäprofiili ja asetukset (laaja)
 
+### Cleanup candidates (deferred at v2.2 close — fold into a small early phase of next milestone)
+
+- **P23-GAP** (never fixed, found in Phase 23 verification): `AktiiviLogo.tsx` redesigned correctly but orphaned — never imported in `Etusivu.tsx`; bottom sheet still shows the old static SVG watermark (lines 906-933). A prior wiring attempt was reverted in Phase 16.
+- **P30-GAP** (never fixed, found in Phase 30 verification): hardcoded Finnish strings still visible to EN-locale users in `AuthModal.tsx`, `Etusivu.tsx` CalloutCard, `app/paikat/[id]/page.tsx` location row, `DiagonaalKortti.tsx` aria-label.
+- **P30-BUG** (same report): `AuthModal.tsx` line 27 operator-precedence bug in error-message classification — `A || B && C` should be `(A || B) && C`.
+- 22 other open verification/UAT items from phases 20-44 (mostly `human_needed` manual checkpoints never re-confirmed) — see `.planning/STATE.md` Deferred Items table for the full list; low priority unless a related area is touched again.
+
 ### Out of Scope
 
 - Varausjärjestelmä — linkitetään palveluntarjoajan omaan sivuun
@@ -295,7 +292,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ## Context
 
-**Nykytila:** v2.1 AI-pohjainen yrityssivuanalyysi toimitettu 2026-06-16. Kaikki 14 v2.1-vaatimusta toteutettu. Sovellus analysoi automaattisesti yrityksen verkkosivun — hakee HTML:n `fetch`:llä, poimii brändivärit ja logo-kandidaatit, muuntaa kuvat `sharp`:lla, lähettää ne Claudelle yhdessä kutsulla (vision + teksti), ja esitäyttää onboarding-velhon steps 3–5 tuloksilla. DiagonaalKortti renderöi brändivärit YIQ-kontrastilla. 10 plania (phases 44–46), 76 committia.
+**Nykytila:** v2.2 Onboarding-tekoälyn parannukset toimitettu 2026-06-21. Kaikki 21 v2.2-vaatimusta toteutettu. Scraper seuraa monisivuisesti hinnasto/aukioloajat/yhteystiedot-alasivuja SSRF-uudelleenvalidoinnilla; käyttäjä valitsee logon ja 2 väriä useista kandidaateista; galleria esitäyttää Mediat-vaiheen; StepPaikka edeltää URL-analyysiä; jaettu live-esikatselun tila näkyy reaaliajassa kaikissa vaiheissa (myös pre-wizard-analyysinäytöllä). 22 plania (phases 47–51.1), 211 committia, 3 päivää.
 
 **Data-arkkitehtuuri:** Google Places API hakee automaattisesti aukioloajat → upsertit Supabaseen. Kertakäyntihinnat manuaalisesti top 20 palvelulle. AI-widget: Claude Haiku + Open-Meteo, sessionStorage-cache per kalenteripäivä + per kaupunki. Supabase Auth käyttäjätaulut + suosikit (user_id → paikka_id). Sync-skripti tukee ?kaupunki= parametria Helsinki/Turku/Tampere-datalle.
 
@@ -376,4 +373,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-19 — Phase 51.1 (Live preview on AnalysoiSivusto) complete, v2.2 is now feature-complete*
+*Last updated: 2026-06-21 — v2.2 milestone shipped and archived*

@@ -21,10 +21,10 @@ current_phase_name: live-preview-on-analysoisivusto-analyze-quick-accept-results
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-19)
+See: .planning/PROJECT.md (updated 2026-06-21)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v2.2 milestone complete — ready to archive via /gsd-complete-milestone
+**Current focus:** v2.2 archived — planning next milestone (see Carry-Forward for cleanup-phase candidates)
 
 ## Current Position
 
