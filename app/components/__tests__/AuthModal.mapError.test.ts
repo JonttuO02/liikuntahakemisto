@@ -22,6 +22,10 @@ describe('mapError', () => {
   it('resolves an unrecognized message to errorGeneric', () => {
     expect(mapError('some totally unrelated error')).toBe('errorGeneric')
   })
+
+  it('resolves the real Supabase weak-password message', () => {
+    expect(mapError('Password should be at least 6 characters')).toBe('errorWeakPassword')
+  })
 })
 
 describe('mapBusinessError', () => {
@@ -35,5 +39,9 @@ describe('mapBusinessError', () => {
 
   it('does NOT resolve a message containing "password" without "6" to errorWeakPassword (precedence guard)', () => {
     expect(mapBusinessError('password reset failed')).toBe('errorGeneric')
+  })
+
+  it('resolves the real Supabase weak-password message', () => {
+    expect(mapBusinessError('Password should be at least 6 characters')).toBe('errorWeakPassword')
   })
 })
