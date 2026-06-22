@@ -104,8 +104,8 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
 - CR-02: `app/api/business/onboarding/submit/route.ts` doesn't filter by `paikka_id` (pre-existing since Phase 38)
 - **Cleanup phase candidate** — fold into a small early phase of the next milestone:
   - P23-GAP (23-VERIFICATION.md, status gaps_found, never fixed): `AktiiviLogo.tsx` redesigned correctly but orphaned — not imported in `Etusivu.tsx` or anywhere else; bottom sheet still renders the old static SVG watermark (lines 906-933). Wiring attempt was reverted once before in Phase 16 per HANDOFF.json.
-  - P30-GAP (30-VERIFICATION.md, status gaps_found, never fixed): hardcoded Finnish strings still visible to EN-locale users in `AuthModal.tsx` (loading states + mode-toggle paragraph, lines 274/284-303), `Etusivu.tsx` CalloutCard (`'vain jäsenyys'` line 278, review overlay line 1262), `app/paikat/[id]/page.tsx` location row (lines 91/96), `DiagonaalKortti.tsx` aria-label (line 205).
-  - P30-BUG (same report): `AuthModal.tsx` line 27 operator-precedence bug — `A || B && C` should be `(A || B) && C` in error-message classification.
+  - ~~P30-GAP~~ — RESOLVED in Phase 52 (2026-06-22): re-verified all four files already route hardcoded strings through next-intl; see `52-VERIFICATION.md`.
+  - ~~P30-BUG~~ — RESOLVED in Phase 52 (2026-06-22): precedence bug had already been fixed in commit `85eea7a8` (2026-06-04); Phase 52 added a regression test guarding it.
 
 ## Deferred Items
 
@@ -128,7 +128,7 @@ Items acknowledged and deferred at v2.2 milestone close on 2026-06-21 (pre-close
 | verification_gap | Phase 25: 25-VERIFICATION.md | human_needed |
 | verification_gap | Phase 26: 26-VERIFICATION.md | human_needed |
 | verification_gap | Phase 27: 27-VERIFICATION.md | human_needed |
-| verification_gap | Phase 30: 30-VERIFICATION.md | gaps_found (see Carry-Forward — P30-GAP, P30-BUG) |
+| verification_gap | Phase 30: 30-VERIFICATION.md | resolved in Phase 52 (2026-06-22) — see 52-VERIFICATION.md |
 | verification_gap | Phase 32: 32-VERIFICATION.md | human_needed |
 | verification_gap | Phase 34: 34-VERIFICATION.md | human_needed |
 | verification_gap | Phase 38: 38-VERIFICATION.md | human_needed |

@@ -276,6 +276,11 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **LIVEPREV-04**: Live-esikatselu renderöityy `CalloutCard`/`DiagonaalKortti`:lla käyttäen nykyisiä, tallentamattomia kentän arvoja — sekä onboarding- että EditModessa, mukaan lukien AI-sivuanalyysi-poluilla (kolme korjauskierrosta: CR-01 blob-URL-staleness, WR-01 EditModen save-then-navigate-staleness, toinen CR-01 brändipolun hinnasto/aukioloajat/yhteystiedot-ohitus) — v2.2 (Phase 51)
 - ✓ **Live-esikatselu AnalysoiSivusto-näytöllä** (ei muodollista REQ-ID:tä — Phase 51:n alun perin rajaama puute, havaittu käyttäjän testissä): "Analysoi sivustosi" -tulosnäyttö (jossa pikahyväksyntä tapahtuu) näyttää nyt saman live-esikatselun kuin velho — logo/väri/galleria-valinnat päivittyvät reaaliajassa ennen "Hyväksy ja lähetä" -painiketta — v2.2 (Phase 51.1)
 
+### Validated (v3.0)
+
+- ✓ **CLEAN-06**: EN-locale-käyttäjä ei näe kovakoodattuja suomenkielisiä merkkijonoja AuthModalissa, CalloutCardissa, paikkasivulla tai DiagonaalKortissa — re-verified already satisfied (resolves P30-GAP) — v3.0 (Phase 52)
+- ✓ **CLEAN-07**: AuthModalin/mapBusinessErrorin virheviestin precedence-bugi (`A || B && C` → `(A || B) && C`) — fix already shipped in commit `85eea7a8`; Phase 52 added the project's first automated regression test guarding it (resolves P30-BUG) — v3.0 (Phase 52)
+
 ### Future (deferred from v1.1 + v1.7)
 
 - Automaattinen väriteemat kuvista (color extraction Hero + kortit)
@@ -288,8 +293,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 ### Cleanup candidates (deferred at v2.2 close — fold into a small early phase of next milestone)
 
 - **P23-GAP** (never fixed, found in Phase 23 verification): `AktiiviLogo.tsx` redesigned correctly but orphaned — never imported in `Etusivu.tsx`; bottom sheet still shows the old static SVG watermark (lines 906-933). A prior wiring attempt was reverted in Phase 16.
-- **P30-GAP** (never fixed, found in Phase 30 verification): hardcoded Finnish strings still visible to EN-locale users in `AuthModal.tsx`, `Etusivu.tsx` CalloutCard, `app/paikat/[id]/page.tsx` location row, `DiagonaalKortti.tsx` aria-label.
-- **P30-BUG** (same report): `AuthModal.tsx` line 27 operator-precedence bug in error-message classification — `A || B && C` should be `(A || B) && C`.
+- ~~P30-GAP, P30-BUG~~ — resolved in Phase 52 (2026-06-22), see Validated (v3.0) above.
 - 22 other open verification/UAT items from phases 20-44 (mostly `human_needed` manual checkpoints never re-confirmed) — see `.planning/STATE.md` Deferred Items table for the full list; low priority unless a related area is touched again.
 
 ### Out of Scope
@@ -385,4 +389,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-22 — v3.0 milestone started*
+*Last updated: 2026-06-22 — Phase 52 complete (CLEAN-06, CLEAN-07 validated)*
