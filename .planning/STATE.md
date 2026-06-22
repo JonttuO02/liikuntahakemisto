@@ -1,20 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.2
-milestone_name: Onboarding-tekoälyn parannukset
-current_phase: 2
-status: Awaiting next milestone
-stopped_at: v2.2 milestone complete (Phase 51.1 verified, all 6 phases done) — ready for /gsd-complete-milestone
-last_updated: "2026-06-21T13:06:35.668Z"
-last_activity: 2026-06-21
-last_activity_desc: Milestone v2.2 completed and archived
+milestone: v3.0
+milestone_name: Oma tietokanta (Google Places -irtautuminen)
+status: planning
+last_updated: "2026-06-22T07:03:58.248Z"
+last_activity: 2026-06-22
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 22
-  completed_plans: 22
-  percent: 100
-current_phase_name: live-preview-on-analysoisivusto-analyze-quick-accept-results
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-21)
 
 ## Current Position
 
-Phase: Milestone v2.2 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-21 — Milestone v2.2 completed and archived
+Status: Defining requirements
+Last activity: 2026-06-22 — Milestone v3.0 started
 
 ## v2.2 Roadmap Summary
 

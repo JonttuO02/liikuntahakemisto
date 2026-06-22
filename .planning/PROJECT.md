@@ -1,5 +1,17 @@
 # Liikuntahakemisto
 
+## Current Milestone: v3.0 Oma tietokanta (Google Places -irtautuminen)
+
+**Goal:** Poistaa Google Places -datan tallennus kokonaan ja siirtyä täysin omaan, yritysten itse syöttämään paikkadataan.
+
+**Target features:**
+- Cleanup-vaihe: v2.2:sta periytyneet korjaukset (AktiiviLogo-wiring, EN-merkkijonopuutteet, AuthModal-bugi, UAT/verification-gapit)
+- Google Places -synkkaus poistetaan kokonaan koodista; kaikki nykyinen Google-peräinen paikkadata poistetaan tietokannasta
+- Onboardingiin uusi Sijainti-vaihe: kartta + osoitehaku-autocomplete (Google, ephemeral-käyttö) → pinni + zoom; tallennetaan vain lat/lng + käyttäjän kirjoittama osoite
+- Onboardingin AI-sivuanalyysi laajennetaan ehdottamaan myös laji/sport-kategoriaa (käyttäjä vahvistaa/muuttaa)
+- Claim-vaihe muutetaan: käyttäjä luo paikan alusta — manuaalinen nimisyöttö, erillinen yritys-nimi + toimipiste-nimi -kenttäpari, nimikäytäntöjen normalisointi
+- /business-redirectbugi korjataan: ei ikinä automaattiredirectiä onboardingiin; kesken jäänyttä onboardingia voi jatkaa /business-sivulta paikkaa valitsemalla, indikoitu kesken-tilalla
+
 ## Shipped: v2.2 Onboarding-tekoälyn parannukset (2026-06-21)
 
 **Delivered:** Monisivuinen scraper-putki SSRF-uudelleenvalidoinnilla ja plural-skeemalla (logo_candidates, image_urls, värit); käyttäjä valitsee logon ja 2 väriä useista AI-kandidaateista validoidun PATCH-reitin kautta; galleriakuvat esitäyttävät Mediat-vaiheen; Step 6 -esikatselu vaihdettu `CalloutCard`:iin + kontrastiturvallinen logoprimitiivi; `StepPaikka` siirretty ennen URL-analyysiä + pikahyväksyntä admin-jonoon; jaettu live-esikatselun tila kaikissa velhon vaiheissa (desktop split-view, mobiili toggle) sekä onboarding- että EditModessa, ulottuen myös pre-wizard-analyysinäytölle (Phase 51.1 gap-fix). 21/21 vaatimusta toimitettu, 6 vaihetta, 22 plania, 211 committia, 3 päivää (2026-06-16 → 2026-06-19).
@@ -373,4 +385,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-21 — v2.2 milestone shipped and archived*
+*Last updated: 2026-06-22 — v3.0 milestone started*
