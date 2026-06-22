@@ -114,6 +114,16 @@ None - no external service configuration required.
 - The project now has a working Vitest test convention (`app/**/__tests__/*.test.ts`) and a passing `npm test` script — future phases adding tests can follow this pattern directly.
 - DiagonaalKortti.tsx:224 remains a known, deliberately deferred hardcoded Finnish alt string (D-05) — not a blocker for this phase, but still open for a future phase if the user revisits it.
 
+## Self-Check: PASSED
+
+All claimed files and commits verified present on disk/in git log:
+- `app/components/__tests__/AuthModal.mapError.test.ts` — FOUND
+- `.planning/phases/52-cleanup-i18n-merkkijonot-authmodal-bugi/52-VERIFICATION.md` — FOUND
+- `.planning/phases/52-cleanup-i18n-merkkijonot-authmodal-bugi/52-01-SUMMARY.md` — FOUND
+- Commit `1f56a04` (Task 1) — FOUND
+- Commit `3368a33` (Task 2) — FOUND
+- Commit `841313e` (Summary) — FOUND
+
 ---
 *Phase: 52-cleanup-i18n-merkkijonot-authmodal-bugi*
 *Completed: 2026-06-22*
