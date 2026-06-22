@@ -222,11 +222,11 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
   3. Yritysten claimaamat paikat (`business_paikka_links.link_type = 'claim'`) säilyvät — niitä EI poisteta vaikka `business_managed` olisi mikä tahansa
   4. `reviews`- ja `suosikit`-rivimäärät on auditoitu ennen ja jälkeen poiston; vain tarkoituksellinen pudotus tapahtuu (ei cascade-kollateraalia)
 
-**Plans**: 3 plans
+**Plans**: 2/3 plans executed
 **Wave 1**
 
-- [ ] 53-01-PLAN.md — Delete sync-paikat route + obsolete filter test (DATA-11); confirm reference isolation, route → 404, suite green
-- [ ] 53-02-PLAN.md — Author provenance-aware deletion migration (NOT EXISTS on business_paikka_links) + standalone before/after row-count audit script (DATA-12, file-authoring half)
+- [x] 53-01-PLAN.md — Delete sync-paikat route + obsolete filter test (DATA-11); confirm reference isolation, route → 404, suite green
+- [x] 53-02-PLAN.md — Author provenance-aware deletion migration (NOT EXISTS on business_paikka_links) + standalone before/after row-count audit script (DATA-12, file-authoring half)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -367,7 +367,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 | 51. Live-esikatselu velhossa | v2.2 | 7/7 | Complete    | 2026-06-18 |
 | 51.1. Live preview on AnalysoiSivusto results screen | v2.2 | 2/2 | Complete    | 2026-06-19 |
 | 52. Cleanup — i18n & AuthModal | v3.0 | 1/1 | Complete    | 2026-06-22 |
-| 53. Google Places -datan & synkkauksen poisto | v3.0 | 0/0 | Not started | - |
+| 53. Google Places -datan & synkkauksen poisto | v3.0 | 2/3 | In Progress|  |
 | 54. Sijainti — karttapinni & osoitehaku | v3.0 | 0/0 | Not started | - |
 | 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 0/0 | Not started | - |
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 0/0 | Not started | - |
