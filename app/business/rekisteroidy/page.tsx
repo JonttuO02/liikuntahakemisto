@@ -7,7 +7,7 @@ import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 
-function mapBusinessError(
+export function mapBusinessError(
   message: string
 ): 'errorEmailInUse' | 'errorWeakPassword' | 'errorGeneric' {
   if (

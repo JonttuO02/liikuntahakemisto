@@ -108,3 +108,16 @@ ungrouped form's bug is gone). `npm test` / `npx vitest run` runs this suite.
 **Conclusion:** CLEAN-07 is satisfied by the current codebase and is now
 guarded by an automated regression test, preventing silent reintroduction of
 the precedence bug in a future refactor.
+
+**Test-infrastructure fix (Rule 3 — blocking issue, no new dependency):**
+`AuthModal.tsx` is a `'use client'` `.tsx` component containing JSX, and the
+project's `tsconfig.json` sets `"jsx": "preserve"`. Vitest 4's default oxc
+transform failed to parse the file for import analysis under that setting
+when the test imported `mapError` directly from `AuthModal.tsx`, blocking the
+otherwise-correct test from running. Fixed by adding `oxc: { jsx: 'automatic'
+}` to `vitest.config.ts` — this only affects the Vitest transform pipeline
+(no new package installed, no change to the Next.js build's own JSX handling
+which is unaffected by `vitest.config.ts`). Confirmed: all 8 new test cases
+pass, the `-t "weak password"` selector matches the 2 weak-password tests
+across both classifiers, and `npm test` runs the full repo suite (15 files,
+184 tests) green with no regressions in pre-existing tests.
