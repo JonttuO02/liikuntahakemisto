@@ -1,5 +1,12 @@
 -- Phase 53 DATA-12 / D-07: row-count audit for the Google Places data deletion.
 --
+-- ** ACTUAL EXECUTION DEVIATED — see 53-03-SUMMARY.md ** The operator chose to
+-- delete ALL liikuntapaikat rows (327/327), not just the pure-Google subset this
+-- script's "deletion target" breakdown computes. The "expected post-migration
+-- deltas" note below (linked-kept / business_paikka_links unchanged) describes
+-- the originally-reviewed plan, not what happened. Post-deletion, all four tables
+-- below are 0.
+--
 -- Run this script MANUALLY (psql / Supabase SQL editor) BEFORE and AFTER applying
 -- supabase/migrations/20260622120000_remove_google_places_data.sql, then compare
 -- the two result sets to confirm only the intended pure-Google rows (and their

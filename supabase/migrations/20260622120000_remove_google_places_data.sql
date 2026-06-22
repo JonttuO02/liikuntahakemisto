@@ -1,5 +1,16 @@
 -- Phase 53 DATA-12: delete pure-Google liikuntapaikat rows (DATA-11 removes the sync route).
 --
+-- ** NOT WHAT ACTUALLY RAN IN PRODUCTION ** — see 53-03-SUMMARY.md.
+-- At the Plan 03 operator gate, the operator chose a broader deletion than the
+-- predicate below: ALL liikuntapaikat rows were deleted (327/327), including the
+-- 5 rows that had a business_paikka_links claim. The unconditional delete was run
+-- via an ad-hoc script (Supabase CLI was unavailable), never via `supabase db push`
+-- of this file. This file was never applied as written. It is kept only as a
+-- record of the originally-reviewed, narrower, provenance-preserving design — do
+-- not assume it reflects current database state. Read
+-- .planning/phases/53-google-places-datan-ja-synkkauksen-poisto/53-03-SUMMARY.md
+-- before relying on anything below this line.
+--
 -- IRREVERSIBLE: this is a one-time, mass data-deletion migration. Do NOT run this
 -- against any database until the Plan 03 row-count audit baseline (see
 -- supabase/migrations/_audit/53-row-count-audit.sql) has been captured and
