@@ -1,0 +1,45 @@
+-- Phase 53 DATA-12: delete pure-Google liikuntapaikat rows (DATA-11 removes the sync route).
+--
+-- IRREVERSIBLE: this is a one-time, mass data-deletion migration. Do NOT run this
+-- against any database until the Plan 03 row-count audit baseline (see
+-- supabase/migrations/_audit/53-row-count-audit.sql) has been captured and
+-- reviewed by the operator. This migration is authored here but is not executed
+-- by this plan.
+--
+-- Why this is safe:
+--   The predicate below keeps every liikuntapaikat row that has ANY matching
+--   business_paikka_links row, regardless of link_type ('claim' or 'created') or
+--   the business_managed value. business_managed is NOT a provenance signal — it
+--   only tells the sync script which rows not to overwrite (D-06) — so it is never
+--   referenced here. A row with link_type='claim' carries Google-origin base data
+--   underneath a business claim and MUST be kept; a row with link_type='created'
+--   is business-authored from day one. Only rows with NO business_paikka_links
+--   row at all (pure Google Places rows with zero business involvement, per
+--   CONTEXT.md D-01/D-02) are deleted. Claimed/created venues, and therefore their
+--   reviews, favorites, drafts, and branding, all survive by construction.
+--
+-- Cascade chain (ON DELETE CASCADE foreign keys that fire when a liikuntapaikat
+-- row is deleted):
+--   liikuntapaikat -> reviews (paikka_id)                [20260528000000_reviews.sql]
+--   liikuntapaikat -> suosikit (paikka_id)                [20260523_suosikit.sql]
+--   liikuntapaikat -> business_paikka_links (paikka_id)   [20260605000000_business_accounts.sql]
+--   liikuntapaikat -> onboarding_draft (paikka_id)        [20260606000000_onboarding.sql]
+--   liikuntapaikat -> business_branding (paikka_id)       [20260616100000_business_branding_plural_and_paikka_scoping.sql]
+-- Rows with a business_paikka_links row are excluded from deletion by construction
+-- (the NOT EXISTS predicate below), so no claimed or created venue's dependents
+-- ever cascade. Per CONTEXT.md D-03, any reviews/suosikit lost to this cascade on
+-- the deleted pure-Google rows are confirmed test-only data — acceptable loss.
+--
+-- Idempotency: the predicate is a correlated NOT EXISTS against
+-- business_paikka_links. Once all pure-Google rows are gone, the WHERE clause
+-- matches zero rows and re-running this migration is a no-op. Safe to run
+-- multiple times.
+--
+-- NOT EXISTS (not NOT IN): business_paikka_links.paikka_id is NOT NULL today, but
+-- NOT EXISTS is NULL-safe by construction regardless, which is the more robust
+-- and future-proof idempotent form for a correlated anti-join.
+
+DELETE FROM liikuntapaikat
+WHERE NOT EXISTS (
+  SELECT 1 FROM business_paikka_links bpl WHERE bpl.paikka_id = liikuntapaikat.id
+);
