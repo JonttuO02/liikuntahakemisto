@@ -1,0 +1,76 @@
+# Requirements: Liikuntahakemisto
+
+**Defined:** 2026-06-22
+**Core Value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
+
+## v3.0 Requirements
+
+Requirements for milestone v3.0 "Oma tietokanta (Google Places -irtautuminen)". Each maps to roadmap phases.
+
+### Cleanup
+
+- [ ] **CLEAN-06**: EN-locale käyttäjä ei näe kovakoodattuja suomenkielisiä merkkijonoja AuthModal/CalloutCard/paikkasivu/DiagonaalKortti-komponenteissa
+- [ ] **CLEAN-07**: AuthModal-virheviestien luokittelun operaattori-precedence-bugi korjattu (`A || B && C` → `(A || B) && C`)
+
+### Data-irtautuminen
+
+- [ ] **DATA-11**: `/api/admin/sync-paikat`-reitti ja ajastus poistettu kokonaan koodista
+- [ ] **DATA-12**: Google Places -peräiset liikuntapaikka-rivit poistettu tietokannasta provenance-tarkistuksella (`business_paikka_links.link_type`, ei vain `business_managed`)
+
+### Sijainti & AI-lajiluokitus
+
+- [ ] **SIJAINTI-01**: Käyttäjä voi sijoittaa paikan kartalle klikkaamalla onboardingissa
+- [ ] **SIJAINTI-02**: Käyttäjä voi hakea osoitetta autocomplete-kentästä; valinta asettaa pinnin ja zoomaa karttaa
+- [ ] **SIJAINTI-03**: Tallennetaan vain lat/lng + käyttäjän kirjoittama osoiteteksti — ei pysyvää Google Places -datan tallennusta
+- [ ] **AI-06**: AI-sivuanalyysi ehdottaa lajikategoriaa paikan verkkosivun perusteella; käyttäjä vahvistaa tai vaihtaa sen onboardingissa
+
+### Claim/create-rework & business-redirect
+
+- [ ] **CLAIM-04**: Claim-vaiheen olemassa-olevan-paikan-haku poistettu; käyttäjä luo paikan aina alusta
+- [ ] **CLAIM-05**: Käyttäjä syöttää yrityksen nimen ja toimipisteen nimen erillisiin kenttiin; nimet normalisoidaan yhtenäiseen kirjoitusasuun
+- [ ] **BIZPANEL-04**: `/business`-sivu ei koskaan automaattiredirectaa onboardingiin — kirjautunut yritys näkee aina dashboardin tai business-kirjautumisen
+- [ ] **BIZPANEL-05**: Kesken jäänyt onboarding näytetään per-paikka "Kesken"-badgella dashboardilla; käyttäjä voi jatkaa valitsemalla paikan
+
+## Future Requirements (deferred)
+
+### Chain / multi-venue support
+
+- **CHAIN-01**: Ketjuadmin — yksi tili, useita toimipisteitä eri omistajilla (jo aiemmin deferred PROJECT.md:ssä)
+- **CHAIN-02**: Duplikaattien tunnistus ketjun toimipisteiden välillä nimisyötteen perusteella
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Automaattinen ketju/duplikaatti-tunnistus nimisyötteestä | Ei vielä multi-venue-UI:ta hyödyntämään — odottaa CHAIN-01:tä |
+| Google-vapaa geocoding (esim. Nominatim) | Käyttäjä päätti pitää Google Places/Geocoding APIn ephemeral-käytössä — riittävä ToS-vaatimusten täyttämiseen |
+| Vanhojen Google-rivien siirtymäaika/asteittainen poisto | Käyttäjä päätti poistaa kaiken välittömästi sen sijaan että annettaisiin yrityksille claim-ikkuna |
+| AI valitsee lajikategorian automaattisesti ilman vahvistusta | Käyttäjä päätti pitää ihmisen vahvistuksen mukana virheriskin pienentämiseksi |
+
+## Traceability
+
+Filled in during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| CLEAN-06 | — | Pending |
+| CLEAN-07 | — | Pending |
+| DATA-11 | — | Pending |
+| DATA-12 | — | Pending |
+| SIJAINTI-01 | — | Pending |
+| SIJAINTI-02 | — | Pending |
+| SIJAINTI-03 | — | Pending |
+| AI-06 | — | Pending |
+| CLAIM-04 | — | Pending |
+| CLAIM-05 | — | Pending |
+| BIZPANEL-04 | — | Pending |
+| BIZPANEL-05 | — | Pending |
+
+**Coverage:**
+- v3.0 requirements: 12 total
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 12 ⚠️ (resolved by roadmapper)
+
+---
+*Requirements defined: 2026-06-22*
+*Last updated: 2026-06-22 after initial definition*
