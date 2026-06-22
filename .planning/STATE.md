@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Oma tietokanta
 current_phase: 52
-current_phase_name: next to plan
-status: roadmap_complete
-stopped_at: Phase 52 context gathered
-last_updated: "2026-06-22T08:04:35.834Z"
+current_phase_name: next to execute
+status: planned
+stopped_at: Phase 52 planned
+last_updated: "2026-06-22T08:28:49.833Z"
 last_activity: 2026-06-22
-last_activity_desc: v3.0 roadmap created (6 phases, 12 requirements, 100% coverage)
+last_activity_desc: Phase 52 planned (1 plan, 1 wave) — plan-checker + decision-coverage gates passed
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
+  total_plans: 1
   completed_plans: 0
   percent: 0
 ---
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-21)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v3.0 roadmap created (Phases 52–57) — ready for /gsd-plan-phase 52
+**Current focus:** Phase 52 planned — ready for /gsd-execute-phase 52
 
 ## Current Position
 
-Phase: 52 (next to plan) — Cleanup — i18n-merkkijonot & AuthModal-bugi
-Plan: —
-Status: Roadmap complete; ready to plan Phase 52
-Last activity: 2026-06-22 — v3.0 roadmap created (6 phases, 12 requirements, 100% coverage)
+Phase: 52 (planned, ready to execute) — Cleanup — i18n-merkkijonot & AuthModal-bugi
+Plan: 52-01 (1/1)
+Status: Phase 52 planned; verification + decision-coverage gates passed; ready to execute
+Last activity: 2026-06-22 — Phase 52 planned (1 plan, 1 wave): verification-only phase, CLEAN-06/CLEAN-07 already satisfied in current code, one new regression test added for mapError/mapBusinessError precedence
 
 ## v3.0 Roadmap Summary
 
@@ -144,9 +144,9 @@ Items acknowledged and deferred at v2.2 milestone close on 2026-06-21 (pre-close
 
 ## Session Continuity
 
-Last session: 2026-06-22T08:04:35.826Z
-Stopped at: Phase 52 context gathered
-Resume file: .planning/phases/52-cleanup-i18n-merkkijonot-authmodal-bugi/52-CONTEXT.md
+Last session: 2026-06-22T08:28:49.833Z
+Stopped at: Phase 52 planned
+Resume file: .planning/phases/52-cleanup-i18n-merkkijonot-authmodal-bugi/52-01-PLAN.md
 
 ## Performance Metrics
 
@@ -167,4 +167,4 @@ Resume file: .planning/phases/52-cleanup-i18n-merkkijonot-authmodal-bugi/52-CONT
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Run /gsd-execute-phase 52 to execute the planned phase (1 plan, 1 wave)
