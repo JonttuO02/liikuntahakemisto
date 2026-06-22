@@ -26,7 +26,7 @@ status: issues_found
 
 ## Summary
 
-This phase verified two already-fixed defects (i18n string coverage and the `mapError` operator-precedence bug from an earlier phase) and introduced the project's first Vitest regression test, plus a post-merge extraction of `mapBusinessError` into its own module to satisfy Next.js's restriction on extra named exports from `page.tsx` route files.
+This phase verified two already-fixed defects (i18n string coverage and the `mapError` operator-precedence bug from an earlier phase) and added a new Vitest regression test (the project already had 14 other test files predating this phase), plus a post-merge extraction of `mapBusinessError` into its own module to satisfy Next.js's restriction on extra named exports from `page.tsx` route files.
 
 I independently verified the following, all of which check out:
 - `npm run build` succeeds — the extraction correctly resolved the Next.js route-export violation; `page.tsx` no longer exports anything beyond the default component.
