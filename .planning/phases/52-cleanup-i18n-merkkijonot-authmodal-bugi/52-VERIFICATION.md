@@ -252,6 +252,21 @@ successfully`), `npm test` passes (184/184), `npx vitest run
 app/components/__tests__/AuthModal.mapError.test.ts -t "weak password"`
 selects and passes both weak-password regression cases.
 
+**Post-review fix (commits `4fa98b8`, `5d41b1d` — `/gsd-code-review 52 --fix`,
+addressing WR-01/WR-02 from `52-REVIEW.md`):** The `(A || B) && C` precedence
+logic citations above (`app/components/AuthModal.tsx:27-31` and
+`app/business/rekisteroidy/mapBusinessError.ts:11-16`) are now stale pointers
+— that logic was consolidated into a single shared classifier,
+`lib/authErrors.ts`'s `mapAuthError`, which both `AuthModal.tsx`'s `mapError`
+and `mapBusinessError.ts` now delegate to (eliminating the duplicate-copy risk
+WR-01 flagged — the original precedence bug had to be fixed independently in
+each copy once already). A regression test asserting the literal real-world
+GoTrue string `'Password should be at least 6 characters'` was added for both
+classifiers (WR-02). `page.tsx` still exports nothing beyond its default
+component — the Next.js route-export contract from the earlier post-merge fix
+is unaffected. Re-verified: `npm run build` succeeds, `npm test` passes
+186/186 (184 + 2 new). See `52-REVIEW-FIX.md` for full details.
+
 ---
 
 _Verified: 2026-06-22T15:20:00Z_
