@@ -245,9 +245,15 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
   4. Kartta latautuu Sijainti-vaiheessa ilman Maps JS API:n kaksoislatausta (yksi olemassa oleva `APIProvider`)
 
 **Plans**: 3 plans
+**Wave 1**
+
 - [ ] 54-01-PLAN.md — Backend: create-paikka route accepts/persists lat/lng (SIJAINTI-03 allowlist) + Wave 0 test
 - [ ] 54-02-PLAN.md — MapProvider places library + SijaintiPicker + PlaceAutocompleteInput (SIJAINTI-01/02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 54-03-PLAN.md — Wire SijaintiPicker into ClaimSearchForm create step + i18n keys (end-to-end)
+
 **UI hint**: yes
 
 ##### Phase 55: AI-lajiluokitus sivuanalyysiin
