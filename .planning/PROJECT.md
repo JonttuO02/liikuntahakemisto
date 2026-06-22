@@ -279,7 +279,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 ### Validated (v3.0)
 
 - ✓ **CLEAN-06**: EN-locale-käyttäjä ei näe kovakoodattuja suomenkielisiä merkkijonoja AuthModalissa, CalloutCardissa, paikkasivulla tai DiagonaalKortissa — re-verified already satisfied (resolves P30-GAP) — v3.0 (Phase 52)
-- ✓ **CLEAN-07**: AuthModalin/mapBusinessErrorin virheviestin precedence-bugi (`A || B && C` → `(A || B) && C`) — fix already shipped in commit `85eea7a8`; Phase 52 added the project's first automated regression test guarding it (resolves P30-BUG) — v3.0 (Phase 52)
+- ✓ **CLEAN-07**: AuthModalin/mapBusinessErrorin virheviestin precedence-bugi (`A || B && C` → `(A || B) && C`) — fix already shipped in commit `85eea7a8`; Phase 52 added an automated regression test guarding it and wired `npm test` to the pre-existing Vitest suite (resolves P30-BUG) — v3.0 (Phase 52)
 
 ### Future (deferred from v1.1 + v1.7)
 

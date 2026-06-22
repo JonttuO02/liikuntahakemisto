@@ -8,7 +8,7 @@ tags: [vitest, next-intl, i18n, auth, regression-test]
 requires: []
 provides:
   - "52-VERIFICATION.md evidence artifact closing out CLEAN-06 and CLEAN-07 with file+line and git-commit citations"
-  - "First Vitest regression test in the repo (app/components/__tests__/AuthModal.mapError.test.ts), establishing the project's test-file convention"
+  - "New Vitest regression test (app/components/__tests__/AuthModal.mapError.test.ts) following the project's existing app/**/__tests__/*.test.ts convention — correction: this is not the repo's first test file, 14 others already existed (e.g. tests/api/update-paikka.test.ts from Phase 36, lib/branding/*.test.ts from Phase 45)"
   - "Exported mapError (AuthModal.tsx) and mapBusinessError (rekisteroidy/page.tsx) for unit testability"
   - "npm test script wired to vitest run"
   - "vitest.config.ts oxc jsx: automatic fix enabling .tsx component imports in Vitest 4"
@@ -38,7 +38,7 @@ key-decisions:
   - "Added oxc: { jsx: 'automatic' } to vitest.config.ts (Rule 3 blocking-issue fix) because tsconfig.json's jsx: preserve broke Vitest 4's default oxc transform when importing the .tsx AuthModal component directly — no new package was installed"
 
 patterns-established:
-  - "First Vitest test file in the repo: app/components/__tests__/AuthModal.mapError.test.ts using describe/it/expect and the @/ import alias"
+  - "app/components/__tests__/AuthModal.mapError.test.ts uses describe/it/expect and the @/ import alias, same as the project's 14 pre-existing test files"
   - "npm test now runs vitest run for the whole suite"
 
 requirements-completed: [CLEAN-06, CLEAN-07]
@@ -51,7 +51,7 @@ status: complete
 
 # Phase 52 Plan 01: Cleanup — i18n & AuthModal Verification Summary
 
-**Verified CLEAN-06 (i18n coverage) and CLEAN-07 (mapError precedence fix) as already-satisfied with file+line/git evidence, and added the project's first Vitest regression test guarding the (A || B) && C precedence grouping in both mapError and mapBusinessError.**
+**Verified CLEAN-06 (i18n coverage) and CLEAN-07 (mapError precedence fix) as already-satisfied with file+line/git evidence, and added a Vitest regression test guarding the (A || B) && C precedence grouping in both mapError and mapBusinessError.**
 
 ## Performance
 
@@ -112,7 +112,7 @@ None - no external service configuration required.
 
 ## Next Phase Readiness
 - CLEAN-06 and CLEAN-07 are closed out with durable evidence; no further work needed on this phase's requirements.
-- The project now has a working Vitest test convention (`app/**/__tests__/*.test.ts`) and a passing `npm test` script — future phases adding tests can follow this pattern directly.
+- `npm test` is now wired to `vitest run` (it had no `test` script before this phase, even though Vitest and 14 pre-existing test files — e.g. `tests/api/update-paikka.test.ts` from Phase 36, `app/api/admin/__tests__/sync-paikat-filter.test.ts` and `lib/branding/*.test.ts` from Phase 45 — already existed). Future phases adding tests can now just run `npm test`.
 - DiagonaalKortti.tsx:224 remains a known, deliberately deferred hardcoded Finnish alt string (D-05) — not a blocker for this phase, but still open for a future phase if the user revisits it.
 
 ## Self-Check: PASSED
