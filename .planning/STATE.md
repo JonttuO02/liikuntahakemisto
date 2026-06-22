@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Oma tietokanta
 current_phase: 52
-current_phase_name: next to execute
-status: planned
+current_phase_name: cleanup-i18n-merkkijonot-authmodal-bugi
+status: executing
 stopped_at: Phase 52 planned
-last_updated: "2026-06-22T08:28:49.833Z"
+last_updated: "2026-06-22T11:28:03.204Z"
 last_activity: 2026-06-22
-last_activity_desc: Phase 52 planned (1 plan, 1 wave) — plan-checker + decision-coverage gates passed
+last_activity_desc: Phase 52 execution started
 progress:
   total_phases: 6
   completed_phases: 0
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-21)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 52 planned — ready for /gsd-execute-phase 52
+**Current focus:** Phase 52 — cleanup-i18n-merkkijonot-authmodal-bugi
 
 ## Current Position
 
-Phase: 52 (planned, ready to execute) — Cleanup — i18n-merkkijonot & AuthModal-bugi
-Plan: 52-01 (1/1)
-Status: Phase 52 planned; verification + decision-coverage gates passed; ready to execute
-Last activity: 2026-06-22 — Phase 52 planned (1 plan, 1 wave): verification-only phase, CLEAN-06/CLEAN-07 already satisfied in current code, one new regression test added for mapError/mapBusinessError precedence
+Phase: 52 (cleanup-i18n-merkkijonot-authmodal-bugi) — EXECUTING
+Plan: 1 of 1
+Status: Executing Phase 52
+Last activity: 2026-06-22 — Phase 52 execution started
 
 ## v3.0 Roadmap Summary
 

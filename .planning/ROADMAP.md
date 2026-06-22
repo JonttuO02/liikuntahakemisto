@@ -186,7 +186,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 
 **Milestone goal:** Poistaa Google Places -datan tallennus kokonaan ja siirtyä täysin omaan, yritysten itse syöttämään paikkadataan.
 
-- [ ] **Phase 52: Cleanup — i18n-merkkijonot & AuthModal-bugi** — EN-locale-käyttäjä ei näe kovakoodattuja suomenkielisiä merkkijonoja; AuthModal-virheviestin precedence-bugi korjattu (CLEAN-06, CLEAN-07)
+- [x] **Phase 52: Cleanup — i18n-merkkijonot & AuthModal-bugi** — EN-locale-käyttäjä ei näe kovakoodattuja suomenkielisiä merkkijonoja; AuthModal-virheviestin precedence-bugi korjattu (CLEAN-06, CLEAN-07) (completed 2026-06-22)
 - [ ] **Phase 53: Google Places -datan ja synkkauksen poisto** — sync-paikat-reitti poistettu; Google-peräiset paikkarivit poistettu provenance-tarkistuksella (DATA-11, DATA-12)
 - [ ] **Phase 54: Sijainti — karttapinni & osoitehaku onboardingissa** — käyttäjä sijoittaa paikan kartalle klikkaamalla tai osoitehaulla; vain lat/lng + kirjoitettu osoite tallennetaan (SIJAINTI-01, SIJAINTI-02, SIJAINTI-03)
 - [ ] **Phase 55: AI-lajiluokitus sivuanalyysiin** — AI-sivuanalyysi ehdottaa lajikategoriaa; käyttäjä vahvistaa tai vaihtaa sen (AI-06)
@@ -196,72 +196,91 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 #### Phase Details
 
 ##### Phase 52: Cleanup — i18n-merkkijonot & AuthModal-bugi
+
 **Goal**: EN-locale-käyttäjä näkee koko käyttöliittymän valitsemallaan kielellä, ja AuthModalin virheviestien luokittelu toimii oikein
 **Depends on**: Nothing (first phase, independent of all other v3.0 work)
 **Requirements**: CLEAN-06, CLEAN-07
 **Success Criteria** (what must be TRUE):
+
   1. EN-locale-käyttäjä näkee AuthModalissa englanninkieliset lataus- ja tilanvaihtotekstit (ei kovakoodattuja suomenkielisiä merkkijonoja)
   2. EN-locale-käyttäjä näkee Etusivun CalloutCardin, paikkasivun sijaintirivin ja DiagonaalKortin aria-labelin englanniksi
   3. AuthModalin virheviestin luokittelu tuottaa oikean viestin kun virhe vastaa useita ehtoja (precedence-bugi `A || B && C` → `(A || B) && C` korjattu)
-**Plans**: 1 plan
-- [ ] 52-01-PLAN.md — Verify CLEAN-06 i18n coverage + CLEAN-07 precedence fix (file/line + git evidence); export mapError/mapBusinessError and add Vitest regression test guarding the precedence behavior
+
+**Plans**: 1/1 plans complete
+
+- [x] 52-01-PLAN.md — Verify CLEAN-06 i18n coverage + CLEAN-07 precedence fix (file/line + git evidence); export mapError/mapBusinessError and add Vitest regression test guarding the precedence behavior
 
 ##### Phase 53: Google Places -datan ja synkkauksen poisto
+
 **Goal**: Google Places -synkkaus ei enää aja koodissa, ja kaikki puhtaasti Google-peräiset paikkarivit on poistettu tietokannasta ilman, että yritysten claimaamia paikkoja, arvosteluja tai suosikkeja menetetään vahingossa
 **Depends on**: Phase 52 (sequencing only — no code coupling)
 **Requirements**: DATA-11, DATA-12
 **Success Criteria** (what must be TRUE):
+
   1. `/api/admin/sync-paikat`-reitti ja sen ajastus on poistettu kokonaan koodista; reitin kutsu palauttaa 404
   2. Puhtaasti Google-peräiset paikkarivit (ei `business_paikka_links`-riviä lainkaan) on poistettu tietokannasta
   3. Yritysten claimaamat paikat (`business_paikka_links.link_type = 'claim'`) säilyvät — niitä EI poisteta vaikka `business_managed` olisi mikä tahansa
   4. `reviews`- ja `suosikit`-rivimäärät on auditoitu ennen ja jälkeen poiston; vain tarkoituksellinen pudotus tapahtuu (ei cascade-kollateraalia)
+
 **Plans**: TBD
 
 ##### Phase 54: Sijainti — karttapinni & osoitehaku onboardingissa
+
 **Goal**: Yritys voi onboardingin luo-alusta-polussa määrittää paikan sijainnin kartalta, ja vain käyttäjän hyväksymä lat/lng + hänen kirjoittamansa osoite tallennetaan — ilman pysyvää Google Places -datan tallennusta
 **Depends on**: Phase 52 (sequencing); independent of Phase 53
 **Requirements**: SIJAINTI-01, SIJAINTI-02, SIJAINTI-03
 **Success Criteria** (what must be TRUE):
+
   1. Käyttäjä voi sijoittaa pinnin kartalle klikkaamalla onboardingin Sijainti-vaiheessa
   2. Käyttäjä voi hakea osoitetta autocomplete-kentästä; valinta asettaa pinnin ja zoomaa kartan kohteeseen
   3. Tallennettuun paikkaan kirjautuu vain lat/lng + käyttäjän kirjoittama osoiteteksti — ei `place_id`:tä eikä muuta raakaa Places-vastausdataa
   4. Kartta latautuu Sijainti-vaiheessa ilman Maps JS API:n kaksoislatausta (yksi olemassa oleva `APIProvider`)
+
 **Plans**: TBD
 **UI hint**: yes
 
 ##### Phase 55: AI-lajiluokitus sivuanalyysiin
+
 **Goal**: Onboardingin AI-sivuanalyysi ehdottaa paikan lajikategoriaa verkkosivun perusteella, ja käyttäjä vahvistaa tai vaihtaa ehdotuksen ennen sen tallentumista — ilman että olemassa olevan logo/väri/hinnasto/aukioloaika-poiminnan laatu heikkenee
 **Depends on**: Phase 52 (sequencing); independent of Phases 53–54
 **Requirements**: AI-06
 **Success Criteria** (what must be TRUE):
+
   1. AI-sivuanalyysi palauttaa ehdotetun lajikategorian `lib/lajit.ts`-taksonomiasta (ei vapaata tekstiä)
   2. Käyttäjä näkee ehdotuksen erottuvana "ehdotus"-elementtinä ja voi vahvistaa sen tai vaihtaa toiseen lajiin ennen tallennusta
   3. Lajikategoriaa ei kirjoiteta `liikuntapaikat.laji`-kenttään ilman käyttäjän eksplisiittistä vahvistusta
   4. Olemassa olevat poiminnat (logo, värit, hinnasto, aukioloajat) toimivat regressiottomasti, vaikka Claude-vastaus jättäisi lajikentän pois
+
 **Plans**: TBD
 **UI hint**: yes
 
 ##### Phase 56: Claim/create-rework — luo paikka alusta + nimikäytäntö
+
 **Goal**: Yritys luo paikan onboardingissa aina alusta (ei enää olemassa-olevan-paikan-hakua), syöttää yrityksen ja toimipisteen nimen erillisiin kenttiin yhtenäisellä normalisoinnilla, eivätkä kesken jääneet vanhan mallin onboardingit hajoa muutoksen myötä
 **Depends on**: Phase 54 (Sijainti on osa luo-alusta-polkua, johon nimikentät kytkeytyvät)
 **Requirements**: CLAIM-04, CLAIM-05
 **Success Criteria** (what must be TRUE):
+
   1. Onboardingin Paikka-vaiheessa ei ole enää olemassa-olevan-paikan-hakua; käyttäjä luo paikan aina alusta
   2. Käyttäjä syöttää yrityksen nimen ja toimipisteen nimen erillisiin kenttiin; nimet normalisoidaan yhtenäiseen kirjoitusasuun
   3. Uuden paikan luonti onnistuu eikä riko olemassa olevaa `UNIQUE(paikka_id)`-rajoitusta — toinen yritys saa edelleen 409:n yrittäessään luoda/claimata jo linkitetyn paikan
   4. Ennen muutosta kesken jääneet `onboarding_draft`-/pending-rivit näkyvät täytetyillä (ei tyhjillä) nimikentillä backfillin ansiosta
+
 **Plans**: TBD
 **UI hint**: yes
 
 ##### Phase 57: Dashboard-redirect-korjaus & Kesken-tila
+
 **Goal**: Kirjautunut yritys päätyy aina /business-dashboardille (ei koskaan automaattiseen onboarding-redirectiin), ja kesken jäänyt onboarding näkyy dashboardilla per-paikka Kesken-badgella, josta käyttäjä voi jatkaa valitsemalla paikan — kytkettynä Phase 56:n uudistettuun luo-polkuun
 **Depends on**: Phase 56 (dashboardin "ei paikkoja vielä" -haara ja Kesken-jatka-nappi kytkeytyvät uudistettuun luo/claim-sisääntuloon; tehdään vasta reworkin jälkeen jotta vältetään heittohukka — per PITFALLS Pitfall 9)
 **Requirements**: BIZPANEL-04, BIZPANEL-05
 **Success Criteria** (what must be TRUE):
+
   1. /business-sivu ei koskaan automaattiredirectaa onboardingiin — kirjautunut yritys näkee aina dashboardin tai business-kirjautumisen
   2. Kesken jäänyt onboarding näkyy dashboardilla per-paikka "Kesken"-badgella
   3. Käyttäjä voi jatkaa kesken jäänyttä onboardingia valitsemalla paikan dashboardilta (siirtyy `/business/onboarding?paikka_id=X`)
   4. Tili, jolla on 2+ samanaikaista kesken jäänyttä onboardingia, näkee jokaisen erillisenä jatkettavana rivinä (ei yhtä booleania)
+
 **Plans**: TBD
 **UI hint**: yes
 
@@ -280,7 +299,6 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 - Phase 57 must be **last** — BIZPANEL-04/05's dashboard work couples to Phase 56's reworked create/claim entry; building the Kesken-resume UI before the rework lands is throwaway work (PITFALLS.md Pitfall 9, ARCHITECTURE.md Migration Order).
 
 > **Ordering note (reconciled):** research SUMMARY.md placed the redirect fix early; ARCHITECTURE.md's migration order favors landing it first as a pure-frontend de-risk. PITFALLS.md Pitfall 9, however, establishes that BIZPANEL-04/05 directly couples to CLAIM-04/05's reworked entry point, so the redirect/dashboard phase is sequenced **after** the rework to avoid re-fixing it twice. This roadmap follows the PITFALLS sequencing.
-
 
 ---
 
@@ -340,7 +358,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 | 50. Flow-uudelleenjärjestys & pikahyväksyntä | v2.2 | 2/2 | Complete   | 2026-06-17 |
 | 51. Live-esikatselu velhossa | v2.2 | 7/7 | Complete    | 2026-06-18 |
 | 51.1. Live preview on AnalysoiSivusto results screen | v2.2 | 2/2 | Complete    | 2026-06-19 |
-| 52. Cleanup — i18n & AuthModal | v3.0 | 0/0 | Not started | - |
+| 52. Cleanup — i18n & AuthModal | v3.0 | 1/1 | Complete   | 2026-06-22 |
 | 53. Google Places -datan & synkkauksen poisto | v3.0 | 0/0 | Not started | - |
 | 54. Sijainti — karttapinni & osoitehaku | v3.0 | 0/0 | Not started | - |
 | 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 0/0 | Not started | - |
