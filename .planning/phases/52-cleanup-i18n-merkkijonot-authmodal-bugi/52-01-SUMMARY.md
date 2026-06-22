@@ -124,6 +124,24 @@ All claimed files and commits verified present on disk/in git log:
 - Commit `3368a33` (Task 2) — FOUND
 - Commit `841313e` (Summary) — FOUND
 
+## Post-Merge Orchestrator Fix (commit `24e1be5`)
+
+After this plan's worktree merged, the orchestrator's post-merge build gate
+(`npm run build`) failed — `mapBusinessError`'s export from
+`app/business/rekisteroidy/page.tsx` (a Next.js App Router `page.tsx` route
+file) violated Next's closed allowed-exports contract for route files. This
+was invisible to `npx vitest run`/`npm test` (both passed), so the executor's
+own per-task verification could not have caught it.
+
+User chose "extract to a new module" (of 3 presented options) over reverting
+the export or leaving the build broken. Fix: moved `mapBusinessError` into a
+new file, `app/business/rekisteroidy/mapBusinessError.ts`; `page.tsx` now
+imports it internally (no export, no behavior change). This also surfaced a
+second build failure (`oxc: { jsx: 'automatic' }` in `vitest.config.ts` is
+not valid — the type requires `{ runtime: 'automatic' }`), fixed in the same
+commit. `52-VERIFICATION.md` updated to cite the new file location.
+Re-verified: `npm run build` and `npm test` (184/184) both pass.
+
 ---
 *Phase: 52-cleanup-i18n-merkkijonot-authmodal-bugi*
 *Completed: 2026-06-22*
