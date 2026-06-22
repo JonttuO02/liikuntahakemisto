@@ -17,7 +17,7 @@ interface AuthModalProps {
 
 type Mode = 'signin' | 'signup'
 
-function mapError(message: string): 'errorInvalidCredentials' | 'errorEmailInUse' | 'errorWeakPassword' | 'errorGeneric' {
+export function mapError(message: string): 'errorInvalidCredentials' | 'errorEmailInUse' | 'errorWeakPassword' | 'errorGeneric' {
   if (message.includes('Invalid login credentials') || message.includes('invalid_credentials')) {
     return 'errorInvalidCredentials'
   }
