@@ -6,25 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-
-export function mapBusinessError(
-  message: string
-): 'errorEmailInUse' | 'errorWeakPassword' | 'errorGeneric' {
-  if (
-    message.includes('User already registered') ||
-    message.includes('already been registered') ||
-    message.includes('already exists')
-  ) {
-    return 'errorEmailInUse'
-  }
-  if (
-    (message.includes('Password should be at least') || message.includes('password')) &&
-    message.includes('6')
-  ) {
-    return 'errorWeakPassword'
-  }
-  return 'errorGeneric'
-}
+import { mapBusinessError } from './mapBusinessError'
 
 export default function BusinessRekisteroidyPage() {
   const t = useTranslations('Business')

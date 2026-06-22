@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mapError } from '@/app/components/AuthModal'
-import { mapBusinessError } from '@/app/business/rekisteroidy/page'
+import { mapBusinessError } from '@/app/business/rekisteroidy/mapBusinessError'
 
 describe('mapError', () => {
   it('resolves invalid credentials message to errorInvalidCredentials', () => {

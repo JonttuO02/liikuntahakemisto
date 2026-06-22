@@ -76,7 +76,8 @@ operator precedence in AuthModal mapError password check"), dated 2026-06-04.
     return 'errorWeakPassword'
   }
   ```
-- `app/business/rekisteroidy/page.tsx:20-23`:
+- `app/business/rekisteroidy/mapBusinessError.ts:1-17` (relocated from
+  `page.tsx:10-27` — see Testability change below):
   ```ts
   if (
     (message.includes('Password should be at least') || message.includes('password')) &&
@@ -91,11 +92,24 @@ Both classifiers correctly group `(A || B) && C` — the equivalent logic in
 need the same historical fix because it was written correctly from the start.
 
 **Testability change (this plan):** `mapError` and `mapBusinessError` were
-module-private `function` declarations. Both are now exported (`export
-function`) solely so a regression test can import and exercise the real
-production functions rather than an inlined copy, per PATTERNS.md Option 1.
-This is a behavior-preserving change — no call sites changed, default exports
-unchanged, precedence expressions byte-for-byte unchanged.
+module-private `function` declarations. `mapError` is now exported (`export
+function`) directly from `AuthModal.tsx` — a behavior-preserving change, no
+call sites changed, default export unchanged, precedence expression
+byte-for-byte unchanged.
+
+`mapBusinessError` could not be exported the same way: `app/business/rekisteroidy/page.tsx`
+is a Next.js App Router `page.tsx` route file, and Next's generated route
+typing (`checkFields<Diff<...>>` in `.next/types/.../page.ts`) only permits a
+closed set of named exports (`default`, `metadata`, `generateStaticParams`,
+etc.) — any other named export fails `next build`'s type-check. This surfaced
+as a post-merge build-gate failure (`npm run build` failed; `npm test` /
+`npx vitest run` passed regardless, since Vitest's transform pipeline doesn't
+apply Next's route-export typing). Fix: `mapBusinessError` was moved verbatim
+(zero logic change) into a new plain module, `app/business/rekisteroidy/mapBusinessError.ts`,
+which `page.tsx` now imports for its own internal use (no export from
+`page.tsx` itself, default export of the page component unchanged, call site
+at `page.tsx:80` unchanged). The regression test imports `mapBusinessError`
+from the new module path instead of from `page.tsx`.
 
 **Regression guard:** `app/components/__tests__/AuthModal.mapError.test.ts`
 (added this plan) asserts the precedence behavior for both `mapError` and
@@ -121,3 +135,31 @@ which is unaffected by `vitest.config.ts`). Confirmed: all 8 new test cases
 pass, the `-t "weak password"` selector matches the 2 weak-password tests
 across both classifiers, and `npm test` runs the full repo suite (15 files,
 184 tests) green with no regressions in pre-existing tests.
+
+**Post-merge build-gate fix #1 (blocking issue, no new dependency):** After the
+worktree merge, the orchestrator's post-merge build gate (`npm run build`)
+failed with a TypeScript error in `.next/types/app/business/rekisteroidy/page.ts`:
+exporting `mapBusinessError` directly from `page.tsx` violates Next.js App
+Router's closed allowed-exports contract for route segment files. `npx vitest run`
+and `npm test` had already passed because Vitest's transform does not apply
+this Next-specific route-export type-check, so the issue was invisible to the
+plan's own per-task verification and only caught by the phase-level
+build gate. Fixed by extracting `mapBusinessError` into a new non-route
+module (`app/business/rekisteroidy/mapBusinessError.ts`); `page.tsx` now
+imports it for internal use only.
+
+**Post-merge build-gate fix #2 (blocking issue, no new dependency):** Fixing
+#1 surfaced a second, independent build failure: `npm run build` type-checks
+the whole project including `vitest.config.ts` itself, and `oxc: { jsx:
+'automatic' }` (added by fix attempt above) does not type-check — Vitest 4's
+`OxcOptions.jsx` type is `'preserve' | JsxOptions`, where `JsxOptions` is an
+object (`{ runtime?: 'classic' | 'automatic'; ... }`), not the bare string
+`'automatic'`. `npx vitest run` had not caught this because Vitest's own
+config loader does not strictly type-check `vitest.config.ts` at runtime.
+Fixed by changing the value to `oxc: { jsx: { runtime: 'automatic' } }` in
+`vitest.config.ts`.
+
+**Re-verified after both fixes:** `npm run build` succeeds (`✓ Compiled
+successfully`), `npm test` passes (184/184), `npx vitest run
+app/components/__tests__/AuthModal.mapError.test.ts -t "weak password"`
+selects and passes both weak-password regression cases.
