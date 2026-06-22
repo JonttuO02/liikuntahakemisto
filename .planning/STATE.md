@@ -1,10 +1,14 @@
 ---
 gsd_state_version: 1.0
 milestone: v3.0
-milestone_name: Oma tietokanta (Google Places -irtautuminen)
+milestone_name: Oma tietokanta
+current_phase: 52
+current_phase_name: next to plan
 status: roadmap_complete
-last_updated: "2026-06-22T08:30:00.000Z"
+stopped_at: Phase 52 context gathered
+last_updated: "2026-06-22T08:04:35.834Z"
 last_activity: 2026-06-22
+last_activity_desc: v3.0 roadmap created (6 phases, 12 requirements, 100% coverage)
 progress:
   total_phases: 6
   completed_phases: 0
@@ -43,6 +47,7 @@ Last activity: 2026-06-22 — v3.0 roadmap created (6 phases, 12 requirements, 1
 Dependency order: 52, 53, 55 independent (parallel-safe) → 54 feeds 56 → 57 LAST (after 56's claim/create rework; per PITFALLS Pitfall 9 the dashboard/redirect entry point couples to the reworked create flow).
 
 Open product decisions to resolve before the relevant phase:
+
 - **Phase 53**: Fate of unclaimed-but-kept venues post sync-removal (delete vs. keep with staleness signal) — PITFALLS Pitfall 2; take a pre-migration pg_dump.
 - **Phase 56**: Company/branch naming = cosmetic (one venue per flow) vs. multi-branch precursor — log decision in PROJECT.md before writing the migration (PITFALLS Pitfall 7). Chain support stays deferred.
 
@@ -139,9 +144,9 @@ Items acknowledged and deferred at v2.2 milestone close on 2026-06-21 (pre-close
 
 ## Session Continuity
 
-Last session: 2026-06-19T00:15:00.000Z
-Stopped at: v2.2 milestone complete (Phase 51.1 verified, all 6 phases done) — ready for /gsd-complete-milestone
-Resume file: None
+Last session: 2026-06-22T08:04:35.826Z
+Stopped at: Phase 52 context gathered
+Resume file: .planning/phases/52-cleanup-i18n-merkkijonot-authmodal-bugi/52-CONTEXT.md
 
 ## Performance Metrics
 
