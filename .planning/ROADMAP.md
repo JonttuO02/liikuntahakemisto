@@ -187,7 +187,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 **Milestone goal:** Poistaa Google Places -datan tallennus kokonaan ja siirtyä täysin omaan, yritysten itse syöttämään paikkadataan.
 
 - [x] **Phase 52: Cleanup — i18n-merkkijonot & AuthModal-bugi** — EN-locale-käyttäjä ei näe kovakoodattuja suomenkielisiä merkkijonoja; AuthModal-virheviestin precedence-bugi korjattu (CLEAN-06, CLEAN-07) (completed 2026-06-22)
-- [ ] **Phase 53: Google Places -datan ja synkkauksen poisto** — sync-paikat-reitti poistettu; Google-peräiset paikkarivit poistettu provenance-tarkistuksella (DATA-11, DATA-12)
+- [x] **Phase 53: Google Places -datan ja synkkauksen poisto** — sync-paikat-reitti poistettu; Google-peräiset paikkarivit poistettu provenance-tarkistuksella (DATA-11, DATA-12) (completed 2026-06-22)
 - [ ] **Phase 54: Sijainti — karttapinni & osoitehaku onboardingissa** — käyttäjä sijoittaa paikan kartalle klikkaamalla tai osoitehaulla; vain lat/lng + kirjoitettu osoite tallennetaan (SIJAINTI-01, SIJAINTI-02, SIJAINTI-03)
 - [ ] **Phase 55: AI-lajiluokitus sivuanalyysiin** — AI-sivuanalyysi ehdottaa lajikategoriaa; käyttäjä vahvistaa tai vaihtaa sen (AI-06)
 - [ ] **Phase 56: Claim/create-rework — luo paikka alusta + nimikäytäntö** — claim-haku poistettu; käyttäjä luo paikan aina alusta, syöttää yritys- ja toimipistenimen erikseen (CLAIM-04, CLAIM-05)
@@ -222,7 +222,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
   3. Yritysten claimaamat paikat (`business_paikka_links.link_type = 'claim'`) säilyvät — niitä EI poisteta vaikka `business_managed` olisi mikä tahansa
   4. `reviews`- ja `suosikit`-rivimäärät on auditoitu ennen ja jälkeen poiston; vain tarkoituksellinen pudotus tapahtuu (ei cascade-kollateraalia)
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans complete
 **Wave 1**
 
 - [x] 53-01-PLAN.md — Delete sync-paikat route + obsolete filter test (DATA-11); confirm reference isolation, route → 404, suite green
@@ -230,7 +230,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 53-03-PLAN.md — [BLOCKING] Human-gated supabase db push: capture audit baseline → apply irreversible deletion → confirm claimed venues survived (DATA-12, execution half)
+- [x] 53-03-PLAN.md — [BLOCKING] Human-gated supabase db push: capture audit baseline → apply irreversible deletion → confirm claimed venues survived (DATA-12, execution half)
 
 ##### Phase 54: Sijainti — karttapinni & osoitehaku onboardingissa
 
@@ -367,7 +367,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 | 51. Live-esikatselu velhossa | v2.2 | 7/7 | Complete    | 2026-06-18 |
 | 51.1. Live preview on AnalysoiSivusto results screen | v2.2 | 2/2 | Complete    | 2026-06-19 |
 | 52. Cleanup — i18n & AuthModal | v3.0 | 1/1 | Complete    | 2026-06-22 |
-| 53. Google Places -datan & synkkauksen poisto | v3.0 | 2/3 | In Progress|  |
+| 53. Google Places -datan & synkkauksen poisto | v3.0 | 3/3 | Complete   | 2026-06-22 |
 | 54. Sijainti — karttapinni & osoitehaku | v3.0 | 0/0 | Not started | - |
 | 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 0/0 | Not started | - |
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 0/0 | Not started | - |
