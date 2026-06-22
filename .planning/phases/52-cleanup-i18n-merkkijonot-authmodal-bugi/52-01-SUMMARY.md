@@ -24,6 +24,7 @@ tech-stack:
 key-files:
   created:
     - app/components/__tests__/AuthModal.mapError.test.ts
+    - app/business/rekisteroidy/mapBusinessError.ts
     - .planning/phases/52-cleanup-i18n-merkkijonot-authmodal-bugi/52-VERIFICATION.md
   modified:
     - app/components/AuthModal.tsx
