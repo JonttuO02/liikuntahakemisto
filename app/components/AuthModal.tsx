@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import type { AuthChangeEvent, Session, AuthError } from '@supabase/supabase-js'
 import { useTranslations } from 'next-intl'
+import { mapAuthError } from '@/lib/authErrors'
 
 interface AuthModalProps {
   open: boolean
@@ -18,20 +19,7 @@ interface AuthModalProps {
 type Mode = 'signin' | 'signup'
 
 export function mapError(message: string): 'errorInvalidCredentials' | 'errorEmailInUse' | 'errorWeakPassword' | 'errorGeneric' {
-  if (message.includes('Invalid login credentials') || message.includes('invalid_credentials')) {
-    return 'errorInvalidCredentials'
-  }
-  if (message.includes('User already registered') || message.includes('already been registered') || message.includes('already exists')) {
-    return 'errorEmailInUse'
-  }
-  if (
-    (message.includes('Password should be at least') ||
-      message.includes('password')) &&
-    message.includes('6')
-  ) {
-    return 'errorWeakPassword'
-  }
-  return 'errorGeneric'
+  return mapAuthError(message)
 }
 
 export default function AuthModal({ open, onClose, pendingPaikkaId, onSuccess }: AuthModalProps) {
