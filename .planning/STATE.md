@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Oma tietokanta
-current_phase: 53
-current_phase_name: google-places-datan-ja-synkkauksen-poisto
+current_phase: 54
+current_phase_name: sijainti — karttapinni & osoitehaku onboardingissa
 status: executing
 stopped_at: Phase 53 context gathered
-last_updated: "2026-06-22T18:11:51.683Z"
+last_updated: "2026-06-22T19:13:05.642Z"
 last_activity: 2026-06-22
-last_activity_desc: Phase 53 execution started
+last_activity_desc: Phase 53 complete, transitioned to Phase 54
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 1
-  percent: 17
+  completed_plans: 4
+  percent: 33
 ---
 
 # Project State
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-21)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 53 — google-places-datan-ja-synkkauksen-poisto
+**Current focus:** Phase 54 — sijainti — karttapinni & osoitehaku onboardingissa
 
 ## Current Position
 
-Phase: 53 (google-places-datan-ja-synkkauksen-poisto) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 53
-Last activity: 2026-06-22 — Phase 53 execution started
+Phase: 54 — sijainti — karttapinni & osoitehaku onboardingissa
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-22 — Phase 53 verified (5/5 UAT passed), transitioned to Phase 54
 
 ## v3.0 Roadmap Summary
 
@@ -48,7 +48,7 @@ Dependency order: 52, 53, 55 independent (parallel-safe) → 54 feeds 56 → 57 
 
 Open product decisions to resolve before the relevant phase:
 
-- **Phase 53**: Fate of unclaimed-but-kept venues post sync-removal (delete vs. keep with staleness signal) — PITFALLS Pitfall 2; take a pre-migration pg_dump.
+- ~~**Phase 53**: Fate of unclaimed-but-kept venues post sync-removal~~ — RESOLVED 2026-06-22: operator chose full wipe (327/327, including 5 claimed rows) at the live gate instead of the planned provenance-preserving delete (322/327); no pre-migration pg_dump was taken (PITFALLS Pitfall 2 risk accepted). See `53-03-SUMMARY.md`.
 - **Phase 56**: Company/branch naming = cosmetic (one venue per flow) vs. multi-branch precursor — log decision in PROJECT.md before writing the migration (PITFALLS Pitfall 7). Chain support stays deferred.
 
 ## v2.2 Roadmap Summary
@@ -106,6 +106,7 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
   - P23-GAP (23-VERIFICATION.md, status gaps_found, never fixed): `AktiiviLogo.tsx` redesigned correctly but orphaned — not imported in `Etusivu.tsx` or anywhere else; bottom sheet still renders the old static SVG watermark (lines 906-933). Wiring attempt was reverted once before in Phase 16 per HANDOFF.json.
   - ~~P30-GAP~~ — RESOLVED in Phase 52 (2026-06-22): re-verified all four files already route hardcoded strings through next-intl; see `52-VERIFICATION.md`.
   - ~~P30-BUG~~ — RESOLVED in Phase 52 (2026-06-22): precedence bug had already been fixed in commit `85eea7a8` (2026-06-04); Phase 52 added a regression test guarding it.
+- **P53-FOLLOWUP** (new, Phase 53, 2026-06-22): 2 business accounts (`0f0e024d-...`, `ac22a395-...`) lost their claimed venue when the full `liikuntapaikat` wipe cascaded their `business_paikka_links`/`business_branding` rows. UAT confirmed the dashboard degrades gracefully (no crash), but no re-claim/outreach flow was run. Low priority unless those accounts surface support requests.
 
 ## Deferred Items
 
@@ -144,9 +145,9 @@ Items acknowledged and deferred at v2.2 milestone close on 2026-06-21 (pre-close
 
 ## Session Continuity
 
-Last session: 2026-06-22T13:08:29.024Z
-Stopped at: Phase 53 context gathered
-Resume file: .planning/phases/53-google-places-datan-ja-synkkauksen-poisto/53-CONTEXT.md
+Last session: 2026-06-22T19:13:05.642Z
+Stopped at: Phase 53 complete, ready to plan Phase 54
+Resume file: None
 
 ## Performance Metrics
 
@@ -167,4 +168,4 @@ Resume file: .planning/phases/53-google-places-datan-ja-synkkauksen-poisto/53-CO
 
 ## Operator Next Steps
 
-- Run /gsd-execute-phase 52 to execute the planned phase (1 plan, 1 wave)
+- Run /gsd-discuss-phase 54 or /gsd-plan-phase 54 to start the next independent phase (Sijainti — map-pin & address autocomplete)

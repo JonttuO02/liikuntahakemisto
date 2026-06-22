@@ -280,6 +280,8 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 - ✓ **CLEAN-06**: EN-locale-käyttäjä ei näe kovakoodattuja suomenkielisiä merkkijonoja AuthModalissa, CalloutCardissa, paikkasivulla tai DiagonaalKortissa — re-verified already satisfied (resolves P30-GAP) — v3.0 (Phase 52)
 - ✓ **CLEAN-07**: AuthModalin/mapBusinessErrorin virheviestin precedence-bugi (`A || B && C` → `(A || B) && C`) — fix already shipped in commit `85eea7a8`; Phase 52 added an automated regression test guarding it and wired `npm test` to the pre-existing Vitest suite (resolves P30-BUG) — v3.0 (Phase 52)
+- ✓ **DATA-11**: `/api/admin/sync-paikat`-reitti ja sen testi poistettu kokonaan; reitti 404 — v3.0 (Phase 53)
+- ✓ **DATA-12**: Google Places -peräinen liikuntapaikka-data poistettu tietokannasta — ⚠️ laajemmin kuin suunniteltu: operaattori valitsi live-gatella täyden tyhjennyksen (kaikki 327 riviä) eikä suunniteltua provenance-säilyttävää poistoa (322/327, 5 claimed-riviä olisi säilynyt). 2 business-tiliä menetti claimattun venuen myötä `business_paikka_links`- ja `business_branding`-rivinsä. Ei varmuuskopiota (D-07, hyväksytty riski). Ks. `53-03-SUMMARY.md` täydelliset luvut ja hyväksyntäketju — v3.0 (Phase 53)
 
 ### Future (deferred from v1.1 + v1.7)
 
@@ -367,6 +369,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 | Admin-hyväksyntä ensimmäiseen rekisteröintiin; muokkaukset heti | Ei re-approval -vaatimusta tavallisille muutoksille — vähemmän kitkaaa | ✓ Phase 35 |
 | Reapply: UPDATE rejected → pending (ei INSERT) | Composite UNIQUE rajoite business_paikka_links:ssä — uusi INSERT rikkoisi sen | ✓ Phase 35 |
 | paikka_id URL-parametrina edit/onboarding-velhossa | Estää cross-venue draft -kontaminaation; mahdollistaa suoran linkityksen | ✓ Phase 36 |
+| Liikuntapaikat-taulu tyhjennetty täysin (327/327) Google Places -irtautumisessa | Operaattori valitsi live-gatella täyden nollauksen suunnitellun provenance-säilyttävän poiston (322/327) sijaan — kaikki venuet, mukaan lukien claimatut, lähtivät uudestaan rakennettavaksi puhtaalta pöydältä | ✓ Phase 53 — 2 business-tiliä menetti claimansa, ei seurantatoimenpiteitä tehty |
 
 ---
 
@@ -389,4 +392,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-22 — Phase 52 complete (CLEAN-06, CLEAN-07 validated)*
+*Last updated: 2026-06-22 — Phase 53 complete (DATA-11, DATA-12 validated; liikuntapaikat fully wiped, see Key Decisions)*

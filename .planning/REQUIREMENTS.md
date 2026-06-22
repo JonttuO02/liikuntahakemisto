@@ -14,8 +14,8 @@ Requirements for milestone v3.0 "Oma tietokanta (Google Places -irtautuminen)". 
 
 ### Data-irtautuminen
 
-- [ ] **DATA-11**: `/api/admin/sync-paikat`-reitti ja ajastus poistettu kokonaan koodista
-- [ ] **DATA-12**: Google Places -peräiset liikuntapaikka-rivit poistettu tietokannasta provenance-tarkistuksella (`business_paikka_links.link_type`, ei vain `business_managed`)
+- [x] **DATA-11**: `/api/admin/sync-paikat`-reitti ja ajastus poistettu kokonaan koodista
+- [x] **DATA-12**: Google Places -peräiset liikuntapaikka-rivit poistettu tietokannasta provenance-tarkistuksella (`business_paikka_links.link_type`, ei vain `business_managed`) — ⚠️ toteutus poikkesi: operaattori valitsi täyden tyhjennyksen (kaikki 327 riviä, myös 5 claimed-riviä) suunnitellun provenance-säilyttävän poiston sijaan. Ks. `53-03-SUMMARY.md`.
 
 ### Sijainti & AI-lajiluokitus
 
@@ -55,8 +55,8 @@ Filled in during roadmap creation.
 |-------------|-------|--------|
 | CLEAN-06 | Phase 52 | Complete |
 | CLEAN-07 | Phase 52 | Complete |
-| DATA-11 | Phase 53 | Pending |
-| DATA-12 | Phase 53 | Pending |
+| DATA-11 | Phase 53 | Complete |
+| DATA-12 | Phase 53 | Complete |
 | SIJAINTI-01 | Phase 54 | Pending |
 | SIJAINTI-02 | Phase 54 | Pending |
 | SIJAINTI-03 | Phase 54 | Pending |

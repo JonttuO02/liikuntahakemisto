@@ -367,7 +367,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 | 51. Live-esikatselu velhossa | v2.2 | 7/7 | Complete    | 2026-06-18 |
 | 51.1. Live preview on AnalysoiSivusto results screen | v2.2 | 2/2 | Complete    | 2026-06-19 |
 | 52. Cleanup — i18n & AuthModal | v3.0 | 1/1 | Complete    | 2026-06-22 |
-| 53. Google Places -datan & synkkauksen poisto | v3.0 | 3/3 | Complete   | 2026-06-22 |
+| 53. Google Places -datan & synkkauksen poisto | v3.0 | 3/3 | Complete    | 2026-06-22 |
 | 54. Sijainti — karttapinni & osoitehaku | v3.0 | 0/0 | Not started | - |
 | 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 0/0 | Not started | - |
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 0/0 | Not started | - |
