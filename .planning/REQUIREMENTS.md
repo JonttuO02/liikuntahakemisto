@@ -9,8 +9,8 @@ Requirements for milestone v3.0 "Oma tietokanta (Google Places -irtautuminen)". 
 
 ### Cleanup
 
-- [ ] **CLEAN-06**: EN-locale käyttäjä ei näe kovakoodattuja suomenkielisiä merkkijonoja AuthModal/CalloutCard/paikkasivu/DiagonaalKortti-komponenteissa
-- [ ] **CLEAN-07**: AuthModal-virheviestien luokittelun operaattori-precedence-bugi korjattu (`A || B && C` → `(A || B) && C`)
+- [x] **CLEAN-06**: EN-locale käyttäjä ei näe kovakoodattuja suomenkielisiä merkkijonoja AuthModal/CalloutCard/paikkasivu/DiagonaalKortti-komponenteissa
+- [x] **CLEAN-07**: AuthModal-virheviestien luokittelun operaattori-precedence-bugi korjattu (`A || B && C` → `(A || B) && C`)
 
 ### Data-irtautuminen
 
@@ -53,8 +53,8 @@ Filled in during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLEAN-06 | Phase 52 | Pending |
-| CLEAN-07 | Phase 52 | Pending |
+| CLEAN-06 | Phase 52 | Complete |
+| CLEAN-07 | Phase 52 | Complete |
 | DATA-11 | Phase 53 | Pending |
 | DATA-12 | Phase 53 | Pending |
 | SIJAINTI-01 | Phase 54 | Pending |
@@ -67,6 +67,7 @@ Filled in during roadmap creation.
 | BIZPANEL-05 | Phase 57 | Pending |
 
 **Coverage:**
+
 - v3.0 requirements: 12 total
 - Mapped to phases: 12 (Phases 52–57) ✓
 - Unmapped: 0
