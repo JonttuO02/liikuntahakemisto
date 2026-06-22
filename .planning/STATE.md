@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Oma tietokanta (Google Places -irtautuminen)
-status: planning
-last_updated: "2026-06-22T07:03:58.248Z"
+status: roadmap_complete
+last_updated: "2026-06-22T08:30:00.000Z"
 last_activity: 2026-06-22
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,14 +20,31 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-21)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v2.2 archived — planning next milestone (see Carry-Forward for cleanup-phase candidates)
+**Current focus:** v3.0 roadmap created (Phases 52–57) — ready for /gsd-plan-phase 52
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 52 (next to plan) — Cleanup — i18n-merkkijonot & AuthModal-bugi
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-22 — Milestone v3.0 started
+Status: Roadmap complete; ready to plan Phase 52
+Last activity: 2026-06-22 — v3.0 roadmap created (6 phases, 12 requirements, 100% coverage)
+
+## v3.0 Roadmap Summary
+
+| Phase | Goal | Requirements |
+|-------|------|---------------|
+| 52. Cleanup — i18n & AuthModal | EN-locale UI fully localized; AuthModal precedence bug fixed | CLEAN-06, CLEAN-07 |
+| 53. Google Places -datan & synkkauksen poisto | sync route removed; pure-Google rows deleted via link_type provenance check | DATA-11, DATA-12 |
+| 54. Sijainti — karttapinni & osoitehaku | Map-pin + autocomplete location step; only lat/lng + typed address persisted | SIJAINTI-01..03 |
+| 55. AI-lajiluokitus sivuanalyysiin | AI suggests sport category (lib/lajit.ts taxonomy); user confirms/edits | AI-06 |
+| 56. Claim/create-rework — luo alusta + nimikäytäntö | Create-only flow; separate company/branch name fields + normalization + backfill | CLAIM-04, CLAIM-05 |
+| 57. Dashboard-redirect-korjaus & Kesken-tila | /business never auto-redirects; per-venue Kesken badge with resume | BIZPANEL-04, BIZPANEL-05 |
+
+Dependency order: 52, 53, 55 independent (parallel-safe) → 54 feeds 56 → 57 LAST (after 56's claim/create rework; per PITFALLS Pitfall 9 the dashboard/redirect entry point couples to the reworked create flow).
+
+Open product decisions to resolve before the relevant phase:
+- **Phase 53**: Fate of unclaimed-but-kept venues post sync-removal (delete vs. keep with staleness signal) — PITFALLS Pitfall 2; take a pre-migration pg_dump.
+- **Phase 56**: Company/branch naming = cosmetic (one venue per flow) vs. multi-branch precursor — log decision in PROJECT.md before writing the migration (PITFALLS Pitfall 7). Chain support stays deferred.
 
 ## v2.2 Roadmap Summary
 

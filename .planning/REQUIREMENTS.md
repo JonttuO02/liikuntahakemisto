@@ -53,24 +53,24 @@ Filled in during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLEAN-06 | — | Pending |
-| CLEAN-07 | — | Pending |
-| DATA-11 | — | Pending |
-| DATA-12 | — | Pending |
-| SIJAINTI-01 | — | Pending |
-| SIJAINTI-02 | — | Pending |
-| SIJAINTI-03 | — | Pending |
-| AI-06 | — | Pending |
-| CLAIM-04 | — | Pending |
-| CLAIM-05 | — | Pending |
-| BIZPANEL-04 | — | Pending |
-| BIZPANEL-05 | — | Pending |
+| CLEAN-06 | Phase 52 | Pending |
+| CLEAN-07 | Phase 52 | Pending |
+| DATA-11 | Phase 53 | Pending |
+| DATA-12 | Phase 53 | Pending |
+| SIJAINTI-01 | Phase 54 | Pending |
+| SIJAINTI-02 | Phase 54 | Pending |
+| SIJAINTI-03 | Phase 54 | Pending |
+| AI-06 | Phase 55 | Pending |
+| CLAIM-04 | Phase 56 | Pending |
+| CLAIM-05 | Phase 56 | Pending |
+| BIZPANEL-04 | Phase 57 | Pending |
+| BIZPANEL-05 | Phase 57 | Pending |
 
 **Coverage:**
 - v3.0 requirements: 12 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 12 ⚠️ (resolved by roadmapper)
+- Mapped to phases: 12 (Phases 52–57) ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-06-22*
-*Last updated: 2026-06-22 after initial definition*
+*Last updated: 2026-06-22 — traceability mapped during roadmap creation (Phases 52–57)*
