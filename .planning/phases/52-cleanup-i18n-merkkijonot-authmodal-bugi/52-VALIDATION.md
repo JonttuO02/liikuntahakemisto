@@ -1,8 +1,8 @@
 ---
 phase: 52
 slug: cleanup-i18n-merkkijonot-authmodal-bugi
-status: draft
-nyquist_compliant: false
+status: planned
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-06-22
 ---
@@ -38,8 +38,8 @@ created: 2026-06-22
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD (assigned during planning) | — | — | CLEAN-06 | — | EN-locale user sees English strings in AuthModal/CalloutCard/paikkasivu/DiagonaalKortti — no hardcoded Finnish | manual (file/line assertion) | `grep -n 'useTranslations\|getTranslations' app/components/AuthModal.tsx app/components/CalloutCard.tsx app/paikat/[id]/page.tsx app/components/DiagonaalKortti.tsx` | N/A | ⬜ pending |
-| TBD (assigned during planning) | — | — | CLEAN-07 | — | `mapError`/`mapBusinessError` precedence produces correct classification when an error message matches multiple conditions | unit | `npx vitest run app/components/__tests__/AuthModal.mapError.test.ts -t "weak password"` | ❌ Wave 0 | ⬜ pending |
+| 52-01-T1 | 52-01 | 1 | CLEAN-06 | — | EN-locale user sees English strings in AuthModal/CalloutCard/paikkasivu/DiagonaalKortti — no hardcoded Finnish (deferred DiagonaalKortti alt excepted per D-05) | manual (file/line assertion) | `grep -lE 'useTranslations\|getTranslations' app/components/AuthModal.tsx app/components/CalloutCard.tsx app/paikat/[id]/page.tsx app/components/DiagonaalKortti.tsx` (expect 4/4) | N/A | ⬜ pending |
+| 52-01-T2 | 52-01 | 1 | CLEAN-07 | T-52-01 | `mapError`/`mapBusinessError` precedence produces correct classification when an error message matches multiple conditions | unit | `npx vitest run app/components/__tests__/AuthModal.mapError.test.ts -t "weak password"` | ❌ Wave 0 (created in 52-01-T2) | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 *Task IDs are placeholders — the planner assigns concrete `{phase}-{plan}-{task}` IDs; this table is updated once plans exist.*
@@ -64,11 +64,11 @@ created: 2026-06-22
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 5s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies (T1: grep-based file assertion; T2: `npx vitest run ...`)
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify (both of 2 tasks have automated verify)
+- [x] Wave 0 covers all MISSING references (`AuthModal.mapError.test.ts` created in 52-01-T2, which exports the SUT functions in the same task)
+- [x] No watch-mode flags (`vitest run`, not `vitest`)
+- [x] Feedback latency < 5s (~1-2s suite)
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-06-22 — plan 52-01 satisfies all sign-off criteria.

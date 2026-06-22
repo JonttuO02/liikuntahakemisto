@@ -203,7 +203,8 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
   1. EN-locale-käyttäjä näkee AuthModalissa englanninkieliset lataus- ja tilanvaihtotekstit (ei kovakoodattuja suomenkielisiä merkkijonoja)
   2. EN-locale-käyttäjä näkee Etusivun CalloutCardin, paikkasivun sijaintirivin ja DiagonaalKortin aria-labelin englanniksi
   3. AuthModalin virheviestin luokittelu tuottaa oikean viestin kun virhe vastaa useita ehtoja (precedence-bugi `A || B && C` → `(A || B) && C` korjattu)
-**Plans**: TBD
+**Plans**: 1 plan
+- [ ] 52-01-PLAN.md — Verify CLEAN-06 i18n coverage + CLEAN-07 precedence fix (file/line + git evidence); export mapError/mapBusinessError and add Vitest regression test guarding the precedence behavior
 
 ##### Phase 53: Google Places -datan ja synkkauksen poisto
 **Goal**: Google Places -synkkaus ei enää aja koodissa, ja kaikki puhtaasti Google-peräiset paikkarivit on poistettu tietokannasta ilman, että yritysten claimaamia paikkoja, arvosteluja tai suosikkeja menetetään vahingossa
