@@ -1,168 +1,155 @@
 # Feature Research
 
-**Domain:** AI-assisted business onboarding wizard — website-to-brand-kit extraction + multi-step form with live preview (Finnish sports-venue directory business portal)
-**Researched:** 2026-06-16
-**Milestone:** v2.2 Onboarding-tekoälyn parannukset
-**Confidence:** MEDIUM (codebase analysis is HIGH confidence; external ecosystem patterns are MEDIUM — WebSearch-verified across multiple sources but no single authoritative spec exists for this niche combination of features)
+**Domain:** Business onboarding for a local-listing / directory marketplace — manual venue creation, map-based location placement, dashboard draft-resume UX, naming conventions for self-entered chain/single-location business names
+**Researched:** 2026-06-22
+**Milestone:** v3.0 Oma tietokanta (Google Places -irtautuminen)
+**Confidence:** MEDIUM-HIGH (Google Business Profile guidelines are HIGH confidence/official; general onboarding-UX and map-picker patterns are MEDIUM — synthesized from multiple industry sources, not a single authoritative spec; codebase findings are HIGH confidence since they're read directly from the actual implementation)
 
-## Context: What Already Exists (v2.1 baseline)
+## Context From Existing Codebase
 
-Before categorizing the 8 target features, the current pipeline matters because every feature either extends or risks breaking it:
+Before recommending anything, three load-bearing facts from the current implementation constrain every recommendation below:
 
-- `AnalysoiSivusto.tsx` — pre-wizard state machine (`checking → url-input → analyzing → preview/error/timeout`), polls `GET /api/business/analyze-website` every 2s up to 30 tries (~60s cap)
-- `scrapeWebsite()` (`lib/branding/scraper.ts`) — fetches **homepage HTML only**, regex-extracts theme-color + `:root` CSS vars (colors), and up to 5 logo candidates (favicon → og:image → `<img>` with "logo" in src/alt/class), converts each to PNG via `sharp`
-- `analyzeWithClaude()` (`lib/branding/analyzer.ts` + `prompt.ts`) — **single** Claude vision+text call returns `{ logo_index (one int), logo_type, colors[] (read-only list, first one used as bg), prices[], opening_hours[], website_url }`
-- Result stored in `business_branding` table (one row per `business_account_id`, status state machine `pending→analyzing→analyzed→failed`)
-- `WizardInner.tsx` renders steps in fixed order 1 Paikka → 2 Mediat → 3 Hinnasto → 4 Aukioloajat → 5 Yhteystiedot → 6 Esikatselu; `OnboardingWizardPage` runs `AnalysoiSivusto` *before* `WizardInner` even mounts (step 1/Paikka is never visible until after analysis or skip)
-- `StepEsikatselu.tsx` (step 6) currently renders `PaikkaKortti` + `DiagonaalKortti` + `PaikkaSheet` — **not** `CalloutCard`, which is what's actually used in production (per target feature 1)
-- `buildBrandingPreview()` only ever uses `colors[0]` as a single `brandColor`; logo is whatever index Claude picked, with no white/transparent contrast handling
-- Submission only happens via the full step-6 `handleSubmit` → `POST /api/business/onboarding/submit`; there is no quick-accept path that skips wizard steps 2–5
-- No live-preview mechanism exists in any step today — `StepMediat`, `StepHinnasto`, etc. only show a preview on step 6, and `PreviewModal` (edit mode) is an on-demand modal, not continuously live
+1. **`app/business/page.tsx` (lines 191-200) currently has the exact bug item 3 asks to fix**: on every dashboard load it queries `onboarding_draft` for the logged-in business, and if *any* row exists it unconditionally `router.push('/business/onboarding')` — no UI, no opt-out, no per-venue indicator. This must become a dashboard-visible badge per venue, not a redirect.
+2. **`onboarding_draft` is already venue-scoped** (`UNIQUE(business_account_id, paikka_id)`, FK to `liikuntapaikat.id`) — multi-venue draft tracking needs no new schema, only a query change (fetch all drafts, not just check existence) and UI to surface them per `VenueRow`.
+3. **`ClaimSearchForm.tsx`'s `create` step already collects `nimi` (single name field) + `osoite` (free-text address) + `kaupunki` (dropdown)** — this is the exact flow item 2 and 3 of FEATURES below replace. The "search for existing venue" step (`step: 'search'`) becomes dead code once Google-sourced venues are deleted — there is nothing left to search.
 
 ## Feature Landscape
 
 ### Table Stakes (Users Expect These)
 
-These match what any modern "scan my website → prefill my profile" or website-builder onboarding flow offers as baseline. Missing them makes the AI onboarding feel broken or untrustworthy relative to category leaders (Wix ADI, Squarespace Blueprint, Brandfetch-style brand-kit tools).
-
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| **Esikatselu preview shows the real card component (Feature 1)** | Users judge "is this what my listing will look like" by comparing the preview to what they've seen elsewhere in the product (the map CalloutCard). A wrong/unused component breaks trust in the whole onboarding output. | LOW | Pure swap: `StepEsikatselu.tsx` imports `PaikkaKortti`/`DiagonaalKortti` instead of `CalloutCard`. Already has `draftAsPaikka` + `brandColor` computed — `CalloutCard` likely needs same `Liikuntapaikka` shape (verify props match; CalloutCard may expect map-context props like position/zoom it won't have here — needs a "static/preview" variant or prop subset). |
-| **Logo visible against its actual background (Feature 7 — bug fix)** | Every brand-kit tool (Brandfetch, Wix Logo Maker) renders extracted logos on a checkerboard or contrasting backdrop specifically because white/transparent logos are extremely common (most company logos ship as transparent PNG/SVG with a wordmark in dark or white). Showing it on a plain white card is a known, well-documented failure mode. | LOW | Needs either (a) a neutral/checkerboard backdrop behind the logo thumbnail in preview, or (b) using the extracted brand background color as the logo's container background (ties to Feature 6 — 2-color pick gives a natural "use accent/bg color as logo backdrop" solution). Cheapest fix: container `bg-[rgba(0,0,0,0.05)]` checkerboard or border; better fix ties into Feature 6. |
-| **Single-call AI prefill of structured fields (already shipped)** | Baseline expectation once you've shipped "Analysoi sivustosi" — not new for v2.2, but Features 3–5 extend the *scope* of what's extracted (subpages, multiple images), which IS table stakes once competitors (Wix ADI, Squarespace Blueprint) all crawl more than the homepage. | — | Context only — not new in this milestone. |
-| **Following internal links to pricing/hours/contact subpages (Feature 3)** | Real Finnish sports venues very commonly put hinnasto/aukioloajat/yhteystiedot on dedicated subpages, not the homepage. Every competing "site analyzer" (Wix ADI, brand-kit extractors, SEO crawlers) follows at least same-domain links 1 level deep for exactly this reason — homepage-only scraping is considered the naive/incomplete version of this feature category. | MEDIUM | This is the single highest-risk feature for cost/latency/security blast-radius — see Pitfalls below. Requires: link discovery (regex or HTML parse for `<a href>` with Finnish keywords "hinnasto", "hinnat", "aukioloajat", "yhteystiedot", "yhteys", "contact"), same-origin enforcement (reuse existing SSRF guard — apply to EVERY followed link, not just the seed URL), a hard cap on number of pages fetched (e.g. 3–5) and total combined HTML size, and extending `analyzeWithClaude`'s prompt to accept multiple HTML snippets labeled by page type. |
-| **Multiple photos prefilled into Mediat gallery (Feature 4)** | Once you're already scraping for logos, collecting "other images on the page" (hero images, facility photos) for the gallery step is the obvious next step and matches what users expect from "smart" import tools — they expect to not re-upload photos that already exist on their own site. | MEDIUM | `StepMediat` already supports a `media_urls.photos` array (max 5) and an `existingPhotoUrls` UI for delete/replace — the slot exists. New work: scraper needs an "other images" candidate list (distinct from logo candidates — likely `<img>` NOT matching "logo" heuristic, filtered by min dimensions to exclude icons/spacers), then those need to be fetched server-side, converted/validated, and stored in Supabase Storage (or referenced by external URL until user confirms) before populating `media_urls.photos`. Costs note: each extra image = another fetch + sharp conversion in the background job, increasing waitUntil duration risk (Hobby tier 10s cap, already flagged as an accepted limitation in this codebase). |
+| Map pin + address-autocomplete combined location picker | Every modern local-listing/marketplace onboarding (Uber Eats merchant signup, DoorDash, Airbnb host map step, Google Business Profile) pairs a search box with a draggable/clickable pin — users expect to type an address AND fine-tune visually | MEDIUM | Bidirectional sync: autocomplete selection moves pin + zooms map; pin drag/click reverse-geocodes back into the address field. Use Google Places Autocomplete (per STACK.md, ephemeral use only) + click listener on existing `@vis.gl/react-google-maps` instance. Store only `lat/lng` + the user-typed address string — no Places `place_id` retained (per milestone goal of full Google Places decoupling) |
+| Single required venue name field at creation time | Every directory/marketplace (Yelp Add Business, Google Business Profile, Foursquare) requires exactly one "name" field before anything else — it's the anchor identity of the listing | LOW | Already exists (`createNimi` in `ClaimSearchForm`) — keep as the single source-of-truth field, see naming-convention section below for how chains should fill it |
+| "Cannot find / does not exist yet → create new" entry path | Standard pattern across Yelp, Google Business Profile, TripAdvisor — but in this milestone it becomes the *only* path since the searchable database of Google-sourced venues is being deleted entirely | LOW | This isn't really "table stakes to add" — it's the entire claim flow collapsing into create-only. See Anti-Features below: do not keep a non-functional search step |
+| Required-field validation before submit (name, address/pin) | Universal form-UX expectation — users get inline errors, not silent failures | LOW | Already exists (`errorNameRequired`, `errorAddressRequired` in `ClaimSearchForm`) — extend to require a pin placement too |
+| Visible status/progress indicator for incomplete setup tasks | Progress bars and incomplete-state framing are a documented universal SaaS-onboarding pattern (Zeigarnik effect: visible incompleteness drives completion) — directly informs item 3 | LOW-MEDIUM | Reuse existing `ProgressBar.tsx` step-indicator pattern from the wizard; just needs new placement on `VenueRow` in the dashboard |
+| Dashboard never blocks access to existing functional views behind a forced wizard | Users expect dashboards to be the home base; forced redirects to setup flows (without an explicit "skip"/"later" affordance) are a widely criticized anti-pattern in onboarding UX literature | LOW | This is literally the bug being fixed — replace the `router.push` redirect with a badge + resume CTA |
 
 ### Differentiators (Competitive Advantage)
 
-These go beyond what most generic "analyze my website" tools do, and align with the project's core differentiator of making business onboarding nearly frictionless for small Finnish sports venues with weak/no web presence skills.
-
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **Quick-accept path: skip straight to admin queue (Feature 2, part B)** | Most onboarding products (Airtable, Wix ADI) still force users through every step once an AI draft exists; letting a confident user submit the AI's first guess directly to admin review is a meaningfully lower-friction path than competitors offer, especially for venues whose owner has very limited time/digital literacy — a strong fit for this product's Finnish small-business audience. | MEDIUM | Needs: a new "Hyväksy ja lähetä" CTA on the `AnalysoiSivusto` preview phase (before `WizardInner` ever mounts) that (a) creates/links the `paikka_id` from whatever `StepPaikka` would have collected — but Feature 2 part A moves `StepPaikka` BEFORE the URL step, so by the time analysis preview renders, `paikka_id` already exists; (b) writes branding result directly into `onboarding_draft` fields (hinnasto, aukioloajat, yhteystiedot/website) bypassing steps 2–5 entirely, since Mediat (logo/photos) and the new multi-pick UIs (Features 5–6) still need *some* minimal interaction — open question whether quick-accept skips those too or forces at least a logo/color confirmation click; (c) calls the same `/api/business/onboarding/submit` endpoint used by step 6. Risk: submit endpoint may assume all draft fields are present/validated — needs auditing for partial-draft submission. |
-| **StepPaikka moved before URL analysis (Feature 2, part A)** | Lets the system resolve `paikka_id` first, which (a) enables tying the analysis run + quick-accept directly to a known venue row instead of an account-level `business_branding` row, and (b) gives the scraper/Claude prompt the venue's existing `laji` (sport type) and city as context, which could improve subpage-link heuristics and price/hours extraction accuracy (e.g. disambiguating multi-location chains). | MEDIUM | Structural reorder in `WizardInner`/`OnboardingWizardPage`: today `AnalysoiSivusto` renders standalone before `WizardInner` mounts at all, so `paikkaId` doesn't exist yet when analysis starts. Moving Paikka first means either (a) lifting `StepPaikka` out of `WizardInner` into the page-level flow before `AnalysoiSivusto`, or (b) restructuring `business_branding`'s key from `business_account_id` (1 row per account) to `paikka_id`-scoped, which is a bigger schema change since a business can own multiple venues (`business_paikka_links` already supports many-to-one). **This is the most architecturally invasive of the 8 features** — touches DB schema/RLS (`business_branding` FK), the route handler's UPSERT `onConflict` key, and both onboarding/edit entry points. |
-| **Multi-logo selection UI (Feature 5)** | Wix's AI Logo Maker, Brandfetch, and most brand-kit extractors that find >1 plausible logo present a small picker grid rather than silently auto-selecting — auto-pick is a known source of "wrong logo chosen" complaints (e.g. picking a partner/sponsor logo instead of the venue's own). Letting the user choose converts an occasionally-wrong AI guess into a fast, low-friction confirm step. | MEDIUM | Scraper already collects up to 5 logo candidates and converts all to PNG (`logoBuffers`) — the raw materials already exist! Today only `result.logo_index` (Claude's single pick) is uploaded via `uploadLogo()`; the other 4 candidate buffers are discarded. New work: (a) upload ALL candidate buffers to Storage (or a temp/staging path) so the user can render a picker grid of real images, not just Claude's pick; (b) `analyzeWithClaude` should still return a *ranked* `logo_index` as the default/highlighted choice, but the UI must allow override; (c) the chosen index needs to flow into `media_urls.logo` / `business_branding.logo_url` on confirm. Standard interaction model from research: a horizontal/grid thumbnail picker with the AI's top pick pre-highlighted/selected, single-select (radio-button semantics, not checkboxes). |
-| **2-color palette selection (Feature 6)** | Squarespace Blueprint and similar tools present a small swatch picker (3–6 extracted colors) and let the user assign roles (background vs. accent) rather than auto-applying the first extracted color. This is more sophisticated than this project's current v2.1 implementation (`colors[0]` always = background, no accent at all) and directly fixes the Feature 7 white-logo bug by giving users an explicit way to choose a *visible* background. | MEDIUM | `scraper.ts` and the prompt already return up to 5 colors as a flat ranked array (`colors: string[]`) — the data exists. New work: (a) UI swatch grid where user picks 2 roles from the palette (could also allow a manual hex override / "pick custom color" escape hatch since auto-extracted palettes are sometimes irrelevant, e.g. picked up a CSS framework's accent rather than true brand color); (b) extend `BrandingResult`/`business_branding` schema from `colors: string[]` to an explicit `{ background: string, accent: string }` selection persisted separately from the raw extracted list (raw list stays in `raw_analysis` for audit/regenerate); (c) `buildBrandingPreview()` and `DiagonaalKortti`/`CalloutCard` need a second color prop threaded through (today only `brandColor` singular is passed). Standard interaction model: tap/click first swatch → assign "Tausta", tap second → assign "Korostus", with a visual preview chip showing both colors together (often shown as a small two-tone pill or split swatch). |
-| **Live preview while editing, with desktop split-view / mobile toggle (Feature 8)** | This is the strongest differentiator of the 8 — Airbnb's listing editor and Squarespace's site editor are the closest reference patterns, both showing real-time updates as the user types/uploads, specifically to reduce "I'll find out what it looks like at the end" anxiety. Currently this wizard ONLY shows a preview at step 6, which is the single biggest UX gap relative to category leaders. | HIGH | This is the most invasive feature for the *existing component architecture*: every Step component (`StepMediat`, `StepHinnasto`, `StepAukioloajat`, `StepYhteystiedot`) currently manages local form state independently and only persists to Supabase on "Next"/"Save" — there's no shared/lifted state that a sibling preview pane could read from while a step is still being edited. Implementing this requires either (a) lifting ALL step form state up into `WizardInner` (a large refactor touching 4 step components + draft-loading logic), or (b) each step emitting an `onChange` callback (not just `onNext`) that WizardInner uses to update a shared "live draft" object the preview pane reads — less invasive than (a) but still touches every step's internals. Desktop: two-column layout (edit form left/right, preview right/left) replacing the current single-centered-column `max-w-xl` step layout — a layout change for the whole wizard shell, not just step 6. Mobile: a toggle/tab control (segmented control "Muokkaa / Esikatselu") swapping which pane is visible, consistent with `AnimatePresence` crossfade patterns already used elsewhere in the app (per CLAUDE.md animation principles — no y-movement, opacity-only crossfade). **Recommend scoping this as its own phase, last, after Features 1–7 stabilize the preview component and color/logo model it needs to render live.** |
+| Explicit "Yrityksen nimi" (company/brand) + "Toimipisteen nimi" (branch/location) two-field pattern for chains | Solves the exact chain-naming ambiguity that generic directories get wrong (see naming convention section) — sports-venue chains (e.g. a gym franchise with several Tampere locations) are common in this domain and a single free-text name field produces inconsistent, duplicate-looking listings ("Liikuntakeskus X Hervanta" vs "X Hervannan toimipiste" vs "X — Hervanta") | MEDIUM | New optional UI fields composing into the existing single `nimi` column (no schema split needed — see Naming Convention section) to avoid migrating every reader of `liikuntapaikat.nimi` (cards, map pins, search, SEO titles) |
+| Per-venue onboarding-progress badge directly inside the existing venue list (not a separate "drafts" page) | Surfaces actionable state exactly where the business owner already looks (BIZPANEL-01 dashboard) — zero new navigation, lower cognitive load than a generic "drafts" inbox | LOW-MEDIUM | Render inline in `VenueRow`: badge ("Onboarding kesken") + "Jatka" CTA linking to `/business/onboarding?paikka_id=X`. Reuses existing claim_status badge visual language (amber/green/red pills already in `VenueRow`) |
+| Reverse-geocode-assisted address text (auto-fills the free-text address field from the dropped pin) | Reduces manual typing error vs a fully free-text address field; still keeps human-authored text per milestone's "tallennetaan vain lat/lng + käyttäjän kirjoittama osoite" requirement | LOW-MEDIUM | Use Google Geocoding API reverse lookup only to *suggest* text into the address input on pin-drop — user can edit/override it, so the stored value stays "user-written" even if seeded by reverse geocoding |
+| AI sport/category suggestion at onboarding (PROJECT.md target feature, adjacent to this question's scope) | Not one of the 4 items asked about directly, but shares the same StepPaikka/onboarding surface — flagged here only as a sequencing dependency, not designed in this document | — | See Dependencies section — do not conflate with the Sijainti step's own scope |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|------------------|-------------|
-| **Full recursive site crawl (>1 link depth, sitemap.xml ingestion, unlimited pages)** | "Better scraping" (Feature 3) could be over-interpreted as "crawl the whole site like a search engine" to maximize data found. | Massively increases SSRF/cost/latency risk on a server that already has a documented Hobby-tier 10s `waitUntil` cap; most small Finnish venue sites have <10 pages total, so diminishing returns are immediate; widens prompt-injection attack surface (more attacker-controllable HTML reaching the Claude prompt) per existing `CR-03`/`CR-04`/`WR-02` mitigations already in this codebase. | Cap at homepage + N (3–5) same-origin links matched by keyword heuristics (hinnasto/hinnat, aukioloajat/aukiolo, yhteystiedot/yhteys/contact) found in the homepage's own nav/footer links — bounded, predictable cost, addresses the actual user need (subpages, not the whole site). |
-| **Auto-applying full extracted palette (5 colors) across the entire site theme** | "Let users use the brand colors everywhere" sounds appealing as a natural extension of Feature 6. | This project has a fixed glassmorphism design system (CLAUDE.md: `.glass`, fixed neutral palette, sport-type colors in `lib/lajit.ts`) — applying arbitrary scraped colors site-wide would conflict with brand consistency rules already established and risks accessibility (contrast) issues outside the narrow, already-YIQ-checked DiagonaalKortti/CalloutCard usage. | Keep 2-color selection scoped to the venue's own card/preview components only (current pattern), not the wizard chrome or rest of the app. |
-| **Real-time live preview implemented via continuous Supabase writes on every keystroke** | "Live" could be naively implemented as "save to DB on every onChange" to keep the preview and persisted draft always in sync. | Hammers the DB with writes on every keystroke (price input, hours input), risking rate limits/cost and race conditions with the existing debounced/explicit-save pattern already used by `StepHinnasto`/`StepAukioloajat`; also reintroduces the same kind of TOCTOU concern flagged elsewhere in this project's history (`WR-03`: TOCTOU approve). | Keep persistence on explicit Next/Save as today; live preview reads from **local component state** (or a lifted in-memory draft object), not from a round-tripped Supabase read — DB writes stay exactly as frequent as they are now. |
-| **Letting Claude pick colors AND logo AND crop/recolor images automatically with no extracted-candidate transparency** | Tempting to "let the AI just decide" to minimize new UI work for Features 5–6. | Directly contradicts the stated v2.2 goal (user sees/approves results in real time with less manual work, but also more control) and is the literal current behavior (auto-pick) that targets 5 and 6 exist specifically to replace. Continuing single auto-pick is the status quo being fixed, not a feature. | Multi-candidate picker UIs as scoped in Features 5 and 6, with AI's top pick pre-selected as the default (best of both: zero-click for users who trust the AI, override available for ones who don't). |
+| Keeping a "search existing venues" step even with an empty/near-empty table | Feels safer to preserve the existing UI shape (`ClaimSearchForm`'s `search` → `claim` → `create` three-step state machine) and avoid touching working code | After the Google-sourced data deletion, the search step will almost always return zero results (only previously self-created venues remain) — this adds a dead click-through step, increases time-to-create, and the `is_claimed`/`claim` UI branch becomes unreachable dead code that still needs maintaining | Collapse `ClaimSearchForm` to a single `create`-only flow (remove `step: 'search'` and `step: 'claim'` entirely, plus `/api/business/claim-paikka` becomes unused — flag for removal in this milestone's cleanup phase) |
+| Auto-redirecting straight back into onboarding whenever a draft exists (current behavior) | Seems like "helpful" forced continuity — guarantees the business finishes setup | Removes user agency, breaks the dashboard's role as home base, makes it impossible to view other venues' status, manage profile, or use the map while one venue's onboarding is incomplete — this is the literal bug being fixed in item 3 | Always render the dashboard; show a non-blocking per-venue "kesken" badge + explicit "Jatka onboardingia" button |
+| Free-text "branch name" field with zero guidance, no template/example | Looks like maximum flexibility for businesses | Produces inconsistent display names across the directory (some show "Liikuntakeskus X", others "X Hervanta", others "X - Hervannan toimipiste, 2 krs") which look unprofessional side-by-side on a map/list and hurts search/sport-filter UX | Provide a clear composed-name convention with a live preview of how the name renders on `PaikkaKortti`/map pin before submit (see Naming Convention) |
+| Allowing the pin to be placed without ever opening the map (lat/lng defaulted to city centroid or geocoded-only) | Saves a step, feels faster for businesses in a hurry | Produces systematically wrong pin clusters at city center — a known failure mode of geocode-only location entry; defeats the entire purpose of MAP-* features (Sponsored badge, distance sort, GPS recenter) since this venue's distance numbers would be wrong | Always require an explicit pin placement (click or drag) before allowing "Next"; autocomplete only assists, never fully substitutes for the pin |
+| Allowing onboarding resume only via re-finding/re-searching the venue (old claim-flow pattern) | Matches the old `ClaimSearchForm`-driven UX where users found-then-resumed | Forces the business to remember which venue name they used and search for it again — friction that increases abandonment, defeats the purpose of item 3 | Resume must be a one-tap link from the dashboard's per-venue badge — no search step required |
 
 ## Feature Dependencies
 
 ```
-StepPaikka-before-URL-analysis (Feature 2A)
-    └──requires──> business_branding scoped to paikka_id, not just business_account_id
-                       └──affects──> Quick-accept path (Feature 2B) — needs paikka_id to exist before analysis starts
-                       └──affects──> Multi-page scraping (Feature 3) — venue laji/city context can improve subpage heuristics
+[Map pin + autocomplete location step]
+    └──requires──> [StepPaikka rework: collect nimi + lat/lng + osoite together, not via ClaimSearchForm pre-step]
+                       └──requires──> [Schema: liikuntapaikat.latitude/longitude already exist (confirmed in app/business/page.tsx VenueLiikuntapaikka type) — no new columns needed for coordinates]
 
-Quick-accept path (Feature 2B)
-    └──requires──> StepPaikka-before-URL-analysis (Feature 2A) — paikka_id must exist first
-    └──requires──> Multi-logo selection (Feature 5) OR an explicit decision to skip logo confirmation in quick-accept
-    └──requires──> 2-color selection (Feature 6) OR an explicit decision to skip color confirmation in quick-accept
-    └──requires──> /api/business/onboarding/submit to accept partial/AI-only drafts
+[Claim-flow collapse to create-only]
+    └──requires──> [Google Places venue data deletion (separate milestone task — must land before or alongside this, or ClaimSearchForm's search step still returns stale claimable rows)]
+    └──conflicts──> [Keeping /api/business/claim-paikka route and is_claimed UI branch — both become dead code]
 
-Multi-page scraping (Feature 3)
-    └──enhances──> Image discovery (Feature 4) — following subpages surfaces more candidate photos (e.g. gallery pages)
-    └──enhances──> Multi-logo selection (Feature 5) — more pages = more logo candidate sightings
-    └──conflicts-risk──> existing SSRF/prompt-injection guards — every new followed URL must re-run the same hostname/private-IP checks as the seed URL
+[Dashboard draft-resume badge]
+    └──requires──> [Query change in app/business/page.tsx: fetch onboarding_draft rows (not just .limit(1) existence check), join/match against venueLinks by paikka_id]
+    └──enhances──> [Existing VenueRow status-badge visual pattern (claim_status pills) — extend with a 4th visual state, not a parallel system]
 
-Multi-logo selection (Feature 5)
-    └──requires──> scraper already returns logoBuffers[] (exists today) — needs all candidates uploaded, not just the chosen one
-    └──helps-fix──> White/transparent logo bug (Feature 7) — letting user pick avoids picking an obviously-broken candidate, but doesn't fully fix contrast
+[Naming convention (Yritys — Toimipiste pattern)]
+    └──enhances──> [StepPaikka / create-venue form UI — add a second optional input + live-preview composition]
+    └──conflicts──> [Single free-text nimi field with no structure — cannot coexist with a clean chain-naming guarantee]
 
-2-color selection (Feature 6)
-    └──requires──> scraper colors[] already exists — needs UI + schema change to store 2 roles instead of "colors[0] = bg"
-    └──fixes──> White/transparent logo bug (Feature 7) — chosen background color becomes the logo's contrasting backdrop
-
-White/transparent logo bug (Feature 7)
-    └──blocks──> CalloutCard preview fix (Feature 1) looking correct for any venue with a white/transparent logo — must ship together or the new preview will visibly reproduce the same bug
-
-CalloutCard preview fix (Feature 1)
-    └──independent — no hard dependency on other features, but should land before Live preview (Feature 8) since Feature 8 will repeatedly re-render whichever preview component is chosen
-
-Live preview while editing (Feature 8)
-    └──requires──> CalloutCard preview fix (Feature 1) — must render the correct component before making it "live"
-    └──requires──> 2-color selection (Feature 6) + Multi-logo selection (Feature 5) state shape finalized — live preview needs a stable shape to read from for logo/colors, not the old single-logo/single-color shape
-    └──requires──> lifting form state out of each Step component (StepMediat, StepHinnasto, StepAukioloajat, StepYhteystiedot) into a shared draft object WizardInner/page can pass to a preview pane
+[AI sport/category suggestion (PROJECT.md adjacent feature, not designed here)]
+    └──shares-surface-with──> [StepPaikka rework] — sequence both StepPaikka changes (location + AI category) in the same phase to avoid touching this component twice
 ```
 
 ### Dependency Notes
 
-- **Feature 2A (StepPaikka reorder) requires a `business_branding` schema/key change:** today `business_branding` has one row per `business_account_id` (UPSERT `onConflict: 'business_account_id'`). If a business owns multiple venues (already supported via `business_paikka_links`), reordering so Paikka comes first and ties analysis to a specific venue likely means re-keying this table to `paikka_id` (or a composite key). This is a migration + RLS policy change, not just a UI reorder — flag for its own implementation step.
-- **Feature 2B (quick-accept) requires 2A first:** the quick-accept CTA needs a resolved `paikka_id` to write hinnasto/aukioloajat/yhteystiedot into `onboarding_draft` and to call `/api/business/onboarding/submit`. It cannot exist before the reorder lands.
-- **Feature 3 (multi-page scraping) is the highest security-review-risk item:** the existing SSRF guard (private-IP blocklist, protocol check) in `route.ts` only runs once, on the user-submitted seed URL. Every link discovered and followed on the homepage must pass through the *same* guard before fetching — Claude-suggested or HTML-extracted URLs are attacker-influenceable input (the existing `WR-02` "only trust Claude's URL if same hostname" pattern is the right model to replicate here).
-- **Feature 5 (multi-logo) and Feature 6 (2-color) both change persisted data shape**, which Feature 8 (live preview) then depends on. Sequencing these before Feature 8 avoids building the live-preview data plumbing twice.
-- **Feature 7 (white logo bug) is cheapest to fix as a standalone CSS/contrast change** (checkerboard or neutral backdrop on logo thumbnails) but is *more completely* solved once Feature 6 exists (use the user-chosen background color as the logo's preview backdrop, matching what it will look like in the live card).
-- **Feature 8 (live preview) is correctly the most complex and should be sequenced last** — it depends on the final shape of every other feature's output (correct preview component, fixed logo contrast, 2-color model, multi-logo selection) and requires the largest structural refactor (lifting state out of 4 step components).
+- **Map pin step requires StepPaikka rework, not a new component bolted onto ClaimSearchForm:** Since `ClaimSearchForm`'s search/claim machinery is being removed, the location-and-name collection logically belongs in (or replaces) `StepPaikka.tsx` inside the wizard itself, run once per new venue, rather than as a pre-wizard gate. This avoids splitting venue-creation logic across two different components with two different submit paths.
+- **Claim-flow collapse requires the Google Places data deletion to land first (or at least the same phase):** if old Google-sourced rows remain queryable, the dead "search" step will still show results, contradicting the "every business creates from scratch" requirement and confusing testers.
+- **Dashboard badge enhances rather than replaces the existing status-pill pattern:** `VenueRow` already renders a `claim_status` pill (approved/rejected/pending). The new "onboarding kesken" indicator should visually sit alongside or above that pill as a distinct state (a venue can simultaneously be "pending admin approval" AND have no draft, or have a draft and not yet be submitted at all — these are different axes and must not be merged into one enum).
+- **Naming convention conflicts with leaving `nimi` as unstructured free text:** any chain-naming guidance is cosmetic/voluntary unless the UI actively composes the string for the user. Recommend a light-touch solution (template + live preview, see below) rather than a backend schema split, to avoid migrating every reader of `liikuntapaikat.nimi` (PaikkaKortti, DiagonaalKortti, map pins, SEO `<title>`, search `ilike`).
+- **AI sport/category suggestion shares StepPaikka's surface:** both this feature and the map/Sijainti step touch `StepPaikka.tsx` — sequence them in the same phase rather than two separate phases that each re-touch the same component.
+
+## Naming Convention Recommendation (Concrete, Implementable)
+
+Based on Google Business Profile's official multi-location guidance (HIGH confidence — official source) and observed patterns from Yelp/marketplace onboarding (MEDIUM confidence — industry convention, not a single spec):
+
+**Rule set to implement in the create-venue form:**
+
+1. **Single-location business:** one name field, no special handling. E.g. `"Tampereen Squash-keskus"`.
+2. **Chain / multi-location business:** present **two inputs** in the create form:
+   - `Yrityksen nimi` (brand name) — e.g. `"FitLife Gym"`
+   - `Toimipisteen sijainti` (location/branch identifier) — e.g. `"Hervanta"` or `"Keskusta"`
+   - The form **auto-composes** the stored `nimi` field as `"{Yrityksen nimi} {Toimipisteen sijainti}"` (space-separated, Google's own pattern: `"Starbucks Stockholm"`, not a dash) — show this composed string live as a preview label above the submit button, consistent with the live-preview convention already established elsewhere in the wizard (`LivePreviewPane.tsx` per CLAUDE.md).
+   - **Do not** default to em-dash or pipe separators (`"FitLife Gym — Hervanta"`) — Google's own examples and most directory conventions use a plain space-joined city/branch suffix, which reads more naturally in Finnish address-adjacent contexts and avoids inconsistent dash/space rendering across truncated card/pin labels.
+3. **Detect "is this a chain" with a simple yes/no toggle**, not automatic inference — asking the business directly ("Onko tämä yksi useista toimipisteistä?") is simpler and more reliable than trying to detect duplicate brand names server-side, and avoids a false-positive UX where a single coincidentally-named venue gets treated as a chain.
+4. **Capitalization rule:** Title Case for the composed name, normalized server-side on save (first letter of each significant word capitalized; Finnish stopwords like `ja`, `tai` lowercase) — prevents all-caps or all-lowercase manual entry from degrading visual consistency on cards/map pins. Implement as a pure function (e.g. `lib/nimiNormalisointi.ts`) following the existing `lib/lajit.ts`/`lib/aukiolo.ts` single-source-of-truth convention already established in this codebase, rather than inline formatting in the form component — keeps it testable and lets it also be applied to AI-suggested names (the website-scraper AI step may also propose a venue name).
+5. **Do not enforce uniqueness server-side at MVP** — two different "Liikuntakeskus" chains in different cities can legitimately share a brand name; rely on `osoite`/`kaupunki` + map position for disambiguation, consistent with how the existing same-address pin-clustering (MAP-09) already disambiguates visually.
 
 ## MVP Definition
 
-### Launch With (v2.2 core)
+### Launch With (v1 — this milestone)
 
-Minimum set that delivers the milestone's stated goal ("AI analysis produces better data via broader site search, user sees/approves results in real time, with less manual work") without requiring the full live-preview refactor:
+- [ ] Sijainti step: map + Places Autocomplete combined picker (click-to-pin, search-to-pin+zoom), storing only `lat/lng` + user-edited address text — essential per milestone goal of full Google Places sync decoupling
+- [ ] `ClaimSearchForm` collapsed to create-only (remove search/claim branches, dead-code `/api/business/claim-paikka`) — essential because there is nothing left to search once Google-sourced rows are deleted
+- [ ] Chain naming: two-field (`Yrityksen nimi` + `Toimipisteen sijainti`) input with yes/no chain toggle, client-composed `nimi`, live preview — essential to avoid an immediate naming-quality regression once Google's canonical names disappear
+- [ ] Name normalization function (Title Case, Finnish stopword handling) applied on save — essential, low cost, prevents a visible quality drop on day one
+- [ ] `/business` dashboard: remove auto-redirect; add per-venue "Onboarding kesken" badge + "Jatka" resume link — essential, this is literally the reported bug
 
-- [ ] **Feature 1 — CalloutCard preview fix** — cheap, fixes a visibly broken/wrong preview; should not ship another milestone with the wrong component showing
-- [ ] **Feature 7 — White/transparent logo contrast fix** — small, visible bug; cheap relative to value once Feature 6's color model exists (sequence after Feature 6, or ship a quick backdrop-only fix first if Feature 6 slips)
-- [ ] **Feature 3 — Multi-page scraping (homepage + N same-origin subpages)** — this is the actual "better data" half of the milestone goal; bounded scope (3–5 pages, keyword-matched links) keeps cost/risk manageable
-- [ ] **Feature 5 — Multi-logo selection** — raw candidates already exist in the pipeline (`logoBuffers`); mostly a UI + upload-all-candidates change, high value-to-effort ratio
-- [ ] **Feature 6 — 2-color selection** — raw palette already exists in the pipeline (`colors[]`); mostly a UI + schema change, also high value-to-effort ratio and unblocks Feature 7's proper fix
+### Add After Validation (v1.x)
 
-### Add After Validation (v2.x)
+- [ ] Reverse-geocode-assisted address text auto-fill on pin drop (nice UX polish, not blocking — manual address typing already satisfies the requirement)
+- [ ] Server-side duplicate-name/duplicate-location fuzzy warning ("a venue with a similar name already exists nearby — is this the same place?") — valuable once enough self-sourced data accumulates to make false-duplicate creation a real risk
+- [ ] Admin-side surfacing of which venues are "draft, never submitted" vs "submitted, pending" — useful for admin queue triage once volume grows
 
-- [ ] **Feature 4 — Image discovery for Mediat gallery** — natural follow-on once Feature 3's multi-page fetch exists (more pages = more candidate photos found), but adds Storage cost and background-job duration risk — validate Feature 3's latency/cost first
-- [ ] **Feature 2 (A+B) — Flow reorder + quick-accept** — valuable but the most architecturally invasive (schema re-key); worth its own focused phase once the data the quick-accept path would submit (logo, colors, subpages) is stable from Features 3/5/6
+### Future Consideration (v2+)
 
-### Future Consideration (v3+)
-
-- [ ] **Feature 8 — Live preview with desktop split/mobile toggle** — explicitly the highest-complexity item; depends on every other feature's final data shape being settled, and requires lifting state out of 4 step components plus a wizard-shell layout change. Defer until Features 1, 3, 5, 6, 7 have shipped and stabilized the preview data model; building live preview against a still-changing data shape means rework.
+- [ ] Ketjuadmin (single account managing multiple branches with shared brand identity/logo across locations) — already flagged as deferred in PROJECT.md "Future" section; the naming convention above is designed to not block this later feature (brand name input can later become a shared `chains` table FK without breaking existing composed-name strings already saved)
+- [ ] Automatic chain detection via fuzzy brand-name matching across existing venues — defer until there's enough self-sourced volume to make this useful rather than noisy
 
 ## Feature Prioritization Matrix
 
 | Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| 1. CalloutCard preview fix | MEDIUM | LOW | P1 |
-| 2A. StepPaikka before URL analysis | MEDIUM | MEDIUM | P2 |
-| 2B. Quick-accept to admin queue | HIGH | MEDIUM | P2 |
-| 3. Multi-page scraping | HIGH | MEDIUM | P1 |
-| 4. Image discovery for Mediat | MEDIUM | MEDIUM | P2 |
-| 5. Multi-logo selection | HIGH | MEDIUM | P1 |
-| 6. 2-color selection | HIGH | MEDIUM | P1 |
-| 7. White/transparent logo bug fix | MEDIUM | LOW | P1 |
-| 8. Live preview (split/toggle) | HIGH | HIGH | P3 |
+|---------|------------|----------------------|----------|
+| Map + autocomplete Sijainti step | HIGH | MEDIUM | P1 |
+| Collapse claim-flow to create-only | HIGH | LOW | P1 |
+| Dashboard draft-resume badge (fix auto-redirect bug) | HIGH | LOW | P1 |
+| Chain naming two-field pattern + live preview | MEDIUM-HIGH | MEDIUM | P1 |
+| Name normalization (Title Case) function | MEDIUM | LOW | P1 |
+| Reverse-geocode address auto-fill | MEDIUM | LOW-MEDIUM | P2 |
+| Duplicate-venue fuzzy warning | MEDIUM | MEDIUM | P3 |
+| Ketjuadmin (shared multi-branch account) | MEDIUM | HIGH | P3 (already deferred) |
 
 **Priority key:**
-- P1: Must have for v2.2 — delivers the stated milestone goal (better data, real-time approve, less manual work) at acceptable cost
-- P2: Should have, sequence into v2.2 if P1 lands cleanly, otherwise v2.3
-- P3: Nice to have, defer to its own milestone — highest complexity, depends on P1/P2 data shapes settling first
+- P1: Must have for this milestone's launch
+- P2: Should have, add when possible
+- P3: Nice to have, future consideration
 
-## Competitor Feature Analysis
+## Competitor / Reference Pattern Analysis
 
-| Feature | Wix ADI / Squarespace Blueprint | Brandfetch-style brand-kit extractors | Our Approach |
-|---------|----------------------------------|----------------------------------------|--------------|
-| Logo extraction | AI-generated or single best-guess logo suggestion from a brief, not scraped from an existing site (different use case — building a new site, not importing an existing one) | Extracts and lists ALL logo variants found (favicon, wordmark, icon) and lets user pick/download any | Already scrapes multiple candidates (`logoBuffers`); v2.2 adds the missing picker UI to match the brand-kit-extractor pattern (Feature 5) |
-| Color palette | Presents a small set of curated palette options matched to a style/mood the user selects; live preview updates as palettes are swapped | Extracts a ranked list of hex colors found in CSS/meta tags with no role assignment | v2.2's 2-color picker is closer to the brand-kit-extractor model (raw extracted palette) but adds Wix/Squarespace's "live preview as you pick" sensibility by assigning explicit roles (bg/accent) rather than just listing colors |
-| Subpage crawling | Wix ADI ingests an existing Facebook/website link and crawls multiple pages of the source to build site content — multi-page is the norm, not the exception, for this category | N/A (most brand-kit tools are single-page extractors) | v2.2's Feature 3 brings this project in line with the AI-website-builder norm (Wix/Squarespace), bounded to a few same-origin pages rather than full-site ingestion |
-| Live preview while editing | Core differentiator of both Wix ADI and Squarespace Blueprint — every selection (palette, layout, copy) updates a visible preview immediately | N/A — brand-kit extractors are one-shot exports, not editing tools | Feature 8 directly targets parity with this pattern but is correctly scoped as the largest, last-sequenced piece of work given this project's current step-isolated form architecture |
+| Feature | Google Business Profile | Yelp for Business | Our Approach |
+|---------|--------------------------|--------------------|---------------|
+| Chain naming | Same brand name across all locations in a country; location suffix only if it's part of the *official* registered name (e.g. "Starbucks Stockholm") | Single free-text name field, no formal chain guidance; relies on manual moderation to catch duplicates | Two-field input (brand + branch) composed into one stored string with a plain-space join, mirroring Google's own real-world pattern, but exposed as guided UI rather than a moderation-after-the-fact fix |
+| Location entry | Pin placement required; supports both address-search and manual drag | Address typed, geocoded automatically server-side, no visible pin-drop step for the business owner | Map pin (click/drag) + Places Autocomplete combined, bidirectional sync — gives the business owner direct visual confirmation, matching Google's own flow |
+| "No existing listing found" path | Always falls back to "Add your business" creation form | "Add business with this name" link below search, or full "Add your business to Yelp" flow | Entire claim flow becomes create-only since the underlying searchable Google-sourced table is removed in this milestone — no fallback branch needed, just one path |
+| Resuming incomplete setup | Profile dashboard shows "complete your profile" prompts inline on the business's own profile card, not a forced redirect | Dashboard nudges incomplete profiles via banners, not redirects | Per-venue badge inline in the existing `VenueRow` list, with explicit resume CTA — never a forced redirect (this is the bug fix) |
 
 ## Sources
 
-- Codebase analysis (HIGH confidence): `app/business/WizardInner.tsx`, `app/business/onboarding/{StepPaikka,StepMediat,StepEsikatselu,AnalysoiSivusto}.tsx`, `app/api/business/analyze-website/route.ts`, `lib/branding/{scraper,analyzer,brandingResult,prompt}.ts`, `.planning/PROJECT.md` (v2.1 shipped summary + v2.2 target list)
-- [Brand Kit Extractor — Chrome Web Store](https://chromewebstore.google.com/detail/brand-kit-extractor/mcegfbolimgfafdlblnnfkpfjdohccad) — MEDIUM confidence, ecosystem pattern for one-click brand asset extraction
-- [Brandfetch — Chrome Web Store](https://chromewebstore.google.com/detail/brandfetch/ecbhicmbbeeckcmhgoaiemddbfcgphhj?hl=en) — MEDIUM confidence, multi-logo/color/font extraction pattern reference
-- [Branding Capture — Chrome Web Store](https://chromewebstore.google.com/detail/branding-capture/lkgghfingfogkbogcgkmhahbdneikafd) — MEDIUM confidence, color extraction/categorization pattern
-- Wix AI Logo Maker review (websitebuilderexpert.com) — MEDIUM confidence, color-suggestion + multi-option pattern
-- Wix vs Squarespace AI builder comparison (lokuma.ai) — MEDIUM confidence, "live preview updates as user picks options" pattern (Squarespace Blueprint)
-- [Is there a scraper that can navigate subpages and find all links for me? — Firecrawl Glossary](https://www.firecrawl.dev/glossary/web-crawling-apis/scraper-to-navigate-subpages-find-all-links) — MEDIUM confidence, crawl-boundary best practices (depth limit, URL pattern matching, breadth-first for site-mapping)
-- Pluralsight scraping best-practices guide — MEDIUM confidence, ethical/rate-limit crawling guidance
-- Userguiding.com onboarding wizard examples (Airbnb/Upwork live-preview pattern) — MEDIUM confidence, live-preview-while-editing reference pattern
+- Google Business Profile official naming guidelines (HIGH confidence — official docs): [Guidelines for representing your business on Google](https://support.google.com/business/answer/3038177?hl=en)
+- PinMeTo — Google Business Profile multi-location naming explainer (MEDIUM confidence — third-party summary, cross-checked against the official source above): [Google Business Profile Name Guidelines for Multi-location Chains](https://www.pinmeto.com/blog/google-business-profile-name-guidelines/)
+- Yelp for Business — claim/add-business flow (MEDIUM confidence — vendor marketing + support docs): [Search or add your business | Yelp for Business](https://biz.yelp.com/claim), [How to Add or Claim a Yelp Business Listing — BrightLocal](https://www.brightlocal.com/learn/how-to-add-or-claim-a-yelp-business-listing/)
+- Geoapify — location-picker pattern (address autocomplete + draggable pin + reverse geocoding) (MEDIUM confidence — vendor technical blog, consistent with general industry pattern): [Leaflet Location Picker with Address Autocomplete, Geolocation, and Draggable Pin](https://dev.to/geoapify-maps-api/leaflet-location-picker-with-address-autocomplete-geolocation-and-draggable-pin-with-geoapify-1gfa)
+- Google Maps Platform — official Places Autocomplete address-form example (HIGH confidence — official docs): [Place Autocomplete Address Form | Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete-addressform)
+- Onboarding/abandonment UX patterns, Zeigarnik effect framing for incomplete-state indicators (MEDIUM confidence — aggregated industry blog consensus, not a single primary source): [Appcues — Onboarding UX: 10 patterns, best practices, and real examples](https://www.appcues.com/blog/user-onboarding-ui-ux-patterns), [Appcues — User Onboarding Best Practices](https://www.appcues.com/blog/user-onboarding-best-practices)
+- Existing codebase, read directly as primary source (HIGH confidence): `app/business/page.tsx`, `app/components/ClaimSearchForm.tsx`, `app/business/onboarding/StepPaikka.tsx`, `supabase/migrations/20260606000000_onboarding.sql`
 
 ---
-*Feature research for: AI-assisted business onboarding wizard, website-to-brand-kit extraction*
-*Researched: 2026-06-16*
+*Feature research for: Liikuntahakemisto v3.0 — self-sourced venue data model (Google Places decoupling), onboarding/dashboard/naming features*
+*Researched: 2026-06-22*

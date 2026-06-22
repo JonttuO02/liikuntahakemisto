@@ -1,162 +1,161 @@
 # Stack Research
 
-**Domain:** Server-side website scraping enhancements (multi-page crawl, image gallery extraction) + live two-pane preview UI for a multi-step onboarding wizard
-**Researched:** 2026-06-16
-**Confidence:** HIGH (Cheerio, Framer Motion, Sharp all verified via Context7/official docs; concurrency-control decision verified against project's existing tsconfig)
-
-## Context: What Already Exists (do not re-architect)
-
-This is an **additive** milestone on top of a working v2.1 pipeline:
-
-- `lib/branding/scraper.ts` — `fetch`-only HTML scraping, regex-based extraction (no DOM parser currently), SSRF guard already in `route.ts`, 5MB response cap, 10s/5s `AbortSignal.timeout`
-- `lib/branding/analyzer.ts` + `lib/branding/prompt.ts` — ONE Claude Haiku call combining vision (logo PNGs) + text (HTML snippet, 8000 chars) → structured JSON (`logo_index`, `logo_type`, `colors[]` up to 5, `prices[]`, `opening_hours[]`, `website_url`)
-- `colors: string[]` already returns **up to 5 hex colors** extracted from `<meta theme-color>` + CSS `:root` vars — the "2-color palette selection" requirement is a **UI-only** change (user picks 2 of the existing N swatches), **not a new color-extraction capability**
-- `sharp` already converts arbitrary image formats (SVG/AVIF/WebP) to PNG for Claude vision input
-- `app/business/WizardInner.tsx` — single component, `mode: 'onboarding' | 'edit'`, plain `useState`/`useEffect`, no form library, no global state library
-- Vercel Hobby `waitUntil` 10-second background-execution ceiling is a known, accepted constraint (documented in `route.ts` comments) — **multi-page crawling must respect this budget**
-
-Given this, the stack additions below are deliberately minimal.
+**Domain:** Decommissioning Google Places venue-data sync + adding Places Autocomplete/Geocoding location picker + extending existing Claude analysis prompt
+**Researched:** 2026-06-22
+**Confidence:** MEDIUM (official Google docs + GitHub maintainer discussion, cross-checked across multiple sources; no Context7 library exists for Google Maps Platform itself)
 
 ## Recommended Stack
 
-### Core Technologies (new)
+### Core Technologies — no new npm packages
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| `cheerio` | `^1.2.0` | Parse HTML on subpages to extract `<a href>` links and `<img>` candidates (logo + gallery) | The current scraper uses hand-rolled regex for a handful of fixed patterns (favicon, og:image, theme-color). That approach does not scale to "find all internal links" or "find all content images, excluding logos/icons/nav assets" — regex-based link/attribute extraction on arbitrary real-world HTML is fragile (nested quotes, self-closing variations, attribute order) and was already showing strain (CR-05 lastIndex bug in the existing regex loop). Cheerio gives a real DOM + CSS-selector + jQuery-like `.attr()`/`.each()` API, pure JS (no native binary, no Edge Runtime conflict — same `runtime = 'nodejs'` constraint as `sharp` already requires), tiny footprint (the route already pulls in `sharp`, this adds negligible bundle weight), and is the de-facto standard for server-side HTML scraping in the Node ecosystem. It does NOT execute JS or render the page — it parses static HTML exactly like the current `fetch`-based pipeline already does, so the architecture is unchanged, just the parsing layer is upgraded from regex to a proper parser. |
+| `@vis.gl/react-google-maps` | `^1.8.3` (already installed) | Loads the `places` library via `useMapsLibrary('places')`; hosts the pin map for the new Sijainti step | Already the project's map binding (MAP-03 decision) — no reason to add a second maps wrapper just for Autocomplete |
+| `google.maps.places.AutocompleteSuggestion` (loaded at runtime via the Maps JS API, **not an npm package**) | Places API "(New)" — current stable channel as of 2026 | Address-suggestion-as-you-type for the Sijainti step | `google.maps.places.Autocomplete` (the old widget) has been closed to new customers since March 1, 2025 and now only receives major-regression bug fixes — do not start a new integration on it. `PlaceAutocompleteElement` (the fully-managed web-component replacement) is still alpha/beta-channel only as of this research, not GA, so it is not the safe production default this milestone needs |
+| `google.maps.Geocoder` (Maps JS API core library, already loaded by the existing `APIProvider`) | Current stable Geocoding API | Reverse-geocode a manually-dropped map pin (click-to-place) into a human-readable address string | The milestone needs both directions: type → suggestion → pin, AND click pin → address text. Autocomplete only covers the first; `Geocoder.geocode({ location })` is the standard, stable API for the second. No separate geocoding library is needed — this ships with the Maps JS API already loaded by `MapProvider` |
+| `@anthropic-ai/sdk` | `^0.97.1` (already installed) | Extend the existing single Claude call in `lib/branding/analyzer.ts` to also return a sport-category guess | Additive prompt/schema change only — explicitly NOT a new AI integration, just a new field in the same JSON response contract |
 
-### Supporting Libraries
+### Supporting Libraries — none required
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| *(none — no new runtime dependency for image gallery extraction)* | — | Extracting non-logo `<img>` candidates reuses Cheerio + the existing `toPngBase64`/fetch pattern in `scraper.ts` | Select `<img>` tags via `$('img')`, filter out ones already claimed as logo candidates (same URL), filter out tiny images (favicons/icons) by checking `width`/`height` attributes when present, cap to N (e.g. 8) candidates, resolve to absolute URL with `new URL(src, baseUrl)` exactly as the logo extraction already does |
-| *(none — no concurrency-limiter library)* | — | Bounding parallel subpage/image fetches | The scale here is small and fixed (e.g. ≤4 extra subpages, ≤8 extra images) — use the same pattern already in `scraper.ts` (`Promise.all` over a `.slice()`-capped array with per-request `AbortSignal.timeout`). Adding `p-limit` (`^7.3.0`, pure ESM) is unnecessary complexity for a fixed small fan-out and the existing code already proves `Promise.all` + per-call timeout is the established idiom in this codebase. Revisit only if the page/image cap grows materially. |
+No new npm packages are needed for any of the three milestone items. This is the central finding: everything is either (a) deletion of existing code, (b) runtime-loaded Google Maps JS API surface already available through the existing `APIProvider`/`useMapsLibrary` pattern, or (c) a prompt/schema change to an existing Claude call.
 
 ### Development Tools
 
 | Tool | Purpose | Notes |
 |------|---------|-------|
-| Vitest (existing) | Unit tests for new crawler/extraction logic | `lib/branding/scraper.test.ts` already exists — extend it; mock `fetch` the same way for subpage crawl tests |
+| Supabase SQL migration (existing `supabase/migrations/`) | Drop Google-sourced rows from `liikuntapaikat` and remove the now-dead sync route | One forward migration, auditable and re-runnable in staging — not an ad-hoc one-off script |
+| `@types/google.maps` | Type the new Autocomplete/Geocoder calls | `^3.64.1` is already installed; verify it exposes `AutocompleteSuggestion` types — if narrow gaps appear, use targeted `as` casts at the call site rather than adding a new types package |
 
 ## Installation
 
 ```bash
-# Core
-npm install cheerio@^1.2.0
+# No installation needed — every capability above is either already in package.json
+# (@vis.gl/react-google-maps, @anthropic-ai/sdk, @types/google.maps) or is part of the
+# Google Maps JavaScript API surface loaded at runtime by the existing MapProvider/APIProvider.
 
-# No supporting libraries or dev dependencies needed beyond what's already installed
+# Google Cloud Console side (not npm):
+# - Ensure "Places API (New)" is enabled on the project (the legacy Places API alone is not
+#   sufficient for AutocompleteSuggestion).
+# - Ensure "Geocoding API" is enabled (a separate API from Places, separate billing line item).
+# - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY (already used for the map) needs both new APIs added to its
+#   API restrictions allowlist, alongside the existing Maps JavaScript API restriction.
 ```
 
-## What's Needed for Each Feature (a–d)
+## (a) Removing Google Places Sync — Safe Migration/Cleanup Approach
 
-### (a) Multi-page crawling — same-origin link discovery with limits
+**What exists today** (verified by reading the code): `app/api/admin/sync-paikat/route.ts` performs a `GET` guarded by `ADMIN_SECRET`, runs Places `textsearch` + `details` calls, and `upsert`s rows into the `liikuntapaikat` table keyed on `place_id`. It already has a `business_managed` boolean that excludes business-onboarded venues from being overwritten by sync — this is the load-bearing flag for a safe cleanup.
 
-**No new infra beyond Cheerio.** Implementation pattern, integrated into `lib/branding/scraper.ts`:
+**Recommended approach:**
 
-1. After fetching the homepage HTML (already done), parse it with `cheerio.load(html)` instead of (or alongside) the current regex logo/color extraction.
-2. Extract `$('a[href]')`, resolve each to absolute URL via `new URL(href, baseUrl)`, filter to **same hostname** (`new URL(href).hostname === new URL(baseUrl).hostname`) — same-origin check the SSRF guard in `route.ts` already models.
-3. Score/select candidate subpages by keyword match against the link's path/text (Finnish + English: `hinnasto|hinnat|price`, `aukiolo|tunnit|hours`, `yhteys|contact`) — this is plain string matching, no library needed.
-4. Cap to **2–4 subpages max** (hard limit, not configurable by the response) to stay inside the 10s `waitUntil` budget already documented as a constraint.
-5. Fetch each selected subpage with the **same** `fetch` + `AbortSignal.timeout(5000)` + 5MB-size-guard pattern already used for CSS files in `scraper.ts` — run them with `Promise.all` (bounded by the hard page cap, so no concurrency limiter needed).
-6. Concatenate/label each subpage's stripped HTML snippet (reuse the existing comment/script/style-stripping regex) and pass labeled snippets into the Claude prompt (e.g. `--- Page: /hinnasto ---\n<snippet>`) so Claude can attribute extracted prices/hours to source pages if useful for debugging.
-7. **Do not** introduce a crawl queue, sitemap parser, or `robots.txt` parser for this milestone — the brief is "follow homepage links to find a few specific subpages," not general-purpose crawling. Respect SSRF guard on every followed URL exactly as the homepage URL is checked today (same-origin filtering already makes this mostly moot, but re-validate each resolved URL through the same private-IP check before fetching, since a malicious homepage could link to a private-IP-resolving same-looking hostname).
+1. **Delete the route file outright** (`app/api/admin/sync-paikat/route.ts`) rather than disabling it — no value in keeping a half-dead admin endpoint around; git history is the rollback path if ever needed.
+2. **Data cleanup is a single Supabase migration, not an ad-hoc admin script**: `DELETE FROM liikuntapaikat WHERE business_managed = false AND place_id IS NOT NULL;` — i.e. delete rows that originated from Google sync and were never claimed by a business. Keep `business_managed = true` rows untouched — those are the v3.0 target state (business-entered data) and must survive the cleanup.
+3. **Do not drop the `place_id` column in the same migration.** Per Google's Places API caching policy, `place_id` is the one field exempt from caching/storage restrictions and may be stored indefinitely — so even though the sync mechanism is being removed, there's no compliance urgency to scrub `place_id` from rows you keep. Drop it in a later, separate cleanup phase only once confirmed unused, to avoid coupling a data-deletion migration with a schema migration (smaller, more reversible migrations are safer).
+4. **Cron/scheduled trigger**: check for any Vercel Cron config pointing at `/api/admin/sync-paikat` and remove the cron entry in the same change — an orphaned cron hitting a deleted route 404s silently every run.
+5. **Env var cleanup**: `GOOGLE_PLACES_API_KEY` becomes unused once `sync-paikat` is deleted — confirm no other route still reads it (the onboarding/branding pipeline uses `ANTHROPIC_API_KEY` + `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, not the Places key) before removing it from Vercel env config.
+6. **Sequencing**: ship the code deletion (route + cron) in the same phase as the data-deletion migration, but only run the migration in production after confirming in staging that no UI path still depends on aukioloajat-only fields that exclusively came from the now-deleted sync — the new onboarding flow already provides its own hours input (`StepAukioloajat`), so this should be a non-issue, but verify before the destructive `DELETE`.
 
-**Why not Playwright/Puppeteer:** `playwright` is already a `devDependency` in this repo but is verified **unused in source** (search found it only in `package.json`/`package-lock.json`/a stale `TESTING.md` reference — Vitest is the actual active test runner per `package.json` scripts and `lib/branding/*.test.ts`). Do not promote it to a runtime dependency. A headless browser is unnecessary here — every target subpage (pricing, hours, contact) is typically server-rendered static HTML on small business sites, exactly the kind of content `fetch` already retrieves successfully for the homepage. Headless browsers add ~300MB+ deploy size, multi-second cold starts, and are flatly incompatible with the existing `waitUntil` 10-second Hobby-tier budget and the `runtime = 'nodejs'` Vercel function model already in place. If a future milestone discovers JS-rendered SPA target sites, that's a distinct, larger architectural decision — not an incremental addition here.
+## (b) Places Autocomplete + Geocoding for the Sijainti Step
 
-### (b) Extracting non-logo images reliably for a media gallery
+### Why not `google.maps.places.Autocomplete` (the old widget)
 
-Reuse Cheerio's `$('img')` traversal:
+As of March 1, 2025, `google.maps.places.Autocomplete` is closed to new customers (any project that hasn't already used it) and now only receives fixes for major regressions — not new features, not most bug classes. Starting a brand-new integration on it in 2026 means building on a widget Google has explicitly told developers to migrate away from. **Do not use it.**
 
-- Exclude any `src` already present in the logo-candidate list (string equality after URL resolution).
-- Exclude tiny images: if `width`/`height` attributes are present and either is `<100`, skip (catches icons/spacers/tracking pixels).
-- Exclude common non-content patterns by filename/class heuristics already proven useful for logo detection in reverse: skip if `src`/`alt`/`class` matches `icon|sprite|pixel|spinner|loader`.
-- Resolve to absolute URL, dedupe, cap to a fixed number (e.g. 8) — same `.slice()` pattern as logo candidates.
-- Fetch + `sharp`-convert each to PNG/WebP **only if needed for storage normalization** — note the existing pipeline only does this for logo candidates because they're sent to Claude vision. Gallery images do **not** need to go through Claude vision (no requirement to classify gallery photos), so they can be passed through as discovered URLs and copied directly into Supabase Storage (or referenced if already public) without a `sharp` round-trip, saving compute. Only convert if the original format is unsupported by `<img>` rendering (e.g. legacy `.bmp`) — rare enough to handle with the existing `toPngBase64` helper as a fallback, not a new dependency.
+### Why not `PlaceAutocompleteElement` either (yet)
 
-### (c) React pattern for two-pane live preview in Next.js 14 + Framer Motion
+`PlaceAutocompleteElement` — the fully-managed, Google-hosted web component intended as the long-term replacement — was still gated to the alpha/beta release channel as of this research, not GA/stable. Building production functionality on an alpha-channel API risks breaking changes outside your control, and `@vis.gl/react-google-maps` maintainers themselves point away from it for production code today.
 
-**Framer Motion (already installed, `^12.38.0`) is sufficient. No new library needed.** Verified via Context7 (`/grx7/framer-motion`) — note the upstream package was renamed `motion` (npm `motion`, import `motion/react`) in 2025, but `framer-motion` remains a maintained legacy-named alias and this project's CLAUDE.md/animation conventions are written against `framer-motion` imports already used throughout (`AnimatePresence`, `motion.div`, `whileHover`, `staggerChildren`). **Do not migrate the import path** in this milestone — that's an unrelated, unscoped rename with no functional benefit here.
+### Recommended approach: `AutocompleteSuggestion` (Places API "New", stable) + a custom input
 
-The actual pattern needed is a **state-lifting** pattern, not a new animation or state-management library:
+This is the path the `@vis.gl/react-google-maps` maintainers point to for production right now (confirmed via the library's own GitHub discussion thread):
 
-1. Lift form field state (or at minimum a derived "preview model" object: chosen logo URL, 2 selected colors, pricing rows, hours, contact info) up into `WizardInner` (already the shared parent across all 6 steps per the `mode: 'onboarding' | 'edit'` consolidation done in v1.9).
-2. Each `Step*.tsx` component receives `value` + `onChange` props (or a single `onPreviewUpdate(partial)` callback) instead of owning fully isolated local state — this is a small refactor of the existing `useState`-per-step pattern, not an architecture change. (`StepHinnasto`, `StepMediat`, etc. already accept `initialDraft`/`initialPaikka` as props and call `onSaveSuccess` callbacks upward — extending this with a live "preview model" callback is consistent with the existing prop-drilling convention, no Context API or external store required given only 6 steps and one parent.)
-3. Render `DiagonaalKortti` (already brand-color-aware with YIQ contrast, per v2.1) directly inside the preview pane, fed by the lifted state — this component already exists and already does exactly the rendering job needed; no new preview-renderer component required.
-4. Desktop layout: CSS Grid/Flex two-column (`md:grid md:grid-cols-2`), no animation library involvement — this is pure Tailwind layout.
-5. Mobile layout: toggle between edit/preview panes using the **same `AnimatePresence mode="wait"` crossfade pattern already mandated in CLAUDE.md** for lista/kartta view switches (`opacity`-only, `duration: 0.2`, stable `key` prop) — this is a direct reuse of an existing, documented animation convention, not a new pattern.
-6. For the live update itself (preview re-rendering as the user types), this is just React re-render on lifted state change — no debouncing library needed at this form scale (a handful of text/select inputs), though a simple `useDeferredValue` (built into React 18, already in use) can be applied to the preview-feeding state if typing-induced re-renders of `DiagonaalKortti` ever feel janky. This is a built-in React 18 hook, not a new dependency.
+1. Load the `places` library the same way the project already loads map libraries: `const places = useMapsLibrary('places')`.
+2. On debounced text input, call `places.AutocompleteSuggestion.fetchAutocompleteSuggestions({ input, ... })` — a stable, GA method, not an alpha widget.
+3. Render the returned `placePrediction` list in a custom `.glass` dropdown styled to match the existing design system (no Google-hosted UI shell to fight — actually an advantage over the widget approaches).
+4. On selection: `const { place } = await suggestion.placePrediction.toPlace().fetchFields({ fields: ['location', 'formattedAddress'] })`, then read `place.location.lat()` / `place.location.lng()`.
+5. Use the returned `location` to move the map's `AdvancedMarker` (already the project's pin component per CLAUDE.md/MAP-08) and call `map.panTo()` / `map.setZoom()` to satisfy "selecting a suggestion zooms the map."
+6. For the **reverse direction** (user clicks the map to drop a pin manually, no typing): attach a `click` listener to the `Map` component, take the clicked `LatLng`, and call `new google.maps.Geocoder().geocode({ location: latLng })` to get a `formatted_address` to populate the editable address text field. This is the Geocoding API — a separate, stable, long-standing API, unaffected by the Autocomplete deprecation.
+7. **Persist only**: `lat`, `lng` (from either path), and the address **string** as currently displayed/edited in the text field (whether it came from an Autocomplete selection, a Geocoder reverse-lookup, or a manual edit). Never persist the raw `AutocompleteSuggestion`/`Place` response object, the predictions list, or any other Places fields from this flow into Supabase.
 
-**What NOT to add:** no Zustand/Jotai/Redux (6 steps, one parent component, prop-drilling is already the established and sufficient pattern per `WizardInner`/`Step*` props); no React Hook Form (the codebase has zero form-library usage today — every step uses raw `useState` for fields — introducing one now for live-preview alone would be inconsistent and unnecessary since the live-preview requirement is satisfied by lifting plain state).
+### Compliance note — refines, not contradicts, the milestone's stated assumption
 
-### (d) Logo contrast / checkerboard backdrop for transparency visibility
+The milestone brief states: "store only lat/lng + the user-typed address string... to stay compliant." Research confirms this is **directionally correct, but the legal basis is narrower than a blanket "ephemeral use is fine" reading** — worth stating precisely so it isn't over-generalized later:
 
-**Pure CSS — no library.** This is a well-known pattern (same one Photoshop/Figma use for transparent layers):
+- Google's Places API policy default is **no pre-fetching, caching, or storage** of Places content.
+- One specific, narrow exception applies: when an end user uses Autocomplete to type a street address that "would have been completely and accurately provided by that end user without Autocomplete," **the selected address itself** becomes exempt from the caching restriction — but "solely for that end user's specific transaction." The exception does **not** extend to the list of suggestions, to other Place fields (ratings, hours, photos, types, etc.), or beyond the address text itself.
+- `place_id` has its own, separate, indefinite-storage exemption regardless of how it was obtained.
+- **Practical takeaway**: storing the final selected/edited address text + derived lat/lng for the business's own venue record is consistent with the Autocomplete exemption (it is the end user's own selected address, stored for their own venue, not redistributed as Places content to other users). The milestone's choice to store nothing else from the Places response (no `place_id`, no ratings/types/photos) is the right conservative interpretation and should not be loosened in a future milestone without re-checking the current terms.
+- This reasoning does **not** extend to a hypothetical future feature like "cache nearby Places search results for 24h to cut API costs" — that would hit the general no-caching default and needs separate review if it ever comes up.
 
-```css
-.logo-checkerboard-backdrop {
-  background-image:
-    linear-gradient(45deg, #80808022 25%, transparent 25%),
-    linear-gradient(-45deg, #80808022 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #80808022 75%),
-    linear-gradient(-45deg, transparent 75%, #80808022 75%);
-  background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
-}
-```
+### Cost/quota consideration (architecture-relevant, not just compliance)
 
-Implementation notes specific to this project:
-- Render the logo `<img>`/`<Image>` inside a small container with this checkerboard background, OR offer a light/dark toggle behind the logo (two solid swatches, e.g. `#ffffff` and `#111111` — the project's own foreground-primary token from CLAUDE.md) so the user can manually verify visibility against both extremes, in addition to the checkerboard which reveals transparency itself.
-- Recommend **checkerboard as the default backdrop** (reveals transparency unambiguously) with a small toggle to preview against the *actual selected background color* (one of the 2 chosen palette colors from requirement 4) — this directly serves the bug being fixed (white logo invisible on white preview background) by letting the user see the logo against the real background color they picked, not just a generic white card.
-- No new npm package — this is ~10 lines of CSS plus a boolean toggle state, consistent with the project's existing glassmorphism utility-class convention (`globals.css`) of defining reusable primitives there rather than inline styles. Add a `.checkerboard` utility class to `app/globals.css` alongside `.glass`/`.glass-hover` per existing convention.
+Autocomplete billing is per-session if an `AutocompleteSessionToken` is threaded correctly (bundles all keystroke-level autocomplete requests + the final `fetchFields` call into one session-priced unit instead of per-character billing). Create one `AutocompleteSessionToken` instance per "search attempt," reuse it across the debounced input lifecycle and the final `fetchFields` call, and only create a new token when the user starts a fresh search (after a selection, or after clearing the field). Skipping this is the most common Places Autocomplete cost mistake, and it has no functional symptom — only a billing one — so it is easy to miss in testing.
+
+## (c) Extending the Claude Analysis Call with Sport-Category Classification
+
+**Existing pattern** (`lib/branding/analyzer.ts` + `lib/branding/prompt.ts`): one `anthropic.messages.create()` call per analysis run, `model: 'claude-haiku-4-5-20251001'`, image content blocks (screenshot + logo candidates) followed by one text block containing the prompt + concatenated labeled-page HTML. Response is parsed as JSON (with markdown-fence stripping) into a typed `BrandingAnalysisResult`, with defensive per-field validation (e.g. `VALID_LOGO_TYPES.includes(...)`, hex-regex test on colors) before persisting.
+
+**Recommended approach — purely additive, no new AI call:**
+
+1. Add a `category` field to the same JSON response schema the prompt already requests — e.g. `{ "category": "padel", "category_confidence": "high" | "medium" | "low" }` — alongside the existing `logos`, `colors`, `prices`, `opening_hours`, `website_url` keys.
+2. Inject the valid category set into the prompt **dynamically from `lib/lajit.ts`**, e.g. `Object.keys(lajiKonfig).join(', ')` interpolated into `BRANDING_ANALYSIS_PROMPT`, rather than hardcoding category names into the prompt string. This guarantees the prompt and the runtime category list (already the single source of truth per CLAUDE.md) never drift — any future sport added to `lajit.ts` automatically becomes a valid Claude output with zero prompt edit.
+3. Validate Claude's `category` output the same defensive way `logos`/`colors` are already validated in `analyzeWithClaude`: check the returned string is a member of `Object.keys(lajiKonfig)`; default to `'liikunta'` (the existing generic fallback category already present in `lajiKonfig`) if missing/malformed/unrecognized. This follows the file's existing validation idiom exactly rather than introducing a new style.
+4. Surface the field through the same `BrandingAnalysisResult` interface (add `category: string`, optionally `category_confidence`) and the same GET route response in `app/api/business/analyze-website/route.ts` (extend the `.select()` projection) — add `category` as a new nullable column on `business_branding` via an additive migration, mirroring how `colors`/`logo_type` are already stored and exposed.
+5. Onboarding UI: per the milestone, the user "confirms/changes" the suggestion — reuse the existing pre-fill-then-edit pattern already used for prices/hours (`StepHinnasto`/`StepAukioloajat` pre-filled from `raw_analysis`, user edits before submit), not a new UI paradigm. The category picker should be sourced from `LAJIT_FILTTERI`/`lajiKonfig` (already the single source of truth), pre-selected to Claude's guess.
+6. **Do not add a second Claude call** ("classify category" as its own request). The token cost of one extra JSON key on an existing response is negligible versus a second `messages.create()` round-trip, and a second call would break the explicit "one Claude API call" architecture decision already recorded in PROJECT.md ("Yksi Claude API -kutsu analysoi logo-kandidaatit (vision) + HTML-tekstisisällön"), which the milestone context explicitly says to preserve.
 
 ## Alternatives Considered
 
 | Recommended | Alternative | When to Use Alternative |
 |-------------|-------------|--------------------------|
-| Cheerio for HTML parsing | `node-html-parser` | Slightly faster/lighter for very simple selector needs, but lacks Cheerio's jQuery-style `.attr()`/`.each()`/manipulation ergonomics and has a smaller ecosystem; not worth the tradeoff for this use case |
-| Cheerio for HTML parsing | `linkedom` | Closer to a full DOM (supports more DOM APIs), used when code needs `document.querySelector`-style APIs or is shared with browser code; this project has no such cross-environment requirement, so Cheerio's purpose-built scraping API is the better fit |
-| Plain `Promise.all` + `.slice()` cap for fan-out fetches | `p-limit` (`^7.3.0`) | Use if the subpage/image cap grows beyond a small fixed number (e.g. dynamic discovery of 20+ pages) where uncontrolled parallel fetches could overwhelm the target server or blow the 10s budget — not needed at the 2–4 page / ≤8 image scale specified here |
-| Lifted `useState` in `WizardInner` for live preview | React Hook Form + Context | Use if the wizard grows significantly more complex (cross-field validation, large dynamic field arrays) — at 6 fixed steps with simple field shapes, the overhead and inconsistency with the existing zero-form-library codebase isn't justified |
-| CSS checkerboard backdrop | `react-checkerboard` / canvas-based pattern libraries | Never needed here — these exist for canvas/WebGL contexts (e.g. image editors with zoom/pan); a static CSS background covers this project's "preview a logo" use case completely |
+| `AutocompleteSuggestion` (Places API New, stable) | `PlaceAutocompleteElement` (web component) | Only once Google promotes it out of alpha/beta to GA — re-check at that point since it removes the need to build a custom dropdown UI; not safe to build on today |
+| `AutocompleteSuggestion` + custom `.glass` dropdown | Third-party address-autocomplete React libraries (e.g. `react-google-autocomplete`, `use-places-autocomplete`) | Never for this project — most current releases of these wrappers are themselves built on the deprecated `Autocomplete`/`AutocompleteService` classes underneath, so adopting one just hides the same deprecated dependency one layer down |
+| `google.maps.Geocoder` for reverse-geocoding pin clicks | A geocoding npm package (e.g. `node-geocoder`, `react-geocode`) | Only if a provider-agnostic geocoding abstraction were needed (e.g. swappable to Mapbox/OSM later) — not justified here; the project is already 100% Google Maps Platform and the JS API's `Geocoder` is already loaded for free |
+| One additive field in the existing Claude prompt/schema | A second, separate Claude call dedicated to category classification | Only if category classification needed a different model/temperature/image input than the branding analysis — it doesn't; the same HTML text input already gives sufficient signal |
 
 ## What NOT to Use
 
 | Avoid | Why | Use Instead |
 |-------|-----|--------------|
-| Playwright / Puppeteer for crawling | Already a devDependency but unused in source; headless browsers add huge cold-start latency and deploy size, and are incompatible with the documented 10s `waitUntil` Hobby-tier budget that the multi-page crawl must still fit inside | `fetch` + Cheerio (static HTML parsing), exactly extending the existing `scraper.ts` approach |
-| `p-limit`/`p-queue` for this milestone's fetch fan-out | Adds a pure-ESM dependency for a problem (bounding ~4 parallel fetches) the codebase already solves inline with `Promise.all` + per-call `AbortSignal.timeout` | Keep using the existing inline `Promise.all` pattern from `scraper.ts` |
-| `node-vibrant` / `sharp-vibrant` (image-based color extraction) | The milestone's "2-color palette" requirement operates on the **already-extracted** `colors: string[]` (from HTML/CSS, by explicit prompt design — "Do NOT extract colors from images") — adding image-based palette extraction would contradict the existing, deliberate prompt instruction and pipeline design; it's also not asked for (the brief is "user picks 2 of the extracted colors," not "extract colors from images") | Reuse existing `colors[]` array from `analyzeWithClaude`; build a 2-of-N swatch picker UI only |
-| Zustand/Redux/Jotai for live-preview state | No global/cross-route state-sharing need exists — the wizard is a single component tree (`WizardInner` → `Step*`) already using lifted props successfully | Lift preview-relevant state into `WizardInner`, pass down via props |
-| react-hook-form (for this milestone specifically) | Zero existing usage in the codebase; introducing it only for live-preview would create an inconsistent two-pattern codebase (some steps raw `useState`, others RHF) for no functional gain — live preview only needs state lifting, not validation/schema features | Keep raw `useState` lifted to the parent, same as the rest of the wizard |
-| `framer-motion` → `motion` package rename | Out of scope; the rename is cosmetic (same API, new import path `motion/react`) and every existing component/CLAUDE.md convention in this repo is written against `framer-motion` — migrating mid-milestone for an unrelated feature set adds churn with zero benefit | Continue using `framer-motion@^12.38.0` exactly as already installed |
+| `google.maps.places.Autocomplete` (legacy widget) | Closed to new customers since March 1, 2025; receives only major-regression fixes, not active development | `places.AutocompleteSuggestion.fetchAutocompleteSuggestions()` |
+| `google.maps.places.AutocompleteService` / `PlacesService` (legacy services) | Same deprecation track as the widget — explicitly named in Google's own migration guide as the classes to remove | `AutocompleteSuggestion` + `Place.fetchFields()` |
+| `PlaceAutocompleteElement` in production right now | Alpha/beta channel only — not GA, breaking-change risk | Custom input + `AutocompleteSuggestion`; revisit when GA |
+| A second Claude API call for category classification | Breaks the explicit "one Claude call" architecture decision in PROJECT.md; doubles per-onboarding AI cost and latency for no real benefit | Additive JSON field in the existing `analyzeWithClaude` call/prompt |
+| Caching/storing raw Places API response content (predictions list, ratings, types, photos) anywhere in Supabase | Violates Google Maps Platform Terms' default no-cache rule; only the end-user-selected address text and `place_id` carry exemptions | Store only the final lat/lng + edited address string, as the milestone already specifies |
+| A new geocoding/address npm package | Unnecessary dependency — Geocoding API ships with the Maps JS API already loaded by `MapProvider` | `new google.maps.Geocoder()` |
 
 ## Stack Patterns by Variant
 
-**If subpage discovery via link-text keyword matching finds zero confident matches (e.g. a single-page site with no separate pricing/hours pages):**
-- Fall back to homepage-only analysis exactly as today — this is not a regression, it's the existing v2.1 behavior preserved as a fallback path.
-- Because: the milestone goal is "better data when subpages exist," not "force a crawl" — Claude's existing single-call analysis of the homepage alone remains a fully valid result.
+**If the onboarding Sijainti step needs to work without the user ever typing (pure click-to-place):**
+- Use `Geocoder.geocode({ location })` alone, skip Autocomplete entirely for that interaction path.
+- Because Autocomplete only assists *typed* input — a pure map-click flow has no text to autocomplete, it only needs reverse geocoding to produce a human-readable string for the editable address field.
 
-**If a discovered subpage fails to fetch (timeout, 404, non-HTML content-type):**
-- Skip it silently (same `try/catch`-and-continue idiom already used for logo-candidate fetches in `scraper.ts`) and proceed with whatever subpages did succeed, even if that's zero.
-- Because: one flaky subpage must never fail the entire analysis — this mirrors the existing per-candidate error handling philosophy already in the codebase.
+**If Autocomplete suggestions need to be biased toward Finland / the project's three cities (Tampere, Helsinki, Turku):**
+- Pass `includedRegionCodes: ['fi']` (the new-API replacement for the legacy `componentRestrictions.country`) and/or a `locationBias`/`origin` centered on the relevant city coordinates (already available from `SUOMI_KAUPUNGIT` in `lib/constants`) in the `fetchAutocompleteSuggestions` request.
+- Because unscoped global autocomplete will surface irrelevant international results for short Finnish street-name inputs, hurting the suggestion UX.
+
+**If a future milestone needs the Autocomplete dropdown's accessibility/keyboard nav to exactly match Google's reference implementation:**
+- Re-evaluate `PlaceAutocompleteElement` once GA, since the custom dropdown built today is intentionally minimal (matching `.glass` styling) and not a full ARIA-combobox reimplementation.
+- Because building full accessibility semantics by hand for a custom dropdown is real, ongoing effort that Google's hosted element solves once it's stable.
 
 ## Version Compatibility
 
 | Package A | Compatible With | Notes |
 |-----------|------------------|-------|
-| `cheerio@^1.2.0` | Next.js 14.2.35, Node.js runtime (`runtime = 'nodejs'`) | Pure JS, no native bindings — safe alongside `sharp` (native) in the same Node.js-runtime-only API route; do not import in any file reachable by the Edge Runtime |
-| `cheerio@^1.2.0` | TypeScript 5.x strict mode | Ships its own types; `import * as cheerio from 'cheerio'` per current ESM-first API (v1.x's documented API surface, confirmed via Context7 docs example) |
-| `framer-motion@^12.38.0` (existing, unchanged) | React 18, Next.js 14 App Router | No version bump needed for this milestone's two-pane preview work; `AnimatePresence`/`motion.div` patterns already proven in this codebase (Kartta/Lista crossfade) directly reusable |
+| `@vis.gl/react-google-maps@1.8.3` | `places` library loaded via `useMapsLibrary('places')`, exposing `AutocompleteSuggestion` | Confirmed pattern from the library's own maintainer discussion (GitHub Discussion #707) — no version bump needed for this capability |
+| `@types/google.maps@3.64.1` | `google.maps.places.AutocompleteSuggestion`, `google.maps.Geocoder` | Should cover both; if `AutocompleteSuggestion` types are missing/incomplete in this exact version, use narrow `as` casts at the call site rather than pulling in a newer major or a duplicate types package |
+| Places API (New) + Geocoding API (Cloud Console) | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (existing key, client-side, HTTP-referrer-restricted per CLAUDE.md env table) | Both new APIs must be explicitly enabled on the GCP project and added to the existing key's API restriction allowlist — the key itself doesn't need to change, only its restriction list |
+| `@anthropic-ai/sdk@0.97.1` | `claude-haiku-4-5-20251001` (existing pinned model in `analyzer.ts`) | No SDK or model version change needed for the additive category field — same `messages.create()` call, same JSON-parsing path |
 
 ## Sources
 
-- Context7 `/cheeriojs/cheerio` — load/selecting/attribute-extraction API confirmed current (`cheerio.load`, `.attr()`, `$.extract()`)
-- Context7 `/grx7/framer-motion` — confirmed `AnimatePresence`/layout animation API surface unchanged from what's already used in this codebase
-- WebSearch, verified against npm — Cheerio latest `1.2.0` (Jan 2026 release) — MEDIUM-HIGH confidence (single search source, but corroborated by Context7 docs reflecting the same v1.x API)
-- WebSearch — Framer Motion → Motion rename (2025, package `motion`, import `motion/react`) — MEDIUM confidence (multiple corroborating sources: motion.dev official upgrade guide, npm); decision to NOT migrate is a project-fit judgment, not a contested fact
-- WebSearch — `p-limit@7.3.0`, pure ESM — MEDIUM confidence (npm package page); decision to avoid it is based on direct codebase inspection (`tsconfig.json` `moduleResolution: bundler` would support it technically, but it's unneeded complexity at this fan-out scale)
-- Direct codebase inspection (HIGH confidence, no external source needed): `lib/branding/scraper.ts`, `lib/branding/analyzer.ts`, `lib/branding/prompt.ts`, `app/api/business/analyze-website/route.ts`, `app/business/WizardInner.tsx`, `app/business/onboarding/StepMediat.tsx`, `app/business/onboarding/StepEsikatselu.tsx`, `package.json`, `tsconfig.json` — confirmed existing pipeline shape, confirmed Playwright is an unused devDependency, confirmed `colors[]` already extracts up to 5 HTML/CSS-sourced hex values, confirmed zero form-library usage, confirmed `bundler` module resolution
+- [Migrate to the new Place Autocomplete (Google Developers)](https://developers.google.com/maps/documentation/javascript/legacy/places-migration-autocomplete) — MEDIUM confidence, official docs, confirms March 1 2025 closure of legacy `Autocomplete` to new customers and the migration path to `AutocompleteSuggestion`/`PlaceAutocompleteElement`
+- [visgl/react-google-maps GitHub Issue #736 — "As of March 1st, 2025, google.maps.places.Autocomplete is not available to new customers"](https://github.com/visgl/react-google-maps/issues/736) — MEDIUM confidence, maintainer-acknowledged issue confirming the deprecation's practical impact on this exact library
+- [visgl/react-google-maps GitHub Discussion #707 — Autocomplete example with Places API (new)](https://github.com/visgl/react-google-maps/discussions/707) — MEDIUM confidence, maintainer-endorsed production pattern using `AutocompleteSuggestion` + `toPlace().fetchFields()`, explicitly recommends against `PlaceAutocompleteElement` for production due to alpha/beta channel status
+- [Policies and attributions for Places API (Google Developers)](https://developers.google.com/maps/documentation/places/web-service/policies) — MEDIUM confidence, official policy page; confirms general no-cache rule, `place_id` indefinite-storage exemption, and the narrow end-user-selected-address exemption for Autocomplete
+- [Policies and attributions for Geocoding API (Google Developers)](https://developers.google.com/maps/documentation/geocoding/policies) — MEDIUM confidence, official policy page; confirms Geocoding API results are subject to the same general no-permanent-storage default, with the same `place_id` exemption
+- [Google Maps Platform Service Specific Terms (Cloud Google)](https://cloud.google.com/maps-platform/terms/maps-service-terms) — MEDIUM confidence, primary legal source for the end-user-selected-address exemption language; corroborated by the policies pages above and by independent web search results repeating the same exemption wording
+- Direct codebase reads of `app/api/admin/sync-paikat/route.ts`, `app/api/business/analyze-website/route.ts`, `lib/branding/analyzer.ts`, `lib/lajit.ts`, `app/components/MapProvider.tsx`, `app/business/onboarding/StepPaikka.tsx` — HIGH confidence (primary source, current repository state)
 
 ---
-*Stack research for: Onboarding-AI scraping/preview enhancements (v2.2 milestone)*
-*Researched: 2026-06-16*
+*Stack research for: Liikuntahakemisto v3.0 — Google Places decommissioning + business location picker + AI category classification*
+*Researched: 2026-06-22*
