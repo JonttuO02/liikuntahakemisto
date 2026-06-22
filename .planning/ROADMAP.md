@@ -222,7 +222,11 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
   3. Yritysten claimaamat paikat (`business_paikka_links.link_type = 'claim'`) säilyvät — niitä EI poisteta vaikka `business_managed` olisi mikä tahansa
   4. `reviews`- ja `suosikit`-rivimäärät on auditoitu ennen ja jälkeen poiston; vain tarkoituksellinen pudotus tapahtuu (ei cascade-kollateraalia)
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+- [ ] 53-01-PLAN.md — Delete sync-paikat route + obsolete filter test (DATA-11); confirm reference isolation, route → 404, suite green
+- [ ] 53-02-PLAN.md — Author provenance-aware deletion migration (NOT EXISTS on business_paikka_links) + standalone before/after row-count audit script (DATA-12, file-authoring half)
+- [ ] 53-03-PLAN.md — [BLOCKING] Human-gated supabase db push: capture audit baseline → apply irreversible deletion → confirm claimed venues survived (DATA-12, execution half)
 
 ##### Phase 54: Sijainti — karttapinni & osoitehaku onboardingissa
 
