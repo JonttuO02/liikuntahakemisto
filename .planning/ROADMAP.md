@@ -188,7 +188,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 
 - [x] **Phase 52: Cleanup — i18n-merkkijonot & AuthModal-bugi** — EN-locale-käyttäjä ei näe kovakoodattuja suomenkielisiä merkkijonoja; AuthModal-virheviestin precedence-bugi korjattu (CLEAN-06, CLEAN-07) (completed 2026-06-22)
 - [x] **Phase 53: Google Places -datan ja synkkauksen poisto** — sync-paikat-reitti poistettu; Google-peräiset paikkarivit poistettu provenance-tarkistuksella (DATA-11, DATA-12) (completed 2026-06-22)
-- [ ] **Phase 54: Sijainti — karttapinni & osoitehaku onboardingissa** — käyttäjä sijoittaa paikan kartalle klikkaamalla tai osoitehaulla; vain lat/lng + kirjoitettu osoite tallennetaan (SIJAINTI-01, SIJAINTI-02, SIJAINTI-03)
+- [x] **Phase 54: Sijainti — karttapinni & osoitehaku onboardingissa** — käyttäjä sijoittaa paikan kartalle klikkaamalla tai osoitehaulla; vain lat/lng + kirjoitettu osoite tallennetaan (SIJAINTI-01, SIJAINTI-02, SIJAINTI-03) (completed 2026-06-23)
 - [ ] **Phase 55: AI-lajiluokitus sivuanalyysiin** — AI-sivuanalyysi ehdottaa lajikategoriaa; käyttäjä vahvistaa tai vaihtaa sen (AI-06)
 - [ ] **Phase 56: Claim/create-rework — luo paikka alusta + nimikäytäntö** — claim-haku poistettu; käyttäjä luo paikan aina alusta, syöttää yritys- ja toimipistenimen erikseen (CLAIM-04, CLAIM-05)
 - [ ] **Phase 57: Dashboard-redirect-korjaus & Kesken-tila** — /business ei koskaan automaattiredirectaa onboardingiin; kesken jäänyt onboarding näkyy Kesken-badgella jatkamismahdollisuudella (BIZPANEL-04, BIZPANEL-05)
@@ -244,7 +244,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
   3. Tallennettuun paikkaan kirjautuu vain lat/lng + käyttäjän kirjoittama osoiteteksti — ei `place_id`:tä eikä muuta raakaa Places-vastausdataa
   4. Kartta latautuu Sijainti-vaiheessa ilman Maps JS API:n kaksoislatausta (yksi olemassa oleva `APIProvider`)
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans complete
 **Wave 1**
 
 - [x] 54-01-PLAN.md — Backend: create-paikka route accepts/persists lat/lng (SIJAINTI-03 allowlist) + Wave 0 test
@@ -252,7 +252,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 54-03-PLAN.md — Wire SijaintiPicker into ClaimSearchForm create step + i18n keys (end-to-end)
+- [x] 54-03-PLAN.md — Wire SijaintiPicker into ClaimSearchForm create step + i18n keys (end-to-end)
 
 **UI hint**: yes
 
@@ -377,7 +377,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 | 51.1. Live preview on AnalysoiSivusto results screen | v2.2 | 2/2 | Complete    | 2026-06-19 |
 | 52. Cleanup — i18n & AuthModal | v3.0 | 1/1 | Complete    | 2026-06-22 |
 | 53. Google Places -datan & synkkauksen poisto | v3.0 | 3/3 | Complete    | 2026-06-22 |
-| 54. Sijainti — karttapinni & osoitehaku | v3.0 | 2/3 | In Progress|  |
+| 54. Sijainti — karttapinni & osoitehaku | v3.0 | 3/3 | Complete   | 2026-06-23 |
 | 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 0/0 | Not started | - |
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 0/0 | Not started | - |
 | 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 0/0 | Not started | - |
