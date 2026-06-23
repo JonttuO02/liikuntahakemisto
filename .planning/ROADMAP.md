@@ -244,11 +244,11 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
   3. Tallennettuun paikkaan kirjautuu vain lat/lng + käyttäjän kirjoittama osoiteteksti — ei `place_id`:tä eikä muuta raakaa Places-vastausdataa
   4. Kartta latautuu Sijainti-vaiheessa ilman Maps JS API:n kaksoislatausta (yksi olemassa oleva `APIProvider`)
 
-**Plans**: 3 plans
+**Plans**: 2/3 plans executed
 **Wave 1**
 
-- [ ] 54-01-PLAN.md — Backend: create-paikka route accepts/persists lat/lng (SIJAINTI-03 allowlist) + Wave 0 test
-- [ ] 54-02-PLAN.md — MapProvider places library + SijaintiPicker + PlaceAutocompleteInput (SIJAINTI-01/02)
+- [x] 54-01-PLAN.md — Backend: create-paikka route accepts/persists lat/lng (SIJAINTI-03 allowlist) + Wave 0 test
+- [x] 54-02-PLAN.md — MapProvider places library + SijaintiPicker + PlaceAutocompleteInput (SIJAINTI-01/02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -377,7 +377,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 | 51.1. Live preview on AnalysoiSivusto results screen | v2.2 | 2/2 | Complete    | 2026-06-19 |
 | 52. Cleanup — i18n & AuthModal | v3.0 | 1/1 | Complete    | 2026-06-22 |
 | 53. Google Places -datan & synkkauksen poisto | v3.0 | 3/3 | Complete    | 2026-06-22 |
-| 54. Sijainti — karttapinni & osoitehaku | v3.0 | 0/0 | Not started | - |
+| 54. Sijainti — karttapinni & osoitehaku | v3.0 | 2/3 | In Progress|  |
 | 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 0/0 | Not started | - |
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 0/0 | Not started | - |
 | 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 0/0 | Not started | - |
