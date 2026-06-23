@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
+import SijaintiPicker from './SijaintiPicker'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,7 +50,9 @@ export default function ClaimSearchForm() {
   // Step 3 — create form
   const [createNimi, setCreateNimi] = useState('')
   const [createOsoite, setCreateOsoite] = useState('')
-  const [createKaupunki, setCreateKaupunki] = useState('Tampere')
+  const [createKaupunki, setCreateKaupunki] = useState('')
+  const [createLat, setCreateLat] = useState<number | null>(null)
+  const [createLng, setCreateLng] = useState<number | null>(null)
 
   // Shared
   const [loading, setLoading] = useState(false)
@@ -137,6 +140,10 @@ export default function ClaimSearchForm() {
       setError(t('errorAddressRequired'))
       return
     }
+    if (createLat === null || createLng === null) {
+      setError(t('sijaintiPakollinen'))
+      return
+    }
 
     setLoading(true)
     setError(null)
@@ -155,6 +162,8 @@ export default function ClaimSearchForm() {
           nimi: createNimi.trim(),
           osoite: createOsoite.trim(),
           kaupunki: createKaupunki,
+          latitude: createLat,
+          longitude: createLng,
         }),
       })
 
@@ -430,23 +439,19 @@ export default function ClaimSearchForm() {
                 value={createNimi}
                 onChange={e => setCreateNimi(e.target.value)}
               />
-              <input
-                type="text"
-                placeholder={t('createAddressPlaceholder')}
-                className={INPUT_CLASS}
-                value={createOsoite}
-                onChange={e => setCreateOsoite(e.target.value)}
+
+              <h3 className="text-sm font-bold text-[#111111]">
+                {t('sijaintiLabel')}
+              </h3>
+
+              <SijaintiPicker
+                onChange={({ lat, lng, address, city }) => {
+                  setCreateLat(lat)
+                  setCreateLng(lng)
+                  setCreateOsoite(address)
+                  setCreateKaupunki(city)
+                }}
               />
-              <select
-                aria-label="Kaupunki"
-                className={SELECT_CLASS}
-                value={createKaupunki}
-                onChange={e => setCreateKaupunki(e.target.value)}
-              >
-                <option value="Tampere">Tampere</option>
-                <option value="Helsinki">Helsinki</option>
-                <option value="Turku">Turku</option>
-              </select>
 
               {/* Error block */}
               <AnimatePresence>
@@ -466,7 +471,7 @@ export default function ClaimSearchForm() {
               </AnimatePresence>
 
               {/* Create CTA */}
-              <button type="submit" className={CTA_CLASS} disabled={loading}>
+              <button type="submit" className={CTA_CLASS} disabled={loading || createLat === null}>
                 {loading ? t('creating') : t('createCta')}
               </button>
             </form>
