@@ -93,6 +93,23 @@ One implementation refinement beyond the PATTERNS.md sketch: `handleQuickAccept`
 
 None — `npx tsc --noEmit` showed zero new errors originating in either modified file, and the full `npm test` suite (199 tests across 17 files) stayed green throughout.
 
+## Issues Found During UAT (post-checkpoint fix)
+
+Human UAT of Task 3 passed steps 1-8 except one: **the laji did not update on the wizard's preview cards during onboarding.**
+
+**Root cause:** `page.tsx`'s `handleConfirm` correctly writes the confirmed `selections.laji` to `onboarding_draft.laji` via `save-step` (deferred-to-submit invariant D-04 — correct, untouched), but never stored it in page-level state, and `WizardInner` was never given any laji-related prop. Separately, `WizardInner`'s `OnboardingMode` fetches `paikkaInfo` (including `laji`) directly from `liikuntapaikat` on mount and feeds it straight into `LivePreviewProvider`/`StepEsikatselu`/the Step-1 read-only card. Since `liikuntapaikat.laji` is only updated at final submit (by design), the wizard's live preview showed the STALE pre-onboarding value for the entire session — never the value the user just confirmed in `AnalysoiSivusto`. This was a display gap introduced by this plan's confirm-then-defer flow, not a persistence bug — the DB write at final submit was already correct.
+
+**Fix (display-only, no persistence change):**
+- `app/business/onboarding/page.tsx`: added `confirmedLaji` state, set from `handleConfirm`'s `selections.laji` and from `handleLajiSkipPick`'s picked `value` (D-06 skip path); passed as a new `confirmedLaji` prop to `WizardInner`.
+- `app/business/WizardInner.tsx`: widened the `mode: 'onboarding'` branch of `WizardInnerProps` with `confirmedLaji?: string | null`; in `OnboardingMode`, built a `livePreviewPaikkaInfo` derived value (`{ ...paikkaInfo, laji: confirmedLaji }` when `confirmedLaji` is set, else `paikkaInfo` unchanged) and used it for both the `LivePreviewProvider`'s `paikkaInfo` prop and `StepEsikatselu`'s `paikkaInfo` prop. `confirmedLaji` wins when the user picked one this session; falls back to the DB value on direct navigation/resume where nothing was confirmed yet.
+- No changes to any save-step/submit write path — `liikuntapaikat.laji` is still only persisted at final submit via the existing conditional spread.
+
+**Verification:** `npx tsc --noEmit` clean; full `npm test` suite (199 tests, 17 files) stayed green.
+
+**Commits:** `c6f0f50` (fix), plus this SUMMARY update.
+
+This fix has not yet been re-verified by the human — the checkpoint remains open pending re-confirmation that the live preview now updates correctly.
+
 ## User Setup Required
 
 None - no external service configuration required.
