@@ -268,14 +268,14 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
   3. Lajikategoriaa ei kirjoiteta `liikuntapaikat.laji`-kenttään ilman käyttäjän eksplisiittistä vahvistusta
   4. Olemassa olevat poiminnat (logo, värit, hinnasto, aukioloajat) toimivat regressiottomasti, vaikka Claude-vastaus jättäisi lajikentän pois
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 **Wave 1**
 
 - [x] 55-01-PLAN.md — AI suggestion source: migrations (suggested_laji + onboarding_draft.laji) + prompt enum + analyzer allowlist validation + brandingResult type + analyze-website persist/GET + analyzer tests (D-03, D-07)
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 55-02-PLAN.md — Persistence routes: save-step 'laji' ALLOWED_FIELDS + bounded validator; submit conditional-spread write (no null-overwrite); new submit/save-step route tests (D-02, D-04)
+- [x] 55-02-PLAN.md — Persistence routes: save-step 'laji' ALLOWED_FIELDS + bounded validator; submit conditional-spread write (no null-overwrite); new submit/save-step route tests (D-02, D-04)
 
 **Wave 3** *(blocked on Wave 2)*
 
@@ -390,6 +390,6 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 | 52. Cleanup — i18n & AuthModal | v3.0 | 1/1 | Complete    | 2026-06-22 |
 | 53. Google Places -datan & synkkauksen poisto | v3.0 | 3/3 | Complete    | 2026-06-22 |
 | 54. Sijainti — karttapinni & osoitehaku | v3.0 | 3/3 | Complete    | 2026-06-23 |
-| 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 1/3 | In Progress|  |
+| 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 2/3 | In Progress|  |
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 0/0 | Not started | - |
 | 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 0/0 | Not started | - |
