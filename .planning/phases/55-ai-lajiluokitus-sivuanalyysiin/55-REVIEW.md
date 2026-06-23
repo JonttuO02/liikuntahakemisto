@@ -23,7 +23,11 @@ findings:
   warning: 4
   info: 3
   total: 9
-status: issues_found
+status: resolved
+resolution:
+  CR-01: "fixed in 8df4547 — FI_TO_EN translation added at WizardInner.tsx brandingHours, brandingResult.ts buildBrandingPreview, AnalysoiSivusto.tsx handleQuickAccept; regression test added in lib/branding/brandingResult.test.ts"
+  CR-02: "fixed in 3d3c7db — save-step now persists value.trim() for the laji field"
+  warnings_info: "not fixed — WR-01..WR-04, IN-01..IN-03 left as documented findings, not blocking"
 ---
 
 # Phase 55: Code Review Report
@@ -31,7 +35,7 @@ status: issues_found
 **Reviewed:** 2026-06-23T21:38:04Z
 **Depth:** standard
 **Files Reviewed:** 14
-**Status:** issues_found
+**Status:** resolved (both Critical findings fixed; Warning/Info left as documented, non-blocking)
 
 ## Summary
 
