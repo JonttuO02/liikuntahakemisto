@@ -22,7 +22,7 @@ Requirements for milestone v3.0 "Oma tietokanta (Google Places -irtautuminen)". 
 - [x] **SIJAINTI-01**: Käyttäjä voi sijoittaa paikan kartalle klikkaamalla onboardingissa
 - [x] **SIJAINTI-02**: Käyttäjä voi hakea osoitetta autocomplete-kentästä; valinta asettaa pinnin ja zoomaa karttaa
 - [x] **SIJAINTI-03**: Tallennetaan vain lat/lng + käyttäjän kirjoittama osoiteteksti — ei pysyvää Google Places -datan tallennusta
-- [ ] **AI-06**: AI-sivuanalyysi ehdottaa lajikategoriaa paikan verkkosivun perusteella; käyttäjä vahvistaa tai vaihtaa sen onboardingissa
+- [x] **AI-06**: AI-sivuanalyysi ehdottaa lajikategoriaa paikan verkkosivun perusteella; käyttäjä vahvistaa tai vaihtaa sen onboardingissa
 
 ### Claim/create-rework & business-redirect
 
@@ -60,7 +60,7 @@ Filled in during roadmap creation.
 | SIJAINTI-01 | Phase 54 | Complete |
 | SIJAINTI-02 | Phase 54 | Complete |
 | SIJAINTI-03 | Phase 54 | Complete |
-| AI-06 | Phase 55 | Pending |
+| AI-06 | Phase 55 | Complete |
 | CLAIM-04 | Phase 56 | Pending |
 | CLAIM-05 | Phase 56 | Pending |
 | BIZPANEL-04 | Phase 57 | Pending |
