@@ -29,15 +29,22 @@ type PaikkaInfo = {
 }
 
 type WizardInnerProps =
-  | { mode: 'onboarding'; brandingData?: BrandingResult | null; onBackToAnalyze?: () => void }
+  | {
+      mode: 'onboarding'
+      brandingData?: BrandingResult | null
+      confirmedLaji?: string | null
+      onBackToAnalyze?: () => void
+    }
   | { mode: 'edit'; paikka: Liikuntapaikka; paikkaId: number }
 
 // ─── Onboarding mode ────────────────────────────────────────────────────────
 function OnboardingMode({
   brandingData,
+  confirmedLaji,
   onBackToAnalyze,
 }: {
   brandingData?: BrandingResult | null
+  confirmedLaji?: string | null
   onBackToAnalyze?: () => void
 }) {
   const searchParams = useSearchParams()
@@ -248,9 +255,19 @@ function OnboardingMode({
     )
   }
 
+  // Display-only override: the AI-suggested/manually-picked laji is confirmed locally in
+  // page.tsx's OnboardingWizardPage (AnalysoiSivusto confirm/D-06 skip flows) but only ever
+  // persisted to liikuntapaikat.laji at final submit (D-04 deferred-to-submit invariant) — so
+  // paikkaInfo.laji (fetched on mount, pre-onboarding) is stale for the whole wizard session.
+  // confirmedLaji wins when the user picked one this session; falls back to the DB value
+  // otherwise (e.g. direct navigation/resume where nothing was confirmed yet).
+  const livePreviewPaikkaInfo = paikkaInfo && confirmedLaji
+    ? { ...paikkaInfo, laji: confirmedLaji }
+    : paikkaInfo
+
   return (
     <LivePreviewProvider
-      paikkaInfo={paikkaInfo}
+      paikkaInfo={livePreviewPaikkaInfo}
       paikkaId={paikkaId}
       brandingData={brandingData}
       initialDraft={draft}
@@ -323,7 +340,7 @@ function OnboardingMode({
                   {step === 5 && (
                     <StepEsikatselu
                       draft={draft}
-                      paikkaInfo={paikkaInfo}
+                      paikkaInfo={livePreviewPaikkaInfo}
                       brandingData={brandingData}
                       onPrev={() => goToStep(4)}
                     />
@@ -523,7 +540,13 @@ function EditMode({ paikka, paikkaId }: { paikka: Liikuntapaikka; paikkaId: numb
 // ─── Exported component ───────────────────────────────────────────────────────
 export default function WizardInner(props: WizardInnerProps) {
   if (props.mode === 'onboarding') {
-    return <OnboardingMode brandingData={props.brandingData} onBackToAnalyze={props.onBackToAnalyze} />
+    return (
+      <OnboardingMode
+        brandingData={props.brandingData}
+        confirmedLaji={props.confirmedLaji}
+        onBackToAnalyze={props.onBackToAnalyze}
+      />
+    )
   }
   return <EditMode paikka={props.paikka} paikkaId={props.paikkaId} />
 }

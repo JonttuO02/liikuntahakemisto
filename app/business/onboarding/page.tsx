@@ -167,12 +167,18 @@ export default function OnboardingWizardPage() {
   const [brandingData, setBrandingData] = useState<BrandingResult | null>(null)
   const [paikkaId, setPaikkaId] = useState<number | null>(null)
   const [paikkaInfo, setPaikkaInfo] = useState<PaikkaBase | null>(null)
+  // Display-only: the laji confirmed/picked in AnalysoiSivusto (Vahvista/Vaihda) or the D-06
+  // skip-path picker, threaded into WizardInner so its live preview / Step 1 card show the
+  // just-picked value instead of the stale pre-onboarding liikuntapaikat.laji — the actual DB
+  // write still only happens at final submit (D-04), this never feeds any extra persistence.
+  const [confirmedLaji, setConfirmedLaji] = useState<string | null>(null)
 
   async function handleConfirm(
     result: BrandingResult,
     selections: { logoUrl: string | null; gallery: string[]; laji: string | null }
   ) {
     setBrandingData(result)
+    setConfirmedLaji(selections.laji)
 
     // AWAIT the media_urls save-step write BEFORE navigating into the wizard.
     // WizardInner's OnboardingMode re-fetches the onboarding_draft from Supabase ON MOUNT —
@@ -257,6 +263,7 @@ export default function OnboardingWizardPage() {
         // consistent with onboarding's "nothing literally blocks submit" philosophy.
       }
     }
+    setConfirmedLaji(value)
     setPagePhase('wizard')
   }
 
@@ -309,7 +316,12 @@ export default function OnboardingWizardPage() {
               </div>
             }
           >
-            <WizardInner mode="onboarding" brandingData={brandingData} onBackToAnalyze={handleBackToAnalyze} />
+            <WizardInner
+              mode="onboarding"
+              brandingData={brandingData}
+              confirmedLaji={confirmedLaji}
+              onBackToAnalyze={handleBackToAnalyze}
+            />
           </Suspense>
         )}
       </div>
