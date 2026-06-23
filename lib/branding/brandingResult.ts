@@ -50,6 +50,8 @@ export type BrandingResult = {
     website_url: string
   } | null
   error_message: string | null
+  /** AI-06: raw AI-suggested sport-category key from the lib/lajit.ts taxonomy, or null (unconfirmed/no signal). */
+  suggested_laji: string | null
 }
 
 // ─── getContrastColor ─────────────────────────────────────────────────────────

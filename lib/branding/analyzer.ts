@@ -2,6 +2,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { BRANDING_ANALYSIS_PROMPT } from './prompt'
+import { lajiKonfig } from '@/lib/lajit'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -36,10 +37,15 @@ export interface BrandingAnalysisResult {
   // Backward-compat (additive, RESEARCH.md Pitfall 5): keeps Plan 47-05's existing
   // upload/UPSERT path and the Phase-46 GET consumer working until Phase 48.
   logo_index: number                                     // = logos[0]?.index ?? -1
+
+  // AI-06: raw AI-suggested sport-category key, allowlist-validated against the
+  // live lib/lajit.ts taxonomy. null on omission/mismatch (D-03) — never a sentinel.
+  suggested_laji: string | null
 }
 
 const VALID_LOGO_TYPES: LogoType[] = ['wordmark', 'icon', 'combination', 'unknown']
 const VALID_COLOR_ROLES: ColorRole[] = ['background', 'primary', 'secondary', 'accent', 'text', 'unknown']
+const VALID_LAJI_KEYS: string[] = Object.keys(lajiKonfig)
 
 export async function analyzeWithClaude(
   logoCandidatesBuffers: Buffer[],
@@ -106,6 +112,7 @@ export async function analyzeWithClaude(
       prices?: Array<{ label?: unknown; price?: unknown; source_page?: unknown }>
       opening_hours?: Array<{ day?: unknown; open?: unknown; close?: unknown; source_page?: unknown }>
       website_url?: unknown
+      laji?: unknown
     }
 
     // 6. Validate logos: drop out-of-bounds indexes, default invalid types to 'unknown'
@@ -156,6 +163,12 @@ export async function analyzeWithClaude(
     // CR-02: guard against non-string website_url (Claude may return null or number)
     const website_url = typeof result.website_url === 'string' ? result.website_url : ''
 
+    // 10. Validate laji: discard to null on any mismatch/omission (D-03) — NOT a
+    // sentinel like the logo/color 'unknown' path, because the UI's unconfirmed
+    // state keys on suggested_laji === null (AI-06 criterion 1).
+    const rawLaji = typeof result.laji === 'string' ? result.laji : null
+    const suggested_laji: string | null = rawLaji && VALID_LAJI_KEYS.includes(rawLaji) ? rawLaji : null
+
     // Backward-compat: logo_index derived from the first logo entry
     const logo_index = logos[0]?.index ?? -1
 
@@ -167,6 +180,7 @@ export async function analyzeWithClaude(
       website_url,
       raw_analysis: result,
       logo_index,
+      suggested_laji,
     }
   } catch (err) {
     console.error('[branding/analyzer] error:', err)
