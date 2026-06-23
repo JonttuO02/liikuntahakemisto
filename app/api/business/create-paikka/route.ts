@@ -27,13 +27,28 @@ export async function POST(request: Request) {
   let nimi: string
   let osoite: string
   let kaupunki: string
+  let latitude: number | null
+  let longitude: number | null
   try {
     const body = await request.json()
     nimi = typeof body.nimi === 'string' ? body.nimi.trim().slice(0, 500) : ''
     osoite = typeof body.osoite === 'string' ? body.osoite.trim().slice(0, 500) : ''
     kaupunki = typeof body.kaupunki === 'string' ? body.kaupunki.trim().slice(0, 500) : ''
 
-    if (!nimi || !osoite || !kaupunki) {
+    // SIJAINTI-03: allowlist parse only latitude/longitude — never read place_id,
+    // formatted_address, or any other Places/Geocoding field from the body, and
+    // never spread ...body into the insert. Reject (not coerce) non-finite or
+    // out-of-range values; coordinates are mandatory for newly created venues.
+    latitude =
+      typeof body.latitude === 'number' && Number.isFinite(body.latitude) && body.latitude >= -90 && body.latitude <= 90
+        ? body.latitude
+        : null
+    longitude =
+      typeof body.longitude === 'number' && Number.isFinite(body.longitude) && body.longitude >= -180 && body.longitude <= 180
+        ? body.longitude
+        : null
+
+    if (!nimi || !osoite || !kaupunki || latitude === null || longitude === null) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
   } catch {
@@ -45,7 +60,7 @@ export async function POST(request: Request) {
   // business_managed is set to true by the approval trigger (PUB-01) when claim_status='approved'.
   const { data: newPaikka, error: paikkaError } = await supabaseAdmin
     .from('liikuntapaikat')
-    .insert({ nimi, osoite, kaupunki, laji: 'Muu', published: false })
+    .insert({ nimi, osoite, kaupunki, latitude, longitude, laji: 'Muu', published: false })
     .select('id')
     .single()
 
