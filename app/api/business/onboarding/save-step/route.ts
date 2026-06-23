@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
 
 // Allowed fields that can be stored per wizard step in onboarding_draft.
 // These match the JSONB columns defined in the migration (20260606000000_onboarding.sql).
-const ALLOWED_FIELDS = ['media_urls', 'hinnasto', 'aukioloajat', 'yhteystiedot'] as const
+const ALLOWED_FIELDS = ['media_urls', 'hinnasto', 'aukioloajat', 'yhteystiedot', 'laji'] as const
 type AllowedField = (typeof ALLOWED_FIELDS)[number]
 
 // Validate aukioloajat shape: object with valid day keys and HH:MM time strings.
@@ -84,6 +84,11 @@ export async function POST(request: Request) {
     const rows = value as unknown[]
     if (!Array.isArray(rows) || rows.length > 20) {
       return NextResponse.json({ error: 'hinnasto: max 20 rows' }, { status: 400 })
+    }
+  }
+  if (field === 'laji') {
+    if (typeof value !== 'string' || value.trim().length === 0 || value.length > 100) {
+      return NextResponse.json({ error: 'laji: invalid value' }, { status: 400 })
     }
   }
 
