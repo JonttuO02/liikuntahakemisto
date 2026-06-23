@@ -83,6 +83,9 @@ export async function POST(request: Request) {
       image_url: draft.media_urls?.photos?.[0] ?? null,
       photo_urls: draft.media_urls?.photos ?? null,
       logo_url: draft.media_urls?.logo ?? null,
+      // AI-06 criterion 4: omit the laji key entirely when draft.laji is falsy — never write
+      // `laji: null`, which would clobber an existing liikuntapaikat.laji value (Pitfall 2).
+      ...(draft.laji ? { laji: draft.laji } : {}),
     })
     .eq('id', draft.paikka_id)
 
