@@ -327,3 +327,63 @@ describe('analyzeWithClaude multi-page / SCRAP-08', () => {
     expect(result.logo_index).toBe(-1)
   })
 })
+
+describe('analyzeWithClaude laji suggestion / AI-06', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockCreate.mockResolvedValue(makeOkResponse())
+  })
+
+  it('laji: returns suggested_laji when Claude returns a valid taxonomy key', async () => {
+    mockCreate.mockResolvedValue(makeOkResponse({ laji: 'padel' }))
+
+    const result = await analyzeWithClaude(makeBuffers(1), makeLabeledPages())
+
+    expect(result.suggested_laji).toBe('padel')
+  })
+
+  it('laji: discards a non-taxonomy string to null, never a sentinel', async () => {
+    mockCreate.mockResolvedValue(makeOkResponse({ laji: 'sulkapallo' }))
+
+    const result = await analyzeWithClaude(makeBuffers(1), makeLabeledPages())
+
+    expect(result.suggested_laji).toBeNull()
+  })
+
+  it('laji: discards free text to null', async () => {
+    mockCreate.mockResolvedValue(makeOkResponse({ laji: 'Padel ja tennis' }))
+
+    const result = await analyzeWithClaude(makeBuffers(1), makeLabeledPages())
+
+    expect(result.suggested_laji).toBeNull()
+  })
+
+  it('laji: defaults to null when omitted, without breaking other fields (AI-06 criterion 4)', async () => {
+    mockCreate.mockResolvedValue(
+      makeOkResponse({
+        logos: [{ index: 0, type: 'icon' }],
+        colors: [{ hex: '#3b82f6', role: 'background' }],
+        prices: [{ label: 'Aikuinen', price: '12 €', source_page: 'pricing' }],
+        opening_hours: [{ day: 'Ma', open: '07:00', close: '21:00', source_page: 'hours' }],
+      })
+    )
+
+    const result = await analyzeWithClaude(makeBuffers(1), makeLabeledPages())
+
+    expect(result.suggested_laji).toBeNull()
+    expect(result.logos).toEqual([{ index: 0, type: 'icon' }])
+    expect(result.colors).toEqual([{ hex: '#3b82f6', role: 'background' }])
+    expect(result.prices).toEqual([{ label: 'Aikuinen', price: '12 €', source_page: 'pricing' }])
+    expect(result.opening_hours).toEqual([
+      { day: 'Ma', open: '07:00', close: '21:00', source_page: 'hours' },
+    ])
+  })
+
+  it('laji: discards an explicit null to null', async () => {
+    mockCreate.mockResolvedValue(makeOkResponse({ laji: null }))
+
+    const result = await analyzeWithClaude(makeBuffers(1), makeLabeledPages())
+
+    expect(result.suggested_laji).toBeNull()
+  })
+})

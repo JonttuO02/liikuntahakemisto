@@ -134,6 +134,9 @@ async function runAnalysis(url: string, businessAccountId: string, paikkaId: num
             } catch { return url }
           })(),
           raw_analysis: result,
+          // AI-06: raw, allowlist-validated AI sport-category suggestion. Unconfirmed —
+          // the user-confirmed value lives separately in onboarding_draft.laji (D-04).
+          suggested_laji: result.suggested_laji,
           error_message: null,
           analyzed_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -260,7 +263,7 @@ export async function GET(request: Request) {
   // .maybeSingle() returns null (not PGRST116 error) when no row exists.
   const { data, error } = await supabaseAdmin
     .from('business_branding')
-    .select('status, logo_url, colors, logo_type, logo_candidates, image_urls, selected_logo_url, selected_background_color, selected_accent_color, raw_analysis, error_message, analyzed_at')
+    .select('status, logo_url, colors, logo_type, logo_candidates, image_urls, selected_logo_url, selected_background_color, selected_accent_color, raw_analysis, error_message, analyzed_at, suggested_laji')
     .eq('business_account_id', user.id)
     .eq('paikka_id', paikkaId)
     .maybeSingle()

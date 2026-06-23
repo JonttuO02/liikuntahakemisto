@@ -8,6 +8,13 @@
 // Jos scraper ei vielä lähetä screenshotteja, värianalyysi EI parane pelkällä
 // tällä promptilla — se on pakollinen muutos scraperin puolelle (SCRAP-08).
 
+import { lajiKonfig } from '@/lib/lajit'
+
+// Build the enum value list from the live taxonomy (lib/lajit.ts) at module
+// load so the prompt never drifts from the actual 9-key Record — AI-06
+// criterion 1 requires Claude's suggestion to come ONLY from this list.
+const LAJI_ENUM = Object.keys(lajiKonfig).join('" | "')
+
 export const BRANDING_ANALYSIS_PROMPT = `You are a branding analyst. You analyze a company's own website material and extract its visual identity and key business information.
 
 == INPUT ==
@@ -42,7 +49,8 @@ Return ONLY a valid JSON object — no markdown code fences, no explanation, no 
   "opening_hours": [
     { "day": <string>, "open": "HH:MM", "close": "HH:MM", "source_page": <string label of the page it was found on> }
   ],
-  "website_url": <string canonical URL, or "">
+  "website_url": <string canonical URL, or "">,
+  "laji": "${LAJI_ENUM}" | null
 }
 
 == FIELD RULES ==
@@ -88,6 +96,13 @@ opening_hours:
 website_url:
 - Look for the canonical URL in <link rel="canonical"> or <meta property="og:url"> in any HTML section.
 - If neither is present, return "".
+
+laji:
+- Infer the SINGLE most likely sport/activity category this company offers, based on all available material.
+- Choose ONLY from this exact list of keys: "${LAJI_ENUM}". Do not invent a key, do not translate it, do not return anything outside this list.
+- laji is a SCALAR field — return a single string or null, never an array.
+- If you are uncertain, or the site gives no clear sport/activity signal, return null. Do NOT guess — returning null is always preferable to a wrong category.
+- Never return free text (e.g. a sentence or multiple categories joined together) — only one of the listed keys, or null.
 
 == OUTPUT RULES ==
 - Respond ONLY with the JSON object. No markdown, no code fences, no explanation.
