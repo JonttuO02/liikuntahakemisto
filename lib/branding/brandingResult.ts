@@ -12,7 +12,7 @@
  */
 
 import type { Liikuntapaikka } from '@/lib/types'
-import { type PaikkaBase, hinnastaToHintaKuvaus } from '@/lib/onboardingUtils'
+import { type PaikkaBase, hinnastaToHintaKuvaus, FI_TO_EN } from '@/lib/onboardingUtils'
 
 // ─── BrandingResult ───────────────────────────────────────────────────────────
 
@@ -123,13 +123,13 @@ export function buildBrandingPreview(
   selectedLogoUrl?: string | null,
 ): Liikuntapaikka {
   // Convert opening_hours Array<{day,open,close}> → Record<string, {open,close}>
-  // Day strings from the API are already English weekday names (e.g. "monday"),
-  // matching the storage key format used by lib/aukiolo.ts.
+  // Day strings from the API are Finnish abbreviations (lib/branding/prompt.ts), so
+  // translate through FI_TO_EN to the English weekday keys lib/aukiolo.ts expects.
   const aukioloajat: Record<string, { open: string; close: string }> | null =
     brandingResult.raw_analysis?.opening_hours?.length
       ? Object.fromEntries(
           brandingResult.raw_analysis.opening_hours.map(entry => [
-            entry.day,
+            FI_TO_EN[entry.day] ?? entry.day,
             { open: entry.open, close: entry.close },
           ]),
         )

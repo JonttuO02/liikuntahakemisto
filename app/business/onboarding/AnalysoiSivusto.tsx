@@ -9,7 +9,7 @@ import ContrastSafeLogo from '@/app/components/ContrastSafeLogo'
 import { LivePreviewProvider, useLivePreview } from '@/lib/livePreview/LivePreviewContext'
 import LivePreviewPane from '@/app/business/onboarding/LivePreviewPane'
 import LivePreviewToggle from '@/app/business/onboarding/LivePreviewToggle'
-import { type PaikkaBase } from '@/lib/onboardingUtils'
+import { type PaikkaBase, FI_TO_EN } from '@/lib/onboardingUtils'
 import { lajiKonfig } from '@/lib/lajit'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -863,7 +863,7 @@ export default function AnalysoiSivusto({ paikkaId, paikkaInfo, onConfirm, onSki
       }))
       const aukioloajat = Object.fromEntries(
         (brandingResult.raw_analysis?.opening_hours ?? []).map(e => [
-          e.day,
+          FI_TO_EN[e.day] ?? e.day,
           { open: e.open, close: e.close },
         ])
       )

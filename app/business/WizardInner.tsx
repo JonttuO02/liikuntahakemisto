@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import type { OnboardingDraft } from '@/lib/onboardingUtils'
+import { FI_TO_EN } from '@/lib/onboardingUtils'
 import type { Liikuntapaikka } from '@/lib/types'
 import { type BrandingResult } from '@/lib/branding/brandingResult'
 import ProgressBar from './onboarding/ProgressBar'
@@ -239,7 +240,7 @@ function OnboardingMode({
         const hrs = brandingData.raw_analysis?.opening_hours
         if (!hrs?.length) return null
         const result: Record<string, { open: string; close: string }> = {}
-        for (const h of hrs) { result[h.day] = { open: h.open, close: h.close } }
+        for (const h of hrs) { result[FI_TO_EN[h.day] ?? h.day] = { open: h.open, close: h.close } }
         return result
       })()
     : null
