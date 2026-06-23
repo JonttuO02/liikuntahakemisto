@@ -282,6 +282,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **CLEAN-07**: AuthModalin/mapBusinessErrorin virheviestin precedence-bugi (`A || B && C` → `(A || B) && C`) — fix already shipped in commit `85eea7a8`; Phase 52 added an automated regression test guarding it and wired `npm test` to the pre-existing Vitest suite (resolves P30-BUG) — v3.0 (Phase 52)
 - ✓ **DATA-11**: `/api/admin/sync-paikat`-reitti ja sen testi poistettu kokonaan; reitti 404 — v3.0 (Phase 53)
 - ✓ **DATA-12**: Google Places -peräinen liikuntapaikka-data poistettu tietokannasta — ⚠️ laajemmin kuin suunniteltu: operaattori valitsi live-gatella täyden tyhjennyksen (kaikki 327 riviä) eikä suunniteltua provenance-säilyttävää poistoa (322/327, 5 claimed-riviä olisi säilynyt). 2 business-tiliä menetti claimattun venuen myötä `business_paikka_links`- ja `business_branding`-rivinsä. Ei varmuuskopiota (D-07, hyväksytty riski). Ks. `53-03-SUMMARY.md` täydelliset luvut ja hyväksyntäketju — v3.0 (Phase 53)
+- ✓ **AI-06**: AI-sivuanalyysi ehdottaa lajikategoriaa paikan verkkosivun perusteella `lib/lajit.ts`-taksonomiasta (ei vapaata tekstiä); käyttäjä vahvistaa tai vaihtaa ehdotuksen erottuvalla "ehdotus"-elementillä ennen tallennusta; arvo kirjoitetaan `liikuntapaikat.laji`-kenttään vain eksplisiittisen vahvistuksen jälkeen — v3.0 (Phase 55)
 
 ### Future (deferred from v1.1 + v1.7)
 
@@ -392,4 +393,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-22 — Phase 53 complete (DATA-11, DATA-12 validated; liikuntapaikat fully wiped, see Key Decisions)*
+*Last updated: 2026-06-24 — Phase 55 complete (AI-06 validated)*
