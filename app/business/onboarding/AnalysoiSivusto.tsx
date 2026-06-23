@@ -1093,9 +1093,20 @@ export default function AnalysoiSivusto({ paikkaId, paikkaInfo, onConfirm, onSki
   // ONLY to the non-preview branches; the preview branch renders as a sibling (D-03: the
   // five non-preview branches stay visually unchanged single-column).
   if (phase === 'preview' && brandingResult) {
+    // Display-only override (same gap/fix as WizardInner.tsx's livePreviewPaikkaInfo): this
+    // component's own paikkaInfo prop is fetched pre-analysis by the parent (StepPaikkaPrePhase)
+    // and is never updated when the user confirms/picks a laji via the Vahvista/Vaihda flow
+    // below — so without this, the live preview pane here would show the stale pre-onboarding
+    // liikuntapaikat.laji instead of what the user just confirmed. confirmedLaji wins when set;
+    // falls back to the original value otherwise (e.g. nothing confirmed yet). Actual
+    // liikuntapaikat.laji persistence is unaffected — still only happens at final submit.
+    const livePreviewPaikkaInfo = paikkaInfo && confirmedLaji
+      ? { ...paikkaInfo, laji: confirmedLaji }
+      : paikkaInfo
+
     return (
       <LivePreviewProvider
-        paikkaInfo={paikkaInfo}
+        paikkaInfo={livePreviewPaikkaInfo}
         paikkaId={paikkaId}
         brandingData={{ ...brandingResult, selected_background_color: bgColor, selected_accent_color: accentColor }}
       >
