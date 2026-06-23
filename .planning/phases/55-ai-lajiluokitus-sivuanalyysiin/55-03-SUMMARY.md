@@ -108,7 +108,7 @@ Human UAT of Task 3 passed steps 1-8 except one: **the laji did not update on th
 
 **Commits:** `c6f0f50` (fix), plus this SUMMARY update.
 
-This fix has not yet been re-verified by the human — the checkpoint remains open pending re-confirmation that the live preview now updates correctly.
+Superseded by the second fix below — the human's re-test surfaced one more instance before final approval.
 
 ## Issues Found During UAT (second instance, post-c6f0f50 re-test)
 
@@ -123,7 +123,7 @@ Human re-test after the `c6f0f50` fix found the SAME class of bug on a DIFFERENT
 
 **Commits:** `9c0c0e4` (fix), plus this SUMMARY update.
 
-This second fix has not yet been re-verified by the human — the checkpoint remains open pending re-confirmation that both live preview instances now update correctly.
+After this second fix, the human re-ran the full 8-step UAT walkthrough against both live-preview instances and confirmed all steps pass, including the criterion-4 no-overwrite check (verified directly against `liikuntapaikat.laji` via DB query). The Task 3 checkpoint is approved.
 
 ## User Setup Required
 
@@ -131,7 +131,7 @@ None - no external service configuration required.
 
 ## Next Phase Readiness
 
-Tasks 1 and 2 are complete, committed, and verified (tsc clean, full test suite green). Task 3 is a `checkpoint:human-verify` (gate="blocking") covering criterion 2, D-02, D-03, D-05, D-06, and end-to-end persistence (criteria 3/4) — none of which have automated coverage per 55-RESEARCH.md's Validation Architecture section (no component-test infra in this project). A local dev server was started on port 3055 against this worktree (with `.env.local` copied in) and confirmed responsive (`/` returns 200, `/business/onboarding` returns 307 as expected for an unauthenticated request) to support manual verification. The orchestrator/human must complete the 8-step UAT walkthrough in `55-03-PLAN.md`'s Task 3 `<how-to-verify>` before this plan can be marked fully complete.
+All 3 tasks complete. Tasks 1 and 2 verified by tsc/test suite; Task 3 (`checkpoint:human-verify`, gate="blocking") was approved by the human after the two live-preview fixes above, covering criterion 2, D-02, D-03, D-05, D-06, and end-to-end persistence (criteria 3/4) — none of which have automated coverage per 55-RESEARCH.md's Validation Architecture section (no component-test infra in this project). Migrations `20260623190347`/`20260623190348` were applied to the linked Supabase project during UAT (via `supabase db push`) — required for the analyze pipeline to write `suggested_laji` at all; this should be folded into the normal deploy/migration process going forward, not left as a one-off manual step.
 
 ---
 *Phase: 55-ai-lajiluokitus-sivuanalyysiin*
