@@ -110,6 +110,21 @@ Human UAT of Task 3 passed steps 1-8 except one: **the laji did not update on th
 
 This fix has not yet been re-verified by the human — the checkpoint remains open pending re-confirmation that the live preview now updates correctly.
 
+## Issues Found During UAT (second instance, post-c6f0f50 re-test)
+
+Human re-test after the `c6f0f50` fix found the SAME class of bug on a DIFFERENT page: `AnalysoiSivusto.tsx`'s own preview phase (the suggestion-card / Vahvista/Vaihda page) has its own separate `LivePreviewProvider` instance, which was still passing the raw pre-analysis `paikkaInfo` prop straight through unmodified — so its live preview pane also never reflected the user's confirmed laji until final submit, independent of the `WizardInner.tsx` instance already fixed.
+
+**Fix (display-only, no persistence change):**
+- `app/business/onboarding/AnalysoiSivusto.tsx`: at the preview-phase `LivePreviewProvider` call site, derived a `livePreviewPaikkaInfo` value (`{ ...paikkaInfo, laji: confirmedLaji }` when both `paikkaInfo` and `confirmedLaji` are set, else `paikkaInfo` unchanged) and passed it as the `paikkaInfo` prop instead of the raw prop — mirroring the exact pattern from `WizardInner.tsx`'s `c6f0f50` fix. `confirmedLaji` was already local state in this component (used elsewhere for the suggestion-card UI), so no new state or prop threading was needed here.
+- Null-safe: only overrides when `paikkaInfo` is non-null.
+- No changes to `WizardInner.tsx` (already fixed) or any save-step/submit write path.
+
+**Verification:** `npx tsc --noEmit` clean; full `npm test` suite (199 tests, 17 files) stayed green.
+
+**Commits:** `9c0c0e4` (fix), plus this SUMMARY update.
+
+This second fix has not yet been re-verified by the human — the checkpoint remains open pending re-confirmation that both live preview instances now update correctly.
+
 ## User Setup Required
 
 None - no external service configuration required.
