@@ -3,13 +3,13 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import WizardInner from '../WizardInner'
-import AnalysoiSivusto from './AnalysoiSivusto'
+import AnalysoiSivusto, { LajiPicker } from './AnalysoiSivusto'
 import StepPaikka from './StepPaikka'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { type BrandingResult } from '@/lib/branding/brandingResult'
 import { type PaikkaBase } from '@/lib/onboardingUtils'
 
-type PagePhase = 'paikka' | 'analyze' | 'wizard'
+type PagePhase = 'paikka' | 'analyze' | 'laji-skip' | 'wizard'
 
 function PreVaiheSpinner() {
   return (
@@ -108,7 +108,7 @@ function PrePhase({
   paikkaInfo: PaikkaBase | null
   onConfirm: (
     result: BrandingResult,
-    selections: { logoUrl: string | null; gallery: string[] }
+    selections: { logoUrl: string | null; gallery: string[]; laji: string | null }
   ) => void | Promise<void>
   onSkip: () => void
   onPaikkaIdResolved: (paikkaId: number) => void
@@ -170,7 +170,7 @@ export default function OnboardingWizardPage() {
 
   async function handleConfirm(
     result: BrandingResult,
-    selections: { logoUrl: string | null; gallery: string[] }
+    selections: { logoUrl: string | null; gallery: string[]; laji: string | null }
   ) {
     setBrandingData(result)
 
@@ -202,6 +202,23 @@ export default function OnboardingWizardPage() {
             value: { logo: selections.logoUrl, photos: selections.gallery },
           }),
         })
+        // AI-06/D-04: laji is staged via save-step (never an immediate PATCH) and only ever
+        // written when explicitly confirmed — never send null/empty (save-step rejects it).
+        if (selections.laji) {
+          await fetch('/api/business/onboarding/save-step', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + token,
+            },
+            body: JSON.stringify({
+              paikka_id: paikkaId,
+              step: 0,
+              field: 'laji',
+              value: selections.laji,
+            }),
+          })
+        }
       } catch {
         // Non-blocking: if the write fails, still allow navigation — StepMediat lets the
         // user re-add photos/logo manually in the wizard.
@@ -211,8 +228,39 @@ export default function OnboardingWizardPage() {
     setPagePhase('wizard')
   }
 
+  // D-06: the skip path ("Ohita") has no AI suggestion to confirm — route through a small
+  // intermediate manual-picker phase (reusing the same LajiPicker as Vaihda) before the
+  // wizard, so laji doesn't stay permanently stuck at 'Muu' for skip-path users.
   function handleSkip() {
     setBrandingData(null)
+    setPagePhase('laji-skip')
+  }
+
+  async function handleLajiSkipPick(value: string) {
+    if (paikkaId !== null) {
+      try {
+        const supabase = createBusinessBrowserClient()
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        const token = session?.access_token ?? ''
+        await fetch('/api/business/onboarding/save-step', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + token,
+          },
+          body: JSON.stringify({ paikka_id: paikkaId, step: 0, field: 'laji', value }),
+        })
+      } catch {
+        // Non-blocking: if the write fails, the venue keeps its create-paikka default —
+        // consistent with onboarding's "nothing literally blocks submit" philosophy.
+      }
+    }
+    setPagePhase('wizard')
+  }
+
+  function handleLajiSkipCancel() {
     setPagePhase('wizard')
   }
 
@@ -244,6 +292,14 @@ export default function OnboardingWizardPage() {
               onPaikkaIdResolved={setPaikkaId}
             />
           </Suspense>
+        )}
+        {pagePhase === 'laji-skip' && (
+          <div className="glass rounded-2xl p-6 w-full max-w-xl mx-auto flex flex-col gap-4">
+            <p className="text-sm text-[rgba(17,17,17,0.45)]">
+              Valitse paikan lajikategoria ennen jatkamista
+            </p>
+            <LajiPicker value={null} onPick={handleLajiSkipPick} onCancel={handleLajiSkipCancel} />
+          </div>
         )}
         {pagePhase === 'wizard' && (
           <Suspense
