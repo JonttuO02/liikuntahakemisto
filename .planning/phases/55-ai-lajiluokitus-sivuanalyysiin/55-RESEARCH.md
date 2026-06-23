@@ -449,29 +449,41 @@ Not applicable — no new external dependencies, services, or CLI tools. All req
 
 ## Validation Architecture
 
+**CORRECTION (orchestrator, post-research fact-check):** The table below in the original research pass claimed no test framework exists in this project. That is factually wrong — verified directly against the repo: `vitest.config.ts` exists at root, `package.json`'s `"test"` script is `vitest run`, `vitest: "^4.1.7"` is a devDependency, and there are 12 existing `*.test.ts` files including `lib/branding/analyzer.test.ts` — the exact module this phase extends with `suggested_laji`. The corrected tables below replace the original (wrong) ones.
+
 ### Test Framework
 | Property | Value |
 |----------|-------|
-| Framework | None detected — no `pytest.ini`, `jest.config.*`, `vitest.config.*`, or `__tests__`/`*.test.*` files found in this codebase as of this research |
-| Config file | none — see Wave 0 |
-| Quick run command | n/a — manual/conversational UAT only, per existing project pattern (see `gsd-verify-work` usage in STATE.md history) |
-| Full suite command | n/a |
+| Framework | Vitest 4.1.7 [VERIFIED: package.json, vitest.config.ts] |
+| Config file | `vitest.config.ts` (root) |
+| Quick run command | `npx vitest run lib/branding/analyzer.test.ts` |
+| Full suite command | `npm test` |
+| Estimated runtime | ~3-6 seconds |
+
+**Directly relevant existing test files to extend (not create from scratch):**
+- `lib/branding/analyzer.test.ts` — already tests `analyzeWithClaude`'s `VALID_LOGO_TYPES`/`VALID_COLOR_ROLES` allowlist-and-filter pattern (e.g. `'defaults an invalid logo type to "unknown"'`, `'filters non-hex colors and defaults an invalid role to "unknown"'`). The `suggested_laji` allowlist behavior (criterion 1) is unit-testable here with the identical mock-Claude-response pattern already used — just add `laji` to the mocked JSON response and assert `result.suggested_laji`.
+- `tests/api/update-paikka.test.ts` — establishes the project's Route Handler test pattern: mock `next/server`'s `NextResponse.json`, mock `@/lib/supabaseAdmin.server` with a chainable builder keyed by table name, import the route's exported handler AFTER mocks are set up. New files for `submit`/`save-step` route tests should mirror this exact pattern.
 
 ### Phase Requirements → Test Map
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| AI-06 (criterion 1) | `suggested_laji` is always one of the 9 taxonomy keys or `null`, never free text | manual-only | n/a — verify via DB inspection after a live analysis run | ❌ Wave 0 |
-| AI-06 (criterion 2) | Suggestion card renders distinctly; Vahvista/Vaihda both work | manual-only (UAT) | n/a — conversational UAT per project convention | ❌ Wave 0 |
-| AI-06 (criterion 3) | `liikuntapaikat.laji` is never written without explicit confirmation | manual-only | n/a — verify via DB inspection: confirm draft never auto-populates `laji` without a UI action | ❌ Wave 0 |
-| AI-06 (criterion 4) | Logo/color/price/hours extraction regression-free when `laji` is omitted from Claude's response | manual-only | n/a — re-run an existing analyzed venue and diff `business_branding` columns pre/post | ❌ Wave 0 |
+| AI-06 (criterion 1) | `suggested_laji` is always one of the 9 taxonomy keys or `null`, never free text, even when Claude returns an out-of-taxonomy string | unit | `npx vitest run lib/branding/analyzer.test.ts -t "laji"` | ❌ Wave 0 (extend existing `analyzer.test.ts`) |
+| AI-06 (criterion 3, partial) / Pitfall 2 | `submit/route.ts`'s `liikuntapaikat` UPDATE omits the `laji` key entirely when `draft.laji` is falsy — never sends `laji: null` and clobbers an existing value | unit (API route) | `npx vitest run tests/api/submit.test.ts -t "does not overwrite laji"` | ❌ Wave 0 (new file, mirror `update-paikka.test.ts` mock pattern) |
+| AI-06 (criterion 3, partial) | `submit/route.ts` DOES write `laji` into `liikuntapaikat` when `draft.laji` is set (closes Pitfall 1 — the "never touches laji at all today" gap) | unit (API route) | `npx vitest run tests/api/submit.test.ts -t "writes confirmed laji"` | ❌ Wave 0 (same new file) |
+| AI-06 (criterion 3, partial) | `save-step/route.ts` rejects empty-string / >100-char `laji` values (Pitfall 5 — free-text Vaihda escape hatch must still be bounded) | unit (API route) | `npx vitest run tests/api/save-step.test.ts -t "laji"` | ❌ Wave 0 (new file, mirror `update-paikka.test.ts`'s field-validation tests) |
+| AI-06 (criterion 2) | Suggestion card renders distinctly; Vahvista/Vaihda both work; unconfirmed state forces Vaihda (D-03) | manual-only (UAT) | n/a — no component-level test infra in this project (no React Testing Library / jsdom component tests found, only route + lib unit tests) | N/A — manual UAT |
+| AI-06 (criterion 4) | Logo/color/price/hours extraction regression-free when `laji` is omitted from Claude's response | unit (extends existing) | `npx vitest run lib/branding/analyzer.test.ts` (existing suite already asserts `logos`/`colors`/`prices`/`opening_hours` shape independent of other fields — add one assertion that omitting `laji` from the mocked Claude response doesn't throw and other fields stay intact) | ✅ existing file, add one test |
 
 ### Sampling Rate
-- **Per task commit:** manual code review against the patterns documented above (no automated test runner exists in this project)
-- **Per wave merge:** manual conversational UAT walkthrough of confirm/change/skip paths
-- **Phase gate:** `/gsd-verify-work` conversational UAT before considering AI-06 complete, consistent with this project's established verification pattern (see `STATE.md`'s extensive `verification_gap`/`human_needed` history — this project relies on UAT, not automated test suites, for phase verification)
+- **After every task commit:** `npx vitest run lib/branding/analyzer.test.ts` (or the specific new file the task touched)
+- **After every plan wave:** `npm test` (full suite)
+- **Before `/gsd-verify-work`:** Full suite must be green, plus manual UAT walkthrough of confirm/change/skip paths (criterion 2 has no automated coverage)
+- **Max feedback latency:** ~6 seconds
 
 ### Wave 0 Gaps
-- No test framework exists in this project at all (confirmed by absence of any test config/files) — this is a pre-existing condition across the entire codebase, not specific to Phase 55. Introducing one is out of scope for this phase; follow the project's existing UAT-only verification convention.
+- `tests/api/submit.test.ts` — does not exist yet. New file required, mirroring `tests/api/update-paikka.test.ts`'s mock-builder pattern (mock `supabaseAdmin.auth.getUser`, mock chainable `.from('liikuntapaikat').update(...)`), to cover the Pitfall 1/Pitfall 2 null-overwrite regression risk — this is the single highest-value automated test in this phase given it guards success criterion 4 directly.
+- `tests/api/save-step.test.ts` — does not exist yet (today `save-step/route.ts` has zero dedicated test coverage of any field, not just `laji`). New file required if the planner wants automated coverage of the new `laji` field-validation block; alternatively this can stay manual-only if the planner judges the existing `update-paikka.test.ts` route-level coverage pattern sufficient precedent without a new file — planner's discretion, but criterion-1-adjacent free-text bounding (Pitfall 5) is cheap to automate given the established mock pattern.
+- `lib/branding/analyzer.test.ts` — exists, extend with `laji` cases (allowlist-pass, invalid-string-to-null, missing-field-to-null, criterion-4 omission-doesn't-break-other-fields).
 
 ## Security Domain
 
