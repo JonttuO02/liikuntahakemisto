@@ -10,6 +10,7 @@ import { LivePreviewProvider, useLivePreview } from '@/lib/livePreview/LivePrevi
 import LivePreviewPane from '@/app/business/onboarding/LivePreviewPane'
 import LivePreviewToggle from '@/app/business/onboarding/LivePreviewToggle'
 import { type PaikkaBase } from '@/lib/onboardingUtils'
+import { lajiKonfig } from '@/lib/lajit'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,7 +21,7 @@ interface AnalysoiSivustoProps {
   paikkaInfo: PaikkaBase | null
   onConfirm: (
     brandingData: BrandingResult,
-    selections: { logoUrl: string | null; gallery: string[] }
+    selections: { logoUrl: string | null; gallery: string[]; laji: string | null }
   ) => void | Promise<void>
   onSkip: () => void
 }
@@ -96,6 +97,89 @@ function MutedButton({
   )
 }
 
+// ─── LajiPicker ───────────────────────────────────────────────────────────────
+
+/**
+ * LajiPicker — taxonomy grid (9 lib/lajit.ts categories) + bounded free-text input.
+ * Shared by the Vaihda flow (AnalysoiSivusto preview, AI-suggestion framing applies
+ * one level up via the caller) AND the D-06 skip-path picker (page.tsx) — this
+ * component itself carries NO AI-suggestion framing ("Ehdotettu"/Vahvista), only the
+ * raw pick-a-category UI, so both call sites can wrap it however they need.
+ */
+export function LajiPicker({
+  value,
+  onPick,
+  onCancel,
+}: {
+  value: string | null
+  onPick: (value: string) => void
+  onCancel: () => void
+}) {
+  const [freeText, setFreeText] = useState('')
+  const [freeTextError, setFreeTextError] = useState<string | null>(null)
+
+  function handleFreeTextSubmit() {
+    const trimmed = freeText.trim()
+    if (!trimmed || trimmed.length > 100) {
+      setFreeTextError('Anna lajin nimi (enintään 100 merkkiä)')
+      return
+    }
+    setFreeTextError(null)
+    setFreeText('')
+    onPick(trimmed)
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <LabelCaps>Valitse lajikategoria</LabelCaps>
+      <div className="flex flex-row flex-wrap gap-2">
+        {Object.entries(lajiKonfig).map(([key, cfg]) => {
+          const isSelected = value === key
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onPick(key)}
+              className={`border rounded-lg p-2 text-sm transition-colors ${
+                isSelected
+                  ? 'border-[#111111] ring-2 ring-[#111111] font-bold text-[#111111]'
+                  : 'border-[rgba(0,0,0,0.12)] text-[rgba(17,17,17,0.45)]'
+              }`}
+            >
+              {cfg.label}
+            </button>
+          )
+        })}
+      </div>
+      <div className="flex flex-col gap-1">
+        <LabelCaps>Muu</LabelCaps>
+        <div className="flex flex-row gap-2">
+          <input
+            type="text"
+            value={freeText}
+            onChange={e => {
+              setFreeText(e.target.value)
+              if (freeTextError) setFreeTextError(null)
+            }}
+            placeholder="Muu laji…"
+            aria-label="Muu laji"
+            className="border border-[rgba(0,0,0,0.12)] rounded-lg h-10 px-3 text-sm text-[#111111] outline-none focus:border-[rgba(0,0,0,0.3)] flex-1"
+          />
+          <MutedButton onClick={handleFreeTextSubmit}>Käytä</MutedButton>
+        </div>
+        {freeTextError && (
+          <p className="text-sm text-red-600" role="alert">
+            {freeTextError}
+          </p>
+        )}
+      </div>
+      <div>
+        <MutedButton onClick={onCancel}>Peruuta</MutedButton>
+      </div>
+    </div>
+  )
+}
+
 // ─── Preview phase content (rendered inside LivePreviewProvider) ──────────────
 
 /**
@@ -138,9 +222,16 @@ function PreviewPhaseContent(props: {
   handleQuickAccept: () => void
   onConfirm: (
     brandingData: BrandingResult,
-    selections: { logoUrl: string | null; gallery: string[] }
+    selections: { logoUrl: string | null; gallery: string[]; laji: string | null }
   ) => void | Promise<void>
   onReanalyze: () => void
+  lajiState: 'suggested' | 'confirmed' | 'unconfirmed'
+  suggestedLajiKey: string | null
+  confirmedLaji: string | null
+  lajiPickerOpen: boolean
+  setLajiPickerOpen: (open: boolean) => void
+  handleVahvistaLaji: () => void
+  handleLajiPick: (value: string) => void
 }) {
   const { dispatch } = useLivePreview()
 
@@ -171,6 +262,13 @@ function PreviewPhaseContent(props: {
     handleQuickAccept,
     onConfirm,
     onReanalyze,
+    lajiState,
+    suggestedLajiKey,
+    confirmedLaji,
+    lajiPickerOpen,
+    setLajiPickerOpen,
+    handleVahvistaLaji,
+    handleLajiPick,
   } = props
 
   // Mirror the screen's logo/gallery selections into the live-preview reducer so
@@ -406,6 +504,48 @@ function PreviewPhaseContent(props: {
         </div>
       )}
 
+      {/* Laji suggestion card (AI-06, D-01/D-02/D-03) */}
+      <div className="flex flex-col gap-2">
+        <LabelCaps>Laji</LabelCaps>
+        {lajiPickerOpen ? (
+          <LajiPicker
+            value={confirmedLaji}
+            onPick={handleLajiPick}
+            onCancel={() => setLajiPickerOpen(false)}
+          />
+        ) : (
+          <>
+            {lajiState === 'suggested' && (
+              <>
+                <p className="text-sm font-bold text-[#111111]">
+                  Ehdotettu laji: {suggestedLajiKey ? lajiKonfig[suggestedLajiKey]?.label : ''}
+                </p>
+                <div className="flex flex-row gap-2">
+                  <PrimaryButton onClick={handleVahvistaLaji}>Vahvista</PrimaryButton>
+                  <MutedButton onClick={() => setLajiPickerOpen(true)}>Vaihda</MutedButton>
+                </div>
+              </>
+            )}
+            {lajiState === 'confirmed' && (
+              <>
+                <p className="text-sm font-bold text-[#111111]">
+                  Laji: {confirmedLaji ? (lajiKonfig[confirmedLaji]?.label ?? confirmedLaji) : ''}
+                </p>
+                <MutedButton onClick={() => setLajiPickerOpen(true)}>Vaihda</MutedButton>
+              </>
+            )}
+            {lajiState === 'unconfirmed' && (
+              <>
+                <p className="text-sm text-[rgba(17,17,17,0.45)]">
+                  Lajia ei tunnistettu automaattisesti — valitse lajikategoria
+                </p>
+                <PrimaryButton onClick={() => setLajiPickerOpen(true)}>Valitse laji</PrimaryButton>
+              </>
+            )}
+          </>
+        )}
+      </div>
+
       {/* Prices */}
       <div className="flex flex-col gap-2">
         <LabelCaps>Hinnat</LabelCaps>
@@ -465,7 +605,7 @@ function PreviewPhaseContent(props: {
                 // so onConfirm/page.tsx's brandingData (and StepEsikatselu's brandColor) see
                 // the latest selection instead of the stale AI-extracted defaults.
                 { ...brandingResult, selected_background_color: bgColor, selected_accent_color: accentColor },
-                { logoUrl: selectedLogoUrl, gallery: selectedGallery }
+                { logoUrl: selectedLogoUrl, gallery: selectedGallery, laji: confirmedLaji }
               )
             }
             disabled={submittingQuick}
@@ -537,6 +677,12 @@ export default function AnalysoiSivusto({ paikkaId, paikkaInfo, onConfirm, onSki
   // ── Gallery selection state (D-04/D-05/D-06, ONBOARD-16) ────────────────────
   const [selectedGallery, setSelectedGallery] = useState<string[]>([])
 
+  // ── Laji suggestion/confirm/change state (AI-06, D-01/D-02/D-03) ───────────
+  const [lajiState, setLajiState] = useState<'suggested' | 'confirmed' | 'unconfirmed'>('unconfirmed')
+  const [suggestedLajiKey, setSuggestedLajiKey] = useState<string | null>(null)
+  const [confirmedLaji, setConfirmedLaji] = useState<string | null>(null)
+  const [lajiPickerOpen, setLajiPickerOpen] = useState(false)
+
   // ── Live preview split-view / mobile toggle state (LIVEPREV) ───────────────
   const [activeView, setActiveView] = useState<'edit' | 'preview'>('edit')
 
@@ -581,6 +727,17 @@ export default function AnalysoiSivusto({ paikkaId, paikkaInfo, onConfirm, onSki
         setAccentColor(accentCandidate.hex)
         setAccentSource('ai')
       }
+    }
+
+    // Seed laji from the AI's suggestion — only if it is a valid taxonomy key (D-03: never
+    // default to a sentinel like 'liikunta'/'liikuntahalli'/'Muu' when missing/invalid).
+    const laji = brandingResult.suggested_laji
+    if (laji && Object.prototype.hasOwnProperty.call(lajiKonfig, laji)) {
+      setSuggestedLajiKey(laji)
+      setLajiState('suggested')
+    } else {
+      setSuggestedLajiKey(null)
+      setLajiState('unconfirmed')
     }
   }, [brandingResult])
 
@@ -674,6 +831,19 @@ export default function AnalysoiSivusto({ paikkaId, paikkaInfo, onConfirm, onSki
     })
   }
 
+  // ── Laji confirm/change handlers (AI-06, D-01/D-02) ─────────────────────────
+  function handleVahvistaLaji() {
+    if (!suggestedLajiKey) return
+    setConfirmedLaji(suggestedLajiKey)
+    setLajiState('confirmed')
+  }
+
+  function handleLajiPick(value: string) {
+    setConfirmedLaji(value)
+    setLajiState('confirmed')
+    setLajiPickerOpen(false)
+  }
+
   // ── Quick-accept: map AI results + selections into onboarding_draft, then call the
   // existing submit route unmodified (D-10/D-11, FLOW-02/FLOW-03). No parallel write path —
   // every field is written via the same save-step route the full wizard uses. ──────────────
@@ -702,11 +872,14 @@ export default function AnalysoiSivusto({ paikkaId, paikkaInfo, onConfirm, onSki
       // (Plan 01's PATCH route) — no unvalidated client logo URL reaches the draft.
       const media_urls = { logo: selectedLogoUrl, photos: selectedGallery.slice(0, 5) }
 
-      const fieldsToWrite: Array<{ field: 'hinnasto' | 'aukioloajat' | 'yhteystiedot' | 'media_urls'; value: unknown }> = [
+      const fieldsToWrite: Array<{ field: 'hinnasto' | 'aukioloajat' | 'yhteystiedot' | 'media_urls' | 'laji'; value: unknown }> = [
         { field: 'hinnasto', value: hinnasto },
         { field: 'aukioloajat', value: aukioloajat },
         { field: 'yhteystiedot', value: yhteystiedot },
         { field: 'media_urls', value: media_urls },
+        // save-step rejects empty/non-string laji values (400) — only write when confirmed,
+        // never send null/empty (mirrors page.tsx handleConfirm's same guard).
+        ...(confirmedLaji ? [{ field: 'laji' as const, value: confirmedLaji }] : []),
       ]
 
       // Sequential, NOT transactional: if call N fails after 1..N-1 succeeded, the draft is
@@ -952,6 +1125,13 @@ export default function AnalysoiSivusto({ paikkaId, paikkaInfo, onConfirm, onSki
           handleCustomHexSubmit={handleCustomHexSubmit}
           handleQuickAccept={handleQuickAccept}
           onConfirm={onConfirm}
+          lajiState={lajiState}
+          suggestedLajiKey={suggestedLajiKey}
+          confirmedLaji={confirmedLaji}
+          lajiPickerOpen={lajiPickerOpen}
+          setLajiPickerOpen={setLajiPickerOpen}
+          handleVahvistaLaji={handleVahvistaLaji}
+          handleLajiPick={handleLajiPick}
           onReanalyze={() => {
             // "Analysoi uudelleen" re-runs analysis WITHOUT remounting this component, so
             // selectionInitialisedRef would otherwise stay true from the FIRST result and
@@ -967,6 +1147,10 @@ export default function AnalysoiSivusto({ paikkaId, paikkaInfo, onConfirm, onSki
             setArmedSlot(null)
             setSelectedGallery([])
             setBrandingResult(null)
+            setLajiState('unconfirmed')
+            setSuggestedLajiKey(null)
+            setConfirmedLaji(null)
+            setLajiPickerOpen(false)
             setPhase('url-input')
           }}
         />
