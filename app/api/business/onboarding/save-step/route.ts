@@ -90,6 +90,7 @@ export async function POST(request: Request) {
     if (typeof value !== 'string' || value.trim().length === 0 || value.length > 100) {
       return NextResponse.json({ error: 'laji: invalid value' }, { status: 400 })
     }
+    value = value.trim()
   }
 
   // Security: verify the authenticated user actually owns this venue before accepting data.
