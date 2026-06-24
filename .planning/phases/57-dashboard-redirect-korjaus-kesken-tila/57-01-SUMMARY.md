@@ -159,3 +159,45 @@ Tasks A-D complete and committed. **Task 4 (human-verify checkpoint) has NOT bee
 ## Self-Check (continuation): PASSED
 
 All 5 claimed files and all 5 commit hashes (633a20f, 3074e67, a7d8739, e774f78, 6ff1c45) verified present on disk / in git log.
+
+---
+
+## Task 4: Human-verify checkpoint — RESOLVED (approved)
+
+**Resolved during:** Final continuation session, after the `submitted_at` deviation fix (Tasks A-D).
+
+The user applied the `submitted_at` migration (`supabase/migrations/20260624120000_business_paikka_links_submitted_at.sql`) to the live hosted Supabase project via `npx supabase db push`, then re-ran the full verification pass against the running `/business` dashboard, including the two checks added specifically to cover the `submitted_at` fix:
+
+- **Step 0 (new — abandoned pre-wizard case):** A venue created via `create-paikka` and abandoned before any `save-step` call (no `onboarding_draft` row, `claim_status='pending'`, `submitted_at=null`) correctly renders the gray "Kesken" / "In progress" badge with a "Jatka" CTA — not the amber "Pending approval" badge it incorrectly showed under the Tasks-1-3-only implementation.
+- **Steps 1-6 (original four ROADMAP criteria + EN spot check):** No auto-redirect on `/business` visit, Kesken badge replaces amber Pending for draft-backed in-progress venues, Esikatselu disabled + Jatka CTA on Kesken rows, Jatka navigates to `/business/onboarding?paikka_id=X` and resumes the correct venue, 2+ simultaneous drafts each render as independent Kesken rows, EN locale shows "In progress"/"Continue" copy correctly.
+- **Step 7 (new — submit-resets-to-Pending regression check):** A venue that completes the real submit flow (`onboarding/submit/route.ts`, Step 5a/6) now has `claim_status='pending'` AND `submitted_at` stamped with a timestamp, and correctly renders the amber "Pending approval" / "Odottaa hyväksyntää" badge — confirming `submitted_at` successfully distinguishes "never actually submitted" (Kesken) from "genuinely submitted, awaiting admin review" (Pending), resolving the ambiguity that motivated the deviation fix.
+
+**Resume signal received:** "approved" — no mismatches reported.
+
+**Outcome:** All four Phase 57 ROADMAP success criteria confirmed true in the running app, plus the `submitted_at` precedence fix confirmed correct for both edge cases it was designed to resolve. Plan 57-01 is complete.
+
+---
+
+## Self-Check (final)
+
+**must_haves.truths (4/4 satisfied, confirmed via checkpoint approval + code grep):**
+1. "Kirjautunut yritys jolla on kesken jäänyt onboarding-draft näkee /business-dashboardin (ei redirectiä /business/onboarding-sivulle)" — confirmed: `grep -n "router.push" app/business/page.tsx` returns no matches; checkpoint step 1 approved.
+2. "Paikka jolla on onboarding_draft-rivi näyttää harmaan Kesken-badgen amber Pending-badgen sijaan" — confirmed: checkpoint step 2 approved; badge classes `bg-[rgba(17,17,17,0.08)]` / `text-[rgba(17,17,17,0.55)]` present in `app/business/page.tsx`.
+3. "Kesken-rivin Jatka-nappi vie /business/onboarding?paikka_id=X-osoitteeseen" — confirmed: `app/business/page.tsx:143` — `href={isKesken ? '/business/onboarding?paikka_id=' + link.paikka_id : ...}`; checkpoint step 4 approved.
+4. "Tili jolla on 2+ samanaikaista draft-paikkaa näkee jokaisen erillisenä Kesken-rivinä" — confirmed: `keskenPaikkaIds` is a `Set<number>` computed per-row via `.has(link.paikka_id)`, not a single boolean; checkpoint step 5 approved.
+5. "Kesken-rivin Esikatselu-nappi on disabloitu" — confirmed: `app/business/page.tsx:136` — `disabled={isKesken || !link.liikuntapaikat}`.
+
+**artifacts (5/5 present on disk):**
+- `lib/venueStatus.ts` — FOUND; exports `deriveVenueStatus` (`lib/venueStatus.ts:1` — `export function deriveVenueStatus(`)
+- `lib/venueStatus.test.ts` — FOUND
+- `app/business/page.tsx` — FOUND; contains `keskenPaikkaIds` (`app/business/page.tsx:172, 287`)
+- `messages/fi.json` — FOUND; contains `statusKesken` (`messages/fi.json:145` — `"statusKesken": "Kesken",`)
+- `messages/en.json` — FOUND; contains `statusKesken` (`messages/en.json:145` — `"statusKesken": "In progress",`)
+
+**key_links (2/2 patterns present in code, grep-confirmed):**
+- `from\('onboarding_draft'\)` → `app/business/page.tsx:199` (`.from('onboarding_draft')`)
+- `/business/onboarding\?paikka_id=` → `app/business/page.tsx:143` (`'/business/onboarding?paikka_id=' + link.paikka_id`)
+
+**Human-verify checkpoint:** status: **approved**. All 8 verification steps (0-7, including the post-deviation additions for the abandoned-pre-wizard case and the submit-resets-to-Pending regression) confirmed by the user against the live app, after applying the `submitted_at` migration to the hosted Supabase project.
+
+**Plan status: COMPLETE.**
