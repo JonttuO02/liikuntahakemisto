@@ -1,7 +1,7 @@
 ---
 phase: 56
 slug: claim-create-rework-luo-paikka-alusta-nimik-yt-nt
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-24
@@ -76,6 +76,12 @@ Accent reserved for: the single primary submit CTA (`CTA_CLASS`, "Luo paikka" / 
 
 ---
 
+## Visual Hierarchy
+
+Primary focal point: the **"Luo paikka"** submit button (`CTA_CLASS`, accent `#111111`, positioned at the bottom of the form via `mt-auto` per the existing `create` step layout). Unchanged from the current component — this restructure does not move, resize, or re-color the CTA. The two name inputs (`yritysNimi`, `toimipisteNimi`) sit above it in the same `flex flex-col gap-3` column as the existing fields, in normal field order (no new emphasis treatment).
+
+---
+
 ## Copywriting Contract
 
 This is the substantive content of this UI-SPEC — copy must change because the "claim" framing is being deleted (CLAIM-04) and one input becomes two (CLAIM-05). All copy below is Finnish-first per existing convention; English equivalents go in `messages/en.json` following the existing key-pair pattern.
@@ -121,11 +127,11 @@ Not applicable — no shadcn, no component registry of any kind is used by this 
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS (Visual Hierarchy section added per checker recommendation)
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-06-24 (0 blocking issues; 1 non-blocking flag resolved inline)
