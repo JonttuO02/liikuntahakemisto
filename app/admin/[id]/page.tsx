@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
-import { Map, AdvancedMarker } from '@vis.gl/react-google-maps'
+import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import { motion, AnimatePresence } from 'framer-motion'
 import DiagonaalKortti from '@/app/components/DiagonaalKortti'
 import PaikkaSheet from '@/app/components/PaikkaSheet'
@@ -40,6 +40,7 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
   // Sijainti map state — zoom-driven pin/card switch, mirrors Etusivu.tsx
   const [zoomLevel, setZoomLevel] = useState(15)
   const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
+  const [panTick, setPanTick] = useState(0)
 
   useEffect(() => {
     async function load() {
@@ -200,7 +201,8 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
                     style={{ width: '100%', height: '320px' }}
                     onCameraChanged={ev => setZoomLevel(Math.round(ev.detail.zoom))}
                   >
-                    <MapAutoZoom target={autoZoomTarget} onComplete={() => setAutoZoomTarget(null)} />
+                    <MapAutoZoom target={autoZoomTarget} onComplete={() => { setAutoZoomTarget(null); setPanTick(t => t + 1) }} />
+                    <PanToCenterCallout tick={panTick} />
                     <AdvancedMarker position={{ lat: paikka.latitude, lng: paikka.longitude }}>
                       <div style={{ position: 'relative', width: 0, height: 0 }}>
                         <AnimatePresence initial={false}>
@@ -212,7 +214,7 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
                               <SportPin laji={paikka.laji} />
                             </motion.div>
                           )}
-                          {zoomLevel >= 16 && (
+                          {zoomLevel >= 16 && !autoZoomTarget && (
                             <motion.div key="card"
                               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
                               style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)', overflow: 'visible' }}>
@@ -247,6 +249,20 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
       </div>
     </main>
   )
+}
+
+function PanToCenterCallout({ tick }: { tick: number }) {
+  const map = useMap()
+  const lastTick = useRef(0)
+  useEffect(() => {
+    if (!map || tick === lastTick.current) return
+    lastTick.current = tick
+    // Shifts map content down so the CalloutCard's vertical midpoint (not its
+    // bottom anchor, which sits at the venue's lat/lng) lands at the map center.
+    // ~206px card height / 2. If this pans the wrong direction, flip the sign.
+    map.panBy(0, -103)
+  }, [map, tick])
+  return null
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
