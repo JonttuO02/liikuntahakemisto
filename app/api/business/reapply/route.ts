@@ -61,12 +61,19 @@ export async function POST(request: Request) {
     )
   }
 
-  // UPDATE the found row: reset claim_status to pending and clear rejection_reason.
+  // UPDATE the found row: reset claim_status to pending, clear rejection_reason,
+  // and stamp submitted_at (mirrors onboarding/submit's Step 5a). Without this,
+  // deriveVenueStatus would misclassify a genuinely-pending reapplied venue as
+  // 'kesken' whenever the venue never had a draft (see 57-REVIEW.md WR-01).
   // The WHERE clause includes claim_status = 'rejected' to guard against concurrent
   // duplicate reapply requests that both passed the SELECT above.
   const { error: updateError } = await supabaseAdmin
     .from('business_paikka_links')
-    .update({ claim_status: 'pending', rejection_reason: null })
+    .update({
+      claim_status: 'pending',
+      rejection_reason: null,
+      submitted_at: new Date().toISOString(),
+    })
     .eq('id', rejectedLink.id)
     .eq('claim_status', 'rejected')
 

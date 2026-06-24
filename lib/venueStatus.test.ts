@@ -14,6 +14,15 @@ describe('deriveVenueStatus', () => {
     expect(deriveVenueStatus('pending', false, '2026-06-24T10:00:00Z')).toBe('pending')
   })
 
+  it('palauttaa pending kun reapply on asettanut submitted_atin (WR-01 regressio)', () => {
+    // Regression for WR-01: app/api/business/reapply/route.ts now stamps
+    // submitted_at on reapply, mirroring onboarding/submit's Step 5a. Before
+    // the fix, reapply left submitted_at untouched (often still null for a
+    // venue that was rejected without ever being onboarded), which made this
+    // exact transition incorrectly return 'kesken' instead of 'pending'.
+    expect(deriveVenueStatus('pending', false, '2026-06-24T12:00:00Z')).toBe('pending')
+  })
+
   it('palauttaa approved kun draftia ei ole ja claim_status on approved', () => {
     expect(deriveVenueStatus('approved', false, '2026-06-24T10:00:00Z')).toBe('approved')
   })
