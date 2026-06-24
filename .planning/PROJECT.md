@@ -283,6 +283,8 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **DATA-11**: `/api/admin/sync-paikat`-reitti ja sen testi poistettu kokonaan; reitti 404 — v3.0 (Phase 53)
 - ✓ **DATA-12**: Google Places -peräinen liikuntapaikka-data poistettu tietokannasta — ⚠️ laajemmin kuin suunniteltu: operaattori valitsi live-gatella täyden tyhjennyksen (kaikki 327 riviä) eikä suunniteltua provenance-säilyttävää poistoa (322/327, 5 claimed-riviä olisi säilynyt). 2 business-tiliä menetti claimattun venuen myötä `business_paikka_links`- ja `business_branding`-rivinsä. Ei varmuuskopiota (D-07, hyväksytty riski). Ks. `53-03-SUMMARY.md` täydelliset luvut ja hyväksyntäketju — v3.0 (Phase 53)
 - ✓ **AI-06**: AI-sivuanalyysi ehdottaa lajikategoriaa paikan verkkosivun perusteella `lib/lajit.ts`-taksonomiasta (ei vapaata tekstiä); käyttäjä vahvistaa tai vaihtaa ehdotuksen erottuvalla "ehdotus"-elementillä ennen tallennusta; arvo kirjoitetaan `liikuntapaikat.laji`-kenttään vain eksplisiittisen vahvistuksen jälkeen — v3.0 (Phase 55)
+- ✓ **CLAIM-04**: Claim-vaiheen olemassa-olevan-paikan-haku poistettu kokonaan (`claim-paikka/route.ts` poistettu, `ClaimSearchForm.tsx`:n search/claim-askeleet poistettu) — käyttäjä luo paikan aina alusta — v3.0 (Phase 56)
+- ✓ **CLAIM-05**: Yrityksen nimi (`yritysNimi`, pakollinen) ja toimipisteen nimi (`toimipisteNimi`, valinnainen) syötetään erillisiin kenttiin; yhteinen `lib/normalizeNimi.ts`-helpperi normalisoi (trim, whitespace-collapse, 200 merkin katto per kenttä + yhdistetty katto) ja kirjoittaa `business_accounts.company_name`+`liikuntapaikat.nimi` — Ketjuadmin (useita toimipisteitä eri omistajilla) jätetty tietoisesti pois scopesta, ks. Future-lista — v3.0 (Phase 56)
 
 ### Future (deferred from v1.1 + v1.7)
 
@@ -371,6 +373,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 | Reapply: UPDATE rejected → pending (ei INSERT) | Composite UNIQUE rajoite business_paikka_links:ssä — uusi INSERT rikkoisi sen | ✓ Phase 35 |
 | paikka_id URL-parametrina edit/onboarding-velhossa | Estää cross-venue draft -kontaminaation; mahdollistaa suoran linkityksen | ✓ Phase 36 |
 | Liikuntapaikat-taulu tyhjennetty täysin (327/327) Google Places -irtautumisessa | Operaattori valitsi live-gatella täyden nollauksen suunnitellun provenance-säilyttävän poiston (322/327) sijaan — kaikki venuet, mukaan lukien claimatut, lähtivät uudestaan rakennettavaksi puhtaalta pöydältä | ✓ Phase 53 — 2 business-tiliä menetti claimansa, ei seurantatoimenpiteitä tehty |
+| Claim/search-vaihe poistettu kokonaan create-paikka-virrasta | Google Places -datan poiston (Phase 53) jälkeen ei ole enää valmista paikkalistaa hakea/claimata — käyttäjä luo paikan aina alusta kahdella nimikentällä | ✓ Phase 56 — CLAIM-04/CLAIM-05; ketjuadmin (multi-venue per tili) jätetty tietoisesti Future-listalle |
 
 ---
 
@@ -393,4 +396,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-24 — Phase 55 complete (AI-06 validated)*
+*Last updated: 2026-06-24 — Phase 56 complete (CLAIM-04, CLAIM-05 validated)*

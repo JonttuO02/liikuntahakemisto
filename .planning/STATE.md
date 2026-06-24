@@ -2,36 +2,36 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Oma tietokanta
-current_phase: 56
-current_phase_name: claim-create-rework-luo-paikka-alusta-nimik-yt-nt
-status: executing
-stopped_at: Phase 56 UI-SPEC approved
-last_updated: "2026-06-24T05:23:10.733Z"
+current_phase: 57
+current_phase_name: dashboard redirect korjaus & kesken tila
+status: ready_to_plan
+stopped_at: Phase 56 complete, ready to plan Phase 57
+last_updated: "2026-06-24T06:42:09.845Z"
 last_activity: 2026-06-24
-last_activity_desc: Phase 56 execution started
+last_activity_desc: Phase 56 complete, transitioned to Phase 57
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 12
-  completed_plans: 10
-  percent: 67
+  completed_plans: 12
+  percent: 83
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-21)
+See: .planning/PROJECT.md (updated 2026-06-24)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 56 — claim-create-rework-luo-paikka-alusta-nimik-yt-nt
+**Current focus:** Phase 57 — dashboard redirect korjaus & kesken tila
 
 ## Current Position
 
-Phase: 56 (claim-create-rework-luo-paikka-alusta-nimik-yt-nt) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 56
-Last activity: 2026-06-24 — Phase 56 execution started
+Phase: 57 — dashboard redirect korjaus & kesken tila
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-24 — Phase 56 complete, transitioned to Phase 57
 
 ## v3.0 Roadmap Summary
 
@@ -49,7 +49,7 @@ Dependency order: 52, 53, 55 independent (parallel-safe) → 54 feeds 56 → 57 
 Open product decisions to resolve before the relevant phase:
 
 - ~~**Phase 53**: Fate of unclaimed-but-kept venues post sync-removal~~ — RESOLVED 2026-06-22: operator chose full wipe (327/327, including 5 claimed rows) at the live gate instead of the planned provenance-preserving delete (322/327); no pre-migration pg_dump was taken (PITFALLS Pitfall 2 risk accepted). See `53-03-SUMMARY.md`.
-- **Phase 56**: Company/branch naming = cosmetic (one venue per flow) vs. multi-branch precursor — log decision in PROJECT.md before writing the migration (PITFALLS Pitfall 7). Chain support stays deferred.
+- ~~**Phase 56**: Company/branch naming = cosmetic (one venue per flow) vs. multi-branch precursor~~ — RESOLVED 2026-06-24: cosmetic naming only (yritysNimi + toimipisteNimi combined into one `liikuntapaikat.nimi`); chain support (multi-branch per owner) stays deferred to Future, logged in PROJECT.md Key Decisions.
 
 ## v2.2 Roadmap Summary
 
@@ -145,9 +145,9 @@ Items acknowledged and deferred at v2.2 milestone close on 2026-06-21 (pre-close
 
 ## Session Continuity
 
-Last session: 2026-06-24T04:43:23.085Z
-Stopped at: Phase 56 UI-SPEC approved
-Resume file: .planning/phases/56-claim-create-rework-luo-paikka-alusta-nimik-yt-nt/56-UI-SPEC.md
+Last session: 2026-06-24T06:42:09.845Z
+Stopped at: Phase 56 complete, ready to plan Phase 57
+Resume file: None
 
 ## Performance Metrics
 
@@ -168,4 +168,4 @@ Resume file: .planning/phases/56-claim-create-rework-luo-paikka-alusta-nimik-yt-
 
 ## Operator Next Steps
 
-- Run /gsd-discuss-phase 54 or /gsd-plan-phase 54 to start the next independent phase (Sijainti — map-pin & address autocomplete)
+- Run /gsd-discuss-phase 57 or /gsd-plan-phase 57 to start the next phase (Dashboard-redirect-korjaus & Kesken-tila — last phase in v3.0, depends on Phase 56's reworked create flow per PITFALLS Pitfall 9)
