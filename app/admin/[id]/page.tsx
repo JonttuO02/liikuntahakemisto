@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import { Map, AdvancedMarker } from '@vis.gl/react-google-maps'
-import PaikkaKortti from '@/app/components/PaikkaKortti'
+import { motion, AnimatePresence } from 'framer-motion'
 import DiagonaalKortti from '@/app/components/DiagonaalKortti'
 import PaikkaSheet from '@/app/components/PaikkaSheet'
 import SportPin from '@/app/components/SportPin'
 import CalloutCard from '@/app/components/CalloutCard'
+import MapAutoZoom from '@/app/components/MapAutoZoom'
 import type { Liikuntapaikka } from '@/lib/types'
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
@@ -36,8 +37,9 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
   const [actionError, setActionError] = useState<string | null>(null)
   const [actionDone, setActionDone] = useState(false)
 
-  // Sijainti map state — toggles the CalloutCard popup on pin click
-  const [showCallout, setShowCallout] = useState(false)
+  // Sijainti map state — zoom-driven pin/card switch, mirrors Etusivu.tsx
+  const [zoomLevel, setZoomLevel] = useState(15)
+  const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -193,27 +195,37 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
                     mapId={MAP_ID}
                     defaultCenter={{ lat: paikka.latitude, lng: paikka.longitude }}
                     defaultZoom={15}
+                    disableDefaultUI
                     gestureHandling="greedy"
                     style={{ width: '100%', height: '320px' }}
+                    onCameraChanged={ev => setZoomLevel(Math.round(ev.detail.zoom))}
                   >
+                    <MapAutoZoom target={autoZoomTarget} onComplete={() => setAutoZoomTarget(null)} />
                     <AdvancedMarker position={{ lat: paikka.latitude, lng: paikka.longitude }}>
-                      {showCallout ? (
-                        <CalloutCard p={{ ...paikka, latitude: paikka.latitude, longitude: paikka.longitude }} />
-                      ) : (
-                        <div onClick={() => setShowCallout(true)}>
-                          <SportPin laji={paikka.laji} />
-                        </div>
-                      )}
+                      <div style={{ position: 'relative', width: 0, height: 0 }}>
+                        <AnimatePresence initial={false}>
+                          {zoomLevel < 16 && (
+                            <motion.div key="pin"
+                              style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)' }}
+                              exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                              onClick={() => setAutoZoomTarget({ lat: paikka.latitude!, lng: paikka.longitude! })}>
+                              <SportPin laji={paikka.laji} />
+                            </motion.div>
+                          )}
+                          {zoomLevel >= 16 && (
+                            <motion.div key="card"
+                              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+                              style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)', overflow: 'visible' }}>
+                              <CalloutCard p={{ ...paikka, latitude: paikka.latitude, longitude: paikka.longitude }} />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </AdvancedMarker>
                   </Map>
                 </div>
               </div>
             )}
-
-            <div className="flex flex-col gap-2">
-              <SectionLabel>Listakortti</SectionLabel>
-              <PaikkaKortti paikka={paikka} />
-            </div>
 
             <div className="flex flex-col gap-2">
               <SectionLabel>Diagonaalikortti</SectionLabel>
