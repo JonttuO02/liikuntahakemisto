@@ -190,7 +190,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 - [x] **Phase 53: Google Places -datan ja synkkauksen poisto** — sync-paikat-reitti poistettu; Google-peräiset paikkarivit poistettu provenance-tarkistuksella (DATA-11, DATA-12) (completed 2026-06-22)
 - [x] **Phase 54: Sijainti — karttapinni & osoitehaku onboardingissa** — käyttäjä sijoittaa paikan kartalle klikkaamalla tai osoitehaulla; vain lat/lng + kirjoitettu osoite tallennetaan (SIJAINTI-01, SIJAINTI-02, SIJAINTI-03) (completed 2026-06-23)
 - [x] **Phase 55: AI-lajiluokitus sivuanalyysiin** — AI-sivuanalyysi ehdottaa lajikategoriaa; käyttäjä vahvistaa tai vaihtaa sen (AI-06) (completed 2026-06-23)
-- [ ] **Phase 56: Claim/create-rework — luo paikka alusta + nimikäytäntö** — claim-haku poistettu; käyttäjä luo paikan aina alusta, syöttää yritys- ja toimipistenimen erikseen (CLAIM-04, CLAIM-05)
+- [x] **Phase 56: Claim/create-rework — luo paikka alusta + nimikäytäntö** — claim-haku poistettu; käyttäjä luo paikan aina alusta, syöttää yritys- ja toimipistenimen erikseen (CLAIM-04, CLAIM-05) (completed 2026-06-24)
 - [ ] **Phase 57: Dashboard-redirect-korjaus & Kesken-tila** — /business ei koskaan automaattiredirectaa onboardingiin; kesken jäänyt onboarding näkyy Kesken-badgella jatkamismahdollisuudella (BIZPANEL-04, BIZPANEL-05)
 
 #### Phase Details
@@ -295,14 +295,14 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
   3. Uuden paikan luonti onnistuu eikä riko olemassa olevaa `UNIQUE(paikka_id)`-rajoitusta — toinen yritys saa edelleen 409:n yrittäessään luoda/claimata jo linkitetyn paikan
   4. Ennen muutosta kesken jääneet `onboarding_draft`-/pending-rivit näkyvät täytetyillä (ei tyhjillä) nimikentillä backfillin ansiosta
 
-**Plans**: 1/2 plans executed
+**Plans**: 2/2 plans complete
 **Wave 1**
 
 - [x] 56-01-PLAN.md — Backend: lib/normalizeNimi.ts helper + tests; create-paikka two name fields + combined nimi + company_name write + 23505→409; delete claim-paikka route (CLAIM-04, CLAIM-05)
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 56-02-PLAN.md — Frontend: ClaimSearchForm create-only rewrite (two name fields, new POST body, 409 copy) + fi/en i18n key rework; human UAT checkpoint (CLAIM-04, CLAIM-05)
+- [x] 56-02-PLAN.md — Frontend: ClaimSearchForm create-only rewrite (two name fields, new POST body, 409 copy) + fi/en i18n key rework; human UAT checkpoint (CLAIM-04, CLAIM-05)
 
 **UI hint**: yes
 
@@ -399,5 +399,5 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 | 53. Google Places -datan & synkkauksen poisto | v3.0 | 3/3 | Complete    | 2026-06-22 |
 | 54. Sijainti — karttapinni & osoitehaku | v3.0 | 3/3 | Complete    | 2026-06-23 |
 | 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 3/3 | Complete    | 2026-06-23 |
-| 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 1/2 | In Progress|  |
+| 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 2/2 | Complete   | 2026-06-24 |
 | 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 0/0 | Not started | - |
