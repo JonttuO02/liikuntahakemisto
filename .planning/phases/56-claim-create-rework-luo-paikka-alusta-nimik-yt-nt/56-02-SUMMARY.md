@@ -37,7 +37,7 @@ patterns-established: []
 requirements-completed: [CLAIM-04, CLAIM-05]
 
 # Metrics
-duration: 20min
+duration: 25min
 completed: 2026-06-24
 status: complete
 ---
@@ -48,8 +48,8 @@ status: complete
 
 ## Performance
 
-- **Duration:** ~20 min
-- **Tasks:** 2 of 3 completed (Task 3 is a checkpoint:human-verify gate — execution paused there per plan frontmatter `autonomous: false`)
+- **Duration:** ~25 min
+- **Tasks:** 3 of 3 completed (Task 3 was the `checkpoint:human-verify` gate; human verification passed)
 - **Files modified:** 3
 
 ## Accomplishments
@@ -69,6 +69,7 @@ Each task was committed atomically:
 
 1. **Task 1: Rewrite ClaimSearchForm.tsx as a create-only two-name form** - `26a5a22` (feat)
 2. **Task 2: Update Business namespace in messages/fi.json and messages/en.json** - `45bf585` (feat)
+3. **Task 3: Human-verify checkpoint** - approved by user 2026-06-24 (no code change; this SUMMARY.md update is the only commit for Task 3)
 
 ## Files Created/Modified
 
@@ -104,16 +105,25 @@ None — no external service configuration required.
 
 ## Checkpoint Reached
 
-Task 3 (`checkpoint:human-verify`, `gate="blocking"`) has not been executed. Per the plan frontmatter (`autonomous: false`), execution stops here for human verification of the create-only flow, two-name behavior, 409/required-field copy, and the EN locale, as described in the plan's `<how-to-verify>` steps. See the orchestrator's checkpoint return for the exact verification steps to perform.
+Task 3 (`checkpoint:human-verify`, `gate="blocking"`) was executed and **approved** by the user on 2026-06-24. All manual verification steps in the plan's `<how-to-verify>` passed:
+- "Luo paikka" heading shown, no search box, no "Luo uusi paikka sen sijaan" link present
+- Two name inputs render and behave as specified: required "Yrityksen nimi" and optional "Toimipisteen nimi (valinnainen)" with helper text
+- Create with company name only → `liikuntapaikat.nimi` equals the company name, no trailing space
+- Create with both names → `liikuntapaikat.nimi` equals "Company Branch"
+- Blank company name → inline validation error shown, no request sent
+- EN locale shows correctly translated labels ("Create a venue", "Company name", "Branch name (optional)", helper text)
+- No console errors about missing i18n keys
+
+No code changes were required for Task 3 — it is a verification-only gate with no associated `<action>` or `<files>`. This plan (56-02) is now fully complete; all 3 tasks done and the phase's frontend half is verified end-to-end.
 
 ## Next Phase Readiness
 
-- Both 56-01 (backend) and 56-02 Tasks 1-2 (frontend) are committed. The create-only flow is wired end-to-end: `ClaimSearchForm.tsx` → `/api/business/create-paikka` → `business_accounts.company_name` + `liikuntapaikat.nimi` (combined).
-- Blocked on the Task 3 human-verify checkpoint before this plan can be marked fully complete.
+- Both 56-01 (backend) and 56-02 (frontend, all 3 tasks) are committed and human-verified. The create-only flow is wired and confirmed end-to-end: `ClaimSearchForm.tsx` → `/api/business/create-paikka` → `business_accounts.company_name` + `liikuntapaikat.nimi` (combined).
+- No blockers remain on this plan. Phase 56 frontend rework (CLAIM-04, CLAIM-05) is complete.
 
 ---
 *Phase: 56-claim-create-rework-luo-paikka-alusta-nimik-yt-nt*
-*Completed (Tasks 1-2 of 3): 2026-06-24*
+*Completed (Tasks 1-3 of 3): 2026-06-24*
 
 ## Self-Check: PASSED
 
