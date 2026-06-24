@@ -1,5 +1,19 @@
 # Liikuntahakemisto
 
+## Current Milestone: v3.1 UX/UI-korjaukset & business-parannukset
+
+**Goal:** Korjata admin-pääsy ja kartta-QA, lisätä saman yrityksen sisäinen hallintaoikeuspyyntö, ja yhtenäistää business-dashboardin/preview-näkymien ja paikkasivun ulkoasu venuepage-arkkitehtuurin ympärille.
+
+**Target features:**
+- Admin-bugin (/admin ei avaudu) juurisyyn selvitys ja korjaus + admin-hyväksyttyjen paikkojen kartta-/sijainti-QA
+- Saman yrityksen toisen työntekijän hallintaoikeuspyyntö olemassaolevaan paikkaan (uusi per-työntekijä-tili linkitettynä yritykseen; nykyinen hallitsija hyväksyy/hylkää /business-näkymässä, Resend-ilmoitus)
+- /business-dashboard: paikkalista → DiagonaalKortti-kortit, status-pillit kortin kuvan alakulmaan, hover/tap paljastaa ikonipainike-lisäosan (preview/edit/continue)
+- Preview-modaalin vanhentunut PaikkaKortti → CalloutCard
+- Edit/onboarding live-preview laajennus: + venuepage (PaikkaSheet)
+- Erillisen paikkasivun (app/paikat/[id]) poisto; sisältö siirretty venuepagelle; vanha reitti 404
+- Kaikki preview-kortit/-sivut puhtaasti visuaalisiksi (ei klikkaustoimintoja)
+- Onboarding-vaiheiden uudelleenjärjestys: PaikkaStep pois, nimi+URL ensin (AI taustalla), sijainti seuraavaksi, AI-analyysin tarkastelu, Preview-step pois, Contact-stepistä URL pois, "PREVIEW" → "SUBMIT"
+
 ## Shipped: v3.0 Oma tietokanta (Google Places -irtautuminen) (2026-06-24)
 
 **Delivered:** Google Places -datan tallennus poistettu kokonaan; siirrytty täysin omaan, yritysten itse syöttämään paikkadataan. Cleanup-vaihe (AuthModal-bugi, EN-merkkijonopuutteet) korjattu; `/api/admin/sync-paikat` poistettu ja kaikki Google-peräinen data tyhjennetty (operaattori valitsi täyden 327/327-tyhjennyksen); onboardingiin uusi Sijainti-vaihe (kartta + osoitehaku-autocomplete, vain lat/lng + kirjoitettu osoite tallennetaan); AI-sivuanalyysi ehdottaa myös laji-kategoriaa; claim-vaihe muutettu create-only-virraksi erillisillä yritys-/toimipiste-nimikentillä; `/business`-redirectbugi korjattu (ei ikinä automaattiredirectiä onboardingiin) ja per-paikka Kesken-tila + Jatka-CTA lisätty, mukaan lukien checkpointissa löytynyt ja korjattu `submitted_at`-precedenssiaukko. 13/13 vaatimusta toimitettu, 6 vaihetta (52-57).
@@ -390,4 +404,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-24 — Phase 57 complete (BIZPANEL-04, BIZPANEL-05 validated) — v3.0 shipped*
+*Last updated: 2026-06-24 — Milestone v3.1 started (UX/UI-korjaukset & business-parannukset)*
