@@ -3,10 +3,15 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
+import { Map, AdvancedMarker } from '@vis.gl/react-google-maps'
 import PaikkaKortti from '@/app/components/PaikkaKortti'
 import DiagonaalKortti from '@/app/components/DiagonaalKortti'
 import PaikkaSheet from '@/app/components/PaikkaSheet'
+import SportPin from '@/app/components/SportPin'
+import CalloutCard from '@/app/components/CalloutCard'
 import type { Liikuntapaikka } from '@/lib/types'
+
+const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 
 type LinkData = {
   id: number
@@ -30,6 +35,9 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
   const [rejectReason, setRejectReason] = useState('')
   const [actionError, setActionError] = useState<string | null>(null)
   const [actionDone, setActionDone] = useState(false)
+
+  // Sijainti map state — toggles the CalloutCard popup on pin click
+  const [showCallout, setShowCallout] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -174,6 +182,34 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
         {/* Venue preview — same components as onboarding StepEsikatselu */}
         {paikka && (
           <>
+            {paikka.latitude != null && paikka.longitude != null && (
+              <div className="flex flex-col gap-2">
+                <SectionLabel>Sijainti</SectionLabel>
+                <div
+                  className="relative rounded-2xl overflow-hidden border border-[rgba(0,0,0,0.07)]"
+                  style={{ width: '100%', height: '320px' }}
+                >
+                  <Map
+                    mapId={MAP_ID}
+                    defaultCenter={{ lat: paikka.latitude, lng: paikka.longitude }}
+                    defaultZoom={15}
+                    gestureHandling="greedy"
+                    style={{ width: '100%', height: '320px' }}
+                  >
+                    <AdvancedMarker position={{ lat: paikka.latitude, lng: paikka.longitude }}>
+                      {showCallout ? (
+                        <CalloutCard p={{ ...paikka, latitude: paikka.latitude, longitude: paikka.longitude }} />
+                      ) : (
+                        <div onClick={() => setShowCallout(true)}>
+                          <SportPin laji={paikka.laji} />
+                        </div>
+                      )}
+                    </AdvancedMarker>
+                  </Map>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col gap-2">
               <SectionLabel>Listakortti</SectionLabel>
               <PaikkaKortti paikka={paikka} />
