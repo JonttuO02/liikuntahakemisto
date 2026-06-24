@@ -201,3 +201,33 @@ The user applied the `submitted_at` migration (`supabase/migrations/202606241200
 **Human-verify checkpoint:** status: **approved**. All 8 verification steps (0-7, including the post-deviation additions for the abandoned-pre-wizard case and the submit-resets-to-Pending regression) confirmed by the user against the live app, after applying the `submitted_at` migration to the hosted Supabase project.
 
 **Plan status: COMPLETE.**
+
+---
+
+## Post-Review Fixes (57-REVIEW.md WR-01, WR-02)
+
+Two warning-level findings from the code review (`.planning/phases/57-dashboard-redirect-korjaus-kesken-tila/57-REVIEW.md`) were fixed in a follow-up continuation session, after the plan was already marked complete. These are corrective fixes, not part of the original plan's task list.
+
+### WR-01: reapply route didn't stamp `submitted_at`
+
+**Issue:** `app/api/business/reapply/route.ts` reset `claim_status` to `'pending'` on reapply but left `submitted_at` untouched. For a venue that was rejected without ever completing onboarding (`submitted_at` still `null` at rejection time — possible because `admin/reject` only requires `claim_status === 'pending'`, not a prior submit), reapplying produced a row with `claim_status='pending'`, `submitted_at=null`. `deriveVenueStatus` then misclassified this genuinely-pending reapplication as `'kesken'` instead of `'pending'`, showing the wrong badge/CTA on the dashboard.
+
+**Fix:** Added `submitted_at: new Date().toISOString()` to the reapply route's update call, mirroring `onboarding/submit`'s Step 5a. Added an explicit regression test to `lib/venueStatus.test.ts` (`'palauttaa pending kun reapply on asettanut submitted_atin (WR-01 regressio)'`) documenting the reapply-sets-submitted_at scenario, since the underlying precedence case was already covered generically but not named for this regression.
+
+**Files modified:** `app/api/business/reapply/route.ts`, `lib/venueStatus.test.ts`
+
+**Verification:** `npx vitest run lib/venueStatus.test.ts` (9/9 passing), `npx tsc --noEmit` (clean).
+
+**Commit:** `b8f1d63` — fix(57): stamp submitted_at on reapply to fix kesken misclassification
+
+### WR-02: hardcoded "Paikka" fallback broke EN locale
+
+**Issue:** `app/business/page.tsx`'s venue-name fallback (`link.liikuntapaikat?.nimi ?? \`Paikka ${link.paikka_id}\``) rendered the hardcoded Finnish word "Paikka" for English-locale users whenever the `liikuntapaikat` join was missing, bypassing the `t()` translation layer used everywhere else in the file.
+
+**Fix:** Added a `venueFallbackName` key to both `messages/fi.json` (`"Paikka {id}"`) and `messages/en.json` (`"Venue {id}"`), placed next to `dashboardVenuesHeading`. Replaced the hardcoded template literal with `t('venueFallbackName', { id: link.paikka_id })`, using the `t` instance already passed into `VenueRow`.
+
+**Files modified:** `app/business/page.tsx`, `messages/fi.json`, `messages/en.json`
+
+**Verification:** `npx tsc --noEmit` (clean), Node script confirming both locale files have the `venueFallbackName` key under `Business`.
+
+**Commit:** `fa64b2e` — fix(57): translate venue name fallback for EN locale
