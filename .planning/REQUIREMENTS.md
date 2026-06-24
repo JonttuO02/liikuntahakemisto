@@ -11,7 +11,7 @@ Requirements for milestone v3.1 (UX/UI-korjaukset & business-parannukset). Each 
 
 - [x] ~~**ADMIN-06**: Juurisyy sille, miksi operaattori ei pääse `/admin`-sivulle, selvitetään ja korjataan~~ — Dropped 2026-06-24 (Phase 58 discussion): bugia ei pystytty toistamaan, `/admin` toimii normaalisti.
 - [x] ~~**QA-01**: Admin-hyväksytyn paikan sijainti tallentuu oikein ja paikka näkyy kartalla oikeassa kohdassa käyttäjille (regressiotestattu)~~ — Dropped 2026-06-24 (Phase 58 discussion): manuaalisesti tarkistettu, toimii oikein.
-- [ ] **ADMIN-07**: Admin-hakemuksen yksityiskohtasivulla (`/admin/[id]`) näytetään paikan sijainti omalla kartallaan — sama pinni/CalloutCard/zoomaus kuin pääsivun kartalla, mutta täysin visuaalinen (pinin klikkaus näyttää CalloutCardin, mutta ei avaa venuepagea)
+- [x] **ADMIN-07**: Admin-hakemuksen yksityiskohtasivulla (`/admin/[id]`) näytetään paikan sijainti omalla kartallaan — sama pinni/CalloutCard/zoomaus kuin pääsivun kartalla, mutta täysin visuaalinen (pinin klikkaus näyttää CalloutCardin, mutta ei avaa venuepagea)
 
 ### Hallintaoikeuspyynnöt (multi-user yritystilit)
 
@@ -77,7 +77,7 @@ Deferred — not in v3.1 scope.
 |-------------|-------|--------|
 | ADMIN-06 | Phase 58 | Dropped (2026-06-24) |
 | QA-01 | Phase 58 | Dropped (2026-06-24) |
-| ADMIN-07 | Phase 58 | Pending |
+| ADMIN-07 | Phase 58 | Complete |
 | ACCESS-01 | Phase 59 | Pending |
 | ACCESS-02 | Phase 59 | Pending |
 | ACCESS-03 | Phase 60 | Pending |
@@ -103,11 +103,13 @@ Deferred — not in v3.1 scope.
 | ONBOARD-24 | Phase 61 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 25 total (2 dropped 2026-06-24: ADMIN-06, QA-01; 1 added: ADMIN-07) — 24 active
 - Mapped to phases: 24 ✓
 - Unmapped: 0 ✓
 
 **Phase coverage map:**
+
 - Phase 58: ADMIN-07 (1) — ADMIN-06 and QA-01 dropped after discussion (bug not reproducible, map QA verified manually)
 - Phase 59: ACCESS-01, ACCESS-02 (2)
 - Phase 60: ACCESS-03, ACCESS-05, ACCESS-06 (3)
