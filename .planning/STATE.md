@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Oma tietokanta
-current_phase: 57
-status: executing
+current_phase: 0
+status: Awaiting next milestone
 stopped_at: Phase 57 UI-SPEC approved
-last_updated: "2026-06-24T11:24:40.886Z"
+last_updated: "2026-06-24T11:32:54.791Z"
 last_activity: 2026-06-24
-last_activity_desc: Phase 57 complete
+last_activity_desc: Milestone v3.0 completed and archived
 progress:
   total_phases: 6
   completed_phases: 6
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-24)
 
 ## Current Position
 
-Phase: 57
-Plan: Not started
-Status: Executing Phase 57
-Last activity: 2026-06-24 — Phase 57 complete
+Phase: Milestone v3.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-24 — Milestone v3.0 completed and archived
 
 ## v3.0 Roadmap Summary
 
@@ -169,4 +169,4 @@ Resume file: .planning/phases/57-dashboard-redirect-korjaus-kesken-tila/57-UI-SP
 
 ## Operator Next Steps
 
-- Run /gsd-discuss-phase 57 or /gsd-plan-phase 57 to start the next phase (Dashboard-redirect-korjaus & Kesken-tila — last phase in v3.0, depends on Phase 56's reworked create flow per PITFALLS Pitfall 9)
+- Start the next milestone with /gsd-new-milestone

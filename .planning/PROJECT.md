@@ -307,7 +307,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ## Context
 
-**Nykytila:** v2.2 Onboarding-tekoälyn parannukset toimitettu 2026-06-21. Kaikki 21 v2.2-vaatimusta toteutettu. Scraper seuraa monisivuisesti hinnasto/aukioloajat/yhteystiedot-alasivuja SSRF-uudelleenvalidoinnilla; käyttäjä valitsee logon ja 2 väriä useista kandidaateista; galleria esitäyttää Mediat-vaiheen; StepPaikka edeltää URL-analyysiä; jaettu live-esikatselun tila näkyy reaaliajassa kaikissa vaiheissa (myös pre-wizard-analyysinäytöllä). 22 plania (phases 47–51.1), 211 committia, 3 päivää.
+**Nykytila:** v3.0 Oma tietokanta (Google Places -irtautuminen) toimitettu 2026-06-24. Kaikki 12 v3.0-vaatimusta toteutettu. Google Places -synkkaus poistettu kokonaan ja kaikki Google-peräinen liikuntapaikka-data tyhjennetty (operaattori valitsi täyden 327/327-tyhjennyksen); onboardingiin uusi Sijainti-vaihe (kartta + osoitehaku-autocomplete, vain lat/lng + kirjoitettu osoite tallennetaan); AI-sivuanalyysi ehdottaa myös laji-kategoriaa käyttäjän vahvistettavaksi; claim-vaihe korvattu create-only-virralla erillisillä yritys-/toimipiste-nimikentillä; `/business`-redirectbugi korjattu ja per-paikka Kesken-tila + Jatka-CTA lisätty. 13 plania (phases 52–57), 2 päivää (2026-06-22 → 2026-06-24).
 
 **Data-arkkitehtuuri:** Google Places API hakee automaattisesti aukioloajat → upsertit Supabaseen. Kertakäyntihinnat manuaalisesti top 20 palvelulle. AI-widget: Claude Haiku + Open-Meteo, sessionStorage-cache per kalenteripäivä + per kaupunki. Supabase Auth käyttäjätaulut + suosikit (user_id → paikka_id). Sync-skripti tukee ?kaupunki= parametria Helsinki/Turku/Tampere-datalle.
 

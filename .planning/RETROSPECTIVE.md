@@ -327,6 +327,46 @@
 
 ---
 
+## Milestone: v3.0 — Oma tietokanta (Google Places -irtautuminen)
+
+**Shipped:** 2026-06-24
+**Phases:** 6 (phases 52–57) | **Plans:** 13 | **Timeline:** 2 days (2026-06-22 → 2026-06-24)
+**Files changed:** 120 | **Lines:** +13,468 / -1,765
+
+### What Was Built
+- Cleanup phase verified i18n coverage and fixed an AuthModal error-precedence bug, with a regression test guarding it
+- `/api/admin/sync-paikat` removed entirely; all Google Places-origin venue rows deleted from `liikuntapaikat` (operator chose a full 327/327 wipe over the planned provenance-preserving delete)
+- New onboarding Sijainti step: map-pin placement + address autocomplete, persisting only lat/lng + the user-typed address (no `place_id` or raw Places response)
+- AI site analysis now suggests a sport category from `lib/lajit.ts`'s taxonomy; user must explicitly confirm or change it before it's written
+- Claim/create flow reworked to create-only: separate company/branch name fields with shared normalization (`lib/normalizeNimi.ts`), old claim-search route deleted
+- `/business` no longer auto-redirects to onboarding; per-venue "Kesken" badge + "Jatka" resume CTA replaces the single boolean redirect, with a `submitted_at` precedence gap caught and fixed during the human-verify checkpoint
+
+### What Worked
+- Sequencing Phase 57 (dashboard/redirect) last, after Phase 56's claim/create rework landed — avoided building the Kesken-resume UI against an entry point that was about to change (PITFALLS Pitfall 9 paid off)
+- Cleanup-first phase (52) caught that two carried-forward gaps (P30-GAP, P30-BUG) were already resolved — re-verifying before re-fixing saved wasted work
+- `AutocompleteSuggestion.fetchAutocompleteSuggestions()` fallback found quickly via the `visgl/react-google-maps` maintainer's own guidance after `PlaceAutocompleteElement` crashed in live browser verification — research caught the blocker before it became a stuck plan
+
+### What Was Inefficient
+- Phase 53's irreversible full-database wipe deviated from the planned provenance-preserving delete (322/327) without a pre-migration `pg_dump`; 2 business accounts lost their claimed venue as a result, with no follow-up outreach run
+- Phase 57's human-verify checkpoint found a `submitted_at` precedence bug (created-but-never-submitted venues showed the wrong Kesken state) — a gap that better upfront state-machine design (explicit timestamp from the start) would have avoided
+
+### Patterns Established
+- `deriveVenueStatus` precedence helper, unit-tested, as the single source of truth for per-venue dashboard state — avoids ad-hoc boolean checks scattered across the UI
+- Explicit `submitted_at` timestamp on `business_paikka_links`, set at `onboarding/submit` and `reapply` — distinguishes "draft, never submitted" from "submitted, pending" instead of inferring it from other fields
+- Two separate name fields (`yritysNimi` required, `toimipisteNimi` optional) normalized through one shared helper, written to both `business_accounts.company_name` and `liikuntapaikat.nimi`
+
+### Key Lessons
+1. An irreversible destructive migration (full-table wipe) deserves a pre-migration backup even when the operator accepts the data-loss risk verbally — the 2 orphaned business accounts had no recovery path and no tracked follow-up
+2. When a Google-recommended/maintainer-recommended web component is alpha/beta-only, verify in a live browser before committing a plan to it — the crash was reproducible on both default and beta channels, not an edge case
+3. Status fields inferred from a combination of other columns (no explicit timestamp) are a recurring source of precedence bugs — Phase 57 hit this for the second time this project (cf. v1.6 AuthModal precedence bug) — prefer an explicit state column when a screen needs to distinguish more than two states
+
+### Cost Observations
+- Model mix: Sonnet 4.6 throughout
+- Sessions: 2 days, multiple sessions per day
+- Notable: lowest plans-per-phase ratio yet (13 plans / 6 phases ≈ 2.2) — three of six phases (52, 55-frontend, 57) closed in a single plan or wave, reflecting smaller, well-scoped surgical changes rather than greenfield builds
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution

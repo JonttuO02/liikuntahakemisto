@@ -1,5 +1,23 @@
 # Milestones — Liikuntahakemisto
 
+## v3.0 Oma tietokanta (Google Places -irtautuminen) (Shipped: 2026-06-24)
+
+**Phases completed:** 6 phases, 13 plans, 13 tasks
+
+**Key accomplishments:**
+
+- Verified CLEAN-06 (i18n coverage) and CLEAN-07 (mapError precedence fix) as already-satisfied with file+line/git evidence, and added a Vitest regression test guarding the (A || B) && C precedence grouping in both mapError and mapBusinessError.
+- Task 1 — `supabase/migrations/20260622120000_remove_google_places_data.sql`
+- The plan specified `PlaceAutocompleteElement` (Google's web-component widget) per D-04. Live browser verification found it threw `TypeError: Cannot read properties of undefined (reading 'keys')` on every construction attempt, reproducible identically on both the default and `beta` Maps JS channels. Root-caused via the `visgl/react-google-maps` maintainer's own GitHub guidance: the widget is alpha/beta-only and the maintainer recommends against using it, suggesting `AutocompleteSuggestion.fetchAutocompleteSuggestions()` instead. The crash only disappeared on `version="alpha"`, which Google explicitly disclaims as dev-only (visible banner, not shippable).
+- Task 1 — Schema migrations.
+- Task 1 — save-step ALLOWED_FIELDS + validation (TDD).
+- Distinct laji suggestion card with Vahvista/Vaihda actions, a reusable 9-category LajiPicker shared by the Vaihda and D-06 skip-path flows, and save-step persistence wired into both the full-wizard and quick-accept paths.
+- New `lib/normalizeNimi.ts` helper (casing-preserving, 200-char cap) plugged into a reworked `create-paikka` route that now accepts separate company/branch name fields, writes `business_accounts.company_name`, adds the missing `23505→409` conflict branch, and the now-orphaned `claim-paikka` route is deleted.
+- `ClaimSearchForm.tsx` rewritten as a create-only form with two name fields (`yritysNimi` required, `toimipisteNimi` optional) wired to the 56-01 `create-paikka` contract, including 409 handling; both locale files updated with new name-field keys and reworded heading/error copy, with all claim/search-only keys removed.
+- Removed the unconditional /business → /business/onboarding redirect and replaced it with a per-venue gray "Kesken" badge + "Jatka" resume CTA, driven by a unit-tested deriveVenueStatus precedence helper.
+
+---
+
 ## v2.2 Onboarding-tekoälyn parannukset (Shipped: 2026-06-21)
 
 **Phases completed:** 6 phases, 22 plans, 48 tasks
