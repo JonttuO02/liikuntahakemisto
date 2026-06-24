@@ -8,6 +8,7 @@ import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import ClaimSearchForm from '@/app/components/ClaimSearchForm'
 import PreviewModal from '@/app/components/PreviewModal'
 import type { Liikuntapaikka } from '@/lib/types'
+import { deriveVenueStatus } from '@/lib/venueStatus'
 
 type VenueLiikuntapaikka = {
   id: number
@@ -33,6 +34,7 @@ type VenueLink = {
   paikka_id: number
   claim_status: string
   rejection_reason: string | null
+  submitted_at: string | null
   liikuntapaikat: VenueLiikuntapaikka | null
 }
 
@@ -203,7 +205,7 @@ export default function BusinessPage() {
       // Fetch all linked venues with their approval status and rejection reason
       const { data: links } = await supabase
         .from('business_paikka_links')
-        .select('paikka_id, claim_status, rejection_reason, liikuntapaikat(id, nimi, laji, osoite, kaupunki, latitude, longitude, hinta_min, hinta_max, hinta_kuvaus, puhelin, varauslinkki, kuvaus, aukioloajat, image_url, logo_url, photo_urls)')
+        .select('paikka_id, claim_status, rejection_reason, submitted_at, liikuntapaikat(id, nimi, laji, osoite, kaupunki, latitude, longitude, hinta_min, hinta_max, hinta_kuvaus, puhelin, varauslinkki, kuvaus, aukioloajat, image_url, logo_url, photo_urls)')
         .eq('business_account_id', user.id)
         .order('created_at', { ascending: true })
 
@@ -282,7 +284,7 @@ export default function BusinessPage() {
                 key={link.paikka_id}
                 link={link}
                 t={t}
-                isKesken={keskenPaikkaIds.has(link.paikka_id)}
+                isKesken={deriveVenueStatus(link.claim_status, keskenPaikkaIds.has(link.paikka_id), link.submitted_at) === 'kesken'}
                 onPreview={setPreviewPaikka}
                 onReapply={handleReapply}
               />
