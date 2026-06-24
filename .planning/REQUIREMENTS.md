@@ -28,8 +28,8 @@ Requirements for milestone v3.0 "Oma tietokanta (Google Places -irtautuminen)". 
 
 - [x] **CLAIM-04**: Claim-vaiheen olemassa-olevan-paikan-haku poistettu; käyttäjä luo paikan aina alusta
 - [x] **CLAIM-05**: Käyttäjä syöttää yrityksen nimen ja toimipisteen nimen erillisiin kenttiin; nimet normalisoidaan yhtenäiseen kirjoitusasuun
-- [ ] **BIZPANEL-04**: `/business`-sivu ei koskaan automaattiredirectaa onboardingiin — kirjautunut yritys näkee aina dashboardin tai business-kirjautumisen
-- [ ] **BIZPANEL-05**: Kesken jäänyt onboarding näytetään per-paikka "Kesken"-badgella dashboardilla; käyttäjä voi jatkaa valitsemalla paikan
+- [x] **BIZPANEL-04**: `/business`-sivu ei koskaan automaattiredirectaa onboardingiin — kirjautunut yritys näkee aina dashboardin tai business-kirjautumisen
+- [x] **BIZPANEL-05**: Kesken jäänyt onboarding näytetään per-paikka "Kesken"-badgella dashboardilla; käyttäjä voi jatkaa valitsemalla paikan
 
 ## Future Requirements (deferred)
 
@@ -63,8 +63,8 @@ Filled in during roadmap creation.
 | AI-06 | Phase 55 | Complete |
 | CLAIM-04 | Phase 56 | Complete |
 | CLAIM-05 | Phase 56 | Complete |
-| BIZPANEL-04 | Phase 57 | Pending |
-| BIZPANEL-05 | Phase 57 | Pending |
+| BIZPANEL-04 | Phase 57 | Complete |
+| BIZPANEL-05 | Phase 57 | Complete |
 
 **Coverage:**
 
