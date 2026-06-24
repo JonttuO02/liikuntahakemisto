@@ -1,10 +1,13 @@
 ---
 gsd_state_version: 1.0
 milestone: v3.1
-milestone_name: UX/UI-korjaukset & business-parannukset
+milestone_name: — Active Milestone
+current_phase_name: roadmap created
 status: roadmap_ready
-last_updated: "2026-06-24T00:00:00.000Z"
+stopped_at: Phase 58 context gathered
+last_updated: "2026-06-24T15:54:23.877Z"
 last_activity: 2026-06-24
+last_activity_desc: v3.1 roadmap created
 progress:
   total_phases: 7
   completed_phases: 0
@@ -44,6 +47,7 @@ Next: `/gsd-plan-phase 58` (or `58` / `59` / `61` — all parallel-safe starting
 | 64. Hallintaoikeuspyynnöt — dashboard-UI | Päähallitsija hyväksyy/hylkää pyynnöt + poistaa sub-managerit uudistetussa dashboardissa | ACCESS-04, ACCESS-07 |
 
 **Dependency order:**
+
 - Phase 58 (admin/QA) — independent, parallel-safe, start anytime
 - Phase 61 (onboarding reorder) — independent code path, parallel-safe
 - Phase 59 (schema) → Phase 60 (access backend) → Phase 64 (access UI)
@@ -51,6 +55,7 @@ Next: `/gsd-plan-phase 58` (or `58` / `59` / `61` — all parallel-safe starting
 - Critical path: 59 → 60 → 64 and 62 → 63 → 64 converge at Phase 64
 
 **Sequencing rationale (from research + instructions):**
+
 - ACCESS-01/02 schema MUST be its own gating phase with explicit pre-migration backup (Phase 53 precedent: unbacked migration → unrecoverable data loss; this one is auth-adjacent)
 - ACCESS dashboard UI (64) sequenced AFTER dashboard redesign (63) — both touch `app/business/page.tsx`; building access UI against the old list layout would be throwaway
 - VENUEPAGE consolidation (62) before LIVEPREV-05 (63) — LIVEPREV-05 needs the consolidated venuepage feature-complete
@@ -105,9 +110,9 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 
 ## Session Continuity
 
-Last session: 2026-06-24 — v3.1 roadmap created
-Stopped at: ROADMAP.md + STATE.md written, REQUIREMENTS.md traceability filled
-Resume file: .planning/ROADMAP.md (v3.1 — Active Milestone section)
+Last session: 2026-06-24T15:54:23.871Z
+Stopped at: Phase 58 context gathered
+Resume file: .planning/phases/58-admin-p-sy-kartta-qa/58-CONTEXT.md
 
 ## Operator Next Steps
 
