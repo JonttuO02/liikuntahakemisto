@@ -24,6 +24,7 @@ vi.mock('@/lib/email', () => ({
 const mockGetUser = vi.fn()
 const mockBizAccountsMaybeSingle = vi.fn()
 const mockBizAccountsSingle = vi.fn()
+const mockBizAccountsUpdateEq = vi.fn()
 const mockLiikuntapaikatInsert = vi.fn()
 const mockLiikuntapaikatInsertSingle = vi.fn()
 const mockLiikuntapaikatUpdateEq = vi.fn()
@@ -45,6 +46,9 @@ vi.mock('@/lib/supabaseAdmin.server', () => {
         eq: () => ({ maybeSingle: () => mockBizAccountsMaybeSingle() }),
       }
     },
+    update: (_payload: unknown) => ({
+      eq: (...args: unknown[]) => mockBizAccountsUpdateEq(...args),
+    }),
   }
 
   // liikuntapaikat: .insert(payload).select('id').single()
@@ -124,7 +128,7 @@ const VALID_TOKEN = 'valid-token-abc'
 const VALID_AUTH_HEADER = { Authorization: `Bearer ${VALID_TOKEN}` }
 
 const VALID_BODY = {
-  nimi: 'Testihalli',
+  yritysNimi: 'Testihalli',
   osoite: 'Testikatu 1',
   kaupunki: 'Tampere',
   latitude: 61.5,
@@ -135,6 +139,7 @@ function setHappyPathMocks() {
   mockGetUser.mockResolvedValue({ data: { user: VALID_USER }, error: null })
   mockBizAccountsMaybeSingle.mockResolvedValue({ data: { user_id: VALID_USER.id }, error: null })
   mockBizAccountsSingle.mockResolvedValue({ data: { company_name: 'Testi Oy' }, error: null })
+  mockBizAccountsUpdateEq.mockResolvedValue({ error: null })
   mockLiikuntapaikatInsertSingle.mockResolvedValue({ data: { id: 42 }, error: null })
   mockLiikuntapaikatUpdateEq.mockResolvedValue({ error: null })
   mockLiikuntapaikatSelectSingle.mockResolvedValue({ data: { nimi: 'Testihalli' }, error: null })
