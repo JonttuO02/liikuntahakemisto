@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Oma tietokanta
 current_phase: 56
-current_phase_name: claim/create rework — luo paikka alusta + nimikäytäntö
+current_phase_name: claim-create-rework-luo-paikka-alusta-nimik-yt-nt
 status: executing
 stopped_at: Phase 56 UI-SPEC approved
-last_updated: "2026-06-24T04:56:05.867Z"
-last_activity: 2026-06-23
-last_activity_desc: Phase 55 complete, transitioned to Phase 56
+last_updated: "2026-06-24T05:23:10.733Z"
+last_activity: 2026-06-24
+last_activity_desc: Phase 56 execution started
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 10
+  total_plans: 12
   completed_plans: 10
   percent: 67
 ---
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-21)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 55 — ai-lajiluokitus-sivuanalyysiin
+**Current focus:** Phase 56 — claim-create-rework-luo-paikka-alusta-nimik-yt-nt
 
 ## Current Position
 
-Phase: 56 — claim/create rework — luo paikka alusta + nimikäytäntö
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-23 — Phase 55 complete, transitioned to Phase 56
+Phase: 56 (claim-create-rework-luo-paikka-alusta-nimik-yt-nt) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 56
+Last activity: 2026-06-24 — Phase 56 execution started
 
 ## v3.0 Roadmap Summary
 

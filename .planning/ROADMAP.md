@@ -295,10 +295,10 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
   3. Uuden paikan luonti onnistuu eikä riko olemassa olevaa `UNIQUE(paikka_id)`-rajoitusta — toinen yritys saa edelleen 409:n yrittäessään luoda/claimata jo linkitetyn paikan
   4. Ennen muutosta kesken jääneet `onboarding_draft`-/pending-rivit näkyvät täytetyillä (ei tyhjillä) nimikentillä backfillin ansiosta
 
-**Plans**: 2 plans
+**Plans**: 1/2 plans executed
 **Wave 1**
 
-- [ ] 56-01-PLAN.md — Backend: lib/normalizeNimi.ts helper + tests; create-paikka two name fields + combined nimi + company_name write + 23505→409; delete claim-paikka route (CLAIM-04, CLAIM-05)
+- [x] 56-01-PLAN.md — Backend: lib/normalizeNimi.ts helper + tests; create-paikka two name fields + combined nimi + company_name write + 23505→409; delete claim-paikka route (CLAIM-04, CLAIM-05)
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -399,5 +399,5 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 | 53. Google Places -datan & synkkauksen poisto | v3.0 | 3/3 | Complete    | 2026-06-22 |
 | 54. Sijainti — karttapinni & osoitehaku | v3.0 | 3/3 | Complete    | 2026-06-23 |
 | 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 3/3 | Complete    | 2026-06-23 |
-| 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 0/2 | Planned | - |
+| 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 1/2 | In Progress|  |
 | 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 0/0 | Not started | - |
