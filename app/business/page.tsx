@@ -108,7 +108,7 @@ function VenueRow({
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-bold text-[#111111] truncate">
-          {link.liikuntapaikat?.nimi ?? `Paikka ${link.paikka_id}`}
+          {link.liikuntapaikat?.nimi ?? t('venueFallbackName', { id: link.paikka_id })}
         </span>
         <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full shrink-0 ${
           isKesken

@@ -232,6 +232,7 @@
     "dashboardStatusRejectedBodyNoReason": "Contact support for more information.",
     "dashboardMapCta": "Open map",
     "dashboardVenuesHeading": "Your venues",
+    "venueFallbackName": "Venue {id}",
     "mapToggleAll": "All venues",
     "mapToggleMine": "My venues",
     "mapLoadingVenues": "Loading venues...",

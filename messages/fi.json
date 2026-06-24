@@ -232,6 +232,7 @@
     "dashboardStatusRejectedBodyNoReason": "Ota yhteyttä ylläpitoon saadaksesi lisätietoja.",
     "dashboardMapCta": "Avaa kartta",
     "dashboardVenuesHeading": "Paikkasi",
+    "venueFallbackName": "Paikka {id}",
     "mapToggleAll": "Kaikki paikat",
     "mapToggleMine": "Omat paikat",
     "mapLoadingVenues": "Ladataan paikkoja...",
