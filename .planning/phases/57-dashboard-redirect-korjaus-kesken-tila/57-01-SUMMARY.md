@@ -104,3 +104,58 @@ Tasks 1-3 are complete, committed, and verified:
 ## Self-Check: PASSED
 
 All claimed files and commit hashes verified present on disk / in git log.
+
+---
+
+## Deviation: submitted_at fix (post-checkpoint, pre-resolution)
+
+**Found during:** Task 4 human-verify checkpoint attempt (this is the gap report, not the checkpoint resolution).
+
+### The gap
+
+`onboarding_draft` rows (the existing Kesken signal from Tasks 1-3) are only created lazily by `save-step`, the first time a user saves real wizard data. A venue created via `create-paikka` and abandoned at the `StepPaikka`/`AnalysoiSivusto` pre-wizard screens — i.e. before any `save-step` call ever fires — has `claim_status='pending'` and **no draft row**. With the Tasks-1-3 implementation, this venue fell through to the amber "Pending approval" badge, which is incorrect: the venue was never actually submitted for admin review, so it should read Kesken just like a draft-backed abandoned venue.
+
+The complication: `onboarding/submit/route.ts` *also* resets `claim_status` to `'pending'` and deletes the draft row once a venue is genuinely submitted (Step 5a/6, see `app/api/business/onboarding/submit/route.ts` lines 97-117). So, prior to this fix, "`claim_status='pending'` AND no draft row" was ambiguous — it meant either "never submitted" or "genuinely submitted, awaiting admin review" with no way to distinguish the two states.
+
+### Why `submitted_at` over the heuristic alternative
+
+Two options were discussed with the user:
+
+1. **Heuristic on onboarding-filled fields:** infer "never submitted" by checking whether fields that only get filled during the wizard (price, hours, contact info, etc.) are still null. Rejected — fragile and tightly coupled to submit's current field set; any future change to which fields submit writes (or doesn't write) would silently break the heuristic with no compile-time or test-time signal.
+2. **Explicit `submitted_at timestamptz` column** on `business_paikka_links`, set only by the real submit route. Chosen — unambiguous, single source of truth, decoupled from submit's field list, and trivially testable (`deriveVenueStatus` precedence covers it directly).
+
+### Precedence implemented
+
+`deriveVenueStatus(claimStatus, hasDraft, submittedAt)`:
+1. `hasDraft === true` → `'kesken'` (unchanged — draft existence always wins)
+2. `claimStatus === 'pending' && !submittedAt` → `'kesken'` (NEW — created but never actually submitted)
+3. `claimStatus === 'approved'` → `'approved'`
+4. `claimStatus === 'rejected'` → `'rejected'`
+5. else → `'pending'` (claimStatus==='pending' with submittedAt truthy — genuinely submitted, awaiting review)
+
+### Files / columns touched
+
+- `supabase/migrations/20260624120000_business_paikka_links_submitted_at.sql` — new nullable `submitted_at timestamptz` column on `business_paikka_links`, `IF NOT EXISTS` guard, no backfill (existing pending rows fall into the "never submitted → Kesken" bucket post-fix, an accepted one-time reclassification per the user's decision)
+- `lib/venueStatus.ts` / `lib/venueStatus.test.ts` — `deriveVenueStatus` extended to 3-param signature (`claimStatus, hasDraft, submittedAt`); TDD RED→GREEN; all 8 assertions pass (7 original + 1 new genuinely-submitted case; one original case's expectation intentionally changed from `'pending'` to `'kesken'`)
+- `app/api/business/onboarding/submit/route.ts` — Step 5a's `claim_status: 'pending'` update now also sets `submitted_at: new Date().toISOString()` in the same non-critical update call
+- `app/business/page.tsx` — `VenueLink` type gained `submitted_at: string | null`; `business_paikka_links` select now includes `submitted_at`; `deriveVenueStatus` imported from `@/lib/venueStatus` and called per-row to compute `isKesken`, replacing the Tasks-1-3 direct `keskenPaikkaIds.has(...)` boolean (which now only feeds the `hasDraft` signal into the helper, no longer the final determination)
+
+### Local migration apply
+
+No local Supabase instance / db-push script is configured in this project (hosted Supabase only, no `supabase db push` wired into `package.json`). The migration file was created and is ready to apply on next deploy/push to the hosted project — **deferred manual step**, does not block these code-level tasks since the column addition is additive/non-breaking and the application code degrades gracefully (a `null` `submitted_at` before the migration runs is functionally identical to the never-submitted case).
+
+### Commits
+
+- `633a20f` — feat: add submitted_at column to business_paikka_links (migration)
+- `3074e67` — test: add failing test for submitted_at precedence (RED)
+- `a7d8739` — feat: extend deriveVenueStatus with submittedAt precedence (GREEN)
+- `e774f78` — feat: stamp submitted_at in onboarding submit route
+- `6ff1c45` — feat: wire submitted_at + deriveVenueStatus into business dashboard
+
+### Status
+
+Tasks A-D complete and committed. **Task 4 (human-verify checkpoint) has NOT been resolved by this agent** — see the CHECKPOINT REACHED report returned to the orchestrator for the updated verification steps reflecting this fix.
+
+## Self-Check (continuation): PASSED
+
+All 5 claimed files and all 5 commit hashes (633a20f, 3074e67, a7d8739, e774f78, 6ff1c45) verified present on disk / in git log.
