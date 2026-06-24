@@ -26,7 +26,7 @@
 
 **Granularity:** standard · **Coverage:** 25/25 v1 requirements mapped
 
-- [ ] **Phase 58: Admin-pääsy & kartta-QA** — Operaattori pääsee /admin-sivulle ja hyväksyttyjen paikkojen sijainnit näkyvät kartalla oikein
+- [ ] **Phase 58: Admin-sijaintikartta** — Admin-hakemuksen yksityiskohtasivulla näytetään paikan sijainti omalla read-only-kartalla (ADMIN-06/QA-01 dropped — ks. CONTEXT.md)
 - [ ] **Phase 59: Multi-company-skeemamigraatio** — Yritys-identiteetti irrotetaan login-identiteetistä companies-taululla; gating-edellytys kaikelle hallintaoikeustyölle
 - [ ] **Phase 60: Hallintaoikeuspyynnöt — backend & sähköposti** — Työntekijä voi pyytää hallintaoikeutta, järjestelmä ilmoittaa sähköpostilla ja estää pääsyn ennen hyväksyntää
 - [ ] **Phase 61: Onboarding-vaiheiden uudelleenjärjestys** — Uusi onboarding-virta: nimi+URL ensin (AI taustalla), sijainti, AI-tarkastelu, ei erillistä preview-vaihetta
@@ -34,14 +34,15 @@
 - [ ] **Phase 63: Business-dashboardin & preview-näkymien uudistus** — DiagonaalKortti-pohjainen dashboard ikonipainikkeilla, CalloutCard-preview, venuepage live-previewssä, kaikki previewt visuaalisia
 - [ ] **Phase 64: Hallintaoikeuspyynnöt — dashboard-UI** — Päähallitsija hallitsee pyynnöt ja sub-managerit uudistetussa dashboardissa
 
-### Phase 58: Admin-pääsy & kartta-QA
-**Goal**: Operaattori pääsee /admin-sivulle ja admin-hyväksyttyjen paikkojen sijainnit näkyvät kartalla oikeassa kohdassa
-**Depends on**: Nothing (first phase; independent of all other workstreams — root cause currently unknown, phase starts with diagnosis)
-**Requirements**: ADMIN-06, QA-01
+### Phase 58: Admin-sijaintikartta
+**Goal**: Admin näkee paikan sijainnin kartalla suoraan hakemuksen tarkastelusivulla, ennen hyväksyntäpäätöstä
+**Depends on**: Nothing (independent of all other workstreams)
+**Requirements**: ADMIN-07
+**Note**: ADMIN-06 ja QA-01 dropped 2026-06-24 (ks. 58-CONTEXT.md) — admin-pääsyongelma ei toistunut, kartta-QA tarkistettu manuaalisesti ilman löydöksiä. ADMIN-07 korvaa molemmat tämän phasen sisällä.
 **Success Criteria** (what must be TRUE):
-  1. Operaattori (is_admin = true -käyttäjä) pääsee `/admin`-sivulle ja näkee odottavat hakemukset — pääsyn estäneen bugin juurisyy on selvitetty ja dokumentoitu ennen korjausta
-  2. Admin-hyväksytyn paikan tallennettu sijainti (lat/lng) vastaa paikan oikeaa osoitetta
-  3. Hyväksytty paikka näkyy kartalla oikeassa kohdassa loppukäyttäjälle (regressiotestattu)
+  1. `/admin/[id]`-sivulla on uusi "Sijainti"-osio, joka näyttää paikan pinnin kartalla samalla SportPin/CalloutCard-tyylillä kuin pääsivun kartta
+  2. Kartta on zoomattava/pannattava, keskitetty paikan koordinaatteihin kiinteällä lähizoomilla (~15)
+  3. Pinin klikkaus näyttää CalloutCardin, mutta ei avaa venuepagea tai laukaise muuta navigointia
 **Plans**: TBD
 **UI hint**: yes
 
