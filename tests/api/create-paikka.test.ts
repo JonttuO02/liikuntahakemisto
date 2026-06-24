@@ -31,6 +31,7 @@ const mockLiikuntapaikatUpdateEq = vi.fn()
 const mockLiikuntapaikatSelectSingle = vi.fn()
 const mockLinksInsert = vi.fn()
 const mockLinksSelectSingle = vi.fn()
+const mockLiikuntapaikatDelete = vi.fn()
 
 vi.mock('@/lib/supabaseAdmin.server', () => {
   // business_accounts: .select('user_id').eq().maybeSingle() (ownership check)
@@ -54,7 +55,7 @@ vi.mock('@/lib/supabaseAdmin.server', () => {
   // liikuntapaikat: .insert(payload).select('id').single()
   //                 .update({is_claimed:true}).eq()
   //                 .select('nimi').eq().single()
-  //                 .delete().eq() (rollback path, unused in these tests)
+  //                 .delete().eq() (rollback path — configurable via mockLiikuntapaikatDelete)
   const liikuntapaikatBuilder = {
     insert: (payload: unknown) => {
       mockLiikuntapaikatInsert(payload)
@@ -71,15 +72,16 @@ vi.mock('@/lib/supabaseAdmin.server', () => {
       }
       return { eq: () => ({ single: () => mockLiikuntapaikatSelectSingle() }) }
     },
-    delete: () => ({ eq: () => Promise.resolve({ error: null }) }),
+    delete: () => ({
+      eq: (...args: unknown[]) => mockLiikuntapaikatDelete(...args),
+    }),
   }
 
-  // business_paikka_links: .insert({...}) -> {error}
+  // business_paikka_links: .insert({...}) -> {error} (configurable via mockLinksInsert)
   //                         .select('id').eq().eq().single()
   const linksBuilder = {
     insert: (payload: unknown) => {
-      mockLinksInsert(payload)
-      return Promise.resolve(mockLinksInsert.mock.results.length ? { error: null } : { error: null })
+      return Promise.resolve(mockLinksInsert(payload))
     },
     select: () => ({
       eq: () => ({
@@ -143,8 +145,9 @@ function setHappyPathMocks() {
   mockLiikuntapaikatInsertSingle.mockResolvedValue({ data: { id: 42 }, error: null })
   mockLiikuntapaikatUpdateEq.mockResolvedValue({ error: null })
   mockLiikuntapaikatSelectSingle.mockResolvedValue({ data: { nimi: 'Testihalli' }, error: null })
-  mockLinksInsert.mockImplementation(() => Promise.resolve({ error: null }))
+  mockLinksInsert.mockReturnValue({ error: null })
   mockLinksSelectSingle.mockResolvedValue({ data: { id: 7 }, error: null })
+  mockLiikuntapaikatDelete.mockResolvedValue({ error: null })
 }
 
 describe('POST /api/business/create-paikka', () => {
@@ -213,5 +216,48 @@ describe('POST /api/business/create-paikka', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body).toEqual({ ok: true, paikka_id: 42 })
+  })
+
+  // WR-03: normalizeNimi collapses internal whitespace server-side, even
+  // though the client also trims. Assert the route persists the
+  // whitespace-collapsed value, not the raw input.
+  it('persists whitespace-collapsed nimi when input has extra internal spaces', async () => {
+    setHappyPathMocks()
+    const req = makeRequest(
+      { ...VALID_BODY, yritysNimi: '  Fit   Life   Oy  ' },
+      VALID_AUTH_HEADER,
+    )
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    expect(mockLiikuntapaikatInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ nimi: 'Fit Life Oy' }),
+    )
+  })
+
+  // WR-05: the 23505 (unique_violation) conflict path must roll back the
+  // orphaned liikuntapaikat row and return 409.
+  it('returns 409 and rolls back the liikuntapaikat row on a 23505 link conflict', async () => {
+    setHappyPathMocks()
+    mockLinksInsert.mockReturnValue({ error: { code: '23505', message: 'duplicate key' } })
+    const req = makeRequest(VALID_BODY, VALID_AUTH_HEADER)
+    const res = await POST(req)
+    expect(res.status).toBe(409)
+    const body = await res.json()
+    expect(body.error).toBe('Already claimed')
+    expect(mockLiikuntapaikatDelete).toHaveBeenCalledWith('id', 42)
+  })
+
+  // WR-05: a generic (non-23505) link-insert failure must also roll back
+  // the orphaned liikuntapaikat row and return 500.
+  it('returns 500 and rolls back the liikuntapaikat row on a generic link-insert failure', async () => {
+    setHappyPathMocks()
+    mockLinksInsert.mockReturnValue({ error: { code: '23P01', message: 'some other db error' } })
+    const req = makeRequest(VALID_BODY, VALID_AUTH_HEADER)
+    const res = await POST(req)
+    expect(res.status).toBe(500)
+    const body = await res.json()
+    expect(body.error).toBe('Link insert failed')
+    expect(body.detail).toBe('some other db error')
+    expect(mockLiikuntapaikatDelete).toHaveBeenCalledWith('id', 42)
   })
 })
