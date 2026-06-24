@@ -61,8 +61,10 @@ export async function POST(request: Request) {
   }
 
   // D-06/D-07/D-08: combined company+branch name, no trailing-space artifact
-  // when toimipisteNimi is empty.
-  const nimi = toimipisteNimi ? `${yritysNimi} ${toimipisteNimi}` : yritysNimi
+  // when toimipisteNimi is empty. Re-cap after concatenation: each field is
+  // capped at 200 by normalizeNimi, but the combined value (200 + 1 + 200 =
+  // 401) must be re-capped to stay within the same 200-char display bound.
+  const nimi = (toimipisteNimi ? `${yritysNimi} ${toimipisteNimi}` : yritysNimi).slice(0, 200)
 
   // Step 1 of 4: INSERT into liikuntapaikat.
   // published=false: new venue hidden from users until admin approves (D-09, T-33-03-05).
@@ -98,11 +100,17 @@ export async function POST(request: Request) {
     // venue already linked. Mirrors the claim-paikka 23505→409 pattern; the
     // constraint is the safety net even though search/claim is removed.
     if (linkError.code === '23505') {
-      await supabaseAdmin.from('liikuntapaikat').delete().eq('id', newPaikkaId)
+      const { error: rollbackError } = await supabaseAdmin.from('liikuntapaikat').delete().eq('id', newPaikkaId)
+      if (rollbackError) {
+        console.error('[create-paikka] CRITICAL: rollback delete failed, orphaned row id=' + newPaikkaId, rollbackError.message)
+      }
       return NextResponse.json({ error: 'Already claimed' }, { status: 409 })
     }
     // Atomicity rollback (D-10): delete the orphaned liikuntapaikat row so user can retry.
-    await supabaseAdmin.from('liikuntapaikat').delete().eq('id', newPaikkaId)
+    const { error: rollbackError } = await supabaseAdmin.from('liikuntapaikat').delete().eq('id', newPaikkaId)
+    if (rollbackError) {
+      console.error('[create-paikka] CRITICAL: rollback delete failed, orphaned row id=' + newPaikkaId, rollbackError.message)
+    }
     return NextResponse.json(
       { error: 'Link insert failed', detail: linkError.message },
       { status: 500 }
