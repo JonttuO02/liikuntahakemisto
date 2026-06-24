@@ -318,7 +318,10 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
   3. Käyttäjä voi jatkaa kesken jäänyttä onboardingia valitsemalla paikan dashboardilta (siirtyy `/business/onboarding?paikka_id=X`)
   4. Tili, jolla on 2+ samanaikaista kesken jäänyttä onboardingia, näkee jokaisen erillisenä jatkettavana rivinä (ei yhtä booleania)
 
-**Plans**: TBD
+**Plans**: 1 plan (Wave 1)
+
+- [ ] 57-01-PLAN.md — Remove /business auto-redirect (BIZPANEL-04); extract deriveVenueStatus helper + Vitest precedence test; per-venue Kesken badge + Jatka resume CTA in VenueRow; statusKesken/jatkaCta i18n keys (FI/EN); human UAT checkpoint (BIZPANEL-05)
+
 **UI hint**: yes
 
 #### v3.0 Dependency Order
@@ -400,4 +403,4 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 | 54. Sijainti — karttapinni & osoitehaku | v3.0 | 3/3 | Complete    | 2026-06-23 |
 | 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 3/3 | Complete    | 2026-06-23 |
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 2/2 | Complete    | 2026-06-24 |
-| 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 0/0 | Not started | - |
+| 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 0/1 | Planned | - |
