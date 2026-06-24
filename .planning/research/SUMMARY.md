@@ -1,84 +1,99 @@
-# Research Summary — v3.0 "Oma tietokanta (Google Places -irtautuminen)"
+# Research Summary — Liikuntahakemisto v3.1
 
-**Project:** Liikuntahakemisto — local sports venue directory with business self-service onboarding  
-**Milestone:** v3.0 — Decommission Google Places, implement manual venue entry + AI category classification  
-**Domain:** Multi-tenant SaaS (Next.js 14 + Supabase) — migrating from API-sourced to user-submitted data  
-**Researched:** 2026-06-22  
-**Confidence:** MEDIUM-HIGH
-
----
+**Project:** Liikuntahakemisto (Finnish sports-venue directory)
+**Milestone:** v3.1 — Multi-user-per-company peer-to-peer access-request flow
+**Domain:** B2B SaaS team/workspace access — employee requests management access to shared venue, colleague approves
+**Researched:** 2026-06-24
+**Confidence:** HIGH (stack, architecture, pitfalls grounded in direct codebase inspection; features validated against industry patterns)
 
 ## Executive Summary
 
-v3.0 represents a fundamental shift: from syncing venue data via Google Places to having businesses manually enter their own venues. Five interrelated initiatives: (1) remove Google Places sync route and data, (2) implement map-pin + Places Autocomplete location picker, (3) rework claim/create to create-only with company/branch naming, (4) add AI sport-category to existing Claude call, (5) fix dashboard redirect bug.
+v3.1 adds multi-user-per-company business accounts with peer-to-peer access-request approval. This is a pure data-modeling and RLS-policy problem — the existing Postgres/Supabase stack handles it natively with no new dependencies. The core change introduces a `companies` table, a `business_access_requests` table, and RLS policies checking same-company membership.
 
-**Recommended approach:** No new npm dependencies (all stack elements exist or load dynamically). Prioritize data integrity via explicit row provenance checks before deletion. Keep onboarding focused with single map component and additive Claude prompt.
+**Recommended approach:** Add new tables as additive migrations, introduce `SECURITY DEFINER` SQL helper function (a proven pattern already used in this codebase), and sequence work in two layers: (1) schema/RLS foundation allowing multiple employees per company, then (2) UX layer (request form, pending list, approve/reject buttons, emails).
 
-**Central risk:** Cascade deletion through 5 FK relationships if business_managed=false used as proxy for "is Google data". Must cross-reference business_paikka_links.link_type to distinguish unclaimed Google rows from business-claimed rows carrying Google-origin data.
-
-**Success requires:** Strict phase sequencing: (1) redirect fix + cleanup decision (early, independent), (2) Sijainti location step, (3) Claude extension, (4) claim/create rework with backfill, (5) integration testing.
-
----
+**Key risks:** (1) RLS recursion, mitigated by `SECURITY DEFINER` functions; (2) Cross-row authorization requires database-level uniqueness constraints; (3) Pre-existing in-flight onboarding state requires careful coordination; (4) `UNIQUE(business_account_id, paikka_id)` constraint on `business_paikka_links` is load-bearing and must be explicitly reviewed.
 
 ## Key Findings
 
-### Stack: No New Packages
+### Recommended Stack
 
-- **@vis.gl/react-google-maps (already installed)** — Add 'places' to existing APIProvider
-- **google.maps.places.AutocompleteSuggestion (runtime-loaded)** — Modern replacement for deprecated Autocomplete
-- **google.maps.Geocoder (Maps JS API core)** — Already available via APIProvider
-- **@anthropic-ai/sdk (already installed)** — Extend single Claude call with sport-category JSON field (additive)
+No new runtime technologies. Build with **Postgres + Supabase RLS + Resend** (all existing).
 
-### Features: Three Layers Ship Together
+**Core technologies:**
+- **Postgres `companies` table** — New entity separate from login. Enables one-to-many employee logins per company.
+- **Postgres `business_access_requests` table** — Dedicated lifecycle table, separate from `business_paikka_links`.
+- **Supabase RLS + `SECURITY DEFINER` SQL functions** — Same-company checks via `current_company_id()` helper (existing pattern precedent).
+- **Postgres composite uniqueness** — `UNIQUE(business_account_id, paikka_id)` prevents double-claims.
+- **Resend (existing)** — Email notifications, reuses existing pattern with new templates.
 
-Must have: Location picker, single venue-name, dashboard never auto-redirects
-Should have: Company/branch naming, per-venue badge, reverse-geocode auto-fill
-Defer: Ketjuadmin, duplicate detection, auto-splitting
+### Expected Features
 
-### Architecture: Reuse Existing Patterns
+**Must have (P1):**
+- Employee-to-company data model + RLS rewrite (foundation)
+- Request-access entry point (venue name search)
+- Pending-request list on approver's dashboard
+- Approve/Reject buttons
+- Email notifications (request, approval, rejection)
+- RLS-enforced zero access for pending requester
+- Requester pending-state UI
 
-- **StepSijainti.tsx (NEW)** — Map pin + Places Autocomplete, bidirectional sync
-- **StepPaikka.tsx (REWORK)** — Collects company + branch names with live preview
-- **app/business/page.tsx (FIX)** — Remove redirect, show per-venue "Kesken" badges
-- **Migration order (CRITICAL):** Redirect fix → sijainti column → Sijainti code → claim/create rework → testing
+**Should have (P2):**
+- Audit log of request/approval actions
+- Self-service remove-colleague
 
-### Critical Pitfalls (Top 5 of 9)
+**Defer (P3+):**
+- Role levels (owner vs. member)
+- Request expiry/reminders
+- In-app notification badge
+- Domain-based auto-approval (explicitly rejected)
 
-1. **Cascade deletion via naive business_managed filter** — Must query link_type first to categorize rows
-2. **Sync removal removes hours freshness** — Decide unclaimed venue fate before route removal
-3. **Double Maps JS API load** — Verify /business/onboarding inside existing provider tree
-4. **Session tokens per keystroke** — Multiplies billing 10-100x; use useRef + monitor
-5. **Storing place_id violates ToS** — Destructure only {lat, lng, osoite} before writes
+### Critical Pitfalls
+
+1. **RLS same-table-recursion** — Use `SECURITY DEFINER` helper like existing pattern
+2. **Service-role write paths** — Code must re-verify ownership, never assume RLS protection
+3. **TOCTOU race on approval** — `UNIQUE(requester_account_id, paikka_id)` prevents duplicate pending requests
+4. **Constraint change** — `UNIQUE(paikka_id)` to `UNIQUE(business_account_id, paikka_id)` is load-bearing
+5. **Cross-row authorization queries** — Require EXPLAIN ANALYZE review for performance
+
+## Implications for Roadmap
+
+### Phase 1: Multi-user Data Model & RLS Foundation
+**Rationale:** Foundation layer — must exist before Phase 2
+**Delivers:** `companies` table, `business_accounts.company_id` FK, RLS rewrite, `current_company_id()`, constraint update, backfill
+**Research flags:** YES — RLS performance verification during `/gsd-plan-phase`. Recommend EXPLAIN ANALYZE.
+
+### Phase 2: Request Submission & Approval UX
+**Rationale:** UX layer — builds on Phase 1
+**Delivers:** `business_access_requests` table, request handler + form, request list, approve/reject handler, 3 email templates, requester pending-state UI
+**Research flags:** NO — well-documented SaaS patterns (Slack, GitHub). Minimal novel risk.
+
+### Phase 3: Audit Logging (Optional, P2)
+**Rationale:** Cheap insurance — append-only table, no UI at launch
+**Delivers:** `business_access_log` table, logging triggers
+**Research flags:** NO — straightforward append-only. Can defer after Phase 2.
 
 ---
 
-## Implications for Roadmap: 5 Phases
+## Confidence Assessment
 
-**Phase 1: Redirect Fix + Cleanup** (independent, early)  
-**Phase 2: Sijainti Location Picker** (foundation for new create flow)  
-**Phase 3: Claude Sport Category** (ready for Paikka integration)  
-**Phase 4: Claim/Create Rework + Backfill** (largest, depends on 2-3)  
-**Phase 5: Integration Testing** (validates all together)
+| Area | Confidence | Notes |
+|------|------------|-------|
+| Stack | HIGH | Direct inspection of existing migrations validates. No new dependencies. |
+| Features | HIGH | Validated against Slack/GitHub/Notion patterns. Grounded in scope. |
+| Architecture | HIGH | Components identified from codebase. Sequencing forced by dependencies. |
+| Pitfalls | HIGH | Direct schema inspection, existing TOCTOU precedent, Postgres anti-patterns. |
 
-All phases have HIGH-confidence grounding. No research-phase tasks needed.
+**Overall confidence:** HIGH
 
----
+### Gaps to Address
 
-## Confidence & Gaps
-
-**Overall: MEDIUM-HIGH** — Codebase-grounded, minor gaps on cost/ToS empirics
-
-- Stack: MEDIUM-HIGH (empirical billing validation deferred to post-launch)
-- Features: MEDIUM-HIGH (naming UX uncertain until UAT)
-- Architecture: HIGH (backfill untested with real data)
-- Pitfalls: HIGH (Pitfalls 4 & 5 need live Google docs re-check)
-
-**During planning:** (1) Implement Places API cost monitoring, (2) Pre-deploy staging validation, (3) Re-check Google ToS, (4) Confirm screenshot status.
+1. **RLS performance** — Query plans must be validated against production-scale data
+2. **Approval workflow edge cases** — Product decisions on duplicate requests, deleted logins
+3. **Multi-employee testing** — Fixtures may assume single-employee accounts
+4. **Backfill completeness** — Pre-phase audit of in-flight onboarding_draft rows
 
 ---
 
-## Ready for Roadmap
-
-Status: Synthesis complete. All four research documents synthesized. 5-phase structure derived.
-
-Research completed: 2026-06-22
+**Research completed:** 2026-06-24
+**Ready for roadmap:** YES

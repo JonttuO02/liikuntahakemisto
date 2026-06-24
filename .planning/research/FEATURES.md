@@ -1,17 +1,21 @@
 # Feature Research
 
-**Domain:** Business onboarding for a local-listing / directory marketplace — manual venue creation, map-based location placement, dashboard draft-resume UX, naming conventions for self-entered chain/single-location business names
-**Researched:** 2026-06-22
-**Milestone:** v3.0 Oma tietokanta (Google Places -irtautuminen)
-**Confidence:** MEDIUM-HIGH (Google Business Profile guidelines are HIGH confidence/official; general onboarding-UX and map-picker patterns are MEDIUM — synthesized from multiple industry sources, not a single authoritative spec; codebase findings are HIGH confidence since they're read directly from the actual implementation)
+**Domain:** B2B SaaS team/workspace access — "request access to a shared resource, owner approves" pattern, applied to multi-employee-per-company venue management for a small Finnish local-business directory
+**Researched:** 2026-06-24
+**Milestone:** v3.1 — saman yrityksen sisäinen hallintaoikeuspyyntö (intra-company access-request feature)
+**Confidence:** MEDIUM-HIGH (the request/approve pattern itself is extremely well-established — Slack workspace join requests, Figma/Notion team access requests, GitHub org access requests, generic IAM access-request tooling all converge on the same shape; this is a well-trodden UX problem, not a novel one. Codebase-specific dependency claims are HIGH confidence — read directly from migrations.)
 
 ## Context From Existing Codebase
 
-Before recommending anything, three load-bearing facts from the current implementation constrain every recommendation below:
+Three load-bearing facts from the current schema constrain every recommendation below (see `supabase/migrations/20260605000000_business_accounts.sql`):
 
-1. **`app/business/page.tsx` (lines 191-200) currently has the exact bug item 3 asks to fix**: on every dashboard load it queries `onboarding_draft` for the logged-in business, and if *any* row exists it unconditionally `router.push('/business/onboarding')` — no UI, no opt-out, no per-venue indicator. This must become a dashboard-visible badge per venue, not a redirect.
-2. **`onboarding_draft` is already venue-scoped** (`UNIQUE(business_account_id, paikka_id)`, FK to `liikuntapaikat.id`) — multi-venue draft tracking needs no new schema, only a query change (fetch all drafts, not just check existence) and UI to surface them per `VenueRow`.
-3. **`ClaimSearchForm.tsx`'s `create` step already collects `nimi` (single name field) + `osoite` (free-text address) + `kaupunki` (dropdown)** — this is the exact flow item 2 and 3 of FEATURES below replace. The "search for existing venue" step (`step: 'search'`) becomes dead code once Google-sourced venues are deleted — there is nothing left to search.
+1. **`business_accounts.user_id` is the PRIMARY KEY, FK'd 1:1 to `auth.users(id)`.** There is currently no concept of "a company" as an entity independent of its single login — the account *is* the company. Multi-employee-per-company requires either (a) a new `company_id` that multiple `business_accounts` rows point to, or (b) keeping `business_accounts` as today's "company" row and adding a separate `business_employees`/`business_users` table that maps `auth.users.id` → `business_accounts.user_id` (the company). Option (b) is far less invasive — it adds a join table rather than restructuring the existing 1:1 FK that `business_paikka_links`, `business_branding`, RLS policies, onboarding, and Resend emails all already key off of.
+2. **`business_paikka_links.business_account_id` has `UNIQUE(paikka_id)`** — one venue is linked to exactly one `business_accounts.user_id` today. The new feature does NOT need to break this uniqueness: the venue still belongs to one `business_accounts` row (the "company"); what's new is that *multiple employee logins* should be able to manage on behalf of that same `business_accounts` row. This is an important scope boundary — this is an **employee-to-company linking problem**, not a multi-owner-per-venue problem.
+3. **All existing RLS policies use `auth.uid() = business_account_id` / `auth.uid() = user_id`.** Every employee who should be able to manage a venue needs their own `auth.uid()` to resolve to the same `business_account_id` for RLS purposes — meaning RLS policies must change from "uid equals the row" to "uid is a member of the company that owns the row," which is the central technical complexity of this feature, independent of the request/approve UX layer.
+
+This means the request-access feature has **two layers that must not be conflated**:
+- **Layer A (data model):** how a second employee login becomes linked to the same company at all — this is the harder, schema-changing part.
+- **Layer B (request/approve UX):** the actual "ask colleague, colleague approves" flow this research question is about — this is the well-understood, lower-complexity part once Layer A exists.
 
 ## Feature Landscape
 
@@ -19,112 +23,122 @@ Before recommending anything, three load-bearing facts from the current implemen
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Map pin + address-autocomplete combined location picker | Every modern local-listing/marketplace onboarding (Uber Eats merchant signup, DoorDash, Airbnb host map step, Google Business Profile) pairs a search box with a draggable/clickable pin — users expect to type an address AND fine-tune visually | MEDIUM | Bidirectional sync: autocomplete selection moves pin + zooms map; pin drag/click reverse-geocodes back into the address field. Use Google Places Autocomplete (per STACK.md, ephemeral use only) + click listener on existing `@vis.gl/react-google-maps` instance. Store only `lat/lng` + the user-typed address string — no Places `place_id` retained (per milestone goal of full Google Places decoupling) |
-| Single required venue name field at creation time | Every directory/marketplace (Yelp Add Business, Google Business Profile, Foursquare) requires exactly one "name" field before anything else — it's the anchor identity of the listing | LOW | Already exists (`createNimi` in `ClaimSearchForm`) — keep as the single source-of-truth field, see naming-convention section below for how chains should fill it |
-| "Cannot find / does not exist yet → create new" entry path | Standard pattern across Yelp, Google Business Profile, TripAdvisor — but in this milestone it becomes the *only* path since the searchable database of Google-sourced venues is being deleted entirely | LOW | This isn't really "table stakes to add" — it's the entire claim flow collapsing into create-only. See Anti-Features below: do not keep a non-functional search step |
-| Required-field validation before submit (name, address/pin) | Universal form-UX expectation — users get inline errors, not silent failures | LOW | Already exists (`errorNameRequired`, `errorAddressRequired` in `ClaimSearchForm`) — extend to require a pin placement too |
-| Visible status/progress indicator for incomplete setup tasks | Progress bars and incomplete-state framing are a documented universal SaaS-onboarding pattern (Zeigarnik effect: visible incompleteness drives completion) — directly informs item 3 | LOW-MEDIUM | Reuse existing `ProgressBar.tsx` step-indicator pattern from the wizard; just needs new placement on `VenueRow` in the dashboard |
-| Dashboard never blocks access to existing functional views behind a forced wizard | Users expect dashboards to be the home base; forced redirects to setup flows (without an explicit "skip"/"later" affordance) are a widely criticized anti-pattern in onboarding UX literature | LOW | This is literally the bug being fixed — replace the `router.push` redirect with a badge + resume CTA |
+| "Request access" entry point for a new employee | Every team-based SaaS (Slack, Notion, Figma, Linear, GitHub orgs) lets a new user signal "I belong to this org, let me in" rather than forcing an admin to pre-provision every account — this is the literal feature being requested | LOW-MEDIUM | New employee registers a normal `business_accounts`-style login, then searches/selects the existing company (by name or by the venue they want to manage) and submits a request. Needs a lightweight company lookup — could be venue name search rather than company name search, since employees know "the gym I work at," not necessarily the exact registered company string |
+| Pending-request list visible to the approver | Universal expectation — Slack shows pending join requests to workspace admins, GitHub shows pending org access requests to org owners, Notion shows pending member requests to workspace admins. Users expect a clear inbox-like list, not a buried setting | LOW | Render as a card/list inside the existing `/business` dashboard — reuse the visual language already established for venue status pills (`VenueRow` claim_status pattern) rather than inventing a new UI module |
+| Approve / Reject buttons with immediate effect | The core verb of the entire pattern — without one-click approve/reject the feature doesn't exist | LOW | Two buttons, optimistic UI update, RLS-guarded mutation restricted to existing members of that company only |
+| Email notification to the approver when a request arrives | Async B2B SaaS workflows assume the approver is not staring at the dashboard when the request lands — every reference pattern (Slack, GitHub, IAM tools) notifies by email/Slack so the requester isn't left hanging indefinitely | LOW-MEDIUM | Reuse the existing Resend integration and email-template patterns already built for admin approval notifications (`ADMIN-01`/`ADMIN-04` from v1.7) — same provider, same general shape, new template |
+| Email notification to the requester on approval/rejection | Mirrors the existing admin→business approval/rejection email pattern (`ADMIN-04`) — the requester needs to know the outcome without polling the login page | LOW | Same Resend pattern; reject should optionally carry a reason, mirroring the existing admin-rejection-with-reason UX already shipped in v1.7 (`ADMIN-03`) |
+| Clear "pending" state shown to the requester while waiting | Users abandon or retry-spam when there's no feedback after submitting a request — every pattern surveyed (Slack "Your request is pending," GitHub "Request pending owner approval") shows an explicit waiting state | LOW | Show a simple "Pyyntö lähetetty, odottaa hyväksyntää" screen/banner on the requester's own dashboard, gating their access to the venue's management UI until approved |
+| Requester sees only what they're allowed to see while pending | Critical security/trust expectation — a pending request must not leak existing venue data, edit access, or other employees' info before approval | LOW-MEDIUM | RLS must explicitly NOT grant any `business_paikka_links`/venue-management read or write until the request transitions to `approved` — pending state should be invisible to all RLS-gated venue tables |
 
 ### Differentiators (Competitive Advantage)
 
+Genuinely optional for this app's size and audience — call out clearly that none of these are required for v3.1.
+
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Explicit "Yrityksen nimi" (company/brand) + "Toimipisteen nimi" (branch/location) two-field pattern for chains | Solves the exact chain-naming ambiguity that generic directories get wrong (see naming convention section) — sports-venue chains (e.g. a gym franchise with several Tampere locations) are common in this domain and a single free-text name field produces inconsistent, duplicate-looking listings ("Liikuntakeskus X Hervanta" vs "X Hervannan toimipiste" vs "X — Hervanta") | MEDIUM | New optional UI fields composing into the existing single `nimi` column (no schema split needed — see Naming Convention section) to avoid migrating every reader of `liikuntapaikat.nimi` (cards, map pins, search, SEO titles) |
-| Per-venue onboarding-progress badge directly inside the existing venue list (not a separate "drafts" page) | Surfaces actionable state exactly where the business owner already looks (BIZPANEL-01 dashboard) — zero new navigation, lower cognitive load than a generic "drafts" inbox | LOW-MEDIUM | Render inline in `VenueRow`: badge ("Onboarding kesken") + "Jatka" CTA linking to `/business/onboarding?paikka_id=X`. Reuses existing claim_status badge visual language (amber/green/red pills already in `VenueRow`) |
-| Reverse-geocode-assisted address text (auto-fills the free-text address field from the dropped pin) | Reduces manual typing error vs a fully free-text address field; still keeps human-authored text per milestone's "tallennetaan vain lat/lng + käyttäjän kirjoittama osoite" requirement | LOW-MEDIUM | Use Google Geocoding API reverse lookup only to *suggest* text into the address input on pin-drop — user can edit/override it, so the stored value stays "user-written" even if seeded by reverse geocoding |
-| AI sport/category suggestion at onboarding (PROJECT.md target feature, adjacent to this question's scope) | Not one of the 4 items asked about directly, but shares the same StepPaikka/onboarding surface — flagged here only as a sequencing dependency, not designed in this document | — | See Dependencies section — do not conflate with the Sijainti step's own scope |
+| Role levels (owner vs. member/editor) | Lets the original registrant retain exclusive rights (e.g. only the owner can remove other employees, change billing-adjacent settings) while employees get day-to-day editing rights | MEDIUM | Only worth building if there's a near-term need to restrict *some* actions to the original company registrant (e.g. deleting the venue, changing company name). For pure "can edit the venue" parity between colleagues, a flat member list with no role distinction is simpler and matches the stated milestone scope ("toinen työntekijä... olemassaolevaan paikkaan") — defer unless a concrete asymmetric-permission need surfaces |
+| Audit log of who approved/requested/acted when | Valuable for trust and dispute resolution ("who changed our opening hours?") once a company has 3+ logins | LOW-MEDIUM | Cheap to add incrementally — a single `business_access_log` table (actor_id, action, target, timestamp) appended to on every request/approve/reject/edit. Worth doing even at MVP if cheap, since it's an append-only insert with no UI requirement at launch — UI for viewing it can come later. Low risk to add now, can be silently deferred without harming the core flow if time-constrained |
+| Self-service "remove a colleague's access" | Mirrors "leave workspace"/"remove member" patterns in Slack/Notion/GitHub — lets companies prune access without contacting support | LOW-MEDIUM | Natural follow-on once the employee-list concept exists; not required for the initial ask-and-approve loop, but the underlying schema (a join table of employees-per-company) should be designed so this is a simple `DELETE`/status-flip later, not a redesign |
+| In-app notification badge (in addition to email) | Reduces reliance on checking email; matches modern SaaS dashboards (Slack bell icon, GitHub notification dot) | LOW | Nice but skippable — email-only is sufficient for a small, low-volume Finnish local-business audience where multi-employee companies will be the minority case, not the majority workflow |
+| Request expiry / auto-cancel after N days | Prevents stale pending requests from cluttering the approver's list indefinitely | LOW | Low priority at this scale — manual reject is sufficient; defer until real usage shows abandoned requests piling up |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|------------------|-------------|
-| Keeping a "search existing venues" step even with an empty/near-empty table | Feels safer to preserve the existing UI shape (`ClaimSearchForm`'s `search` → `claim` → `create` three-step state machine) and avoid touching working code | After the Google-sourced data deletion, the search step will almost always return zero results (only previously self-created venues remain) — this adds a dead click-through step, increases time-to-create, and the `is_claimed`/`claim` UI branch becomes unreachable dead code that still needs maintaining | Collapse `ClaimSearchForm` to a single `create`-only flow (remove `step: 'search'` and `step: 'claim'` entirely, plus `/api/business/claim-paikka` becomes unused — flag for removal in this milestone's cleanup phase) |
-| Auto-redirecting straight back into onboarding whenever a draft exists (current behavior) | Seems like "helpful" forced continuity — guarantees the business finishes setup | Removes user agency, breaks the dashboard's role as home base, makes it impossible to view other venues' status, manage profile, or use the map while one venue's onboarding is incomplete — this is the literal bug being fixed in item 3 | Always render the dashboard; show a non-blocking per-venue "kesken" badge + explicit "Jatka onboardingia" button |
-| Free-text "branch name" field with zero guidance, no template/example | Looks like maximum flexibility for businesses | Produces inconsistent display names across the directory (some show "Liikuntakeskus X", others "X Hervanta", others "X - Hervannan toimipiste, 2 krs") which look unprofessional side-by-side on a map/list and hurts search/sport-filter UX | Provide a clear composed-name convention with a live preview of how the name renders on `PaikkaKortti`/map pin before submit (see Naming Convention) |
-| Allowing the pin to be placed without ever opening the map (lat/lng defaulted to city centroid or geocoded-only) | Saves a step, feels faster for businesses in a hurry | Produces systematically wrong pin clusters at city center — a known failure mode of geocode-only location entry; defeats the entire purpose of MAP-* features (Sponsored badge, distance sort, GPS recenter) since this venue's distance numbers would be wrong | Always require an explicit pin placement (click or drag) before allowing "Next"; autocomplete only assists, never fully substitutes for the pin |
-| Allowing onboarding resume only via re-finding/re-searching the venue (old claim-flow pattern) | Matches the old `ClaimSearchForm`-driven UX where users found-then-resumed | Forces the business to remember which venue name they used and search for it again — friction that increases abandonment, defeats the purpose of item 3 | Resume must be a one-tap link from the dashboard's per-venue badge — no search step required |
+| Full RBAC system (custom roles, granular per-field permissions) | Looks "enterprise-grade" and future-proof | Massive overbuild for a small Finnish sports-venue directory where most companies will have 1-3 employees total; adds permission-matrix UI, more RLS complexity, more support burden, and no current requirement asks for it — directly conflicts with the project's "small local-business app" scale | Flat membership model: an employee is either a member-with-edit-access of the company or not. Re-evaluate only if real usage shows a concrete asymmetric-permission need (e.g. disputes over who can delete a venue) |
+| Auto-approve based on matching email domain (e.g. anyone @company.fi auto-joins) | Feels like it removes friction for "obviously legitimate" colleagues | Finnish small businesses very commonly use generic consumer email domains (gmail.com, outlook.com) rather than a custom company domain, so domain-matching would either fail to help most users or, worse, wrongly auto-approve unrelated people who happen to share a domain (gmail.com is everyone) — a real security hole for a feature whose entire purpose is gatekeeping | Keep human-in-the-loop approval always required — it's the explicit design intent already stated in the milestone ("nykyinen hallitsija hyväksyy/hylkää") and is also the correct security model given Finland's email-domain reality |
+| Allowing a request to silently auto-approve if no one responds within X hours | Looks like it solves the "what if the approver is unavailable" problem | Defeats the entire purpose of gatekeeping — an unattended request becoming access is exactly the failure mode B2B access-request systems exist to prevent; for a venue-management context this could let an unverified person edit pricing/hours/contact info unsupervised | If approver unresponsiveness becomes a real support issue, address it with a reminder email (resend notification after N days), never with silent auto-grant |
+| Letting the requester pick their own role/permission level when requesting | Seems user-friendly ("let them self-describe what they need") | Self-asserted permission level is a textbook privilege-escalation anti-pattern — the approver, not the requester, must be the one who decides what access is granted | Requester submits a plain request ("I'd like to help manage [venue]"); approver's approve action is what grants access, with no role selector needed at MVP (ties to flat-membership recommendation above) |
+| Building a generic "organization/teams" abstraction reusable across future unrelated features | Looks architecturally elegant and future-proof | Premature abstraction — this milestone has one concrete need (shared venue management within a company); building a generic multi-purpose teams system risks scope creep, delays shipping, and may not even fit whatever the *next* real multi-user need turns out to be | Build the minimal join table needed for this feature (employee ↔ company ↔ access-request status) and let it evolve later if/when a second real use case appears — consistent with this project's existing pattern of avoiding speculative generality (e.g. Ketjuadmin explicitly deferred in PROJECT.md rather than designed preemptively) |
+| Real-time (websocket/polling) live update of the pending-request list | Feels modern and responsive | Unnecessary complexity for a feature where requests will be rare (maybe one every few months per company) — this is a low-frequency, low-urgency interaction, not a chat app | Standard request/response: dashboard re-fetches pending requests on page load/navigation, exactly like the existing admin approval queue (`/admin`) already does with no real-time layer |
 
 ## Feature Dependencies
 
 ```
-[Map pin + autocomplete location step]
-    └──requires──> [StepPaikka rework: collect nimi + lat/lng + osoite together, not via ClaimSearchForm pre-step]
-                       └──requires──> [Schema: liikuntapaikat.latitude/longitude already exist (confirmed in app/business/page.tsx VenueLiikuntapaikka type) — no new columns needed for coordinates]
+[Employee-to-company link (Layer A: data model)]
+    └──requires──> [New table: business_employees or business_company_members
+                     (auth.users.id ↔ business_accounts.user_id "company" anchor, with status: pending/approved/rejected)]
+                       └──requires──> [RLS policy rewrite: every policy currently checking
+                                        auth.uid() = business_account_id must become
+                                        auth.uid() IN (SELECT user_id FROM business_employees
+                                          WHERE company_id = business_account_id AND status = 'approved')]
 
-[Claim-flow collapse to create-only]
-    └──requires──> [Google Places venue data deletion (separate milestone task — must land before or alongside this, or ClaimSearchForm's search step still returns stale claimable rows)]
-    └──conflicts──> [Keeping /api/business/claim-paikka route and is_claimed UI branch — both become dead code]
+[Request-access UX (Layer B: this research's scope)]
+    └──requires──> [Employee-to-company link table existing first — Layer B is pure UI/notification
+                     work on top of Layer A's schema; cannot be built before Layer A lands]
+    └──requires──> [Venue/company lookup for the requester — must let a new employee find
+                     "the colleague's company" without already having access to it
+                     (e.g. search by venue name, not by internal company_id)]
 
-[Dashboard draft-resume badge]
-    └──requires──> [Query change in app/business/page.tsx: fetch onboarding_draft rows (not just .limit(1) existence check), join/match against venueLinks by paikka_id]
-    └──enhances──> [Existing VenueRow status-badge visual pattern (claim_status pills) — extend with a 4th visual state, not a parallel system]
+[Approve/reject buttons on existing colleague's dashboard]
+    └──requires──> [Pending-request list query scoped to companies the logged-in employee
+                     already belongs to as 'approved' — must not let a pending requester
+                     see or approve their own request]
 
-[Naming convention (Yritys — Toimipiste pattern)]
-    └──enhances──> [StepPaikka / create-venue form UI — add a second optional input + live-preview composition]
-    └──conflicts──> [Single free-text nimi field with no structure — cannot coexist with a clean chain-naming guarantee]
+[Email notifications (request submitted, approved, rejected)]
+    └──enhances──> [Existing Resend integration (ADMIN-01/04 pattern from v1.7)]
+    └──reuses──> [Existing email-template conventions, not a new provider/integration]
 
-[AI sport/category suggestion (PROJECT.md adjacent feature, not designed here)]
-    └──shares-surface-with──> [StepPaikka rework] — sequence both StepPaikka changes (location + AI category) in the same phase to avoid touching this component twice
+[Audit log (differentiator, optional)]
+    └──enhances──> [Employee-to-company link table — independent append-only addition,
+                     does not block or get blocked by the core request/approve flow]
+
+[Role levels: owner vs member (differentiator, optional)]
+    └──conflicts──> [Flat membership model recommended for MVP — adding roles later means
+                      adding a role column to the same join table, not a redesign, so deferring
+                      this does not create technical debt]
 ```
 
 ### Dependency Notes
 
-- **Map pin step requires StepPaikka rework, not a new component bolted onto ClaimSearchForm:** Since `ClaimSearchForm`'s search/claim machinery is being removed, the location-and-name collection logically belongs in (or replaces) `StepPaikka.tsx` inside the wizard itself, run once per new venue, rather than as a pre-wizard gate. This avoids splitting venue-creation logic across two different components with two different submit paths.
-- **Claim-flow collapse requires the Google Places data deletion to land first (or at least the same phase):** if old Google-sourced rows remain queryable, the dead "search" step will still show results, contradicting the "every business creates from scratch" requirement and confusing testers.
-- **Dashboard badge enhances rather than replaces the existing status-pill pattern:** `VenueRow` already renders a `claim_status` pill (approved/rejected/pending). The new "onboarding kesken" indicator should visually sit alongside or above that pill as a distinct state (a venue can simultaneously be "pending admin approval" AND have no draft, or have a draft and not yet be submitted at all — these are different axes and must not be merged into one enum).
-- **Naming convention conflicts with leaving `nimi` as unstructured free text:** any chain-naming guidance is cosmetic/voluntary unless the UI actively composes the string for the user. Recommend a light-touch solution (template + live preview, see below) rather than a backend schema split, to avoid migrating every reader of `liikuntapaikat.nimi` (PaikkaKortti, DiagonaalKortti, map pins, SEO `<title>`, search `ilike`).
-- **AI sport/category suggestion shares StepPaikka's surface:** both this feature and the map/Sijainti step touch `StepPaikka.tsx` — sequence them in the same phase rather than two separate phases that each re-touch the same component.
-
-## Naming Convention Recommendation (Concrete, Implementable)
-
-Based on Google Business Profile's official multi-location guidance (HIGH confidence — official source) and observed patterns from Yelp/marketplace onboarding (MEDIUM confidence — industry convention, not a single spec):
-
-**Rule set to implement in the create-venue form:**
-
-1. **Single-location business:** one name field, no special handling. E.g. `"Tampereen Squash-keskus"`.
-2. **Chain / multi-location business:** present **two inputs** in the create form:
-   - `Yrityksen nimi` (brand name) — e.g. `"FitLife Gym"`
-   - `Toimipisteen sijainti` (location/branch identifier) — e.g. `"Hervanta"` or `"Keskusta"`
-   - The form **auto-composes** the stored `nimi` field as `"{Yrityksen nimi} {Toimipisteen sijainti}"` (space-separated, Google's own pattern: `"Starbucks Stockholm"`, not a dash) — show this composed string live as a preview label above the submit button, consistent with the live-preview convention already established elsewhere in the wizard (`LivePreviewPane.tsx` per CLAUDE.md).
-   - **Do not** default to em-dash or pipe separators (`"FitLife Gym — Hervanta"`) — Google's own examples and most directory conventions use a plain space-joined city/branch suffix, which reads more naturally in Finnish address-adjacent contexts and avoids inconsistent dash/space rendering across truncated card/pin labels.
-3. **Detect "is this a chain" with a simple yes/no toggle**, not automatic inference — asking the business directly ("Onko tämä yksi useista toimipisteistä?") is simpler and more reliable than trying to detect duplicate brand names server-side, and avoids a false-positive UX where a single coincidentally-named venue gets treated as a chain.
-4. **Capitalization rule:** Title Case for the composed name, normalized server-side on save (first letter of each significant word capitalized; Finnish stopwords like `ja`, `tai` lowercase) — prevents all-caps or all-lowercase manual entry from degrading visual consistency on cards/map pins. Implement as a pure function (e.g. `lib/nimiNormalisointi.ts`) following the existing `lib/lajit.ts`/`lib/aukiolo.ts` single-source-of-truth convention already established in this codebase, rather than inline formatting in the form component — keeps it testable and lets it also be applied to AI-suggested names (the website-scraper AI step may also propose a venue name).
-5. **Do not enforce uniqueness server-side at MVP** — two different "Liikuntakeskus" chains in different cities can legitimately share a brand name; rely on `osoite`/`kaupunki` + map position for disambiguation, consistent with how the existing same-address pin-clustering (MAP-09) already disambiguates visually.
+- **Layer A (employee-to-company schema) must land before Layer B (request/approve UX) — they cannot be built in parallel.** Layer B's entire UI (request form, pending list, approve/reject buttons) reads and writes rows in whatever table Layer A creates. Sequence these as two plans within the same phase, or as two phases with A strictly before B, not as parallel work.
+- **RLS rewrite is the highest-complexity, highest-risk piece, not the request/approve UI.** Every existing RLS policy on `business_paikka_links`, `business_branding`, and any future business-scoped table keys off `auth.uid() = business_account_id`. Changing this to a subquery against a membership table touches every table the business portal already relies on — this needs careful regression testing (existing single-employee companies must keep working exactly as before; this is an additive capability, not a replacement of the existing single-login flow).
+- **The venue/company lookup step is a small but easy-to-miss piece.** Unlike the admin approval flow (where the admin already sees every pending business registration), here the *requesting employee* needs a way to find "my colleague's existing company" without already having access to it — likely a venue name search (since employees know their workplace's public name) that resolves to the underlying `business_accounts` row, rather than requiring the employee to know any internal ID.
+- **Audit log and role levels are both decoupled enhancements** — neither blocks nor is blocked by the core request/approve loop, and both can be added later without schema rework if the join table is designed with a `status` and (for audit) an append-only action log from day one. Recommend including audit logging at MVP since it is cheap insurance; recommend deferring role levels since flat membership matches the stated requirement exactly.
+- **This feature explicitly does NOT touch `business_paikka_links`'s `UNIQUE(paikka_id)` constraint** — the venue still has exactly one owning `business_accounts` row (the company); what changes is how many `auth.users` logins can act on behalf of that one company row. Conflating this with "multiple companies can co-manage one venue" would be solving a different, out-of-scope problem (closer to the already-deferred Ketjuadmin idea, which is the inverse: one company managing multiple venues — not relevant here).
 
 ## MVP Definition
 
-### Launch With (v1 — this milestone)
+### Launch With (v1.1 — this milestone)
 
-- [ ] Sijainti step: map + Places Autocomplete combined picker (click-to-pin, search-to-pin+zoom), storing only `lat/lng` + user-edited address text — essential per milestone goal of full Google Places sync decoupling
-- [ ] `ClaimSearchForm` collapsed to create-only (remove search/claim branches, dead-code `/api/business/claim-paikka`) — essential because there is nothing left to search once Google-sourced rows are deleted
-- [ ] Chain naming: two-field (`Yrityksen nimi` + `Toimipisteen sijainti`) input with yes/no chain toggle, client-composed `nimi`, live preview — essential to avoid an immediate naming-quality regression once Google's canonical names disappear
-- [ ] Name normalization function (Title Case, Finnish stopword handling) applied on save — essential, low cost, prevents a visible quality drop on day one
-- [ ] `/business` dashboard: remove auto-redirect; add per-venue "Onboarding kesken" badge + "Jatka" resume link — essential, this is literally the reported bug
+- [ ] New employee registration flow that, instead of (or in addition to) creating a brand-new company, lets the employee search for and request to join an existing company via the venue it manages — essential entry point for the whole feature
+- [ ] `business_employees`-style join table: `auth.users.id`, company anchor (`business_accounts.user_id`), `status` (`pending`/`approved`/`rejected`), `created_at` — essential data model, smallest viable shape
+- [ ] RLS policy updates on `business_paikka_links` (and any other company-scoped tables touched by day-to-day venue management) to check membership via the join table instead of direct `auth.uid() = business_account_id` equality — essential, this is what actually grants the new employee real access once approved
+- [ ] Pending-request list on the approving colleague's `/business` dashboard with Approve/Reject buttons — essential, the core UX ask
+- [ ] Resend email to the existing colleague(s) when a request arrives — essential, mirrors `ADMIN-01` precedent already shipped
+- [ ] Resend email to the requester on approval or rejection (with optional reason on rejection, mirroring `ADMIN-03`) — essential, closes the loop so the requester isn't left guessing
+- [ ] "Request pending" waiting state shown to the requester, with explicit RLS-enforced zero access to venue data until approved — essential security/trust requirement
 
 ### Add After Validation (v1.x)
 
-- [ ] Reverse-geocode-assisted address text auto-fill on pin drop (nice UX polish, not blocking — manual address typing already satisfies the requirement)
-- [ ] Server-side duplicate-name/duplicate-location fuzzy warning ("a venue with a similar name already exists nearby — is this the same place?") — valuable once enough self-sourced data accumulates to make false-duplicate creation a real risk
-- [ ] Admin-side surfacing of which venues are "draft, never submitted" vs "submitted, pending" — useful for admin queue triage once volume grows
+- [ ] Audit log of access-request and approval actions (who requested, who approved, when) — cheap, low-risk to add even at MVP if time allows; otherwise first thing to add after launch
+- [ ] Self-service "remove a colleague's access" from the dashboard — natural follow-on once the membership table exists and the first real multi-employee company exists in production
+- [ ] In-app notification badge in addition to email — only worth it once real usage shows email-only is insufficient
 
 ### Future Consideration (v2+)
 
-- [ ] Ketjuadmin (single account managing multiple branches with shared brand identity/logo across locations) — already flagged as deferred in PROJECT.md "Future" section; the naming convention above is designed to not block this later feature (brand name input can later become a shared `chains` table FK without breaking existing composed-name strings already saved)
-- [ ] Automatic chain detection via fuzzy brand-name matching across existing venues — defer until there's enough self-sourced volume to make this useful rather than noisy
+- [ ] Role levels (owner vs. member) with asymmetric permissions (e.g. only the owner can remove people or delete the venue) — defer until a concrete dispute or support request demonstrates the flat model is insufficient
+- [ ] Request expiry / reminder emails for stale pending requests — defer until real usage shows abandoned requests are a problem
+- [ ] Generalized teams/organizations abstraction reusable beyond this one feature — explicitly avoid premature generalization; revisit only if a second, genuinely different multi-user need appears (e.g. if Ketjuadmin from PROJECT.md's Future list is picked up later, design this table with that in mind but do not build it now)
 
 ## Feature Prioritization Matrix
 
 | Feature | User Value | Implementation Cost | Priority |
 |---------|------------|----------------------|----------|
-| Map + autocomplete Sijainti step | HIGH | MEDIUM | P1 |
-| Collapse claim-flow to create-only | HIGH | LOW | P1 |
-| Dashboard draft-resume badge (fix auto-redirect bug) | HIGH | LOW | P1 |
-| Chain naming two-field pattern + live preview | MEDIUM-HIGH | MEDIUM | P1 |
-| Name normalization (Title Case) function | MEDIUM | LOW | P1 |
-| Reverse-geocode address auto-fill | MEDIUM | LOW-MEDIUM | P2 |
-| Duplicate-venue fuzzy warning | MEDIUM | MEDIUM | P3 |
-| Ketjuadmin (shared multi-branch account) | MEDIUM | HIGH | P3 (already deferred) |
+| Employee-to-company join table + status field | HIGH | MEDIUM | P1 |
+| RLS rewrite for membership-based access | HIGH | MEDIUM-HIGH | P1 |
+| Request-to-join entry point (venue/company search) | HIGH | LOW-MEDIUM | P1 |
+| Pending-request list + approve/reject buttons | HIGH | LOW | P1 |
+| Email notifications (request + outcome) | HIGH | LOW | P1 |
+| Requester "pending" waiting state with zero leaked access | HIGH | LOW | P1 |
+| Audit log of requests/approvals | MEDIUM | LOW | P2 |
+| Self-service remove-colleague | MEDIUM | LOW-MEDIUM | P2 |
+| In-app notification badge | LOW-MEDIUM | LOW | P3 |
+| Role levels (owner/member) | MEDIUM | MEDIUM | P3 |
+| Request expiry/reminders | LOW | LOW | P3 |
+| Full custom RBAC | LOW (for this scale) | HIGH | Avoid |
 
 **Priority key:**
 - P1: Must have for this milestone's launch
@@ -133,23 +147,22 @@ Based on Google Business Profile's official multi-location guidance (HIGH confid
 
 ## Competitor / Reference Pattern Analysis
 
-| Feature | Google Business Profile | Yelp for Business | Our Approach |
-|---------|--------------------------|--------------------|---------------|
-| Chain naming | Same brand name across all locations in a country; location suffix only if it's part of the *official* registered name (e.g. "Starbucks Stockholm") | Single free-text name field, no formal chain guidance; relies on manual moderation to catch duplicates | Two-field input (brand + branch) composed into one stored string with a plain-space join, mirroring Google's own real-world pattern, but exposed as guided UI rather than a moderation-after-the-fact fix |
-| Location entry | Pin placement required; supports both address-search and manual drag | Address typed, geocoded automatically server-side, no visible pin-drop step for the business owner | Map pin (click/drag) + Places Autocomplete combined, bidirectional sync — gives the business owner direct visual confirmation, matching Google's own flow |
-| "No existing listing found" path | Always falls back to "Add your business" creation form | "Add business with this name" link below search, or full "Add your business to Yelp" flow | Entire claim flow becomes create-only since the underlying searchable Google-sourced table is removed in this milestone — no fallback branch needed, just one path |
-| Resuming incomplete setup | Profile dashboard shows "complete your profile" prompts inline on the business's own profile card, not a forced redirect | Dashboard nudges incomplete profiles via banners, not redirects | Per-venue badge inline in the existing `VenueRow` list, with explicit resume CTA — never a forced redirect (this is the bug fix) |
+| Feature | Slack (workspace join request) | GitHub (org access request) | Our Approach |
+|---------|----------------------------------|------------------------------|---------------|
+| Request entry point | User signs up with a matching email domain or shared invite link, requests to join | User searches for the org, clicks "Request access" on the org page | Employee searches by venue name (more intuitive for this audience than an internal company ID), requests to join the company that manages it |
+| Who approves | Any existing workspace admin/owner | Org owners or admins | Any existing approved employee of that company — flat model, no special "owner" tier required at MVP, matching the milestone's literal wording ("nykyinen hallitsija hyväksyy") |
+| Notification to approver | In-app + email digest | Email + in-app notification | Email only at MVP (Resend, reusing existing pattern) — in-app badge deferred |
+| Outcome notification to requester | In-app + email | Email | Email only at MVP, mirrors existing `ADMIN-04` business-approval email pattern |
+| Role granted on approval | Member (flat, with separate admin promotion later) | Member (flat, with separate role assignment later) | Flat "approved employee" — no role distinction at MVP, consistent with both reference patterns deferring roles to a later, separate step |
+| Domain-based auto-approval | Sometimes offered as an org-level opt-in setting | Not offered — always explicit approval | Explicitly avoided (anti-feature) — Finnish small businesses commonly use generic consumer email domains, making domain-matching unreliable and risky |
 
 ## Sources
 
-- Google Business Profile official naming guidelines (HIGH confidence — official docs): [Guidelines for representing your business on Google](https://support.google.com/business/answer/3038177?hl=en)
-- PinMeTo — Google Business Profile multi-location naming explainer (MEDIUM confidence — third-party summary, cross-checked against the official source above): [Google Business Profile Name Guidelines for Multi-location Chains](https://www.pinmeto.com/blog/google-business-profile-name-guidelines/)
-- Yelp for Business — claim/add-business flow (MEDIUM confidence — vendor marketing + support docs): [Search or add your business | Yelp for Business](https://biz.yelp.com/claim), [How to Add or Claim a Yelp Business Listing — BrightLocal](https://www.brightlocal.com/learn/how-to-add-or-claim-a-yelp-business-listing/)
-- Geoapify — location-picker pattern (address autocomplete + draggable pin + reverse geocoding) (MEDIUM confidence — vendor technical blog, consistent with general industry pattern): [Leaflet Location Picker with Address Autocomplete, Geolocation, and Draggable Pin](https://dev.to/geoapify-maps-api/leaflet-location-picker-with-address-autocomplete-geolocation-and-draggable-pin-with-geoapify-1gfa)
-- Google Maps Platform — official Places Autocomplete address-form example (HIGH confidence — official docs): [Place Autocomplete Address Form | Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete-addressform)
-- Onboarding/abandonment UX patterns, Zeigarnik effect framing for incomplete-state indicators (MEDIUM confidence — aggregated industry blog consensus, not a single primary source): [Appcues — Onboarding UX: 10 patterns, best practices, and real examples](https://www.appcues.com/blog/user-onboarding-ui-ux-patterns), [Appcues — User Onboarding Best Practices](https://www.appcues.com/blog/user-onboarding-best-practices)
-- Existing codebase, read directly as primary source (HIGH confidence): `app/business/page.tsx`, `app/components/ClaimSearchForm.tsx`, `app/business/onboarding/StepPaikka.tsx`, `supabase/migrations/20260606000000_onboarding.sql`
+- General access-request/approval-workflow conventions, audit-log schema patterns for multi-tenant SaaS (MEDIUM confidence — aggregated industry blog consensus, consistent across multiple independent sources, not a single primary spec): [Zluri — How To Optimize User Access Requests & Approvals for SaaS Tools](https://www.zluri.com/blog/how-to-optimize-user-access-requests-and-approvals-for-saas-tools), [Entitle — What are Approval Workflows](https://www.entitle.io/resources/glossary/approval-workflows), [Veza — Access Request Management: A Complete Guide](https://veza.com/blog/access-request-management/)
+- Multi-tenant SaaS architecture, audit logging, and role/membership patterns (MEDIUM-HIGH confidence — vendor technical content from identity/auth infrastructure providers, internally consistent): [WorkOS — The developer's guide to SaaS multi-tenant architecture](https://workos.com/blog/developers-guide-saas-multi-tenant-architecture), [Clerk — Multi-tenant authentication](https://clerk.com/blog/multi-tenant-authentication-what-you-need-to-know), [AWS Prescriptive Guidance — Multi-tenant SaaS authorization and API access control](https://docs.aws.amazon.com/prescriptive-guidance/latest/saas-multitenant-api-access-authorization/introduction.html)
+- Reference patterns for request-to-join / org-access-request UX (MEDIUM confidence — drawn from well-known, widely-documented product behavior in Slack workspace joins, GitHub organization access requests, Notion/Figma team member requests; general product knowledge cross-checked against the access-management sources above, not independently re-verified against current vendor docs for this report)
+- Existing codebase, read directly as primary source (HIGH confidence): `supabase/migrations/20260605000000_business_accounts.sql`, `.planning/PROJECT.md` (BIZ-01/02/03, ADMIN-01–05, CLAIM-04/05, Ketjuadmin deferred-feature note)
 
 ---
-*Feature research for: Liikuntahakemisto v3.0 — self-sourced venue data model (Google Places decoupling), onboarding/dashboard/naming features*
-*Researched: 2026-06-22*
+*Feature research for: Liikuntahakemisto v3.1 — intra-company employee access-request feature for shared venue management*
+*Researched: 2026-06-24*
