@@ -124,7 +124,7 @@
     "createAddressPlaceholder": "Osoite",
     "createCta": "Luo paikka",
     "creating": "Luodaan...",
-    "errorClaimAlreadyTaken": "Tämä paikka on jo rekisteröity. Ota yhteyttä tukeen, jos uskot tämän olevan virhe.",
+    "errorVenueAlreadyTaken": "Tämä paikka on jo rekisteröity. Ota yhteyttä tukeen, jos uskot tämän olevan virhe.",
     "errorCreateFailed": "Paikan luonti epäonnistui. Yritä uudelleen.",
     "errorNameRequired": "Yrityksen nimi on pakollinen.",
     "errorAddressRequired": "Osoite on pakollinen.",

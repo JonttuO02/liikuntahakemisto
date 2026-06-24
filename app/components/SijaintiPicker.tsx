@@ -75,10 +75,12 @@ export default function SijaintiPicker({ onChange }: SijaintiPickerProps) {
   const [address, setAddress] = useState('')
   const [city, setCity] = useState('')
   const [autocompleteTarget, setAutocompleteTarget] = useState<Pin | null>(null)
+  const [geocodeError, setGeocodeError] = useState(false)
 
   async function handlePinChange(coords: Pin) {
     setPin(coords)
     const result = await reverseGeocodeCity(coords.lat, coords.lng)
+    setGeocodeError(result === null)
     setCity(result ?? '')
   }
 
@@ -128,6 +130,10 @@ export default function SijaintiPicker({ onChange }: SijaintiPickerProps) {
       </div>
 
       <PlaceAutocompleteInput onPlaceSelected={handlePlaceSelected} />
+
+      {geocodeError && (
+        <p role="alert" className="text-sm text-red-600">{t('sijaintiVirhe')}</p>
+      )}
 
       <input
         type="text"

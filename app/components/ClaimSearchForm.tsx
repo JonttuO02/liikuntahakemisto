@@ -50,6 +50,10 @@ export default function ClaimSearchForm() {
       setError(t('sijaintiPakollinen'))
       return
     }
+    if (!createKaupunki.trim()) {
+      setError(t('sijaintiVirhe'))
+      return
+    }
 
     setLoading(true)
     setError(null)
@@ -68,7 +72,7 @@ export default function ClaimSearchForm() {
           yritysNimi: yritysNimi.trim(),
           toimipisteNimi: toimipisteNimi.trim(),
           osoite: createOsoite.trim(),
-          kaupunki: createKaupunki,
+          kaupunki: createKaupunki.trim(),
           latitude: createLat,
           longitude: createLng,
         }),
@@ -81,7 +85,7 @@ export default function ClaimSearchForm() {
       }
 
       if (res.status === 409) {
-        setError(t('errorClaimAlreadyTaken'))
+        setError(t('errorVenueAlreadyTaken'))
       } else {
         setError(t('errorCreateFailed'))
       }

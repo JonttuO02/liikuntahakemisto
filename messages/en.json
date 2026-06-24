@@ -124,7 +124,7 @@
     "createAddressPlaceholder": "Street address",
     "createCta": "Create venue",
     "creating": "Creating...",
-    "errorClaimAlreadyTaken": "This venue is already registered. Contact support if you believe this is a mistake.",
+    "errorVenueAlreadyTaken": "This venue is already registered. Contact support if you believe this is a mistake.",
     "errorCreateFailed": "Failed to create venue. Please try again.",
     "errorNameRequired": "Company name is required.",
     "errorAddressRequired": "Address is required.",
