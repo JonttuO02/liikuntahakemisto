@@ -1,193 +1,251 @@
 # Architecture Research
 
-**Domain:** Multi-tenant venue-directory SaaS (Next.js 14 App Router + Supabase) — migrating from external-API-sourced data to user-submitted data
-**Researched:** 2026-06-22
-**Confidence:** HIGH (grounded directly in current repo code, not generic patterns)
-
-> Note on naming: the milestone brief refers to the venues table as `paikat`. The actual table in this codebase is **`liikuntapaikat`** (confirmed in every migration and route read during this research). There is **no `google_place_id` column** — the existing Google-sourced join key is `place_id` (`liikuntapaikat.place_id`, unique, used by `sync-paikat`'s upsert `onConflict: 'place_id'`). All recommendations below use the real names.
+**Domain:** Multi-user-per-company B2B account model + cross-employee access-request workflow, layered onto an existing Next.js 14 + Supabase business portal
+**Researched:** 2026-06-24
+**Confidence:** HIGH (grounded directly in this repo's existing migrations, route handlers, and `lib/supabase-business.ts` — not generic SaaS theory)
 
 ## Standard Architecture
 
 ### System Overview
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                         Consumer surface (/)                         │
-│  Etusivu (map) / PaikkaSheet / paikat/[id] — reads liikuntapaikat    │
-│  WHERE published = true. Untouched by this milestone.                │
-├──────────────────────────────────────────────────────────────────────┤
-│                      Business surface (/business/*)                  │
-│  middleware.ts → sb-biz-* cookie refresh + "is there a user?" guard  │
-│  (no DB query in middleware — confirmed decision, do not change)     │
-│       ↓                                                               │
-│  app/business/layout.tsx        — renders BusinessNav (no auth check)│
-│  app/business/[id]/layout.tsx   — RSC: redirect('/business/kirjaudu')│
-│                                     if !user (per-route guard pattern)│
-│       ↓                                                               │
-│  app/business/page.tsx (CLIENT)  — dashboard: status card, venue     │
-│                                     list, "+ add venue" (ClaimSearch) │
-│                                     BUG: auto-router.push() into      │
-│                                     onboarding when any draft row     │
-│                                     exists for the account            │
-│       ↓                                                               │
-│  app/business/onboarding/page.tsx (CLIENT) — 3 page-level phases:    │
-│    'paikka' → 'analyze' → 'wizard'                                   │
-│       ↓                                                               │
-│  WizardInner (mode='onboarding'|'edit') — 5-step numbered wizard     │
-│    step1 Mediat → step2 Hinnasto → step3 Aukioloajat →               │
-│    step4 Yhteystiedot → step5 Esikatselu (submit)                    │
-├──────────────────────────────────────────────────────────────────────┤
-│                          API / Route Handlers                        │
-│  /api/business/create-paikka   — INSERT liikuntapaikat + link        │
-│  /api/business/claim-paikka    — link existing liikuntapaikat        │
-│  /api/business/onboarding/save-step  — upsert onboarding_draft       │
-│  /api/business/onboarding/submit     — atomic draft → liikuntapaikat │
-│  /api/admin/sync-paikat        — Google Places upsert (TO DECOMMISSION)│
-├──────────────────────────────────────────────────────────────────────┤
-│                              Supabase                                │
-│  liikuntapaikat        — single venues table (consumer + business)  │
-│  business_accounts     — 1 row per business user (FK auth.users)    │
-│  business_paikka_links — many-to-... (currently 1:1 via UNIQUE)      │
-│  onboarding_draft      — paikka_id-scoped wizard staging table       │
-└──────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                      Browser — sb-biz-* cookie namespace                 │
+├──────────────────────────────────────────────────────────────────────────┤
+│  /business/kirjaudu   /business (dashboard)   /business/[id] (venue)     │
+│       │                      │                        │                 │
+│       │   ┌──────────────────┴───────────┐   ┌─────────┴──────────┐     │
+│       │   │ VenueAccessBadge /            │   │ AccessRequestModal │     │
+│       │   │ RequestAccessButton           │   │ (employee-initiated)│    │
+│       │   └──────────────────┬───────────┘   └─────────┬──────────┘     │
+│       │                      │                          │                │
+│       │   ┌──────────────────┴───────────────────────────┐              │
+│       │   │ PendingAccessRequestsPanel (manager-facing,    │              │
+│       │   │ rendered on /business dashboard, approve/reject)│              │
+│       │   └──────────────────┬───────────────────────────┘              │
+├───────┴──────────────────────┴──────────────────────────────────────────┤
+│                    Route Handlers (app/api/business/*)                  │
+│  POST /api/business/access-requests        (create request)             │
+│  GET  /api/business/access-requests        (list mine + incoming)       │
+│  POST /api/business/access-requests/[id]/approve                        │
+│  POST /api/business/access-requests/[id]/reject                         │
+│  — each verifies JWT via supabaseAdmin.auth.getUser(token), exactly      │
+│    like existing approve/reject/register routes                         │
+├──────────────────────────────────────────────────────────────────────────┤
+│                          lib/email.ts (Resend)                          │
+│  sendAccessRequestEmail(toManager, requester, venue)                    │
+│  sendAccessRequestDecisionEmail(toRequester, venue, decision)            │
+├──────────────────────────────────────────────────────────────────────────┤
+│                    Supabase Postgres + RLS (service role writes)        │
+│  business_accounts (existing, 1 row = 1 auth user)                      │
+│  business_paikka_links (existing, UNIQUE(paikka_id) — 1 manager/venue)   │
+│  venue_access_requests (NEW — requester, venue, current manager, status)│
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Component Responsibilities
 
-| Component | Responsibility | Current Implementation |
+| Component | Responsibility | Typical Implementation |
 |-----------|----------------|------------------------|
-| `middleware.ts` | Session refresh only, path-conditional cookie namespace (`sb-biz-*` vs `sb-*`); redirects unauthenticated `/business/*` to `/business/kirjaudu` | Never queries app tables — by design (documented constraint, must stay this way) |
-| `app/business/[id]/layout.tsx` | RSC auth guard for edit-mode routes | `redirect()` if `!user`, nothing else |
-| `app/business/page.tsx` | Dashboard — status, venues, add-venue | Client component; **currently also does onboarding-redirect logic that must move out** |
-| `WizardInner` | Single component, two modes (`onboarding`/`edit`), 5 numbered steps shared across both | URL-driven step state (`?step=N`), `maxReachedStep` forward-skip guard, `LivePreviewProvider` context |
-| `onboarding_draft` | Per-(business_account_id, paikka_id) staging row, written field-by-field via `save-step`, deleted on `submit` | `UNIQUE(business_account_id, paikka_id)`, `current_step INT`, JSONB columns per step |
-| `liikuntapaikat` | Single venues table for both Google-sourced and business-managed/business-created rows | `business_managed BOOLEAN`, `is_claimed BOOLEAN`, `published BOOLEAN`, `place_id` (Google key, nullable for business-created rows) |
-| `sync-paikat` route | Cron-style admin route that searches Google Places and upserts `liikuntapaikat` | Explicitly skips rows where `business_managed = true` — **this exclusion logic is the seam to cut** |
+| `venue_access_requests` table | Single source of truth for a pending/approved/rejected request to gain management rights on a venue already linked to another `business_accounts` row | New table, FK to `liikuntapaikat`, `business_accounts` (requester), `business_accounts` (current manager, denormalized at request time) |
+| `business_paikka_links` (existing) | Still the authority on "who manages this venue" — `UNIQUE(paikka_id)` stays; an approved access request **re-points** this row's `business_account_id`, it does not duplicate it | Existing table, no schema change required for the access-request feature itself |
+| `POST /api/business/access-requests` | Validates requester JWT, looks up venue's current manager via `business_paikka_links`, inserts request row, fires manager-notification email | Route Handler, mirrors `register/route.ts` JWT pattern |
+| `POST /api/business/access-requests/[id]/approve` | Verifies caller is the *current manager* of the target venue (not `is_admin`), re-points `business_paikka_links.business_account_id` to requester, marks request `approved`, emails requester | Route Handler, mirrors `admin/approve/route.ts` concurrency-safe pending-filter pattern |
+| `POST /api/business/access-requests/[id]/reject` | Verifies caller is current manager, marks request `rejected`, emails requester | Route Handler, mirrors `admin/reject/route.ts` |
+| Dashboard UI (`/business`) | Renders a "Pending requests for your venues" panel (manager view) and a "Your sent requests" status strip (requester view) | Client component, fetches via the two GET-shaped list endpoints or a single combined endpoint |
+| `lib/email.ts` additions | Two new senders following the exact `sub()`/`esc()` escaping pattern already in the file | Pure functions appended to existing file, no new dependency |
 
-## Recommended Project Structure (delta only — additions/changes for v3.0)
+**Key architectural decision — no `companies` table.** The milestone scope (per PROJECT.md "Future" list) explicitly defers "Ketjuadmin" (chain admin — one tenant, many venues, many owners) to a later milestone. Introducing a `companies` table now would require migrating `business_accounts.company_name` (a free-text field, not normalized) into a foreign key, touching every existing read path (`/business`, `/admin`, onboarding, branding) and the email templates. That is out of scope for v3.1, which only asks for "a second employee can request access to a venue the company already manages." A lightweight **join/request table** is sufficient and strictly additive — zero existing schema or query needs to change.
+
+## Recommended Project Structure
 
 ```
-app/
-├── api/
-│   ├── admin/
-│   │   └── sync-paikat/route.ts        # DELETE (decommission) or gate behind a feature flag
-│   ├── business/
-│   │   ├── onboarding/
-│   │   │   └── save-step/route.ts      # MODIFY: accept new 'sijainti' field, validate lat/lng
-│   │   └── create-paikka/route.ts      # MODIFY: accept yritys_nimi (or write to business_accounts.company_name only)
-├── business/
-│   ├── page.tsx                        # MODIFY: remove auto-redirect; add resume-badge UI
-│   ├── onboarding/
-│   │   ├── page.tsx                    # MODIFY: insert 'sijainti' phase into pagePhase union
-│   │   ├── StepSijainti.tsx            # NEW: map + autocomplete pin step
-│   │   └── StepPaikka.tsx              # MODIFY: add yritys_nimi / toimipiste_nimi fields (create-from-scratch path)
 supabase/migrations/
-├── YYYYMMDDHHMMSS_onboarding_draft_add_sijainti.sql # NEW (additive)
+└── 20260625000000_venue_access_requests.sql   # NEW — table + RLS, additive only
+
+app/api/business/
+├── access-requests/
+│   ├── route.ts              # POST (create) + GET (list, scoped by query param: mine|incoming)
+│   └── [id]/
+│       ├── approve/route.ts  # POST — manager-only
+│       └── reject/route.ts   # POST — manager-only
+
+app/business/
+├── page.tsx                          # existing dashboard — add <AccessRequestsPanel /> render slot
+├── AccessRequestsPanel.tsx           # NEW client component (incoming list + approve/reject buttons)
+├── RequestAccessButton.tsx           # NEW — shown on a venue card when viewer ≠ current manager
+└── AccessRequestModal.tsx            # NEW — confirm-and-submit dialog
+
+lib/
+└── email.ts                          # MODIFIED — add sendAccessRequestEmail + sendAccessRequestDecisionEmail
 ```
 
 ### Structure Rationale
 
-- New onboarding step gets its **own component file** (`StepSijainti.tsx`) following the exact convention of every other step (`StepMediat`, `StepHinnasto`, etc.) — one component per wizard step, each accepting `paikkaId`, `initialDraft*`, `onNext`, `onPrev`.
-- The fix for the dashboard redirect bug stays inside `app/business/page.tsx` (client) because the underlying signal (`onboarding_draft` row existence) is fetched there already with the user's own Supabase session — no architectural reason to move it to middleware or the RSC layout (see Integration Points below for why).
+- **`access-requests/` route folder mirrors `admin/` exactly** — same JWT-verify-first pattern, same `[id]/approve` and `[id]/reject` sub-route shape already proven in `app/api/admin/approve/route.ts` and `app/api/admin/reject/route.ts`. No new pattern to learn.
+- **No new page/route** — the feature lives entirely inside the existing `/business` dashboard, consistent with this milestone's stated goal of consolidating UI rather than spreading it across new pages.
+- **`lib/email.ts` extended, not duplicated** — keeps the single Resend client, the `sub()`/`esc()` injection-safe helpers, and the `FROM`/`ADMIN_EMAIL` env convention in one place.
 
 ## Architectural Patterns
 
-### Pattern 1: Page-level "pre-phase" before the numbered wizard
+### Pattern 1: Lightweight request/grant table, no tenant table
 
-**What:** `app/business/onboarding/page.tsx` is a small state machine (`'paikka' | 'analyze' | 'wizard'`) that runs *before* `WizardInner`'s own numbered steps. Each pre-phase resolves `paikka_id` independently (URL param → `business_paikka_links` lookup → draft fallback) and passes it down.
-**When to use:** For any new step that must exist **before** `paikka_id` is guaranteed to exist, or before the draft row exists at all (chicken-and-egg: `onboarding_draft` is FK'd to `liikuntapaikat.id`, so you cannot write step data into the draft until a `liikuntapaikat` row exists).
-**Trade-off:** Two different "step" numbering systems now exist (page-level phases vs. `WizardInner`'s `?step=1..5`). This is already mildly confusing (see Phase 50 migration `renumber_onboarding_steps.sql`, which had to shift all step numbers down by 1 when `StepPaikka` was promoted to a pre-phase). Adding a "Sijainti" pre-phase will likely require **another renumbering migration** for `onboarding_draft.current_step` if the new step inserts before any existing numbered step that persists into the draft.
+**What:** A new `venue_access_requests` table records the *intent* (who wants access to what, who must decide). It does **not** become the authority on current access — `business_paikka_links.business_account_id` remains that authority. Approval is a side-effecting UPDATE on the existing link row, not a new grant table that the rest of the app would need to learn to query.
 
-**Where Sijainti fits:** The milestone brief says Sijainti must come "before existing steps that need location, like AI website-analysis or pricing." Concretely:
+**When to use:** When the underlying access model (1 manager per venue, via `business_paikka_links.UNIQUE(paikka_id)`) does not need to change — only *who* currently holds that single slot needs a request/approval workflow to change hands.
 
-- **For the claim flow** (existing venue, already has `latitude`/`longitude` on `liikuntapaikat`): Sijainti is **not needed** — skip it. The location step is only relevant to the **create-from-scratch flow**, which currently inserts a venue with `lat/lng = NULL` (`create-paikka/route.ts` never sets `latitude`/`longitude`).
-- **For the create-from-scratch flow:** Sijainti must run as a **page-level pre-phase**, inserted between `'paikka'` (now: company/branch-name entry, see Pattern 3) and `'analyze'` (AI website analysis, which the milestone says should benefit from having coordinates already). Recommended `pagePhase` union: `'paikka' → 'sijainti' → 'analyze' → 'wizard'`, with `'sijainti'` skipped entirely when resolving an existing (claimed) venue that already has coordinates.
-- Because `latitude`/`longitude` already exist as columns on `liikuntapaikat` (confirmed: `WizardInner`'s `PaikkaInfo` type and the `liikuntapaikat` select in `StepPaikkaPrePhase` both already select them), **lat/lng should be written directly to `liikuntapaikat` at the Sijainti step**, not to `onboarding_draft`. This matches the existing pattern where `StepPaikka` already operates directly against `liikuntapaikat` rather than the draft (the draft only stores step-specific JSONB: `media_urls`, `hinnasto`, `aukioloajat`, `yhteystiedot`). The user-typed address string, however, should go to `onboarding_draft` (new column `sijainti_osoite TEXT`) until submit, consistent with how editable/correctable step data is staged today (`media_urls`, `hinnasto`, etc.) rather than written live to the public table.
+**Trade-offs:** Simpler migration, zero changes to every existing query that reads `business_paikka_links` to determine venue ownership (`/business`, `/admin`, onboarding, branding, RLS policies). Trade-off: this models "transfer of single manager" rather than "multiple simultaneous managers per venue." That matches the milestone's literal spec ("nykyinen hallitsija hyväksyy/hylkää" — *the current* manager approves) — it is a hand-off, not co-management. If a future milestone wants *simultaneous* multi-manager venues, `business_paikka_links` would need its `UNIQUE(paikka_id)` relaxed to `UNIQUE(paikka_id, business_account_id)` — explicitly flag this as a Future item, do not build it now.
 
-### Pattern 2: `onboarding_draft` as a thin staging table, not a full step machine
+**Example:**
+```sql
+-- venue_access_requests: requester wants to take over management of paikka_id
+-- currently held by current_manager_id (denormalized snapshot at request time,
+-- so the email and UI can show "who you're asking" even if it changes later)
+CREATE TABLE venue_access_requests (
+  id                 BIGSERIAL PRIMARY KEY,
+  paikka_id          BIGINT NOT NULL REFERENCES liikuntapaikat(id) ON DELETE CASCADE,
+  requester_id       UUID NOT NULL REFERENCES business_accounts(user_id) ON DELETE CASCADE,
+  current_manager_id UUID NOT NULL REFERENCES business_accounts(user_id) ON DELETE CASCADE,
+  status             TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  decided_at         TIMESTAMPTZ
+);
+```
 
-**What:** The draft table stores `current_step INT` plus JSONB blobs per step domain (`media_urls`, `hinnasto`, `aukioloajat`, `yhteystiedot`). It does **not** store venue identity fields (name, address, sport type) — those live directly on `liikuntapaikat` from the moment the row is created (claim or create).
-**When to use:** Any new step whose data is "correctable before publish" (pricing, hours, contact info) → new JSONB/text column on `onboarding_draft`. Any new step whose data is identity/location data that's safe to persist immediately (and arguably *should* persist immediately, e.g. for the admin queue to show pending venues on a map) → direct column on `liikuntapaikat`.
-**Trade-off:** This split means "abandon onboarding" leaves partial data on `liikuntapaikat` (visible only because `published=false` gates consumer visibility) but not on the draft. This is already the existing behavior for `create-paikka` (name/address/city land immediately) — Sijainti and the company/branch-name fields should follow the same precedent for consistency, not introduce a third pattern.
+### Pattern 2: Approval mutates the existing link row, not a new "membership" row
 
-### Pattern 3: Where company-name vs. branch-name belongs
+**What:** On approve, the Route Handler does **one transaction-equivalent pair of writes**: (1) `UPDATE business_paikka_links SET business_account_id = requester_id WHERE paikka_id = X AND business_account_id = current_manager_id` (concurrency-guarded exactly like `admin/approve/route.ts`'s `count: 'exact'` + `.eq('claim_status','pending')` pattern), and (2) `UPDATE venue_access_requests SET status = 'approved', decided_at = now() WHERE id = Y AND status = 'pending'`.
 
-**What:** Today, `business_accounts.company_name` is the only "name" field for a business; `liikuntapaikat.nimi` is the only name field for a venue. There is no distinction between "the legal/brand company" and "this specific branch/location" — `ClaimSearchForm`'s create-flow writes the user-typed venue name straight into `liikuntapaikat.nimi`.
+**When to use:** Any time "access changes hands" rather than "access is added alongside existing access."
 
-**Recommendation:**
-- **Company name → `business_accounts.company_name`** (already exists, no migration needed for the 1-business-1-venue case). This is the right home because it is account-level identity, not venue-level — it must **not** move to `business_paikka_links` or `liikuntapaikat`, both of which are designed to be per-venue and (per the Future/deferred roadmap item "Ketjuadmin — yksi tili, useita toimipisteitä eri omistajilla") will eventually support **one account, many venues**.
-- **Branch/location name → `liikuntapaikat.nimi`** (already exists) — this is the public-facing venue name shown in lists/cards/map pins, and must stay independent per venue to support the multi-branch future. Do not conflate it with `business_accounts.company_name`.
-- **What's missing today and should be added:** a way to render "Company X — Branch Y" consistently when a business has chain semantics. Since chain support is explicitly deferred (per PROJECT.md "Future" section), the pragmatic v3.0 move is: **add no new table now**, just relabel the "Paikka" pre-phase form to clearly collect two distinct text inputs — `yritysNimi` (writes/updates `business_accounts.company_name`) and `toimipisteNimi` (writes to `liikuntapaikat.nimi`, exactly like today). This requires **zero schema migration** for the create-from-scratch path because both columns already exist; it is purely a UI/copy change plus one extra write (`business_accounts.company_name` UPDATE, JWT-verified, following `create-paikka`'s existing verification pattern).
-- **For future chain support:** `business_paikka_links` is already structured as the right join table for "one account, many venues" (it's already `business_account_id` ↔ `paikka_id`). The only constraint enforcing "one venue, one owner" is `UNIQUE(paikka_id)` on `business_paikka_links` — correct, and does **not** block "one owner, many venues" (the codebase already defensively handles `.limit(1)` lookups in several places, suggesting the schema anticipated multi-venue accounts even though the UI mostly assumes one today). **No schema change needed now** — flag this as already future-proofed.
+**Trade-offs:** Clean and consistent with existing `claim_status` state-machine idioms in the codebase. Trade-off: the *previous* manager instantly loses dashboard visibility into that venue (their RLS-scoped queries on `business_paikka_links` stop returning that row). This is almost certainly the desired behavior for "hand the keys to a colleague," but confirm with the user during `/gsd:discuss-phase` whether the outgoing manager should be soft-revoked instead of hard-cut.
+
+**Example:**
+```typescript
+// app/api/business/access-requests/[id]/approve/route.ts
+const { count: linkUpdated } = await supabaseAdmin
+  .from('business_paikka_links')
+  .update({ business_account_id: req.requester_id }, { count: 'exact' })
+  .eq('paikka_id', req.paikka_id)
+  .eq('business_account_id', user.id) // caller must BE the current manager
+if (!linkUpdated) return NextResponse.json({ error: 'Not current manager' }, { status: 409 })
+
+await supabaseAdmin
+  .from('venue_access_requests')
+  .update({ status: 'approved', decided_at: new Date().toISOString() })
+  .eq('id', requestId)
+  .eq('status', 'pending')
+```
+
+### Pattern 3: RLS for "colleagues see each other's venues" without a companies table
+
+**What:** Since there is no `companies` table, "colleague" cannot be resolved by a JOIN on a shared `company_id`. Two viable options, in order of preference for this milestone:
+
+1. **Scope visibility to the request itself, not to "all colleague venues."** The requester only ever needs to see (a) their own `business_paikka_links` rows and (b) the venues they have an open or resolved `venue_access_requests` row for. This requires **zero new RLS policy on `liikuntapaikat`** — the existing `business_paikka_links` SELECT policy (`auth.uid() = business_account_id`) is untouched, and a new `venue_access_requests` SELECT policy covers `requester_id = auth.uid() OR current_manager_id = auth.uid()`. This is the minimal, correct scope for "Saman yrityksen toisen työntekijän hallintaoikeuspyyntö olemassa olevaan paikkaan" as literally specified — the requester names a *specific existing venue* (e.g. by company name search or a shared invite link), they do not browse "all of my company's venues" first.
+2. **If product wants a colleague to browse a list of "your company's venues" before requesting** (broader visibility), that requires *some* notion of "same company," which today only exists as a free-text `company_name` string. Do **not** match on `company_name` string equality for RLS (fragile, typo-prone, security-relevant). If this is needed, it is the trigger to introduce a minimal `companies` table after all — but confirm this requirement explicitly before building it; it is a bigger schema change than the milestone description implies.
+
+**When to use:** Option 1 for this milestone. Option 2 only if discuss-phase surfaces an explicit requirement for "browse colleague venues without already knowing which one."
+
+**Trade-offs:** Option 1 keeps the migration purely additive and avoids ever needing a privilege check more complex than "are you the requester or the current manager of this specific row" — which the existing JWT-verify-then-row-ownership-check pattern in this codebase already does for every other table.
 
 ## Data Flow
 
-### Onboarding wizard data flow (current, before v3.0 changes)
+### Request Flow (employee requests access to a colleague's venue)
 
 ```
-ClaimSearchForm (create) ──POST /api/business/create-paikka──→ INSERT liikuntapaikat (nimi, osoite, kaupunki, laji='Muu', published=false)
-                                                              → INSERT business_paikka_links (link_type='created', claim_status='pending')
-                                                              → liikuntapaikat.is_claimed = true
-                          ──redirect──→ /business/onboarding?paikka_id=N
-                                              ↓
-                          pagePhase='paikka' → StepPaikka (display only, no writes)
-                                              ↓
-                          pagePhase='analyze' → AnalysoiSivusto (AI website scrape) → onboarding/save-step (step:0, field:media_urls)
-                                              ↓
-                          pagePhase='wizard' → WizardInner step1..5 → onboarding/save-step per step → onboarding/submit (atomic copy draft→liikuntapaikat, DELETE draft)
+Employee logs in as a NEW business_accounts row (own registration via existing
+/api/business/register — no schema change needed, they are just another
+1 user_id : 1 business_accounts row, same as today)
+    ↓
+Employee identifies target venue (by name/address search against liikuntapaikat,
+or a shared deep link containing paikka_id — exact UX is a discuss-phase decision)
+    ↓
+POST /api/business/access-requests { paikka_id }
+    ↓
+Route Handler:
+  1. verify JWT → requester_id = user.id
+  2. SELECT business_account_id FROM business_paikka_links WHERE paikka_id = X
+     → current_manager_id (404 if venue has no manager yet — nothing to request)
+  3. guard: requester_id != current_manager_id (can't request your own venue)
+  4. guard: no existing 'pending' request for (paikka_id, requester_id) — avoid duplicate spam
+  5. INSERT venue_access_requests (status='pending')
+  6. fire sendAccessRequestEmail(to: current_manager's email via
+     supabaseAdmin.auth.admin.getUserById, requester company_name, venue nimi)
+     — non-critical, wrapped in try/catch exactly like admin/approve's email step
+    ↓
+Manager sees it in <AccessRequestsPanel /> on /business dashboard
+(GET /api/business/access-requests?scope=incoming — RLS-equivalent filter
+ current_manager_id = auth.uid() AND status = 'pending')
+    ↓
+Manager clicks Approve or Reject
+    ↓
+POST /api/business/access-requests/[id]/approve   (or /reject)
+    ↓
+Route Handler:
+  1. verify JWT → caller must equal request.current_manager_id (403 otherwise —
+     this is a NEW authorization check distinct from is_admin; it is "are you
+     the manager", not "are you platform staff")
+  2. approve: UPDATE business_paikka_links.business_account_id = requester_id
+              (concurrency-guarded, count-checked — see Pattern 2)
+     reject:  no link mutation
+  3. UPDATE venue_access_requests SET status, decided_at (guarded by
+     .eq('status','pending') to prevent double-processing, same idiom as
+     admin/approve)
+  4. fire sendAccessRequestDecisionEmail(to: requester's email, venue nimi, decision)
+    ↓
+Requester sees updated status in their own "sent requests" list on /business
+(GET /api/business/access-requests?scope=mine)
 ```
 
-### Proposed v3.0 data flow (additions in CAPS)
+### State Management
 
 ```
-ClaimSearchForm (create) ──POST /api/business/create-paikka──→ INSERT liikuntapaikat (..., YRITYS_NIMI→business_accounts.company_name UPDATE, TOIMIPISTE_NIMI→nimi)
-                          ──redirect──→ /business/onboarding?paikka_id=N
-                                              ↓
-                          pagePhase='paikka' → StepPaikka (now collects/confirms yritys+toimipiste names on create path)
-                                              ↓
-                          pagePhase='SIJAINTI' (NEW, create-flow only — skipped if venue already has lat/lng)
-                                  → map + autocomplete pin → UPDATE liikuntapaikat SET latitude, longitude
-                                  → save user-typed address string to onboarding_draft.sijainti_osoite (NEW column)
-                                              ↓
-                          pagePhase='analyze' → AnalysoiSivusto (can use lat/lng for context; AI sport-category suggestion is a separate milestone scope item)
-                                              ↓
-                          pagePhase='wizard' → unchanged step1..5
+venue_access_requests.status: 'pending' → 'approved' | 'rejected'
+business_paikka_links.business_account_id: re-pointed only on 'approved'
+    ↓ (dashboard re-fetch after action, same pattern as existing approve/reject
+       client code which re-fetches /business state after admin actions)
+/business page.tsx server component re-renders with new ownership
 ```
 
-### Dashboard redirect flow (bug fix)
+### Key Data Flows
 
-```
-CURRENT (buggy):
-  /business/page.tsx mounts → fetch business_accounts → fetch onboarding_draft (any row, limit(1))
-    → if draft exists: router.push('/business/onboarding')   ← unconditional, no user choice
+1. **Request creation:** Employee → venue lookup → manager resolution via existing `business_paikka_links` → insert request → async email to manager. No write to `business_paikka_links` happens here — only on decision.
+2. **Decision:** Manager-only mutation gated by `current_manager_id` equality (a *row-level* authorization check, not the existing `is_admin` platform-role check used in `/admin` routes — this is new and must not be confused with admin approval workflow, which governs *new venue applications*, not *intra-company access transfer*).
+3. **Notification:** Both emails reuse the existing `lib/email.ts` Resend singleton, `sub()`/`esc()` sanitization, and `NEXT_PUBLIC_APP_URL` link-back convention — zero new email infrastructure.
 
-PROPOSED:
-  /business/page.tsx mounts → fetch business_accounts → fetch onboarding_draft rows (all, not limit(1))
-    → render dashboard UNCONDITIONALLY
-    → for each venue link that has a matching incomplete draft: render a
-      "Kesken — jatka" badge + explicit button → router.push(`/business/onboarding?paikka_id=${id}`)
-    → no useEffect-driven navigation away from the dashboard, ever
-```
+## Scaling Considerations
 
-## Anti-Patterns to Avoid
+| Scale | Architecture Adjustments |
+|-------|--------------------------|
+| Current (few dozen business accounts) | Table as designed is more than sufficient; no indexing beyond PK/FK needed |
+| 100s of businesses, frequent employee turnover | Add an index on `venue_access_requests(paikka_id, status)` and `(requester_id, status)` for dashboard list queries; consider an `expires_at` / auto-expire-stale-pending-requests cron if requests pile up unanswered |
+| Multi-manager-per-venue need emerges | This is the trigger to revisit the "no companies table" decision — see Pattern 3 option 2 — not a concern for this milestone |
 
-### Anti-Pattern 1: Putting the redirect-guard fix in middleware
+### Scaling Priorities
 
-**What people do:** Reach for `middleware.ts` to "centralize" the auto-redirect logic since it already gates `/business/*` auth.
-**Why it's wrong:** This project has an explicit, documented architectural decision that **middleware never queries application tables** (only `supabase.auth.getUser()` for session refresh). `onboarding_draft` existence is an application-data question, not an auth question. Putting it in middleware would (a) violate that decision, (b) run on every single `/business/*` request including pages where the dashboard badge is irrelevant, and (c) make the "explicit resume action" UX (a button, not a forced redirect) awkward to express from middleware, which can only redirect or pass through.
-**Do this instead:** Keep the check where it already happens — client-side in `app/business/page.tsx` — but change it from "auto-navigate" to "render a badge with a manual CTA," exactly as the milestone brief specifies.
+1. **First bottleneck:** none expected at this app's scale — this is a low-volume B2B workflow (one request per employee-onboarding event, not a high-frequency table).
+2. **Second bottleneck:** if "browse colleague venues" (Pattern 3 option 2) is added later, that is the point to introduce a real `companies` table with a migration that backfills from `business_accounts.company_name` — plan that as its own phase, not bundled into this access-request feature.
 
-### Anti-Pattern 2: Deleting Google sync data/route in the wrong order
+## Anti-Patterns
 
-**What people do:** Drop the sync route, the data, and any related columns all in one pass, or run the data-deletion migration before confirming the route is actually dead.
-**Why it's wrong:** If the route or its cron trigger is still wired up (even dormant) when the data-deletion migration runs, a subsequent manual invocation will re-populate rows the migration just deleted, or fail against a state it didn't expect. Doing route-removal and data-deletion as a single atomic step also makes it impossible to verify "is anything still calling this?" before the irreversible delete.
-**Do this instead:** Decommission order must be: (1) remove/disable the route and any cron trigger calling it first (pure code deploy, reversible), (2) confirm in production logs/monitoring that no further calls occur, (3) only then run the data-deletion migration, (4) optionally, much later, consider dropping now-dormant columns (see Migration Order below).
+### Anti-Pattern 1: Adding a `companies` table "to be safe" for this milestone
 
-### Anti-Pattern 3: Treating `business_managed` exclusion removal as a no-op
+**What people do:** Pre-emptively normalize `company_name` into a `companies` table with `business_accounts.company_id` FK, reasoning "we'll need it eventually for multi-tenant."
+**Why it's wrong:** PROJECT.md explicitly defers "Ketjuadmin" (the actual multi-tenant/chain-admin need) to Future. Doing it now means migrating every existing read of `business_accounts.company_name` (dashboard, admin panel, onboarding, branding, emails) for a milestone that doesn't require it, and risks merge conflicts with the parallel v3.1 work (dashboard redesign, page consolidation) touching the same files.
+**Do this instead:** Ship `venue_access_requests` as a pure addition. If a real multi-tenant `companies` table becomes necessary, do it as its own dedicated migration phase with its own backfill plan.
 
-**What people do:** Assume that once Google sync is deleted, the `business_managed` boolean and its filter logic become irrelevant and can be ignored or dropped immediately.
-**Why it's wrong:** `business_managed` may carry meaning beyond the sync route (e.g. distinguishing professionally-maintained business data from any remaining non-business rows in UI or RLS logic) — assuming it's purely a sync-route artifact without checking all references risks silently breaking unrelated logic.
-**Do this instead:** Audit all `business_managed` references across the codebase before deciding whether to keep, repurpose, or drop the column. Do not couple "delete Google sync" with "delete `business_managed`" automatically.
+### Anti-Pattern 2: Reusing `is_admin` / `/admin` approval plumbing for venue access requests
+
+**What people do:** Route access-request approval through the existing `admin/approve` endpoint or check `profiles.is_admin`, since "approval" already exists in the codebase.
+**Why it's wrong:** `is_admin` governs *platform staff* approving *new venue applications* into the marketplace. Venue access requests are approved by the *current business manager of that specific venue* — a completely different authorization boundary. Conflating them would let any admin approve access transfers (probably fine) but, worse, would make it easy to accidentally let an *unrelated* business manager approve someone else's request if the row-ownership check is copy-pasted carelessly from the admin route without adapting the guard condition.
+**Do this instead:** New authorization check: `request.current_manager_id === verified user.id`, completely separate from `is_admin`.
+
+### Anti-Pattern 3: Allowing the access-request endpoint to accept an arbitrary `current_manager_id` from the client
+
+**What people do:** Trust a `manager_id` field in the POST body to know who to notify/require approval from.
+**Why it's wrong:** Same elevation-of-privilege class of bug this codebase already explicitly guards against in `register/route.ts` (comment: "attacker cannot POST an arbitrary user_id"). A client-supplied manager id could let a requester self-approve by claiming to be their own manager.
+**Do this instead:** Always derive `current_manager_id` server-side from `SELECT business_account_id FROM business_paikka_links WHERE paikka_id = X`, never from the request body.
 
 ## Integration Points
 
@@ -195,49 +253,35 @@ PROPOSED:
 
 | Service | Integration Pattern | Notes |
 |---------|---------------------|-------|
-| Google Places API (Text Search + Place Details) | Server-only `GOOGLE_PLACES_API_KEY`, called from `/api/admin/sync-paikat` (cron/manual `GET` with `ADMIN_SECRET` bearer auth) | Entire integration point to be decommissioned in this milestone — confirm no other route imports from this file before deleting |
-| Google Maps JS API (Autocomplete/Places widget) | Client-side `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, "ephemeral use" per milestone brief — used live in the Sijainti step's address-search box; only the resulting lat/lng + user-typed string are persisted, not a Places result object | New integration point for v3.0 Sijainti step; reuses existing client-side Maps key, no new env var needed |
+| Resend (existing) | Append two new sender functions to `lib/email.ts` using the existing `resend.emails.send()` call shape | No new env vars; reuse `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_APP_URL` |
+| Supabase Auth (existing `sb-biz-*`) | No change — employees register exactly like any other business account via existing `/api/business/register`; the *only* new concept is the request/approval table | Manager's email for notification comes from `supabaseAdmin.auth.admin.getUserById(current_manager_id)`, same call already used in `admin/approve/route.ts` |
 
 ### Internal Boundaries
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| `middleware.ts` ↔ everything else | Auth-only (session refresh + redirect-if-no-user); never reads `onboarding_draft`/`liikuntapaikat`/`business_accounts` | Hard constraint — do not add table queries here for the redirect-bug fix or the Sijainti step |
-| `app/business/page.tsx` ↔ `onboarding_draft` | Direct browser-client Supabase read (RLS-scoped to `auth.uid()`) | Fix changes this from "navigate away" to "render badge" — same query, different consumer behavior |
-| `WizardInner` (`OnboardingMode`) ↔ `onboarding_draft` | Browser-client reads/writes via `/api/business/onboarding/save-step` (server-verified JWT) and direct reads for resume logic | New Sijainti step, if it writes lat/lng directly to `liikuntapaikat`, should go through a small dedicated route extension (e.g. extend `save-step` or add a sibling route) — do **not** let the client write `latitude`/`longitude` directly via the anon key, since `liikuntapaikat` writes are documented as service-role-only (CLAUDE.md: "Supabase writes: service role key only; anon key is read-only after RLS") |
-| `create-paikka` route ↔ `business_accounts.company_name` | Currently one-way: reads `company_name` for the admin-notification email only, never writes it | Adding yritys-nimi capture means this route (or a sibling) must also `UPDATE business_accounts SET company_name = ...` — needs its own JWT-verified write path, following the exact pattern already used in `create-paikka` (`supabaseAdmin`, verified `user.id`) |
-| `liikuntapaikat.published` gate ↔ admin approval | New venues `published=false` until `business_paikka_links.claim_status` flips to `approved` via the existing approval trigger | Unaffected by this milestone — Sijainti/name changes happen pre-publish, same as today's onboarding fields |
+| `venue_access_requests` ↔ `business_paikka_links` | Direct SQL read (resolve current manager) + direct SQL write (re-point on approval) via `supabaseAdmin` service-role client in Route Handlers — no RLS bypass risk since these are server-only writes | Mirrors the exact relationship `business_paikka_links` already has with `liikuntapaikat` |
+| `/business` dashboard ↔ access-request endpoints | Client-side fetch with the user's `sb-biz-*` session JWT in `Authorization: Bearer` header — same pattern as every existing `/business/*` mutation | New `AccessRequestsPanel.tsx` slots into the existing dashboard without disturbing the venue-list rendering this milestone's dashboard-redesign work is also touching — **coordinate file-level overlap with the dashboard-redesign phase** (both touch `/business/page.tsx`) |
+| Admin panel (`/admin`) ↔ access-request feature | None required. Access requests are resolved entirely by the manager peer-to-peer; admin is not in this loop unless a future "admin can override/audit transfers" requirement appears | Keep these systems decoupled — do not add an admin escalation path unless explicitly requested |
 
-## Migration Order (safest sequence)
+## Suggested Build Order (relative to other v3.1 work)
 
-This is the most consequential architectural question in the brief. Recommended order, with rationale per step:
-
-1. **Land the dashboard redirect-bug fix first, independently.** It is purely a frontend behavior change (`app/business/page.tsx`), touches no schema, and currently **actively breaks any business account that has an in-progress draft** every time they load `/business`. Shipping this first removes a live UX bug without being gated on anything else, and de-risks later phases (you don't want to be debugging onboarding step changes while this redirect is also fighting you in manual QA).
-
-2. **Decommission the Google sync *route and trigger* (code only, no data deletion yet).** Remove/disable `/api/admin/sync-paikat` (or feature-flag it off) and any cron job invoking it. Verify via `business_managed` usage audit (Anti-Pattern 3) whether anything else depends on the route's side effects. This step is safe to ship alone — no live business account is affected by removing a route nobody but admins/cron calls.
-
-3. **Add the new `onboarding_draft.sijainti_osoite` column (additive migration, nullable, no backfill required).** `liikuntapaikat.latitude`/`longitude` already exist — no migration needed there. Because this column is nullable and additive, this migration is safe to run **at any time, including before or after step 2** — it does not depend on Google-sync removal and does not affect existing rows. The only true hard dependency is that this step must land **before** the Sijainti UI/route code that writes to it (standard "migration before code that uses it" ordering).
-
-4. **Insert the Sijainti pre-phase into the onboarding code** (`pagePhase` union + new route/save-step field), gated to the create-from-scratch flow only. This depends on step 3's column existing. Because this changes `onboarding_draft.current_step` semantics again (a third renumbering event after the Phase 50 one), follow the same one-time `UPDATE onboarding_draft SET current_step = ...` data-migration precedent used in `20260617000000_renumber_onboarding_steps.sql` — **write and ship that data migration in the same deploy as the code change**, never split across deploys, to avoid leaving in-flight drafts on stale step numbers (this is the exact bug class that migration was created to prevent).
-
-5. **Only after step 2 has been live for at least one full deploy cycle with zero sync calls observed, run the data-deletion migration** that removes Google-sourced rows from `liikuntapaikat` (e.g. `DELETE FROM liikuntapaikat WHERE business_managed = false AND place_id IS NOT NULL` — confirm predicate against current data before running). This is irreversible, so it must come last among the "safe" steps and strictly after the route is confirmed dead, not just disabled-but-deployed.
-
-6. **Defer column drops (`place_id` and any other Google-only columns) to a later cleanup migration, or don't drop them at all.** Per the milestone's own question ("kept dormant for future re-use?") — recommend **keep `place_id` nullable and dormant**. It costs nothing to leave it (NULL for all business-created rows going forward), it preserves a clean audit trail / re-import path if Google data is ever needed again, and dropping it provides no benefit large enough to justify a destructive schema change. If storage/clutter concerns later make column removal desirable, that is a safe, fully independent migration that can run anytime after step 5 with zero risk to live business accounts (no code reads `place_id` outside the now-deleted sync route — confirm via a repo-wide search before dropping).
-
-**Why this order protects live business accounts mid-onboarding:** Steps 1, 3, and 4 touch only the business onboarding surface and are either purely additive (3) or behavior-only (1, 4-with-migration-discipline) — none of them delete or block in-progress drafts. Step 2 (route removal) cannot affect a business account's `onboarding_draft` or `liikuntapaikat` row, since the sync route only ever wrote to non-`business_managed` rows. Step 5 (data deletion) is scoped to `business_managed = false` rows by construction (the existing sync route already excludes `business_managed = true`), so even run without extra care it should never touch a venue currently owned by a business account — but ordering it last, after sync is provably dead, removes any chance of a race where a sync run resurrects a row between deletion and route shutdown.
+1. **Migration first** (`venue_access_requests` table + RLS) — pure additive, zero risk of breaking other in-flight v3.1 work (admin bugfix, dashboard redesign, page consolidation, onboarding reorder). Land this before any dashboard UI work so the dashboard-redesign phase can build `AccessRequestsPanel.tsx` against a real schema instead of mocking it.
+2. **Route Handlers** (create/approve/reject) — depends only on the migration; independent of dashboard visual work, admin bugfix, and onboarding reorder. Can proceed in parallel with those phases.
+3. **Email senders in `lib/email.ts`** — small, can be done alongside step 2 by the same phase.
+4. **Dashboard UI integration** (`AccessRequestsPanel`, `RequestAccessButton`) — should land **after** (or carefully coordinated with) the "/business-dashboard: paikkalista → DiagonaalKortti-kortit" redesign phase, since both touch `app/business/page.tsx`. Sequencing this access-request UI phase *after* the dashboard redesign avoids a merge conflict and lets the new panel be designed against the final card layout (status pills, hover/tap icon-button overlay) rather than the old one.
+5. **No dependency on**: admin `/admin` bugfix (different code path entirely — `is_admin` check, separate route), the page-consolidation work (`app/paikat/[id]` removal — unrelated to business routes), or the onboarding step reorder (unrelated wizard steps). These can all proceed in any order relative to this feature.
 
 ## Sources
 
-- Direct repository inspection (HIGH confidence — primary source, not inferred):
-  - `app/business/page.tsx`, `app/business/[id]/layout.tsx`, `app/business/layout.tsx`
-  - `app/business/onboarding/page.tsx`, `StepPaikka.tsx`, `WizardInner.tsx`
-  - `app/components/ClaimSearchForm.tsx`
-  - `app/api/admin/sync-paikat/route.ts`, `app/api/business/create-paikka/route.ts`
-  - `middleware.ts`
-  - `supabase/migrations/20260605000000_business_accounts.sql`, `20260606000000_onboarding.sql`, `20260617000000_renumber_onboarding_steps.sql`
-  - `.planning/PROJECT.md` (decision log, constraints, shipped-feature history)
-  - `CLAUDE.md` (documented architectural constraints: middleware never queries DB, service-role-only writes)
+- `supabase/migrations/20260605000000_business_accounts.sql` — existing `business_accounts` (1 row = 1 login = 1 company) and `business_paikka_links` (`UNIQUE(paikka_id)`, `claim_status` state machine) schema and RLS, read directly from this repo
+- `supabase/migrations/20260615000000_business_accounts_contact_phone.sql` — confirms additive-column convention for this table
+- `lib/supabase-business.ts` — confirms `sb-biz-*` cookie-namespaced client pattern (browser + server)
+- `app/api/admin/approve/route.ts` — confirms JWT-verify → row-ownership-guard → concurrency-safe `count:'exact'` update → non-critical try/catch email pattern, reused as the template for the new approve/reject endpoints
+- `app/api/business/register/route.ts` — confirms "never trust client-supplied id, always derive from verified JWT" convention, and the comment explicitly warning against elevation-of-privilege via body-supplied IDs
+- `lib/email.ts` — confirms Resend singleton, `sub()`/`esc()` header-injection/XSS-safe helpers, and env var conventions to extend rather than duplicate
+- `.planning/PROJECT.md` — confirms "Ketjuadmin (multi-venue per tili, useita toimipisteitä eri omistajilla)" is explicitly deferred to Future, which is the basis for recommending no `companies` table in this milestone
 
 ---
-*Architecture research for: Liikuntahakemisto v3.0 — Google Places decommission + business onboarding location/identity restructuring*
-*Researched: 2026-06-22*
+*Architecture research for: multi-user-per-company + venue access requests in a Next.js 14 / Supabase business portal*
+*Researched: 2026-06-24*
