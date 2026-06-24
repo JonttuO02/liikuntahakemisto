@@ -191,7 +191,7 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 - [x] **Phase 54: Sijainti — karttapinni & osoitehaku onboardingissa** — käyttäjä sijoittaa paikan kartalle klikkaamalla tai osoitehaulla; vain lat/lng + kirjoitettu osoite tallennetaan (SIJAINTI-01, SIJAINTI-02, SIJAINTI-03) (completed 2026-06-23)
 - [x] **Phase 55: AI-lajiluokitus sivuanalyysiin** — AI-sivuanalyysi ehdottaa lajikategoriaa; käyttäjä vahvistaa tai vaihtaa sen (AI-06) (completed 2026-06-23)
 - [x] **Phase 56: Claim/create-rework — luo paikka alusta + nimikäytäntö** — claim-haku poistettu; käyttäjä luo paikan aina alusta, syöttää yritys- ja toimipistenimen erikseen (CLAIM-04, CLAIM-05) (completed 2026-06-24)
-- [ ] **Phase 57: Dashboard-redirect-korjaus & Kesken-tila** — /business ei koskaan automaattiredirectaa onboardingiin; kesken jäänyt onboarding näkyy Kesken-badgella jatkamismahdollisuudella (BIZPANEL-04, BIZPANEL-05)
+- [x] **Phase 57: Dashboard-redirect-korjaus & Kesken-tila** — /business ei koskaan automaattiredirectaa onboardingiin; kesken jäänyt onboarding näkyy Kesken-badgella jatkamismahdollisuudella (BIZPANEL-04, BIZPANEL-05) (completed 2026-06-24)
 
 #### Phase Details
 
@@ -318,9 +318,9 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
   3. Käyttäjä voi jatkaa kesken jäänyttä onboardingia valitsemalla paikan dashboardilta (siirtyy `/business/onboarding?paikka_id=X`)
   4. Tili, jolla on 2+ samanaikaista kesken jäänyttä onboardingia, näkee jokaisen erillisenä jatkettavana rivinä (ei yhtä booleania)
 
-**Plans**: 1 plan (Wave 1)
+**Plans**: 1/1 plans complete
 
-- [ ] 57-01-PLAN.md — Remove /business auto-redirect (BIZPANEL-04); extract deriveVenueStatus helper + Vitest precedence test; per-venue Kesken badge + Jatka resume CTA in VenueRow; statusKesken/jatkaCta i18n keys (FI/EN); human UAT checkpoint (BIZPANEL-05)
+- [x] 57-01-PLAN.md — Remove /business auto-redirect (BIZPANEL-04); extract deriveVenueStatus helper + Vitest precedence test; per-venue Kesken badge + Jatka resume CTA in VenueRow; statusKesken/jatkaCta i18n keys (FI/EN); human UAT checkpoint (BIZPANEL-05)
 
 **UI hint**: yes
 
@@ -403,4 +403,4 @@ Full archive: `.planning/milestones/v2.2-ROADMAP.md`
 | 54. Sijainti — karttapinni & osoitehaku | v3.0 | 3/3 | Complete    | 2026-06-23 |
 | 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 3/3 | Complete    | 2026-06-23 |
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 2/2 | Complete    | 2026-06-24 |
-| 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 0/1 | Planned | - |
+| 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 1/1 | Complete   | 2026-06-24 |
