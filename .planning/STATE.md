@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: UX/UI-korjaukset & business-parannukset
-status: planning
-last_updated: "2026-06-24T13:31:38.927Z"
+status: roadmap_ready
+last_updated: "2026-06-24T00:00:00.000Z"
 last_activity: 2026-06-24
 progress:
-  total_phases: 0
+  total_phases: 7
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,54 +20,50 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-24)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 57 — dashboard-redirect-korjaus-kesken-tila
+**Current focus:** v3.1 roadmap ready — Phases 58–64 defined, awaiting first phase planning
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Not started (roadmap created)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-24 — Milestone v3.1 started
+Status: Roadmap ready — 25/25 v3.1 requirements mapped across 7 phases (58–64)
+Last activity: 2026-06-24 — v3.1 roadmap created
 
-## v3.0 Roadmap Summary
+Next: `/gsd-plan-phase 58` (or `58` / `59` / `61` — all parallel-safe starting points)
 
-| Phase | Goal | Requirements |
-|-------|------|---------------|
-| 52. Cleanup — i18n & AuthModal | EN-locale UI fully localized; AuthModal precedence bug fixed | CLEAN-06, CLEAN-07 |
-| 53. Google Places -datan & synkkauksen poisto | sync route removed; pure-Google rows deleted via link_type provenance check | DATA-11, DATA-12 |
-| 54. Sijainti — karttapinni & osoitehaku | Map-pin + autocomplete location step; only lat/lng + typed address persisted | SIJAINTI-01..03 |
-| 55. AI-lajiluokitus sivuanalyysiin | AI suggests sport category (lib/lajit.ts taxonomy); user confirms/edits | AI-06 |
-| 56. Claim/create-rework — luo alusta + nimikäytäntö | Create-only flow; separate company/branch name fields + normalization + backfill | CLAIM-04, CLAIM-05 |
-| 57. Dashboard-redirect-korjaus & Kesken-tila | /business never auto-redirects; per-venue Kesken badge with resume | BIZPANEL-04, BIZPANEL-05 |
-
-Dependency order: 52, 53, 55 independent (parallel-safe) → 54 feeds 56 → 57 LAST (after 56's claim/create rework; per PITFALLS Pitfall 9 the dashboard/redirect entry point couples to the reworked create flow).
-
-Open product decisions to resolve before the relevant phase:
-
-- ~~**Phase 53**: Fate of unclaimed-but-kept venues post sync-removal~~ — RESOLVED 2026-06-22: operator chose full wipe (327/327, including 5 claimed rows) at the live gate instead of the planned provenance-preserving delete (322/327); no pre-migration pg_dump was taken (PITFALLS Pitfall 2 risk accepted). See `53-03-SUMMARY.md`.
-- ~~**Phase 56**: Company/branch naming = cosmetic (one venue per flow) vs. multi-branch precursor~~ — RESOLVED 2026-06-24: cosmetic naming only (yritysNimi + toimipisteNimi combined into one `liikuntapaikat.nimi`); chain support (multi-branch per owner) stays deferred to Future, logged in PROJECT.md Key Decisions.
-
-## v2.2 Roadmap Summary
+## v3.1 Roadmap Summary
 
 | Phase | Goal | Requirements |
 |-------|------|---------------|
-| 47. Skeema & monisivuinen scraper-putki | Multi-page crawl + SSRF re-validation + schema for plural branding data | SCRAP-06..09, BRDDB-03..05 |
-| 48. Logo-, väri- ja galleriavalinta | User picks logo/colors from candidates; validated PATCH route; gallery prefill | ONBOARD-14..17 |
-| 49. Esikatselu- ja kontrastikorjaukset | Step 6 CalloutCard swap; shared contrast-safe logo primitive | PREV-02, PREV-03 |
-| 50. Flow-uudelleenjärjestys & pikahyväksyntä | StepPaikka before URL-analysis; quick-accept into admin queue | FLOW-01..04 |
-| 51. Live-esikatselu velhossa | Shared live-preview state; desktop split / mobile toggle | LIVEPREV-01..04 |
+| 58. Admin-pääsy & kartta-QA | Operaattori pääsee /admin-sivulle; hyväksyttyjen paikkojen sijainnit näkyvät kartalla oikein (diagnoosi ensin, root cause unknown) | ADMIN-06, QA-01 |
+| 59. Multi-company-skeemamigraatio | companies-taulu + role-sarake + löysennetty UNIQUE + RLS-rewrite; pre-migration backup -gate | ACCESS-01, ACCESS-02 |
+| 60. Hallintaoikeuspyynnöt — backend & sähköposti | business_access_requests, Route Handlers (concurrency-safe), 2 Resend-senderiä, RLS-tason pääsynesto | ACCESS-03, ACCESS-05, ACCESS-06 |
+| 61. Onboarding-vaiheiden uudelleenjärjestys | Nimi+URL ensin (AI taustalla), sijainti, AI-tarkastelu, preview-step pois, contact-stepistä URL pois, PREVIEW→SUBMIT | ONBOARD-18..24 |
+| 62. Venuepage-konsolidaatio | app/paikat/[id] poistettu; sisältö+navigointi yhdistetty PaikkaSheetiin; vanha reitti 404 | VENUEPAGE-01..04 |
+| 63. Business-dashboardin & preview-näkymien uudistus | DiagonaalKortti-dashboard + ikonipainikkeet; CalloutCard-preview; venuepage live-previewssä; previewt visuaalisia | BIZPANEL-06, BIZPANEL-07, PREV-04, LIVEPREV-05, PREV-05 |
+| 64. Hallintaoikeuspyynnöt — dashboard-UI | Päähallitsija hyväksyy/hylkää pyynnöt + poistaa sub-managerit uudistetussa dashboardissa | ACCESS-04, ACCESS-07 |
 
-Dependency order: 47 → 48 → 49 → 50 (parallel-safe with 48/49 if needed) → 51 (must be last; consumes final data shape from 47-49).
+**Dependency order:**
+- Phase 58 (admin/QA) — independent, parallel-safe, start anytime
+- Phase 61 (onboarding reorder) — independent code path, parallel-safe
+- Phase 59 (schema) → Phase 60 (access backend) → Phase 64 (access UI)
+- Phase 62 (venuepage) → Phase 63 (dashboard redesign) → Phase 64 (access UI)
+- Critical path: 59 → 60 → 64 and 62 → 63 → 64 converge at Phase 64
 
-## v2.1 Summary
+**Sequencing rationale (from research + instructions):**
+- ACCESS-01/02 schema MUST be its own gating phase with explicit pre-migration backup (Phase 53 precedent: unbacked migration → unrecoverable data loss; this one is auth-adjacent)
+- ACCESS dashboard UI (64) sequenced AFTER dashboard redesign (63) — both touch `app/business/page.tsx`; building access UI against the old list layout would be throwaway
+- VENUEPAGE consolidation (62) before LIVEPREV-05 (63) — LIVEPREV-05 needs the consolidated venuepage feature-complete
+- PREV-04/PREV-05 (lightweight) ride along in Phase 63 with BIZPANEL-06/07 and LIVEPREV-05
+- ADMIN-06 + QA-01 (58) and ONBOARD-18..24 (61) independent of everything else
 
-v2.1 AI-pohjainen yrityssivuanalyysi — shipped 2026-06-16.
+## Open Product Decisions (resolve before relevant phase)
 
-- Phase 44: Brändidatan tietokantaperusta (1/1 plans) ✅
-- Phase 45: Scraper & Claude API -putki (4/4 plans) ✅
-- Phase 46: Pre-vaihe UI & velhointegraatio (5/5 plans) ✅
-
-All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
+- **Phase 60/64 (ACCESS-03):** Venue lookup UX for the requester — venue name search vs. shared deep link? Confirm during `/gsd-discuss-phase` for Phase 60 (research Gap).
+- **Phase 59 (audit log):** Confirm whether an append-only action log ships in Phase 59's schema or is deferred to a fast-follow — recommended "should have," cheap either way (research Gap).
+- **Phase 59 (migration safety):** Confirm exact pre-migration backup/rollback mechanism (Supabase point-in-time recovery vs. manual pg_dump) operationally BEFORE writing the migration (research Flag).
+- **Phase 59 (RLS perf):** Verify with EXPLAIN ANALYZE that the composite index is actually used by the EXISTS-subquery RLS pattern, not just assumed (research Flag).
+- **Phase 62 (VENUEPAGE-02):** Audit which unique content on `app/paikat/[id]` is NOT yet on PaikkaSheet and must migrate before deletion.
 
 ## Active Decisions (carried forward)
 
@@ -81,88 +77,40 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
 - **v1.9**: Business routes use `sb-biz-*` cookie namespace; consumer routes use default `sb-*`
 - **v1.9**: `createBusinessServerClient()` and `createBusinessBrowserClient()` in `lib/supabase-business.ts`
 - **v1.9**: Single `WizardInner` component (mode: 'onboarding' | 'edit')
-- **v2.0**: /business/map is a NEW standalone route — does NOT modify Etusivu.tsx
-- **v2.0**: Consumer /profiili page is NOT touched — business users navigate to /business/profiili
-- **v2.1**: No Playwright — `fetch` only; Framer/SPA fallback is manual entry
-- **v2.1**: `business_branding` FK references `business_accounts`, not `businesses`
-- **v2.1**: One Claude API call per analysis (vision + text in same message)
-- **v2.1**: `waitUntil` fire-and-forget — POST returns immediately; background pipeline continues
-- **v2.2 (research)**: New dependency `cheerio@^1.2.0` for DOM-based link/image discovery — replaces regex extraction
-- **v2.2 (research)**: No concurrency-limiter, no headless browser, no state-management library, no form library — existing patterns (`Promise.all` + `AbortSignal.timeout`, React Context+reducer) are sufficient
-- **v2.2 (research)**: Live preview (Phase 51) sequenced last — depends on final data shape from Phases 47-49; building earlier risks rework
+- **v2.0**: /business/map is a standalone route — does NOT modify Etusivu.tsx
+- **v2.1**: One Claude API call per analysis; `waitUntil` fire-and-forget
+- **v3.0**: liikuntapaikat fully wiped (327/327) on Google Places exit; create-only flow (no claim search), yritysNimi + toimipisteNimi → combined `liikuntapaikat.nimi`
+- **v3.1 (research)**: No new runtime dependencies — companies/role/access-requests are pure Postgres DDL + Supabase RLS + existing Resend; avoid CASL/Oso/Cerbos/Clerk/WorkOS
+- **v3.1 (research)**: Co-management model confirmed (multiple employees per venue), single päähallitsija (owner) approves/removes; ARCHITECTURE.md's hand-off design discarded
+- **v3.1 (research)**: `current_company_id()` SECURITY DEFINER helper avoids same-table RLS recursion (same pattern as existing `set_business_managed_on_approval()`)
+- **v3.1 (research)**: Replicate `admin/approve` route's `UPDATE ... WHERE status='pending'` + `count:'exact'` concurrency pattern for peer approval — do not reinvent
 
-## Carry-Forward (open items for next milestone)
+## Carry-Forward (open items from prior milestones)
 
-- P45-WR-05: `lib/branding/storage.ts` uploadLogo — UUID format assertion on `businessAccountId`
-- P45-WR-06: Migration timestamp order — on fresh db push, uploadLogo may fail before bucket creation
-- P45-DNS: DNS rebinding bypasses hostname SSRF guard — post-DNS IP validation deferred (relevant to Phase 47's SSRF re-validation work)
-- CR-01: `app/business/[id]/page.tsx` reads venue data without ownership check (pre-existing since Phase 38)
+- P23-GAP: `AktiiviLogo.tsx` redesigned but orphaned — not imported in `Etusivu.tsx`; bottom sheet still renders old static SVG watermark. Wiring reverted once in Phase 16.
+- CR-01: `app/business/[id]/page.tsx` reads venue data without ownership check (pre-existing since Phase 38) — relevant if Phase 63 touches business page rendering
 - CR-02: `app/api/business/onboarding/submit/route.ts` doesn't filter by `paikka_id` (pre-existing since Phase 38)
-- **Cleanup phase candidate** — fold into a small early phase of the next milestone:
-  - P23-GAP (23-VERIFICATION.md, status gaps_found, never fixed): `AktiiviLogo.tsx` redesigned correctly but orphaned — not imported in `Etusivu.tsx` or anywhere else; bottom sheet still renders the old static SVG watermark (lines 906-933). Wiring attempt was reverted once before in Phase 16 per HANDOFF.json.
-  - ~~P30-GAP~~ — RESOLVED in Phase 52 (2026-06-22): re-verified all four files already route hardcoded strings through next-intl; see `52-VERIFICATION.md`.
-  - ~~P30-BUG~~ — RESOLVED in Phase 52 (2026-06-22): precedence bug had already been fixed in commit `85eea7a8` (2026-06-04); Phase 52 added a regression test guarding it.
-- **P53-FOLLOWUP** (new, Phase 53, 2026-06-22): 2 business accounts (`0f0e024d-...`, `ac22a395-...`) lost their claimed venue when the full `liikuntapaikat` wipe cascaded their `business_paikka_links`/`business_branding` rows. UAT confirmed the dashboard degrades gracefully (no crash), but no re-claim/outreach flow was run. Low priority unless those accounts surface support requests.
-- **P57-FOLLOWUP** (new, Phase 57, 2026-06-24): Consider removing the `StepPaikka` intro screen (`app/business/onboarding/page.tsx` `pagePhase === 'paikka'`) so onboarding starts directly at the AI-analysis (`analyze`) phase right after create-paikka. Raised during 57-01's human-verify checkpoint while diagnosing the Kesken-badge gap; the screen itself isn't broken, just judged as a possibly-unnecessary extra click. Not implemented — fixing the badge gap (P57 checkpoint fix, `submitted_at` flag) was scoped instead. UX/product decision, not a bug — needs a dedicated discussion before touching the flow.
+- P53-FOLLOWUP: 2 business accounts (`0f0e024d-...`, `ac22a395-...`) lost claimed venue in the full liikuntapaikat wipe; dashboard degrades gracefully, no re-claim/outreach flow run
+- P57-FOLLOWUP: Consider removing `StepPaikka` intro screen so onboarding starts at AI-analysis — NOTE: now largely subsumed by Phase 61 (ONBOARD-18 removes PaikkaStep entirely); resolve within Phase 61 discuss
 
 ## Deferred Items
 
-Items acknowledged and deferred at v2.2 milestone close on 2026-06-21 (pre-close audit — all from phases 20-44, pre-existing debt unrelated to v2.2 scope; v2.2's own phases 47-51.1 are clean):
+Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manual checkpoints, low priority unless related area is touched). Full table preserved in prior STATE history and PROJECT.md Cleanup candidates. Key live ones:
 
 | Category | Item | Status |
 |----------|------|--------|
-| uat_gap | Phase 02: 02-UAT.md | unknown |
-| uat_gap | Phase 04: 04-UAT.md | in_progress |
-| uat_gap | Phase 20: 20-HUMAN-UAT.md | partial (4 pending scenarios) |
-| uat_gap | Phase 32: 32-HUMAN-UAT.md | partial (5 pending scenarios) |
-| uat_gap | Phase 33: 33-UAT.md | in_progress |
-| uat_gap | Phase 39: 39-HUMAN-UAT.md | partial (4 pending scenarios) |
-| uat_gap | Phase 42: 42-UAT.md | passed |
-| uat_gap | Phase 43: 43-UAT.md | passed |
-| verification_gap | Phase 20: 20-VERIFICATION.md | human_needed |
-| verification_gap | Phase 21: 21-VERIFICATION.md | human_needed |
-| verification_gap | Phase 22: 22-VERIFICATION.md | human_needed |
-| verification_gap | Phase 23: 23-VERIFICATION.md | gaps_found (see Carry-Forward — P23-GAP) |
-| verification_gap | Phase 25: 25-VERIFICATION.md | human_needed |
-| verification_gap | Phase 26: 26-VERIFICATION.md | human_needed |
-| verification_gap | Phase 27: 27-VERIFICATION.md | human_needed |
-| verification_gap | Phase 30: 30-VERIFICATION.md | resolved in Phase 52 (2026-06-22) — see 52-VERIFICATION.md |
-| verification_gap | Phase 32: 32-VERIFICATION.md | human_needed |
-| verification_gap | Phase 34: 34-VERIFICATION.md | human_needed |
-| verification_gap | Phase 38: 38-VERIFICATION.md | human_needed |
-| verification_gap | Phase 39: 39-VERIFICATION.md | human_needed |
-| verification_gap | Phase 40: 40-VERIFICATION.md | human_needed |
-| verification_gap | Phase 44: 44-VERIFICATION.md | human_needed |
-
-## Open Product Decisions (must resolve before relevant phase)
-
-- **Phase 47**: Multi-venue `business_branding` scoping — confirm re-keying unique constraint to include `paikka_id` (BRDDB-05) is the chosen fix, not just documenting the limitation
-- **Phase 47**: Empirically validate Vercel Hobby `waitUntil` 10s budget under 3-5 page parallel fetch load — do not assume the cap is safe by inspection alone
-- **Phase 50**: Define "minimum viable draft" for quick-accept — what counts as good enough to submit without the remaining wizard steps
+| verification_gap | Phase 23: 23-VERIFICATION.md | gaps_found (P23-GAP, AktiiviLogo orphan) |
+| verification_gap | Phases 20-22, 25-27, 32, 34, 38-40, 44 | human_needed (unconfirmed manual checkpoints) |
+| uat_gap | Phases 02, 04, 20, 32, 33, 39 | partial / in_progress |
 
 ## Session Continuity
 
-Last session: 2026-06-24T09:48:58.489Z
-Stopped at: Phase 57 UI-SPEC approved
-Resume file: .planning/phases/57-dashboard-redirect-korjaus-kesken-tila/57-UI-SPEC.md
-
-## Performance Metrics
-
-| Phase | Plan | Duration | Notes |
-|-------|------|----------|-------|
-| Phase 48 P04 | 10min | 2 tasks | 2 files |
-
-## Decisions
-
-- [Phase ?]: 48-04: handleConfirm save-step writes step:1 so WizardInner lands on Step 2 (Media), not skipping it
-- [Phase ?]: 48-04: StepEsikatselu brandColor fallback uses colors.find(role==='background') instead of colors[0], mirroring AnalysoiSivusto
-
-## Accumulated Context
-
-### Roadmap Evolution
-
-- Phase 51.1 inserted after Phase 51: Live preview missing on AnalysoiSivusto analyze/quick-accept results screen — flagged by Phase 50 summary, scoped out of Phase 51 CONTEXT.md by mistake (the preview sub-phase has brandingResult data available, contrary to the blanket pre-phase exclusion reasoning) (URGENT)
+Last session: 2026-06-24 — v3.1 roadmap created
+Stopped at: ROADMAP.md + STATE.md written, REQUIREMENTS.md traceability filled
+Resume file: .planning/ROADMAP.md (v3.1 — Active Milestone section)
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Review the v3.1 roadmap (`.planning/ROADMAP.md` → "v3.1 — Active Milestone")
+- Start planning: `/gsd-plan-phase 58` (admin/QA), `58`/`59`/`61` are all parallel-safe entry points
+- Phase 59 needs the pre-migration backup mechanism confirmed before its migration is written

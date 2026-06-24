@@ -72,41 +72,48 @@ Deferred — not in v3.1 scope.
 
 ## Traceability
 
-Filled during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ADMIN-06 | TBD | Pending |
-| QA-01 | TBD | Pending |
-| ACCESS-01 | TBD | Pending |
-| ACCESS-02 | TBD | Pending |
-| ACCESS-03 | TBD | Pending |
-| ACCESS-04 | TBD | Pending |
-| ACCESS-05 | TBD | Pending |
-| ACCESS-06 | TBD | Pending |
-| ACCESS-07 | TBD | Pending |
-| BIZPANEL-06 | TBD | Pending |
-| BIZPANEL-07 | TBD | Pending |
-| PREV-04 | TBD | Pending |
-| LIVEPREV-05 | TBD | Pending |
-| PREV-05 | TBD | Pending |
-| VENUEPAGE-01 | TBD | Pending |
-| VENUEPAGE-02 | TBD | Pending |
-| VENUEPAGE-03 | TBD | Pending |
-| VENUEPAGE-04 | TBD | Pending |
-| ONBOARD-18 | TBD | Pending |
-| ONBOARD-19 | TBD | Pending |
-| ONBOARD-20 | TBD | Pending |
-| ONBOARD-21 | TBD | Pending |
-| ONBOARD-22 | TBD | Pending |
-| ONBOARD-23 | TBD | Pending |
-| ONBOARD-24 | TBD | Pending |
+| ADMIN-06 | Phase 58 | Pending |
+| QA-01 | Phase 58 | Pending |
+| ACCESS-01 | Phase 59 | Pending |
+| ACCESS-02 | Phase 59 | Pending |
+| ACCESS-03 | Phase 60 | Pending |
+| ACCESS-05 | Phase 60 | Pending |
+| ACCESS-06 | Phase 60 | Pending |
+| ACCESS-04 | Phase 64 | Pending |
+| ACCESS-07 | Phase 64 | Pending |
+| BIZPANEL-06 | Phase 63 | Pending |
+| BIZPANEL-07 | Phase 63 | Pending |
+| PREV-04 | Phase 63 | Pending |
+| LIVEPREV-05 | Phase 63 | Pending |
+| PREV-05 | Phase 63 | Pending |
+| VENUEPAGE-01 | Phase 62 | Pending |
+| VENUEPAGE-02 | Phase 62 | Pending |
+| VENUEPAGE-03 | Phase 62 | Pending |
+| VENUEPAGE-04 | Phase 62 | Pending |
+| ONBOARD-18 | Phase 61 | Pending |
+| ONBOARD-19 | Phase 61 | Pending |
+| ONBOARD-20 | Phase 61 | Pending |
+| ONBOARD-21 | Phase 61 | Pending |
+| ONBOARD-22 | Phase 61 | Pending |
+| ONBOARD-23 | Phase 61 | Pending |
+| ONBOARD-24 | Phase 61 | Pending |
 
 **Coverage:**
 - v1 requirements: 25 total
-- Mapped to phases: 0 (filled by roadmapper)
-- Unmapped: 25 ⚠️ (expected before roadmap creation)
+- Mapped to phases: 25 ✓
+- Unmapped: 0 ✓
+
+**Phase coverage map:**
+- Phase 58: ADMIN-06, QA-01 (2)
+- Phase 59: ACCESS-01, ACCESS-02 (2)
+- Phase 60: ACCESS-03, ACCESS-05, ACCESS-06 (3)
+- Phase 61: ONBOARD-18..24 (7)
+- Phase 62: VENUEPAGE-01..04 (4)
+- Phase 63: BIZPANEL-06, BIZPANEL-07, PREV-04, LIVEPREV-05, PREV-05 (5)
+- Phase 64: ACCESS-04, ACCESS-07 (2)
 
 ---
 *Requirements defined: 2026-06-24*
-*Last updated: 2026-06-24 after milestone v3.1 requirements definition*
+*Last updated: 2026-06-24 — roadmap created, traceability filled (25/25 mapped)*
