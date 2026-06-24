@@ -43,7 +43,8 @@
   1. `/admin/[id]`-sivulla on uusi "Sijainti"-osio, joka näyttää paikan pinnin kartalla samalla SportPin/CalloutCard-tyylillä kuin pääsivun kartta
   2. Kartta on zoomattava/pannattava, keskitetty paikan koordinaatteihin kiinteällä lähizoomilla (~15)
   3. Pinin klikkaus näyttää CalloutCardin, mutta ei avaa venuepagea tai laukaise muuta navigointia
-**Plans**: TBD
+**Plans**: 1 plan
+- [ ] 58-01-PLAN.md — Read-only "Sijainti" venue-location map section on /admin/[id] (Map + AdvancedMarker + SportPin + CalloutCard, fixed zoom 15, no-op CalloutCard click)
 **UI hint**: yes
 
 ### Phase 59: Multi-company-skeemamigraatio
@@ -374,7 +375,7 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 3/3 | Complete    | 2026-06-23 |
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 2/2 | Complete    | 2026-06-24 |
 | 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 1/1 | Complete    | 2026-06-24 |
-| 58. Admin-pääsy & kartta-QA | v3.1 | 0/? | Not started | - |
+| 58. Admin-pääsy & kartta-QA | v3.1 | 0/1 | Not started | - |
 | 59. Multi-company-skeemamigraatio | v3.1 | 0/? | Not started | - |
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 0/? | Not started | - |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 0/? | Not started | - |
