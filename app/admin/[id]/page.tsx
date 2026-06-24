@@ -4,13 +4,16 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabaseSSR'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
-import { motion, AnimatePresence } from 'framer-motion'
 import DiagonaalKortti from '@/app/components/DiagonaalKortti'
 import PaikkaSheet from '@/app/components/PaikkaSheet'
 import SportPin from '@/app/components/SportPin'
 import CalloutCard from '@/app/components/CalloutCard'
-import MapAutoZoom from '@/app/components/MapAutoZoom'
 import type { Liikuntapaikka } from '@/lib/types'
+
+// Half the CalloutCard's rendered height (~206px tall / 2) — the camera target below is
+// shifted by this many pixels (via the map projection, not a flat-degrees approximation)
+// so the card's visual midpoint, not the venue's raw coordinate, ends up centered.
+const CALLOUT_CARD_HALF_HEIGHT_PX = 103
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 
@@ -40,7 +43,6 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
   // Sijainti map state — zoom-driven pin/card switch, mirrors Etusivu.tsx
   const [zoomLevel, setZoomLevel] = useState(15)
   const [autoZoomTarget, setAutoZoomTarget] = useState<{ lat: number; lng: number } | null>(null)
-  const [panTick, setPanTick] = useState(0)
 
   useEffect(() => {
     async function load() {
@@ -189,8 +191,8 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
               <div className="flex flex-col gap-2">
                 <SectionLabel>Sijainti</SectionLabel>
                 <div
-                  className="relative rounded-2xl overflow-hidden border border-[rgba(0,0,0,0.07)]"
-                  style={{ width: '100%', height: '320px' }}
+                  className="relative rounded-2xl border border-[rgba(0,0,0,0.07)]"
+                  style={{ width: '100%', height: '320px', clipPath: 'inset(0 round 16px)' }}
                 >
                   <Map
                     mapId={MAP_ID}
@@ -201,27 +203,26 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
                     style={{ width: '100%', height: '320px' }}
                     onCameraChanged={ev => setZoomLevel(Math.round(ev.detail.zoom))}
                   >
-                    <MapAutoZoom target={autoZoomTarget} onComplete={() => { setAutoZoomTarget(null); setPanTick(t => t + 1) }} />
-                    <PanToCenterCallout tick={panTick} />
+                    <AdminCardZoom target={autoZoomTarget} onComplete={() => setAutoZoomTarget(null)} />
                     <AdvancedMarker position={{ lat: paikka.latitude, lng: paikka.longitude }}>
                       <div style={{ position: 'relative', width: 0, height: 0 }}>
-                        <AnimatePresence initial={false}>
-                          {zoomLevel < 16 && (
-                            <motion.div key="pin"
-                              style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)' }}
-                              exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-                              onClick={() => setAutoZoomTarget({ lat: paikka.latitude!, lng: paikka.longitude! })}>
-                              <SportPin laji={paikka.laji} />
-                            </motion.div>
-                          )}
-                          {zoomLevel >= 16 && !autoZoomTarget && (
-                            <motion.div key="card"
-                              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-                              style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)', overflow: 'visible' }}>
+                        {zoomLevel < 16 ? (
+                          <div
+                            style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)' }}
+                            onClick={() => setAutoZoomTarget({ lat: paikka.latitude!, lng: paikka.longitude! })}>
+                            <SportPin laji={paikka.laji} />
+                          </div>
+                        ) : (
+                          <div style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)', overflow: 'visible' }}>
+                            {/* Extra wrapper div, matching Etusivu.tsx's nesting depth (its layoutId
+                                motion.div) — omitting this level changes how the filter: drop-shadow
+                                composites relative to the marker's own transform, making the shadow
+                                visibly larger/squarer than on the main map despite identical CSS. */}
+                            <div>
                               <CalloutCard p={{ ...paikka, latitude: paikka.latitude, longitude: paikka.longitude }} />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </AdvancedMarker>
                   </Map>
@@ -251,17 +252,50 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
   )
 }
 
-function PanToCenterCallout({ tick }: { tick: number }) {
+// Single combined zoom+center animation for the admin Sijainti map. Unlike the shared
+// MapAutoZoom (used on the main map, which zooms to the venue's raw coordinate), this
+// computes an adjusted target up front — offset by CALLOUT_CARD_HALF_HEIGHT_PX via the
+// map's own projection — so the camera animates directly to the CalloutCard's centered
+// position in one motion, instead of zooming to the venue point and then panning afterward.
+function AdminCardZoom({ target, onComplete }: { target: { lat: number; lng: number } | null; onComplete: () => void }) {
   const map = useMap()
-  const lastTick = useRef(0)
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
   useEffect(() => {
-    if (!map || tick === lastTick.current) return
-    lastTick.current = tick
-    // Shifts map content down so the CalloutCard's vertical midpoint (not its
-    // bottom anchor, which sits at the venue's lat/lng) lands at the map center.
-    // ~206px card height / 2. If this pans the wrong direction, flip the sign.
-    map.panBy(0, -103)
-  }, [map, tick])
+    if (!map || !target) return
+    const fromCenter = map.getCenter()
+    const fromZoom = map.getZoom() ?? 14
+    const projection = map.getProjection()
+    if (!fromCenter || !projection) { onCompleteRef.current(); return }
+    const toZoom = Math.max(fromZoom, 16)
+    const scale = Math.pow(2, toZoom)
+    const venuePoint = projection.fromLatLngToPoint(new google.maps.LatLng(target.lat, target.lng))
+    if (!venuePoint) { onCompleteRef.current(); return }
+    const shiftedPoint = new google.maps.Point(venuePoint.x, venuePoint.y - CALLOUT_CARD_HALF_HEIGHT_PX / scale)
+    const adjusted = projection.fromPointToLatLng(shiftedPoint)
+    if (!adjusted) { onCompleteRef.current(); return }
+    const toLat = adjusted.lat()
+    const toLng = adjusted.lng()
+    const fromLat = fromCenter.lat()
+    const fromLng = fromCenter.lng()
+    const duration = 700
+    const ease = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
+    let start: number | null = null
+    let raf: number
+    function step(ts: number) {
+      if (!start) start = ts
+      const t = Math.min((ts - start) / duration, 1)
+      const e = ease(t)
+      map!.moveCamera({
+        center: { lat: fromLat + (toLat - fromLat) * e, lng: fromLng + (toLng - fromLng) * e },
+        zoom: fromZoom + (toZoom - fromZoom) * e,
+      })
+      if (t < 1) raf = requestAnimationFrame(step)
+      else onCompleteRef.current()
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [map, target])
   return null
 }
 

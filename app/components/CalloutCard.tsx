@@ -153,6 +153,16 @@ export default function CalloutCard({
           paddingBottom: 23,
           clipPath: clipPath ? `path('${clipPath}')` : undefined,
           borderRadius: clipPath ? 0 : 10,
+          // `box-shadow` is NOT clipped by `clip-path` the same way background/border are —
+          // it follows the element's full rectangular box, so .glass's outer shadow bleeds out
+          // past the notch as a visible rectangle once a path is active. `filter: drop-shadow()`
+          // follows the actual painted (clipped) silhouette instead, so swap to that for the two
+          // outer shadows once we have a real notch shape; keep the inset highlight as box-shadow
+          // since drop-shadow has no inset form and the inset sheen clips correctly as-is.
+          ...(clipPath ? {
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,1)',
+            filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.09)) drop-shadow(0 1px 4px rgba(0,0,0,0.05))',
+          } : {}),
           // Override the FULL `background` (not just backgroundColor) so brandColor fully
           // replaces .glass's white gradient background-image — setting backgroundColor alone
           // leaves the gradient layered on top, visibly washing the brand color out toward
