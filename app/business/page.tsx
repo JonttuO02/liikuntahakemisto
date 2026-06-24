@@ -233,7 +233,7 @@ export default function BusinessPage() {
       setVenueLinks(prev =>
         prev.map(l =>
           l.paikka_id === paikkaId
-            ? { ...l, claim_status: 'pending', rejection_reason: null }
+            ? { ...l, claim_status: 'pending', rejection_reason: null, submitted_at: new Date().toISOString() }
             : l
         )
       )
