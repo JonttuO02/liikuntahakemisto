@@ -10,9 +10,12 @@ import SportPin from '@/app/components/SportPin'
 import CalloutCard from '@/app/components/CalloutCard'
 import type { Liikuntapaikka } from '@/lib/types'
 
-// Half the CalloutCard's rendered height (~206px tall / 2) — the camera target below is
-// shifted by this many pixels (via the map projection, not a flat-degrees approximation)
-// so the card's visual midpoint, not the venue's raw coordinate, ends up centered.
+// The camera target below is shifted up by this many pixels (via the map projection, not
+// a flat-degrees approximation) so the card's visual midpoint, not the venue's raw
+// coordinate, ends up centered. CalloutCard's own measured offsetHeight is 171px, not
+// the ~206px this value would imply if read as an exact half-height — this was tuned by
+// live visual testing during the human-verify checkpoint, not derived precisely from
+// CalloutCard's CSS, so treat it as an empirical constant rather than literal geometry.
 const CALLOUT_CARD_HALF_HEIGHT_PX = 103
 
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
@@ -187,7 +190,13 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
         {/* Venue preview — same components as onboarding StepEsikatselu */}
         {paikka && (
           <>
-            {paikka.latitude != null && paikka.longitude != null && (
+            {paikka.latitude != null && paikka.longitude != null && (() => {
+              // Narrowed once here so every closure below (including AdminCardZoom's
+              // click handler) captures a proven-non-null primitive instead of re-reading
+              // the nullable `paikka.latitude`/`longitude` fields through a fresh closure.
+              const lat = paikka.latitude
+              const lng = paikka.longitude
+              return (
               <div className="flex flex-col gap-2">
                 <SectionLabel>Sijainti</SectionLabel>
                 <div
@@ -196,30 +205,31 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
                 >
                   <Map
                     mapId={MAP_ID}
-                    defaultCenter={{ lat: paikka.latitude, lng: paikka.longitude }}
+                    defaultCenter={{ lat, lng }}
                     defaultZoom={15}
                     disableDefaultUI
                     gestureHandling="greedy"
                     style={{ width: '100%', height: '320px' }}
                     onCameraChanged={ev => setZoomLevel(Math.round(ev.detail.zoom))}
                   >
+                    <DismissOnMapClick />
                     <AdminCardZoom target={autoZoomTarget} onComplete={() => setAutoZoomTarget(null)} />
-                    <AdvancedMarker position={{ lat: paikka.latitude, lng: paikka.longitude }}>
+                    <AdvancedMarker position={{ lat, lng }}>
                       <div style={{ position: 'relative', width: 0, height: 0 }}>
                         {zoomLevel < 16 ? (
                           <div
                             style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)' }}
-                            onClick={() => setAutoZoomTarget({ lat: paikka.latitude!, lng: paikka.longitude! })}>
+                            onClick={() => setAutoZoomTarget({ lat, lng })}>
                             <SportPin laji={paikka.laji} />
                           </div>
                         ) : (
-                          <div style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)', overflow: 'visible' }}>
+                          <div style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)' }}>
                             {/* Extra wrapper div, matching Etusivu.tsx's nesting depth (its layoutId
                                 motion.div) — omitting this level changes how the filter: drop-shadow
                                 composites relative to the marker's own transform, making the shadow
                                 visibly larger/squarer than on the main map despite identical CSS. */}
                             <div>
-                              <CalloutCard p={{ ...paikka, latitude: paikka.latitude, longitude: paikka.longitude }} />
+                              <CalloutCard p={{ ...paikka, latitude: lat, longitude: lng }} />
                             </div>
                           </div>
                         )}
@@ -228,7 +238,8 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
                   </Map>
                 </div>
               </div>
-            )}
+              )
+            })()}
 
             <div className="flex flex-col gap-2">
               <SectionLabel>Diagonaalikortti</SectionLabel>
@@ -252,6 +263,22 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
   )
 }
 
+// Clicking the map while the CalloutCard is showing zooms back out to the pin view —
+// otherwise the only way back is manually scrolling/pinching below zoom 16. Registered
+// via the real map instance (not a React click prop) so it drives the actual camera zoom,
+// which then naturally re-syncs `zoomLevel` through the existing onCameraChanged handler.
+function DismissOnMapClick() {
+  const map = useMap()
+  useEffect(() => {
+    if (!map) return
+    const listener = map.addListener('click', () => {
+      if ((map.getZoom() ?? 0) >= 16) map.setZoom(15)
+    })
+    return () => listener.remove()
+  }, [map])
+  return null
+}
+
 // Single combined zoom+center animation for the admin Sijainti map. Unlike the shared
 // MapAutoZoom (used on the main map, which zooms to the venue's raw coordinate), this
 // computes an adjusted target up front — offset by CALLOUT_CARD_HALF_HEIGHT_PX via the
@@ -266,14 +293,21 @@ function AdminCardZoom({ target, onComplete }: { target: { lat: number; lng: num
     const fromCenter = map.getCenter()
     const fromZoom = map.getZoom() ?? 14
     const projection = map.getProjection()
-    if (!fromCenter || !projection) { onCompleteRef.current(); return }
     const toZoom = Math.max(fromZoom, 16)
+    // Projection can be transiently unavailable (e.g. mid tile-load) — fall back to an
+    // uncentered zoom rather than silently dropping the click with no visual feedback.
+    if (!fromCenter || !projection) {
+      map.panTo(target)
+      map.setZoom(toZoom)
+      onCompleteRef.current()
+      return
+    }
     const scale = Math.pow(2, toZoom)
     const venuePoint = projection.fromLatLngToPoint(new google.maps.LatLng(target.lat, target.lng))
-    if (!venuePoint) { onCompleteRef.current(); return }
+    if (!venuePoint) { map.panTo(target); map.setZoom(toZoom); onCompleteRef.current(); return }
     const shiftedPoint = new google.maps.Point(venuePoint.x, venuePoint.y - CALLOUT_CARD_HALF_HEIGHT_PX / scale)
     const adjusted = projection.fromPointToLatLng(shiftedPoint)
-    if (!adjusted) { onCompleteRef.current(); return }
+    if (!adjusted) { map.panTo(target); map.setZoom(toZoom); onCompleteRef.current(); return }
     const toLat = adjusted.lat()
     const toLng = adjusted.lng()
     const fromLat = fromCenter.lat()

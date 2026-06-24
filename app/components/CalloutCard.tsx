@@ -159,6 +159,9 @@ export default function CalloutCard({
           // follows the actual painted (clipped) silhouette instead, so swap to that for the two
           // outer shadows once we have a real notch shape; keep the inset highlight as box-shadow
           // since drop-shadow has no inset form and the inset sheen clips correctly as-is.
+          // Shared with the main customer-facing map (Etusivu.tsx uses this same component) —
+          // this branch was originally motivated by a bug found on the admin venue map's
+          // clip-path-rounded container, but it's a latent-bug fix here too, not a behavior change.
           ...(clipPath ? {
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,1)',
             filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.09)) drop-shadow(0 1px 4px rgba(0,0,0,0.05))',
