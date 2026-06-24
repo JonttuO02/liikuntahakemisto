@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { AnimatePresence } from 'framer-motion'
 import { Map } from 'lucide-react'
@@ -93,11 +92,13 @@ function StatusCard({
 function VenueRow({
   link,
   t,
+  isKesken,
   onPreview,
   onReapply,
 }: {
   link: VenueLink
   t: TBusiness
+  isKesken: boolean
   onPreview: (p: Liikuntapaikka) => void
   onReapply: (paikkaId: number) => void
 }) {
@@ -108,13 +109,17 @@ function VenueRow({
           {link.liikuntapaikat?.nimi ?? `Paikka ${link.paikka_id}`}
         </span>
         <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full shrink-0 ${
-          link.claim_status === 'approved'
+          isKesken
+            ? 'bg-[rgba(17,17,17,0.08)] text-[rgba(17,17,17,0.55)]'
+            : link.claim_status === 'approved'
             ? 'bg-green-100 text-green-700'
             : link.claim_status === 'rejected'
             ? 'bg-red-50 text-red-600'
             : 'bg-amber-100 text-amber-700'
         }`}>
-          {link.claim_status === 'approved'
+          {isKesken
+            ? t('statusKesken')
+            : link.claim_status === 'approved'
             ? t('statusApproved')
             : link.claim_status === 'rejected'
             ? t('statusRejected')
@@ -126,17 +131,17 @@ function VenueRow({
       <div className="flex items-center gap-3 mt-1">
         <button
           type="button"
-          disabled={!link.liikuntapaikat}
+          disabled={isKesken || !link.liikuntapaikat}
           onClick={() => { if (link.liikuntapaikat) onPreview(link.liikuntapaikat as unknown as Liikuntapaikka) }}
           className="text-xs text-[rgba(17,17,17,0.45)] hover:text-[#111111] underline-offset-2 hover:underline [transition:color_150ms] disabled:opacity-40 disabled:pointer-events-none"
         >
           {t('esikatseluCta')}
         </button>
         <a
-          href={'/business/' + link.paikka_id}
+          href={isKesken ? '/business/onboarding?paikka_id=' + link.paikka_id : '/business/' + link.paikka_id}
           className="text-xs font-bold text-[#111111] border border-[rgba(0,0,0,0.12)] hover:border-[rgba(0,0,0,0.25)] rounded-full px-3 py-1 [transition:border-color_150ms_var(--ease-out)]"
         >
-          {t('muokkaaCta')}
+          {isKesken ? t('jatkaCta') : t('muokkaaCta')}
         </a>
       </div>
 
@@ -161,8 +166,8 @@ function VenueRow({
 // --- Main page ---
 export default function BusinessPage() {
   const t = useTranslations('Business')
-  const router = useRouter()
   const [venueLinks, setVenueLinks] = useState<VenueLink[]>([])
+  const [keskenPaikkaIds, setKeskenPaikkaIds] = useState<Set<number>>(new Set())
   const [loading, setLoading] = useState(true)
   const [isNotBusinessAccount, setIsNotBusinessAccount] = useState(false)
   const [showAddVenue, setShowAddVenue] = useState(false)
@@ -186,18 +191,14 @@ export default function BusinessPage() {
         return
       }
 
-      // If an incomplete draft exists, resume the onboarding wizard.
-      // This handles both first-time users and multi-venue users mid-onboarding.
+      // Fetch paikka_ids with an in-progress onboarding draft (D-02/D-03).
+      // Existence of a draft row = "Kesken", regardless of claim_status.
       const { data: drafts } = await supabase
         .from('onboarding_draft')
-        .select('id')
+        .select('paikka_id')
         .eq('business_account_id', user.id)
-        .limit(1)
 
-      if (drafts && drafts.length > 0) {
-        router.push('/business/onboarding')
-        return
-      }
+      const keskenSet = new Set<number>((drafts ?? []).map((d: { paikka_id: number }) => d.paikka_id))
 
       // Fetch all linked venues with their approval status and rejection reason
       const { data: links } = await supabase
@@ -207,6 +208,7 @@ export default function BusinessPage() {
         .order('created_at', { ascending: true })
 
       setVenueLinks((links as unknown as VenueLink[]) ?? [])
+      setKeskenPaikkaIds(keskenSet)
       setLoading(false)
     }
     checkState()
@@ -280,6 +282,7 @@ export default function BusinessPage() {
                 key={link.paikka_id}
                 link={link}
                 t={t}
+                isKesken={keskenPaikkaIds.has(link.paikka_id)}
                 onPreview={setPreviewPaikka}
                 onReapply={handleReapply}
               />
