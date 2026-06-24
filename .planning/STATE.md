@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Oma tietokanta
 current_phase: 57
-current_phase_name: dashboard redirect korjaus & kesken tila
+current_phase_name: dashboard-redirect-korjaus-kesken-tila
 status: executing
 stopped_at: Phase 57 UI-SPEC approved
-last_updated: "2026-06-24T10:05:21.613Z"
+last_updated: "2026-06-24T10:09:55.921Z"
 last_activity: 2026-06-24
-last_activity_desc: Phase 56 complete, transitioned to Phase 57
+last_activity_desc: Phase 57 execution started
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 12
+  total_plans: 13
   completed_plans: 12
   percent: 83
 ---
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-24)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 57 — dashboard redirect korjaus & kesken tila
+**Current focus:** Phase 57 — dashboard-redirect-korjaus-kesken-tila
 
 ## Current Position
 
-Phase: 57 — dashboard redirect korjaus & kesken tila
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-24 — Phase 56 complete, transitioned to Phase 57
+Phase: 57 (dashboard-redirect-korjaus-kesken-tila) — EXECUTING
+Plan: 1 of 1
+Status: Executing Phase 57
+Last activity: 2026-06-24 — Phase 57 execution started
 
 ## v3.0 Roadmap Summary
 
@@ -107,6 +107,7 @@ All 14 requirements delivered. Archive: `.planning/milestones/v2.1-ROADMAP.md`
   - ~~P30-GAP~~ — RESOLVED in Phase 52 (2026-06-22): re-verified all four files already route hardcoded strings through next-intl; see `52-VERIFICATION.md`.
   - ~~P30-BUG~~ — RESOLVED in Phase 52 (2026-06-22): precedence bug had already been fixed in commit `85eea7a8` (2026-06-04); Phase 52 added a regression test guarding it.
 - **P53-FOLLOWUP** (new, Phase 53, 2026-06-22): 2 business accounts (`0f0e024d-...`, `ac22a395-...`) lost their claimed venue when the full `liikuntapaikat` wipe cascaded their `business_paikka_links`/`business_branding` rows. UAT confirmed the dashboard degrades gracefully (no crash), but no re-claim/outreach flow was run. Low priority unless those accounts surface support requests.
+- **P57-FOLLOWUP** (new, Phase 57, 2026-06-24): Consider removing the `StepPaikka` intro screen (`app/business/onboarding/page.tsx` `pagePhase === 'paikka'`) so onboarding starts directly at the AI-analysis (`analyze`) phase right after create-paikka. Raised during 57-01's human-verify checkpoint while diagnosing the Kesken-badge gap; the screen itself isn't broken, just judged as a possibly-unnecessary extra click. Not implemented — fixing the badge gap (P57 checkpoint fix, `submitted_at` flag) was scoped instead. UX/product decision, not a bug — needs a dedicated discussion before touching the flow.
 
 ## Deferred Items
 
