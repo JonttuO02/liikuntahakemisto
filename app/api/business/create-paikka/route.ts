@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
 import { sendAdminNotificationEmail } from '@/lib/email'
+import { normalizeNimi } from '@/lib/normalizeNimi'
 
 export async function POST(request: Request) {
   // Security: verify JWT from Authorization header before accepting any user data.
@@ -23,15 +24,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No business account' }, { status: 403 })
   }
 
-  // Parse and validate request body (T-33-03-03: trim + slice prevents oversized inserts)
-  let nimi: string
+  // Parse and validate request body (T-33-03-03 / T-56-02: normalizeNimi caps
+  // name fields at 200 chars; osoite/kaupunki keep the existing 500-char slice)
+  let yritysNimi: string
+  let toimipisteNimi: string
   let osoite: string
   let kaupunki: string
   let latitude: number | null
   let longitude: number | null
   try {
     const body = await request.json()
-    nimi = typeof body.nimi === 'string' ? body.nimi.trim().slice(0, 500) : ''
+    yritysNimi = typeof body.yritysNimi === 'string' ? normalizeNimi(body.yritysNimi) : ''
+    toimipisteNimi = typeof body.toimipisteNimi === 'string' ? normalizeNimi(body.toimipisteNimi) : ''
     osoite = typeof body.osoite === 'string' ? body.osoite.trim().slice(0, 500) : ''
     kaupunki = typeof body.kaupunki === 'string' ? body.kaupunki.trim().slice(0, 500) : ''
 
@@ -48,14 +52,19 @@ export async function POST(request: Request) {
         ? body.longitude
         : null
 
-    if (!nimi || !osoite || !kaupunki || latitude === null || longitude === null) {
+    // toimipisteNimi is optional (D-08) — only yritysNimi is required.
+    if (!yritysNimi || !osoite || !kaupunki || latitude === null || longitude === null) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  // Step 1 of 3: INSERT into liikuntapaikat.
+  // D-06/D-07/D-08: combined company+branch name, no trailing-space artifact
+  // when toimipisteNimi is empty.
+  const nimi = toimipisteNimi ? `${yritysNimi} ${toimipisteNimi}` : yritysNimi
+
+  // Step 1 of 4: INSERT into liikuntapaikat.
   // published=false: new venue hidden from users until admin approves (D-09, T-33-03-05).
   // business_managed is set to true by the approval trigger (PUB-01) when claim_status='approved'.
   const { data: newPaikka, error: paikkaError } = await supabaseAdmin
@@ -73,7 +82,7 @@ export async function POST(request: Request) {
 
   const newPaikkaId: number = newPaikka.id
 
-  // Step 2 of 3: INSERT into business_paikka_links using verified user.id — never body.user_id.
+  // Step 2 of 4: INSERT into business_paikka_links using verified user.id — never body.user_id.
   // Service role key bypasses RLS so the insert succeeds regardless of auth.uid().
   const { error: linkError } = await supabaseAdmin
     .from('business_paikka_links')
@@ -85,6 +94,13 @@ export async function POST(request: Request) {
     })
 
   if (linkError) {
+    // PostgreSQL unique_violation (D-11, T-56-03): UNIQUE(paikka_id) constraint —
+    // venue already linked. Mirrors the claim-paikka 23505→409 pattern; the
+    // constraint is the safety net even though search/claim is removed.
+    if (linkError.code === '23505') {
+      await supabaseAdmin.from('liikuntapaikat').delete().eq('id', newPaikkaId)
+      return NextResponse.json({ error: 'Already claimed' }, { status: 409 })
+    }
     // Atomicity rollback (D-10): delete the orphaned liikuntapaikat row so user can retry.
     await supabaseAdmin.from('liikuntapaikat').delete().eq('id', newPaikkaId)
     return NextResponse.json(
@@ -93,7 +109,19 @@ export async function POST(request: Request) {
     )
   }
 
-  // Step 3 of 3: Set is_claimed = true as a denormalized public flag (D-07).
+  // Step 3 of 4: write yritysNimi to business_accounts.company_name (D-05). Identity
+  // comes from the verified user.id, never the request body (T-56-01).
+  // Non-critical: consistent with the is_claimed/email log-don't-rollback pattern below.
+  const { error: companyUpdateError } = await supabaseAdmin
+    .from('business_accounts')
+    .update({ company_name: yritysNimi })
+    .eq('user_id', user.id)
+
+  if (companyUpdateError) {
+    console.error('[create-paikka] company_name UPDATE failed (non-critical):', companyUpdateError.message)
+  }
+
+  // Step 4 of 4: Set is_claimed = true as a denormalized public flag (D-07).
   // Allows "Jo hallittu" check in search results without RLS-protected business_paikka_links query.
   // Non-critical: if this UPDATE fails, the link still exists — log but do not rollback.
   const { error: updateError } = await supabaseAdmin
