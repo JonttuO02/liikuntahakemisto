@@ -2,16 +2,17 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: — Active Milestone
-current_phase_name: roadmap created
-status: roadmap_ready
+current_phase: 58
+current_phase_name: admin-p-sy-kartta-qa
+status: executing
 stopped_at: Phase 58 UI-SPEC approved
-last_updated: "2026-06-24T15:59:51.880Z"
+last_updated: "2026-06-24T16:39:45.332Z"
 last_activity: 2026-06-24
-last_activity_desc: v3.1 roadmap created
+last_activity_desc: Phase 58 execution started
 progress:
   total_phases: 7
   completed_phases: 0
-  total_plans: 0
+  total_plans: 1
   completed_plans: 0
   percent: 0
 ---
@@ -23,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-24)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** v3.1 roadmap ready — Phases 58–64 defined, awaiting first phase planning
+**Current focus:** Phase 58 — admin-p-sy-kartta-qa
 
 ## Current Position
 
-Phase: Not started (roadmap created)
-Plan: —
-Status: Roadmap ready — 25/25 v3.1 requirements mapped across 7 phases (58–64)
-Last activity: 2026-06-24 — v3.1 roadmap created
+Phase: 58 (admin-p-sy-kartta-qa) — EXECUTING
+Plan: 1 of 1
+Status: Executing Phase 58
+Last activity: 2026-06-24 — Phase 58 execution started
 
 Next: `/gsd-plan-phase 58` (or `58` / `59` / `61` — all parallel-safe starting points)
 

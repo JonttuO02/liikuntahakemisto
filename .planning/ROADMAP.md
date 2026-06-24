@@ -35,85 +35,108 @@
 - [ ] **Phase 64: Hallintaoikeuspyynnöt — dashboard-UI** — Päähallitsija hallitsee pyynnöt ja sub-managerit uudistetussa dashboardissa
 
 ### Phase 58: Admin-sijaintikartta
+
 **Goal**: Admin näkee paikan sijainnin kartalla suoraan hakemuksen tarkastelusivulla, ennen hyväksyntäpäätöstä
 **Depends on**: Nothing (independent of all other workstreams)
 **Requirements**: ADMIN-07
 **Note**: ADMIN-06 ja QA-01 dropped 2026-06-24 (ks. 58-CONTEXT.md) — admin-pääsyongelma ei toistunut, kartta-QA tarkistettu manuaalisesti ilman löydöksiä. ADMIN-07 korvaa molemmat tämän phasen sisällä.
 **Success Criteria** (what must be TRUE):
+
   1. `/admin/[id]`-sivulla on uusi "Sijainti"-osio, joka näyttää paikan pinnin kartalla samalla SportPin/CalloutCard-tyylillä kuin pääsivun kartta
   2. Kartta on zoomattava/pannattava, keskitetty paikan koordinaatteihin kiinteällä lähizoomilla (~15)
   3. Pinin klikkaus näyttää CalloutCardin, mutta ei avaa venuepagea tai laukaise muuta navigointia
+
 **Plans**: 1 plan
-- [ ] 58-01-PLAN.md — Read-only "Sijainti" venue-location map section on /admin/[id] (Map + AdvancedMarker + SportPin + CalloutCard, fixed zoom 15, no-op CalloutCard click)
+
+- [x] 58-01-PLAN.md — Read-only "Sijainti" venue-location map section on /admin/[id] (Map + AdvancedMarker + SportPin + CalloutCard, fixed zoom 15, no-op CalloutCard click)
+
 **UI hint**: yes
 
 ### Phase 59: Multi-company-skeemamigraatio
+
 **Goal**: "Yritys" on olemassa entiteettinä erillään "loginista"; tietomalli tukee saman yrityksen useita työntekijöitä samaan paikkaan
 **Depends on**: Nothing (independent of Phase 58; strict prerequisite for Phases 60 ja 64)
 **Requirements**: ACCESS-01, ACCESS-02
 **Success Criteria** (what must be TRUE):
+
   1. `companies`-taulu ja `business_accounts.company_id`/`role` (owner/member) ovat olemassa; jokainen olemassaoleva tili on migratoitu omaksi yrityksekseen päähallitsijana (owner) yhtenä transaktiona
   2. Ennen migraation ajoa on otettu varmuuskopio ja rollback-mekanismi on vahvistettu (precedent: Phase 53:n varmuuskopioimaton migraatio aiheutti peruuttamatonta datahäviötä — tämä migraatio on auth-vieressä, joten rikkoutunut login olisi pahempi)
   3. `business_paikka_links`-rajoite on löysennetty `UNIQUE(business_account_id, paikka_id)`:ksi, jolloin useampi saman yrityksen tili voi linkittyä samaan paikkaan
   4. RLS-politiikat on kirjoitettu uudelleen `current_company_id()`-helpperifunktiolla; olemassaolevat yritykset näkevät edelleen vain omat paikkansa (regressiotestattu kirjautumisella)
+
 **Plans**: TBD
 
 ### Phase 60: Hallintaoikeuspyynnöt — backend & sähköposti
+
 **Goal**: Saman yrityksen työntekijä voi pyytää hallintaoikeutta paikkaan, ja järjestelmä käsittelee pyynnön elinkaaren turvallisesti — riippumatta dashboard-UI:sta
 **Depends on**: Phase 59 (schema). Independent of Phases 61/62/63 (eri koodipolut)
 **Requirements**: ACCESS-03, ACCESS-05, ACCESS-06
 **Success Criteria** (what must be TRUE):
+
   1. Saman yrityksen työntekijä voi hakea hallintaoikeutta paikkaan nimellä/osoitteella; pyyntö tallentuu `business_access_requests`-tauluun pending-tilaan
   2. Päähallitsija saa Resend-sähköpostin pyynnön saapuessa, ja pyytäjä saa sähköpostin päätöksestä (hylkäyssyy valinnainen)
   3. Pyytäjä näkee selkeän "odottaa hyväksyntää" -tilan eikä saa pääsyä paikan hallintaan ennen hyväksyntää — pääsy on estetty RLS-tasolla, ei vain UI:ssa
   4. Samanaikaiset hyväksynnät eivät voi molemmat onnistua (concurrency-turvallinen `UPDATE ... WHERE status='pending'` + count-check, sama paterni kuin `admin/approve`)
+
 **Plans**: TBD
 
 ### Phase 61: Onboarding-vaiheiden uudelleenjärjestys
+
 **Goal**: Onboarding-virta on uudelleenjärjestetty: paikan nimi + verkko-osoite ensin (AI-analyysi taustalla), sijainti seuraavaksi, AI-tulokset tarkasteltavana, ei erillistä preview-vaihetta
 **Depends on**: Nothing (eri koodipolku: onboarding-velhou vs. dashboard/venuepage). Independent of ACCESS/BIZPANEL/VENUEPAGE-työstä
 **Requirements**: ONBOARD-18, ONBOARD-19, ONBOARD-20, ONBOARD-21, ONBOARD-22, ONBOARD-23, ONBOARD-24
 **Success Criteria** (what must be TRUE):
+
   1. Erillinen PaikkaStep (vain nimi + siirry-painike) on poistettu; uusi step 1 kerää nimen ja verkko-osoitteen yhdessä, ja verkko-osoitteen syöttö käynnistää AI-sivuanalyysin taustalla heti
   2. Sijainti-step (kartta + osoitehaku-autocomplete) on step 2; jos verkko-osoite annettiin, AI-analyysin tulokset näytetään tarkasteltavaksi omana stepinä sijainti-stepin jälkeen
   3. Lopullinen Preview-step on poistettu kokonaan (live-preview on aina näkyvissä), ja Yhteystiedot-stepistä on poistettu verkko-osoite-kenttä (kerätty jo step 1:ssä)
   4. Etenemispalkin "PREVIEW"-vaihe on korvattu "SUBMIT"-vaiheella, joka saavutetaan onboardingin lähetyksen yhteydessä
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 62: Venuepage-konsolidaatio
+
 **Goal**: Erillinen paikkasivu on poistettu ja kaikki sen sisältö ja sisäiset navigointipolut on yhdistetty PaikkaSheet-venuepageen
 **Depends on**: Nothing structurally; MUST land before Phase 63 (LIVEPREV-05 tarvitsee konsolidoidun venuepagen feature-complete-tilassa)
 **Requirements**: VENUEPAGE-01, VENUEPAGE-02, VENUEPAGE-03, VENUEPAGE-04
 **Success Criteria** (what must be TRUE):
+
   1. Poistettavan paikkasivun (`app/paikat/[id]`) ainutlaatuinen sisältö (jota ei vielä ole venuepagella) on siirretty venuepageen (PaikkaSheet) ENNEN sivun poistoa
   2. Erillinen paikkasivu on poistettu kokonaan sovelluksesta
   3. Kaikki sovelluksen sisäiset polut, jotka aiemmin avasivat erillisen paikkasivun, avaavat sen tilalla venuepagen (bottom sheet) samalla tavalla kuin CalloutCardin klikkaus
   4. Suora osoite poistettuun reittiin palauttaa 404 (ei redirectiä)
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 63: Business-dashboardin & preview-näkymien uudistus
+
 **Goal**: `/business`-dashboard on uudistettu DiagonaalKortti-korteilla ja ikonipainikkeilla, ja kaikki preview-näkymät käyttävät CalloutCardia, sisältävät venuepagen ja ovat puhtaasti visuaalisia
 **Depends on**: Phase 62 (LIVEPREV-05 tarvitsee konsolidoidun venuepagen). Land before Phase 64 (molemmat koskevat `app/business/page.tsx`)
 **Requirements**: BIZPANEL-06, BIZPANEL-07, PREV-04, LIVEPREV-05, PREV-05
 **Success Criteria** (what must be TRUE):
+
   1. `/business`-dashboardin paikkalista on korvattu DiagonaalKortti-korteilla, joiden kuvan alakulmassa näkyvät status-pillit
   2. Hover (desktop) / tap (mobiili) paljastaa kortin oikealta piilotetun lisäosan pyöreillä ikonipainikkeilla (preview/edit/jatka) — ei tekstipainikkeita
   3. Business-paikkalistan preview-modaali käyttää CalloutCardia (vanhentunut PaikkaKortti-näkymä poistettu), ja edit/onboarding-live-preview sisältää venuepagen (PaikkaSheet) CalloutCardin ja DiagonaalKortin lisäksi
   4. Kaikki preview-näkymät (dashboardin preview-modaali, edit/onboarding-livepreview) ovat puhtaasti visuaalisia — klikkaus ei laukaise navigointia tai toimintoja
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 64: Hallintaoikeuspyynnöt — dashboard-UI
+
 **Goal**: Päähallitsija hallitsee odottavat hallintaoikeuspyynnöt ja sub-managerien oikeudet uudistetussa `/business`-dashboardissa
 **Depends on**: Phase 60 (backend & RLS) ja Phase 63 (dashboard-redesign — vältetään throwaway-UI vanhaa listalayoutia vasten)
 **Requirements**: ACCESS-04, ACCESS-07
 **Success Criteria** (what must be TRUE):
+
   1. Paikan päähallitsija näkee odottavat hallintaoikeuspyynnöt `/business`-dashboardissa ja voi hyväksyä/hylätä ne
   2. Sub-managerit eivät voi hyväksyä toisten pyyntöjä (estetty sekä UI:ssa että backendissä)
   3. Päähallitsija voi poistaa sub-managerin hallintaoikeuden paikasta
   4. Päähallitsijaa itseään ei voi poistaa tämän virran kautta (kova esto)
+
 **Plans**: TBD
 **UI hint**: yes
 
@@ -375,7 +398,7 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 55. AI-lajiluokitus sivuanalyysiin | v3.0 | 3/3 | Complete    | 2026-06-23 |
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 2/2 | Complete    | 2026-06-24 |
 | 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 1/1 | Complete    | 2026-06-24 |
-| 58. Admin-pääsy & kartta-QA | v3.1 | 0/1 | Not started | - |
+| 58. Admin-pääsy & kartta-QA | v3.1 | 1/1 | Complete   | 2026-06-24 |
 | 59. Multi-company-skeemamigraatio | v3.1 | 0/? | Not started | - |
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 0/? | Not started | - |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 0/? | Not started | - |
