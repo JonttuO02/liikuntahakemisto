@@ -4,8 +4,8 @@ milestone: v3.1
 milestone_name: — Active Milestone
 current_phase_name: roadmap created
 status: roadmap_ready
-stopped_at: Phase 58 context gathered
-last_updated: "2026-06-24T15:54:23.877Z"
+stopped_at: Phase 58 UI-SPEC approved
+last_updated: "2026-06-24T15:59:51.880Z"
 last_activity: 2026-06-24
 last_activity_desc: v3.1 roadmap created
 progress:
@@ -110,9 +110,9 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 
 ## Session Continuity
 
-Last session: 2026-06-24T15:54:23.871Z
-Stopped at: Phase 58 context gathered
-Resume file: .planning/phases/58-admin-p-sy-kartta-qa/58-CONTEXT.md
+Last session: 2026-06-24T15:59:51.872Z
+Stopped at: Phase 58 UI-SPEC approved
+Resume file: .planning/phases/58-admin-p-sy-kartta-qa/58-UI-SPEC.md
 
 ## Operator Next Steps
 
