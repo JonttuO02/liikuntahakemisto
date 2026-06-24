@@ -100,7 +100,7 @@ export async function POST(request: Request) {
   // Non-critical: failure does not block onboarding completion.
   const { error: claimStatusError } = await supabaseAdmin
     .from('business_paikka_links')
-    .update({ claim_status: 'pending' })
+    .update({ claim_status: 'pending', submitted_at: new Date().toISOString() })
     .eq('business_account_id', user.id)
     .eq('paikka_id', draft.paikka_id)
 
