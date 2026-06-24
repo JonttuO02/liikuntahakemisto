@@ -106,3 +106,15 @@ None - no external service configuration required.
 ---
 *Phase: 56-claim-create-rework-luo-paikka-alusta-nimik-yt-nt*
 *Completed: 2026-06-24*
+
+## Self-Check: PASSED
+
+- FOUND: lib/normalizeNimi.ts
+- FOUND: lib/normalizeNimi.test.ts
+- FOUND: app/api/business/create-paikka/route.ts
+- CONFIRMED DELETED: app/api/business/claim-paikka/route.ts
+- FOUND commit: 1767a9d (test: failing test for normalizeNimi)
+- FOUND commit: fcef633 (feat: implement normalizeNimi)
+- FOUND commit: 083860e (feat: rework create-paikka)
+- FOUND commit: d16eb25 (feat: delete claim-paikka route)
+- FOUND commit: 7eba972 (docs: plan 01 summary)
