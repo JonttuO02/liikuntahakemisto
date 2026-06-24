@@ -1,16 +1,8 @@
 # Liikuntahakemisto
 
-## Current Milestone: v3.0 Oma tietokanta (Google Places -irtautuminen)
+## Shipped: v3.0 Oma tietokanta (Google Places -irtautuminen) (2026-06-24)
 
-**Goal:** Poistaa Google Places -datan tallennus kokonaan ja siirtyä täysin omaan, yritysten itse syöttämään paikkadataan.
-
-**Target features:**
-- Cleanup-vaihe: v2.2:sta periytyneet korjaukset (AktiiviLogo-wiring, EN-merkkijonopuutteet, AuthModal-bugi, UAT/verification-gapit)
-- Google Places -synkkaus poistetaan kokonaan koodista; kaikki nykyinen Google-peräinen paikkadata poistetaan tietokannasta
-- Onboardingiin uusi Sijainti-vaihe: kartta + osoitehaku-autocomplete (Google, ephemeral-käyttö) → pinni + zoom; tallennetaan vain lat/lng + käyttäjän kirjoittama osoite
-- Onboardingin AI-sivuanalyysi laajennetaan ehdottamaan myös laji/sport-kategoriaa (käyttäjä vahvistaa/muuttaa)
-- Claim-vaihe muutetaan: käyttäjä luo paikan alusta — manuaalinen nimisyöttö, erillinen yritys-nimi + toimipiste-nimi -kenttäpari, nimikäytäntöjen normalisointi
-- /business-redirectbugi korjataan: ei ikinä automaattiredirectiä onboardingiin; kesken jäänyttä onboardingia voi jatkaa /business-sivulta paikkaa valitsemalla, indikoitu kesken-tilalla
+**Delivered:** Google Places -datan tallennus poistettu kokonaan; siirrytty täysin omaan, yritysten itse syöttämään paikkadataan. Cleanup-vaihe (AuthModal-bugi, EN-merkkijonopuutteet) korjattu; `/api/admin/sync-paikat` poistettu ja kaikki Google-peräinen data tyhjennetty (operaattori valitsi täyden 327/327-tyhjennyksen); onboardingiin uusi Sijainti-vaihe (kartta + osoitehaku-autocomplete, vain lat/lng + kirjoitettu osoite tallennetaan); AI-sivuanalyysi ehdottaa myös laji-kategoriaa; claim-vaihe muutettu create-only-virraksi erillisillä yritys-/toimipiste-nimikentillä; `/business`-redirectbugi korjattu (ei ikinä automaattiredirectiä onboardingiin) ja per-paikka Kesken-tila + Jatka-CTA lisätty, mukaan lukien checkpointissa löytynyt ja korjattu `submitted_at`-precedenssiaukko. 13/13 vaatimusta toimitettu, 6 vaihetta (52-57).
 
 ## Shipped: v2.2 Onboarding-tekoälyn parannukset (2026-06-21)
 
@@ -285,6 +277,8 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **AI-06**: AI-sivuanalyysi ehdottaa lajikategoriaa paikan verkkosivun perusteella `lib/lajit.ts`-taksonomiasta (ei vapaata tekstiä); käyttäjä vahvistaa tai vaihtaa ehdotuksen erottuvalla "ehdotus"-elementillä ennen tallennusta; arvo kirjoitetaan `liikuntapaikat.laji`-kenttään vain eksplisiittisen vahvistuksen jälkeen — v3.0 (Phase 55)
 - ✓ **CLAIM-04**: Claim-vaiheen olemassa-olevan-paikan-haku poistettu kokonaan (`claim-paikka/route.ts` poistettu, `ClaimSearchForm.tsx`:n search/claim-askeleet poistettu) — käyttäjä luo paikan aina alusta — v3.0 (Phase 56)
 - ✓ **CLAIM-05**: Yrityksen nimi (`yritysNimi`, pakollinen) ja toimipisteen nimi (`toimipisteNimi`, valinnainen) syötetään erillisiin kenttiin; yhteinen `lib/normalizeNimi.ts`-helpperi normalisoi (trim, whitespace-collapse, 200 merkin katto per kenttä + yhdistetty katto) ja kirjoittaa `business_accounts.company_name`+`liikuntapaikat.nimi` — Ketjuadmin (useita toimipisteitä eri omistajilla) jätetty tietoisesti pois scopesta, ks. Future-lista — v3.0 (Phase 56)
+- ✓ **BIZPANEL-04**: `/business` ei ikinä automaattiredirectiä onboarding-sivulle, vaikka tilillä olisi kesken jäänyt `onboarding_draft` — redirect-blokki poistettu `checkState()`:stä — v3.0 (Phase 57)
+- ✓ **BIZPANEL-05**: Kesken jäänyt onboarding näytetään per-paikka harmaalla "Kesken"-badgella (ei amber Pending) + "Jatka"-CTA:lla `/business/onboarding?paikka_id=X`-osoitteeseen; 2+ samanaikaista draft-paikkaa näkyvät erillisinä riveinä — checkpoint-vaiheessa löytyi ja korjattiin precedenssi-aukko (luotu-mutta-ei-koskaan-lähetetty paikka näytti virheellisesti Pendingin Kesken-tilan sijaan): lisätty eksplisiittinen `submitted_at`-aikaleima `business_paikka_links`-tauluun, asetetaan `onboarding/submit`- ja `reapply`-reiteillä — v3.0 (Phase 57)
 
 ### Future (deferred from v1.1 + v1.7)
 
@@ -396,4 +390,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-24 — Phase 56 complete (CLAIM-04, CLAIM-05 validated)*
+*Last updated: 2026-06-24 — Phase 57 complete (BIZPANEL-04, BIZPANEL-05 validated) — v3.0 shipped*
