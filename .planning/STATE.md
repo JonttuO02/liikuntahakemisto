@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: — Active Milestone
 current_phase: 60
-current_phase_name: Hallintaoikeuspyynnöt — backend & sähköposti
-status: ready_to_plan
-stopped_at: Phase 60 context gathered
-last_updated: "2026-06-25T14:11:02.921Z"
+current_phase_name: hallintaoikeuspyynn-t-backend-s-hk-posti
+status: executing
+stopped_at: Phase 60 UI-SPEC approved
+last_updated: "2026-06-25T15:50:04.101Z"
 last_activity: 2026-06-25
-last_activity_desc: Phase 59 complete, transitioned to Phase 60
+last_activity_desc: Phase 60 execution started
 progress:
   total_phases: 7
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 10
+  completed_plans: 6
   percent: 29
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-25)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 60 — Hallintaoikeuspyynnöt — backend & sähköposti
+**Current focus:** Phase 60 — hallintaoikeuspyynn-t-backend-s-hk-posti
 
 ## Current Position
 
-Phase: 60 — Hallintaoikeuspyynnöt — backend & sähköposti
-Plan: Not started
-Status: Ready to plan Phase 60
-Last activity: 2026-06-25 — Phase 59 complete, transitioned to Phase 60
+Phase: 60 (hallintaoikeuspyynn-t-backend-s-hk-posti) — EXECUTING
+Plan: 1 of 5
+Status: Executing Phase 60
+Last activity: 2026-06-25 — Phase 60 execution started
 
 Next: `/gsd-plan-phase 60` (schema dependency now satisfied), or `58` / `61` (still parallel-safe)
 
@@ -116,9 +116,9 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 
 ## Session Continuity
 
-Last session: 2026-06-25T14:11:02.912Z
-Stopped at: Phase 60 context gathered
-Resume file: .planning/phases/60-hallintaoikeuspyynn-t-backend-s-hk-posti/60-CONTEXT.md
+Last session: 2026-06-25T15:50:04.093Z
+Stopped at: Phase 60 UI-SPEC approved
+Resume file: .planning/phases/60-hallintaoikeuspyynn-t-backend-s-hk-posti/60-UI-SPEC.md
 
 ## Operator Next Steps
 
