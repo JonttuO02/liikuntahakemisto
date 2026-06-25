@@ -115,8 +115,14 @@
   3. Lopullinen Preview-step on poistettu kokonaan (live-preview on aina näkyvissä), ja Yhteystiedot-stepistä on poistettu verkko-osoite-kenttä (kerätty jo step 1:ssä)
   4. Etenemispalkin "PREVIEW"-vaihe on korvattu "SUBMIT"-vaiheella, joka saavutetaan onboardingin lähetyksen yhteydessä
 
-**Plans**: TBD
+**Plans**: 4 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 61-01-PLAN.md — Data layer & i18n foundation (create-paikka name-only, update-paikka 'sijainti' section, 6 new keys)
+- [ ] 61-02-PLAN.md — New entry components (StepNimiJaURL, StepSijainti) + ClaimSearchForm simplification
+- [ ] 61-03-PLAN.md — Wizard finalization (remove preview step, inline submit, ProgressBar SUBMIT label)
+- [ ] 61-04-PLAN.md — Onboarding page state machine rewire + delete StepPaikka
 
 ### Phase 62: Venuepage-konsolidaatio
 
