@@ -25,7 +25,7 @@ decisions:
 metrics:
   duration: "resumed after a mid-session usage-limit interruption; Tasks 1-2 were already committed, Tasks 3-4 were finished and committed on resume"
   completed: "2026-06-25"
-status: in_progress
+status: complete
 ---
 
 # Phase 59 Plan 04: Signup company-creation + runbook Summary
@@ -64,12 +64,10 @@ None.
 
 None beyond the plan's own T-59-11/T-59-12/T-59-13/T-59-14 (all `mitigate`, addressed directly — see plan frontmatter).
 
-## CHECKPOINT — Awaiting Operator Review
+## Checkpoint Resolution
 
-**Type:** human-action (blocking gate, `gate="blocking"` per plan frontmatter Task 4)
-**Status:** Runbook written and automated checks pass; operator has not yet confirmed review.
-
-The operator needs to read `.planning/phases/59-multi-company-skeemamigraatio/59-DEPLOY-RUNBOOK.md` and confirm they understand and accept: production migration execution stays manual (not CI-driven), and — given the migration is already live — Wave 2's app code should be deployed promptly to close the current `company_name`/`company_id` mismatch window if this app is reachable anywhere live.
+**Type:** human-action (blocking gate, `gate="blocking"` per plan frontmatter Task 4) — RESOLVED
+**Status:** Operator reviewed `59-DEPLOY-RUNBOOK.md` and approved.
 
 ## Self-Check: PASSED
 
