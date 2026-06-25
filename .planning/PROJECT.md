@@ -321,7 +321,9 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ## Context
 
-**Nykytila:** v3.0 Oma tietokanta (Google Places -irtautuminen) toimitettu 2026-06-24. Kaikki 12 v3.0-vaatimusta toteutettu. Google Places -synkkaus poistettu kokonaan ja kaikki Google-peräinen liikuntapaikka-data tyhjennetty (operaattori valitsi täyden 327/327-tyhjennyksen); onboardingiin uusi Sijainti-vaihe (kartta + osoitehaku-autocomplete, vain lat/lng + kirjoitettu osoite tallennetaan); AI-sivuanalyysi ehdottaa myös laji-kategoriaa käyttäjän vahvistettavaksi; claim-vaihe korvattu create-only-virralla erillisillä yritys-/toimipiste-nimikentillä; `/business`-redirectbugi korjattu ja per-paikka Kesken-tila + Jatka-CTA lisätty. 13 plania (phases 52–57), 2 päivää (2026-06-22 → 2026-06-24).
+**Nykytila:** v3.1-milestone käynnissä. Phase 59 (multi-company-skeemamigraatio) valmis 2026-06-25 — ACCESS-01/ACCESS-02 toteutettu: `companies`-taulu + `business_accounts.company_id`/`role`, kaikki olemassaolevat tilit migratoitu omiksi yrityksikseen päähallitsijoina yhdessä transaktiossa, `business_paikka_links`-uniikkirajoite löysennetty kompositeiksi, RLS uudelleenkirjoitettu `current_company_id()`-helpperillä. Migraatio ajettu suoraan ainoaan Supabase-projektiin operaattorin hyväksynnällä (ei käyttäjiä vielä). Verifioinnin yhteydessä löydettiin ja korjattiin todellinen oikeuksien-eskalaatio-bugi (5 saraketta, mukaan lukien admin-self-elevation `profiles.is_admin`-sarakkeessa) kahdella korjausmigraatiolla. D-13-kirjautumisregressio vahvistettu UAT:ssa. Seuraavaksi Phase 60 (hallintaoikeuspyynnöt — backend & sähköposti, ACCESS-03/05/06), joka riippuu tästä vaiheesta.
+
+**Edellinen:** v3.0 Oma tietokanta (Google Places -irtautuminen) toimitettu 2026-06-24. Kaikki 12 v3.0-vaatimusta toteutettu. Google Places -synkkaus poistettu kokonaan ja kaikki Google-peräinen liikuntapaikka-data tyhjennetty (operaattori valitsi täyden 327/327-tyhjennyksen); onboardingiin uusi Sijainti-vaihe (kartta + osoitehaku-autocomplete, vain lat/lng + kirjoitettu osoite tallennetaan); AI-sivuanalyysi ehdottaa myös laji-kategoriaa käyttäjän vahvistettavaksi; claim-vaihe korvattu create-only-virralla erillisillä yritys-/toimipiste-nimikentillä; `/business`-redirectbugi korjattu ja per-paikka Kesken-tila + Jatka-CTA lisätty. 13 plania (phases 52–57), 2 päivää (2026-06-22 → 2026-06-24).
 
 **Data-arkkitehtuuri:** Google Places API hakee automaattisesti aukioloajat → upsertit Supabaseen. Kertakäyntihinnat manuaalisesti top 20 palvelulle. AI-widget: Claude Haiku + Open-Meteo, sessionStorage-cache per kalenteripäivä + per kaupunki. Supabase Auth käyttäjätaulut + suosikit (user_id → paikka_id). Sync-skripti tukee ?kaupunki= parametria Helsinki/Turku/Tampere-datalle.
 
@@ -382,6 +384,9 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 | paikka_id URL-parametrina edit/onboarding-velhossa | Estää cross-venue draft -kontaminaation; mahdollistaa suoran linkityksen | ✓ Phase 36 |
 | Liikuntapaikat-taulu tyhjennetty täysin (327/327) Google Places -irtautumisessa | Operaattori valitsi live-gatella täyden nollauksen suunnitellun provenance-säilyttävän poiston (322/327) sijaan — kaikki venuet, mukaan lukien claimatut, lähtivät uudestaan rakennettavaksi puhtaalta pöydältä | ✓ Phase 53 — 2 business-tiliä menetti claimansa, ei seurantatoimenpiteitä tehty |
 | Claim/search-vaihe poistettu kokonaan create-paikka-virrasta | Google Places -datan poiston (Phase 53) jälkeen ei ole enää valmista paikkalistaa hakea/claimata — käyttäjä luo paikan aina alusta kahdella nimikentällä | ✓ Phase 56 — CLAIM-04/CLAIM-05; ketjuadmin (multi-venue per tili) jätetty tietoisesti Future-listalle |
+| Migraatio ajettu suoraan ainoaan Supabase-projektiin staging-ympäristön sijaan | Sovelluksella ei ole vielä oikeita käyttäjiä eikä erillistä staging-projektia; operaattori hyväksyi riskin eksplisiittisesti | ✓ Phase 59 — verifioitu Management API:lla suoraan tuotantotietokantaa vasten |
+| `REVOKE UPDATE (col) ON table FROM authenticated` ei riitä — table-wide grant ohittaa sen | Postgres-semantiikka: sarakekohtainen REVOKE ei kavenna olemassaolevaa taulukohtaista GRANTia; korjaus vaatii `REVOKE UPDATE ON table` + eksplisiittinen sarakelistan `GRANT` | ✓ Phase 59 — löydettiin tämän vaiheen omasta migraatiosta, korjasi myös 4 aiempaa Phase 31:n samalla kuviolla rikkinäistä REVOKEa (mukaan lukien `profiles.is_admin` self-elevation) |
+| `liikuntapaikat`-taulun rivitason RLS (`USING (true)` kirjoituspolitiikoissa) jätetty tietoisesti korjaamatta Phase 59:ssä | Erillinen, laajempi löydös kuin tämän vaiheen scope; minkä tahansa kirjautuneen käyttäjän voi kirjoittaa/poistaa minkä tahansa paikan | ⚠️ Avoin — vaatii oman tietoturvavaiheen, ei seurantatoimenpiteitä toistaiseksi |
 
 ---
 
@@ -404,4 +409,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-24 — Milestone v3.1 started (UX/UI-korjaukset & business-parannukset)*
+*Last updated: 2026-06-25 — Phase 59 complete (multi-company-skeemamigraatio, ACCESS-01/02)*
