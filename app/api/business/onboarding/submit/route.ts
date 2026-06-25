@@ -124,7 +124,7 @@ export async function POST(request: Request) {
   try {
     const { data: biz } = await supabaseAdmin
       .from('business_accounts')
-      .select('company_name')
+      .select('companies(name)')
       .eq('user_id', user.id)
       .single()
     const { data: paikka } = await supabaseAdmin
@@ -134,7 +134,7 @@ export async function POST(request: Request) {
       .single()
     if (biz && paikka && link) {
       await sendAdminNotificationEmail({
-        companyName: biz.company_name,
+        companyName: biz.companies?.name,
         venueName: paikka.nimi,
         linkType: link.link_type as 'claim' | 'created',
         applicationId: link.id,
