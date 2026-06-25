@@ -5,7 +5,7 @@ milestone_name: — Active Milestone
 current_phase: 60
 current_phase_name: hallintaoikeuspyynn-t-backend-s-hk-posti
 status: executing
-stopped_at: Phase 60 UI-SPEC approved
+stopped_at: Phase 60 execution complete (all 6 plans)
 last_updated: "2026-06-25T20:00:55.782Z"
 last_activity: 2026-06-25
 last_activity_desc: Phase 60 execution started
@@ -117,7 +117,7 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 ## Session Continuity
 
 Last session: 2026-06-25T20:00:39.910Z
-Stopped at: Phase 60 UI-SPEC approved
+Stopped at: Phase 60 execution complete — gap-closure plan 06 done
 Resume file: .planning/phases/60-hallintaoikeuspyynn-t-backend-s-hk-posti/60-UI-SPEC.md
 
 ## Operator Next Steps

@@ -25,7 +25,9 @@
       "Skill(gsd-validate-phase)",
       "Skill(gsd-audit-milestone)",
       "Skill(gsd-pause-work)",
-      "Skill(gsd-debug)"
+      "Skill(gsd-debug)",
+      "WebFetch(domain:developers.google.com)",
+      "Skill(gsd-complete-milestone)"
     ]
   },
   "worktree": {
