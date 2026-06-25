@@ -67,7 +67,7 @@
 **Plans**: 4 plans
 **Wave 1**
 
-- [ ] 59-01-PLAN.md — Migration: companies table + company_id/role columns + owner backfill + composite UNIQUE + current_company_id() RLS rewrite + staging dry-run gate (Wave 1)
+- [x] 59-01-PLAN.md — Migration: companies table + company_id/role columns + owner backfill + composite UNIQUE + current_company_id() RLS rewrite + staging dry-run gate (Wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -408,7 +408,7 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 2/2 | Complete    | 2026-06-24 |
 | 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 1/1 | Complete    | 2026-06-24 |
 | 58. Admin-pääsy & kartta-QA | v3.1 | 1/1 | Complete    | 2026-06-24 |
-| 59. Multi-company-skeemamigraatio | v3.1 | 0/? | Not started | - |
+| 59. Multi-company-skeemamigraatio | v3.1 | 1/4 | In Progress|  |
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 0/? | Not started | - |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 0/? | Not started | - |
 | 62. Venuepage-konsolidaatio | v3.1 | 0/? | Not started | - |

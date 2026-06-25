@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: — Active Milestone
 current_phase: 59
-current_phase_name: Multi-company-skeemamigraatio
+current_phase_name: multi-company-skeemamigraatio
 status: executing
 stopped_at: Phase 59 context gathered
-last_updated: "2026-06-25T06:07:28.481Z"
-last_activity: 2026-06-24
-last_activity_desc: Phase 58 complete, transitioned to Phase 59
+last_updated: "2026-06-25T06:11:02.755Z"
+last_activity: 2026-06-25
+last_activity_desc: Phase 59 execution started
 progress:
   total_phases: 7
   completed_phases: 1
-  total_plans: 1
+  total_plans: 5
   completed_plans: 1
   percent: 14
 ---
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-24)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 58 — admin-p-sy-kartta-qa
+**Current focus:** Phase 59 — multi-company-skeemamigraatio
 
 ## Current Position
 
-Phase: 59 — Multi-company-skeemamigraatio
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-24 — Phase 58 complete, transitioned to Phase 59
+Phase: 59 (multi-company-skeemamigraatio) — EXECUTING
+Plan: 1 of 4
+Status: Executing Phase 59
+Last activity: 2026-06-25 — Phase 59 execution started
 
 Next: `/gsd-plan-phase 58` (or `58` / `59` / `61` — all parallel-safe starting points)
 
