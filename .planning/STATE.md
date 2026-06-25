@@ -5,8 +5,8 @@ milestone_name: — Active Milestone
 current_phase: 59
 current_phase_name: Multi-company-skeemamigraatio
 status: executing
-stopped_at: Phase 58 UI-SPEC approved
-last_updated: "2026-06-24T22:11:47.870Z"
+stopped_at: Phase 59 context gathered
+last_updated: "2026-06-25T05:32:33.194Z"
 last_activity: 2026-06-24
 last_activity_desc: Phase 58 complete, transitioned to Phase 59
 progress:
@@ -111,9 +111,9 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 
 ## Session Continuity
 
-Last session: 2026-06-24T15:59:51.872Z
-Stopped at: Phase 58 UI-SPEC approved
-Resume file: .planning/phases/58-admin-p-sy-kartta-qa/58-UI-SPEC.md
+Last session: 2026-06-25T05:32:33.186Z
+Stopped at: Phase 59 context gathered
+Resume file: .planning/phases/59-multi-company-skeemamigraatio/59-CONTEXT.md
 
 ## Operator Next Steps
 
