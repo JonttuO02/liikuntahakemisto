@@ -65,7 +65,12 @@
   4. RLS-politiikat on kirjoitettu uudelleen `current_company_id()`-helpperifunktiolla; olemassaolevat yritykset näkevät edelleen vain omat paikkansa (regressiotestattu kirjautumisella)
 
 **Plans**: 4 plans
+**Wave 1**
+
 - [ ] 59-01-PLAN.md — Migration: companies table + company_id/role columns + owner backfill + composite UNIQUE + current_company_id() RLS rewrite + staging dry-run gate (Wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 59-02-PLAN.md — Business-side company_name→companies(name) fixes (create-paikka, reapply, onboarding/submit) + test mock updates (Wave 2)
 - [ ] 59-03-PLAN.md — Admin-side company_name→companies(name) fixes (approve, reject, applications routes + 3 admin UI files) (Wave 2)
 - [ ] 59-04-PLAN.md — Signup company-creation + register.test.ts + profiili anon-key read + deploy runbook (Wave 2)
