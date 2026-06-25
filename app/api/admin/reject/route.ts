@@ -72,17 +72,17 @@ export async function POST(request: Request) {
     const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(link.business_account_id)
     const { data: biz } = await supabaseAdmin
       .from('business_accounts')
-      .select('company_name')
+      .select('companies(name)')
       .eq('user_id', link.business_account_id)
-      .single()
+      .single<{ companies: { name: string } | null }>()
     const { data: paikka } = await supabaseAdmin
       .from('liikuntapaikat')
       .select('nimi')
       .eq('id', link.paikka_id)
       .single()
-    if (authUser?.user?.email && biz && paikka) {
+    if (authUser?.user?.email && biz?.companies && paikka) {
       await sendRejectionEmail(authUser.user.email, {
-        companyName: biz.company_name,
+        companyName: biz.companies.name,
         venueName: paikka.nimi,
         reason,
       })
