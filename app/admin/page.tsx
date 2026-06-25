@@ -11,7 +11,7 @@ type Application = {
   link_type: string
   claim_status: string
   created_at: string
-  business_accounts: { company_name: string; role_in_company: string | null; user_id: string } | null
+  business_accounts: { role_in_company: string | null; user_id: string; companies: { name: string } | null } | null
   liikuntapaikat: { nimi: string; osoite: string; kaupunki: string } | null
 }
 

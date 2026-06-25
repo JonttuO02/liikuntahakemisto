@@ -27,7 +27,7 @@ type LinkData = {
   created_at: string
   rejection_reason: string | null
   businessEmail: string | null
-  business_accounts: { company_name: string; role_in_company: string | null } | null
+  business_accounts: { role_in_company: string | null; user_id: string; companies: { name: string } | null } | null
   liikuntapaikat: Liikuntapaikka | null
 }
 
@@ -124,7 +124,7 @@ export default function AdminDetailPage({ params }: { params: { id: string } }) 
         {/* Applicant info */}
         <div className="glass rounded-2xl p-5 flex flex-col gap-3">
           <SectionLabel>Hakija</SectionLabel>
-          <Field label="Yritys">{business?.company_name ?? '—'}</Field>
+          <Field label="Yritys">{business?.companies?.name ?? '—'}</Field>
           <Field label="Rooli">{business?.role_in_company ?? '—'}</Field>
           <Field label="Sähköposti">{link.businessEmail ?? '—'}</Field>
           <Field label="Tyyppi">{link.link_type === 'claim' ? 'Haltuunotto' : 'Uusi paikka'}</Field>

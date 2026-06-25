@@ -10,7 +10,7 @@ type Application = {
   link_type: string
   claim_status: string
   created_at: string
-  business_accounts: { company_name: string; role_in_company: string | null; user_id: string } | null
+  business_accounts: { role_in_company: string | null; user_id: string; companies: { name: string } | null } | null
   liikuntapaikat: { nimi: string; osoite: string; kaupunki: string } | null
 }
 
@@ -76,7 +76,7 @@ export default function AdminApplicationList({ applications: initial }: { applic
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-col gap-0.5">
               <span className="text-sm font-bold text-[#111111]">
-                {app.business_accounts?.company_name ?? '—'}
+                {app.business_accounts?.companies?.name ?? '—'}
               </span>
               {app.business_accounts?.role_in_company && (
                 <span className="text-xs text-[rgba(17,17,17,0.45)]">{app.business_accounts.role_in_company}</span>
