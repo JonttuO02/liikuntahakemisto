@@ -5,8 +5,8 @@ milestone_name: — Active Milestone
 current_phase: 60
 current_phase_name: Hallintaoikeuspyynnöt — backend & sähköposti
 status: ready_to_plan
-stopped_at: Phase 59 complete, ready to plan Phase 60
-last_updated: "2026-06-25T15:30:00.000Z"
+stopped_at: Phase 60 context gathered
+last_updated: "2026-06-25T14:11:02.921Z"
 last_activity: 2026-06-25
 last_activity_desc: Phase 59 complete, transitioned to Phase 60
 progress:
@@ -69,6 +69,7 @@ Next: `/gsd-plan-phase 60` (schema dependency now satisfied), or `58` / `61` (st
 - **Phase 62 (VENUEPAGE-02):** Audit which unique content on `app/paikat/[id]` is NOT yet on PaikkaSheet and must migrate before deletion.
 
 **Resolved in Phase 59:**
+
 - Migration safety mechanism: Supabase PITR confirmed as the backup/rollback mechanism (no pg_dump/down-migration by design, D-01/D-03/D-04). Migration applied directly to the project's single Supabase instance (no separate staging exists) with explicit operator sign-off, given no real users yet.
 - Audit log: NOT included — `companies` table stayed minimal (id, name, created_at per D-06). If Phase 60/64 need an access-change audit trail, it's a new addition, not something already present.
 - RLS perf (EXPLAIN ANALYZE on the EXISTS-subquery pattern): not separately verified — `current_company_id()` is a `STABLE` SQL function the planner can inline, matching the existing `set_business_managed_on_approval()` precedent; revisit if Phase 60/64 sees real query-plan issues.
@@ -115,9 +116,9 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 
 ## Session Continuity
 
-Last session: 2026-06-25T15:30:00.000Z
-Stopped at: Phase 59 complete, ready to plan Phase 60
-Resume file: None
+Last session: 2026-06-25T14:11:02.912Z
+Stopped at: Phase 60 context gathered
+Resume file: .planning/phases/60-hallintaoikeuspyynn-t-backend-s-hk-posti/60-CONTEXT.md
 
 ## Operator Next Steps
 
