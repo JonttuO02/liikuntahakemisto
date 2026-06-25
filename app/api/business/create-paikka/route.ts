@@ -96,9 +96,14 @@ export async function POST(request: Request) {
     })
 
   if (linkError) {
-    // PostgreSQL unique_violation (D-11, T-56-03): UNIQUE(paikka_id) constraint —
-    // venue already linked. Mirrors the claim-paikka 23505→409 pattern; the
-    // constraint is the safety net even though search/claim is removed.
+    // PostgreSQL unique_violation (D-11, T-56-03): originally UNIQUE(paikka_id)
+    // ("venue already linked"). Phase 59 widened this to a composite
+    // UNIQUE(business_account_id, paikka_id), so for THIS route (which always
+    // inserts a brand-new paikka_id immediately above) this branch is now
+    // effectively unreachable in normal operation — kept as defensive
+    // cleanup matching the generic error path below, not as a real conflict
+    // path. tests/api/create-paikka.test.ts exercises it by mocking the
+    // error code directly, not via real constraint behavior.
     if (linkError.code === '23505') {
       const { error: rollbackError } = await supabaseAdmin.from('liikuntapaikat').delete().eq('id', newPaikkaId)
       if (rollbackError) {
