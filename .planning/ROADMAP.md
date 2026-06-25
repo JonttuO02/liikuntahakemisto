@@ -96,8 +96,8 @@
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 60-03-PLAN.md — No-auto-company invite signup path (D-09a) + `access-request/submit` Route Handler (D-08/D-09/D-10 guards, owner notification)
-- [ ] 60-04-PLAN.md — `access-request/approve` + `access-request/reject` Route Handlers (concurrency-safe, venue-scoped grant via supabaseAdmin, requester emails)
+- [x] 60-03-PLAN.md — No-auto-company invite signup path (D-09a) + `access-request/submit` Route Handler (D-08/D-09/D-10 guards, owner notification)
+- [x] 60-04-PLAN.md — `access-request/approve` + `access-request/reject` Route Handlers (concurrency-safe, venue-scoped grant via supabaseAdmin, requester emails)
 
 **Wave 3** *(blocked on Wave 2)*
 
@@ -423,7 +423,7 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 1/1 | Complete    | 2026-06-24 |
 | 58. Admin-pääsy & kartta-QA | v3.1 | 1/1 | Complete    | 2026-06-24 |
 | 59. Multi-company-skeemamigraatio | v3.1 | 4/4 | Complete    | 2026-06-25 |
-| 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 2/5 | In Progress|  |
+| 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 4/5 | In Progress|  |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 0/? | Not started | - |
 | 62. Venuepage-konsolidaatio | v3.1 | 0/? | Not started | - |
 | 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 0/? | Not started | - |
