@@ -158,7 +158,7 @@ export async function POST(request: Request) {
       .from('business_accounts')
       .select('companies(name)')
       .eq('user_id', user.id)
-      .single()
+      .single<{ companies: { name: string } | null }>()
     const { data: paikka } = await supabaseAdmin
       .from('liikuntapaikat')
       .select('nimi')
@@ -171,9 +171,9 @@ export async function POST(request: Request) {
       .eq('business_account_id', user.id)
       .eq('paikka_id', newPaikkaId)
       .single()
-    if (biz && paikka && link) {
+    if (biz?.companies && paikka && link) {
       await sendAdminNotificationEmail({
-        companyName: biz.companies?.name,
+        companyName: biz.companies.name,
         venueName: paikka.nimi,
         linkType: 'created',
         applicationId: link.id,

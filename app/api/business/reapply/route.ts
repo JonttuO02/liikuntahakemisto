@@ -90,15 +90,15 @@ export async function POST(request: Request) {
       .from('business_accounts')
       .select('companies(name)')
       .eq('user_id', user.id)
-      .single()
+      .single<{ companies: { name: string } | null }>()
     const { data: paikka } = await supabaseAdmin
       .from('liikuntapaikat')
       .select('nimi')
       .eq('id', paikkaId)
       .single()
-    if (biz && paikka) {
+    if (biz?.companies && paikka) {
       await sendAdminNotificationEmail({
-        companyName: biz.companies?.name,
+        companyName: biz.companies.name,
         venueName: paikka.nimi,
         linkType: 'claim',
         applicationId: rejectedLink.id,

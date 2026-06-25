@@ -126,15 +126,15 @@ export async function POST(request: Request) {
       .from('business_accounts')
       .select('companies(name)')
       .eq('user_id', user.id)
-      .single()
+      .single<{ companies: { name: string } | null }>()
     const { data: paikka } = await supabaseAdmin
       .from('liikuntapaikat')
       .select('nimi')
       .eq('id', draft.paikka_id)
       .single()
-    if (biz && paikka && link) {
+    if (biz?.companies && paikka && link) {
       await sendAdminNotificationEmail({
-        companyName: biz.companies?.name,
+        companyName: biz.companies.name,
         venueName: paikka.nimi,
         linkType: link.link_type as 'claim' | 'created',
         applicationId: link.id,
