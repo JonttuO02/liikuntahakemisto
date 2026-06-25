@@ -24,7 +24,9 @@ vi.mock('@/lib/email', () => ({
 const mockGetUser = vi.fn()
 const mockBizAccountsMaybeSingle = vi.fn()
 const mockBizAccountsSingle = vi.fn()
+const mockBizAccountsCompanyIdSingle = vi.fn()
 const mockBizAccountsUpdateEq = vi.fn()
+const mockCompaniesUpdateEq = vi.fn()
 const mockLiikuntapaikatInsert = vi.fn()
 const mockLiikuntapaikatInsertSingle = vi.fn()
 const mockLiikuntapaikatUpdateEq = vi.fn()
@@ -35,12 +37,18 @@ const mockLiikuntapaikatDelete = vi.fn()
 
 vi.mock('@/lib/supabaseAdmin.server', () => {
   // business_accounts: .select('user_id').eq().maybeSingle() (ownership check)
-  //                     .select('company_name').eq().single() (email block)
+  //                     .select('company_id').eq().single() (company_id lookup for write)
+  //                     .select('companies(name)').eq().single() (email block)
   const businessAccountsBuilder = {
     select: (cols: string) => {
-      if (cols === 'company_name') {
+      if (cols === 'companies(name)') {
         return {
           eq: () => ({ single: () => mockBizAccountsSingle() }),
+        }
+      }
+      if (cols === 'company_id') {
+        return {
+          eq: () => ({ single: () => mockBizAccountsCompanyIdSingle() }),
         }
       }
       return {
@@ -90,6 +98,13 @@ vi.mock('@/lib/supabaseAdmin.server', () => {
     }),
   }
 
+  // companies: .update({ name: ... }).eq('id', company_id) (Step 3 of 4 write target)
+  const companiesBuilder = {
+    update: (_payload: unknown) => ({
+      eq: (...args: unknown[]) => mockCompaniesUpdateEq(...args),
+    }),
+  }
+
   return {
     supabaseAdmin: {
       auth: {
@@ -99,6 +114,7 @@ vi.mock('@/lib/supabaseAdmin.server', () => {
         if (table === 'business_accounts') return businessAccountsBuilder
         if (table === 'liikuntapaikat') return liikuntapaikatBuilder
         if (table === 'business_paikka_links') return linksBuilder
+        if (table === 'companies') return companiesBuilder
         return businessAccountsBuilder
       },
     },
@@ -140,8 +156,10 @@ const VALID_BODY = {
 function setHappyPathMocks() {
   mockGetUser.mockResolvedValue({ data: { user: VALID_USER }, error: null })
   mockBizAccountsMaybeSingle.mockResolvedValue({ data: { user_id: VALID_USER.id }, error: null })
-  mockBizAccountsSingle.mockResolvedValue({ data: { company_name: 'Testi Oy' }, error: null })
+  mockBizAccountsCompanyIdSingle.mockResolvedValue({ data: { company_id: 99 }, error: null })
+  mockBizAccountsSingle.mockResolvedValue({ data: { companies: { name: 'Testi Oy' } }, error: null })
   mockBizAccountsUpdateEq.mockResolvedValue({ error: null })
+  mockCompaniesUpdateEq.mockResolvedValue({ error: null })
   mockLiikuntapaikatInsertSingle.mockResolvedValue({ data: { id: 42 }, error: null })
   mockLiikuntapaikatUpdateEq.mockResolvedValue({ error: null })
   mockLiikuntapaikatSelectSingle.mockResolvedValue({ data: { nimi: 'Testihalli' }, error: null })

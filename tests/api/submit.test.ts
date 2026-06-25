@@ -183,7 +183,7 @@ function setUpdateSuccess() {
 function setNonCriticalSuccess() {
   mockLinkUpdateEq.mockReturnValue({ error: null })
   mockDraftDeleteEq.mockReturnValue({ error: null })
-  mockBizSingle.mockResolvedValue({ data: { company_name: 'Test Oy' }, error: null })
+  mockBizSingle.mockResolvedValue({ data: { companies: { name: 'Test Oy' } }, error: null })
   mockPaikkaSingle.mockResolvedValue({ data: { nimi: 'Test Paikka' }, error: null })
 }
 
