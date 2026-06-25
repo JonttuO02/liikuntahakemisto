@@ -101,7 +101,7 @@
 
 **Wave 3** *(blocked on Wave 2)*
 
-- [ ] 60-05-PLAN.md — `/business/liity` deep-link landing page + "Kopioi kutsulinkki" button + pending banner on `/business` + fi/en i18n keys
+- [x] 60-05-PLAN.md — `/business/liity` deep-link landing page + "Kopioi kutsulinkki" button + pending banner on `/business` + fi/en i18n keys
 
 ### Phase 61: Onboarding-vaiheiden uudelleenjärjestys
 
@@ -423,7 +423,7 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 1/1 | Complete    | 2026-06-24 |
 | 58. Admin-pääsy & kartta-QA | v3.1 | 1/1 | Complete    | 2026-06-24 |
 | 59. Multi-company-skeemamigraatio | v3.1 | 4/4 | Complete    | 2026-06-25 |
-| 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 4/5 | In Progress|  |
+| 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 5/5 | Complete   | 2026-06-25 |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 0/? | Not started | - |
 | 62. Venuepage-konsolidaatio | v3.1 | 0/? | Not started | - |
 | 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 0/? | Not started | - |
