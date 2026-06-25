@@ -246,7 +246,16 @@
     "profileSaved": "Tallennettu",
     "profileSaveError": "Tallennus epäonnistui. Yritä uudelleen.",
     "profileLanguage": "Kieli",
-    "profileSignOut": "Kirjaudu ulos"
+    "profileSignOut": "Kirjaudu ulos",
+    "copyInviteLinkCta": "Kopioi kutsulinkki",
+    "inviteLinkCopied": "Linkki kopioitu",
+    "accessRequestPendingTitle": "Pyyntösi odottaa hyväksyntää",
+    "accessRequestPendingBody": "Paikan päähallitsija käsittelee pyyntösi pian. Saat sähköpostin, kun päätös on tehty.",
+    "liityHeading": "Liity yrityksen tiimiin",
+    "liityBody": "Pyydä hallintaoikeutta tähän paikkaan. Päähallitsija hyväksyy pyyntösi.",
+    "liitySubmitCta": "Lähetä pyyntö",
+    "liityErrorInvalidLink": "Tämä kutsulinkki ei ole voimassa. Pyydä uutta linkkiä paikan päähallitsijalta.",
+    "liityErrorAlreadyInCompany": "Tilisi on jo liitetty toiseen yritykseen. Ota yhteyttä päähallitsijaan, jos tarvitset pääsyn tähän paikkaan."
   },
   "Admin": {
     "pageTitle": "Admin — Odottavat hakemukset",

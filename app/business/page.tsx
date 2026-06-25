@@ -104,6 +104,15 @@ function VenueRow({
   onPreview: (p: Liikuntapaikka) => void
   onReapply: (paikkaId: number) => void
 }) {
+  const [copied, setCopied] = useState(false)
+
+  function handleCopyInviteLink() {
+    const url = window.location.origin + '/business/liity?paikka_id=' + link.paikka_id
+    navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-2">
@@ -145,6 +154,15 @@ function VenueRow({
         >
           {isKesken ? t('jatkaCta') : t('muokkaaCta')}
         </a>
+        {link.claim_status === 'approved' && !isKesken && (
+          <button
+            type="button"
+            onClick={handleCopyInviteLink}
+            className="text-xs font-bold text-[#111111] border border-[rgba(0,0,0,0.12)] hover:border-[rgba(0,0,0,0.25)] rounded-full px-3 py-1 [transition:border-color_150ms_var(--ease-out)]"
+          >
+            {copied ? t('inviteLinkCopied') : t('copyInviteLinkCta')}
+          </button>
+        )}
       </div>
 
       {link.claim_status === 'rejected' && (
@@ -165,6 +183,8 @@ function VenueRow({
   )
 }
 
+type PendingAccessRequest = { id: string; paikka_id: number; status: string }
+
 // --- Main page ---
 export default function BusinessPage() {
   const t = useTranslations('Business')
@@ -174,6 +194,7 @@ export default function BusinessPage() {
   const [isNotBusinessAccount, setIsNotBusinessAccount] = useState(false)
   const [showAddVenue, setShowAddVenue] = useState(false)
   const [previewPaikka, setPreviewPaikka] = useState<Liikuntapaikka | null>(null)
+  const [pendingAccessRequests, setPendingAccessRequests] = useState<PendingAccessRequest[]>([])
 
   useEffect(() => {
     async function checkState() {
@@ -211,6 +232,16 @@ export default function BusinessPage() {
 
       setVenueLinks((links as unknown as VenueLink[]) ?? [])
       setKeskenPaikkaIds(keskenSet)
+
+      // Fetch pending business_access_requests for the current user.
+      // RLS scopes the SELECT to requester_id = auth.uid() (Plan 01 migration).
+      // Shows the "Pyyntösi odottaa hyväksyntää" banner when a pending row exists.
+      const { data: pendingReqs } = await supabase
+        .from('business_access_requests')
+        .select('id, paikka_id, status')
+        .eq('status', 'pending')
+      setPendingAccessRequests((pendingReqs as PendingAccessRequest[]) ?? [])
+
       setLoading(false)
     }
     checkState()
@@ -272,6 +303,15 @@ export default function BusinessPage() {
       <main className="min-h-screen bg-white pt-16 px-4 pb-24">
         {/* Status card */}
         <StatusCard venueLinks={venueLinks} t={t} onReapply={handleReapply} />
+
+        {/* Pending access-request banner — shown when the current account has a
+            pending business_access_requests row (requester waiting for owner approval) */}
+        {pendingAccessRequests.length > 0 && (
+          <div className="glass rounded-2xl p-4 flex flex-col gap-1 border-l-4 border-amber-400 mt-4">
+            <span className="text-sm font-bold text-[#111111]">{t('accessRequestPendingTitle')}</span>
+            <span className="text-xs text-[rgba(17,17,17,0.45)]">{t('accessRequestPendingBody')}</span>
+          </div>
+        )}
 
         {/* Venue list */}
         <section className="mt-6">
@@ -342,6 +382,13 @@ export default function BusinessPage() {
 
   return (
     <main className="min-h-screen bg-white flex flex-col items-center justify-center px-4 py-16">
+      {/* Pending access-request banner for requesters who have no venue links yet */}
+      {pendingAccessRequests.length > 0 && (
+        <div className="glass rounded-2xl p-4 flex flex-col gap-1 border-l-4 border-amber-400 w-full max-w-md mb-4">
+          <span className="text-sm font-bold text-[#111111]">{t('accessRequestPendingTitle')}</span>
+          <span className="text-xs text-[rgba(17,17,17,0.45)]">{t('accessRequestPendingBody')}</span>
+        </div>
+      )}
       <div className="glass rounded-2xl p-6 w-full max-w-md flex flex-col gap-4">
         <h1 className="text-xl font-bold text-[#111111]">{t('claimTitle')}</h1>
         <ClaimSearchForm />
