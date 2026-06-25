@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     .from('business_paikka_links')
     .select(`
       id, paikka_id, link_type, claim_status, created_at,
-      business_accounts(company_name, role_in_company, user_id),
+      business_accounts(role, role_in_company, user_id, companies(name)),
       liikuntapaikat(nimi, osoite, kaupunki)
     `)
     .eq('claim_status', 'pending')

@@ -20,7 +20,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     .from('business_paikka_links')
     .select(`
       id, link_type, claim_status, created_at, rejection_reason,
-      business_accounts(company_name, role_in_company, user_id),
+      business_accounts(role, role_in_company, user_id, companies(name)),
       liikuntapaikat(id, nimi, osoite, kaupunki, laji, kuvaus, puhelin, varauslinkki, hinta_min, hinta_max, hinta_kuvaus, aukioloajat, image_url, photo_urls, logo_url, latitude, longitude)
     `)
     .eq('id', linkId)
