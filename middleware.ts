@@ -31,10 +31,12 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser() // refreshes sb-biz-* session
 
     // Business auth guard: redirect unauthenticated users to /business/kirjaudu
-    // Excluded paths: /business/rekisteroidy and /business/kirjaudu (public entry points)
+    // Excluded paths: /business/rekisteroidy and /business/kirjaudu (public entry points),
+    // and /business/liity (public deep-link invite landing page — its own useEffect handles the unauthenticated redirect)
     const isPublicBusinessPath =
       pathname.startsWith('/business/rekisteroidy') ||
-      pathname.startsWith('/business/kirjaudu')
+      pathname.startsWith('/business/kirjaudu') ||
+      pathname.startsWith('/business/liity')
 
     if (!isPublicBusinessPath && !user) {
       return NextResponse.redirect(new URL('/business/kirjaudu', request.url))

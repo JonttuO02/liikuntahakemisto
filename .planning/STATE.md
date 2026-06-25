@@ -6,15 +6,15 @@ current_phase: 60
 current_phase_name: hallintaoikeuspyynn-t-backend-s-hk-posti
 status: executing
 stopped_at: Phase 60 UI-SPEC approved
-last_updated: "2026-06-25T19:03:57.487Z"
+last_updated: "2026-06-25T20:00:55.782Z"
 last_activity: 2026-06-25
 last_activity_desc: Phase 60 execution started
 progress:
   total_phases: 7
-  completed_phases: 2
-  total_plans: 10
-  completed_plans: 7
-  percent: 29
+  completed_phases: 3
+  total_plans: 11
+  completed_plans: 11
+  percent: 43
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-06-25)
 ## Current Position
 
 Phase: 60 (hallintaoikeuspyynn-t-backend-s-hk-posti) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-06-25 — Phase 60 execution started
 
@@ -116,7 +116,7 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 
 ## Session Continuity
 
-Last session: 2026-06-25T19:03:57.471Z
+Last session: 2026-06-25T20:00:39.910Z
 Stopped at: Phase 60 UI-SPEC approved
 Resume file: .planning/phases/60-hallintaoikeuspyynn-t-backend-s-hk-posti/60-UI-SPEC.md
 
@@ -132,3 +132,8 @@ Resume file: .planning/phases/60-hallintaoikeuspyynn-t-backend-s-hk-posti/60-UI-
 | Phase | Plan | Duration | Notes |
 |-------|------|----------|-------|
 | Phase 60 P01 | 20min | 2 tasks | 1 files |
+| Phase 60 P06 | 1min | 1 tasks | 1 files |
+
+## Decisions
+
+- [Phase ?]: isPublicBusinessPath in middleware.ts extended to include /business/liity — public deep-link invite landing page; its useEffect handles the unauthenticated redirect
