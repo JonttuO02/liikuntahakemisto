@@ -10,13 +10,17 @@ export default async function BusinessProfiiliPage() {
   if (!user) redirect('/business/kirjaudu')
   const { data: account } = await supabase
     .from('business_accounts')
-    .select('company_name, contact_phone')
+    .select('companies(name), contact_phone')
     .eq('user_id', user.id)
     .maybeSingle()
   if (!account) redirect('/business')
+  // company_id is a to-one FK, but the Supabase JS client types embedded
+  // relationships as an array without an explicit foreign-key hint in the
+  // schema; at runtime this is always a single related row (or null).
+  const company = Array.isArray(account.companies) ? account.companies[0] : account.companies
   return (
     <BusinessProfiiliClient
-      companyName={account.company_name}
+      companyName={company?.name ?? ''}
       email={user.email ?? ''}
       contactPhone={account.contact_phone ?? ''}
       userId={user.id}
