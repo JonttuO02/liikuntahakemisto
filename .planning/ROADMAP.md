@@ -87,7 +87,21 @@
   3. Pyytäjä näkee selkeän "odottaa hyväksyntää" -tilan eikä saa pääsyä paikan hallintaan ennen hyväksyntää — pääsy on estetty RLS-tasolla, ei vain UI:ssa
   4. Samanaikaiset hyväksynnät eivät voi molemmat onnistua (concurrency-turvallinen `UPDATE ... WHERE status='pending'` + count-check, sama paterni kuin `admin/approve`)
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+**Wave 1**
+
+- [ ] 60-01-PLAN.md — Migration: `business_access_requests` table + RLS + D-08 partial UNIQUE index + `business_accounts.company_id` relaxed to nullable (D-09a) + [BLOCKING] `supabase db push`
+- [ ] 60-02-PLAN.md — `lib/email.ts`: `sendAccessRequestNotificationEmail` (owner) + `sendAccessRequestDecisionEmail` (requester), reusing `sub()`/`esc()`
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 60-03-PLAN.md — No-auto-company invite signup path (D-09a) + `access-request/submit` Route Handler (D-08/D-09/D-10 guards, owner notification)
+- [ ] 60-04-PLAN.md — `access-request/approve` + `access-request/reject` Route Handlers (concurrency-safe, venue-scoped grant via supabaseAdmin, requester emails)
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 60-05-PLAN.md — `/business/liity` deep-link landing page + "Kopioi kutsulinkki" button + pending banner on `/business` + fi/en i18n keys
 
 ### Phase 61: Onboarding-vaiheiden uudelleenjärjestys
 
