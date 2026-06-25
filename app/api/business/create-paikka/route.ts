@@ -117,16 +117,27 @@ export async function POST(request: Request) {
     )
   }
 
-  // Step 3 of 4: write yritysNimi to business_accounts.company_name (D-05). Identity
-  // comes from the verified user.id, never the request body (T-56-01).
+  // Step 3 of 4: write yritysNimi to companies.name via the caller's company_id (D-05/D-07).
+  // Identity comes from the verified user.id, never the request body (T-56-01).
+  // Two-step write: look up company_id from business_accounts, then update companies.name.
   // Non-critical: consistent with the is_claimed/email log-don't-rollback pattern below.
-  const { error: companyUpdateError } = await supabaseAdmin
+  const { data: companyLookup, error: companyLookupError } = await supabaseAdmin
     .from('business_accounts')
-    .update({ company_name: yritysNimi })
+    .select('company_id')
     .eq('user_id', user.id)
+    .single()
 
-  if (companyUpdateError) {
-    console.error('[create-paikka] company_name UPDATE failed (non-critical):', companyUpdateError.message)
+  if (companyLookupError || !companyLookup) {
+    console.error('[create-paikka] company_id lookup failed (non-critical):', companyLookupError?.message)
+  } else {
+    const { error: companyUpdateError } = await supabaseAdmin
+      .from('companies')
+      .update({ name: yritysNimi })
+      .eq('id', companyLookup.company_id)
+
+    if (companyUpdateError) {
+      console.error('[create-paikka] companies.name UPDATE failed (non-critical):', companyUpdateError.message)
+    }
   }
 
   // Step 4 of 4: Set is_claimed = true as a denormalized public flag (D-07).
@@ -145,7 +156,7 @@ export async function POST(request: Request) {
   try {
     const { data: biz } = await supabaseAdmin
       .from('business_accounts')
-      .select('company_name')
+      .select('companies(name)')
       .eq('user_id', user.id)
       .single()
     const { data: paikka } = await supabaseAdmin
@@ -162,7 +173,7 @@ export async function POST(request: Request) {
       .single()
     if (biz && paikka && link) {
       await sendAdminNotificationEmail({
-        companyName: biz.company_name,
+        companyName: biz.companies?.name,
         venueName: paikka.nimi,
         linkType: 'created',
         applicationId: link.id,
