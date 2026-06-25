@@ -73,3 +73,42 @@ export async function sendRejectionEmail(to: string, params: {
   `
   await resend.emails.send({ from: FROM, to, subject, html })
 }
+
+// Sent to the venue's approved owner when a new access request arrives (ACCESS-05)
+export async function sendAccessRequestNotificationEmail(to: string, params: {
+  requesterName: string
+  venueName: string
+  requestId: number
+}) {
+  const subject = `[Aktiivi] Uusi hallintaoikeuspyyntö — ${sub(params.venueName)}`
+  const html = `
+    <h2>Uusi hallintaoikeuspyyntö</h2>
+    <p><strong>Pyytäjä:</strong> ${esc(params.requesterName)}</p>
+    <p><strong>Paikka:</strong> ${esc(params.venueName)}</p>
+    <p><a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/business">Siirry hallintapaneeliin →</a></p>
+  `
+  await resend.emails.send({ from: FROM, to, subject, html })
+}
+
+// Sent to the requester when their access request is approved or rejected (ACCESS-05)
+export async function sendAccessRequestDecisionEmail(to: string, params: {
+  venueName: string
+  approved: boolean
+  reason?: string
+}) {
+  const subject = params.approved
+    ? `[Aktiivi] Hallintaoikeuspyyntösi on hyväksytty — ${sub(params.venueName)}`
+    : `[Aktiivi] Hallintaoikeuspyyntösi on hylätty — ${sub(params.venueName)}`
+  const html = params.approved
+    ? `
+    <h2>Pyyntösi on hyväksytty!</h2>
+    <p>Sinulla on nyt hallintaoikeus paikkaan <strong>${esc(params.venueName)}</strong>.</p>
+    <p><a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/business">Siirry hallintapaneeliin →</a></p>
+  `
+    : `
+    <h2>Pyyntösi on hylätty</h2>
+    <p>Hallintaoikeuspyyntösi paikkaan <strong>${esc(params.venueName)}</strong> on hylätty.</p>
+    ${params.reason ? `<p><strong>Syy:</strong> ${esc(params.reason)}</p>` : ''}
+  `
+  await resend.emails.send({ from: FROM, to, subject, html })
+}
