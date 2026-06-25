@@ -15,14 +15,21 @@ export async function POST(request: Request) {
   // Parse and validate request body
   let company_name: string
   let role_in_company: string | null
+  let invite: boolean
   try {
     const body = await request.json()
+    invite = body.invite === true
+
     company_name = typeof body.company_name === 'string'
       ? body.company_name.trim().slice(0, 200)
       : ''
-    if (!company_name) {
+
+    // company_name is required only in the default (non-invite) path.
+    // Invite-link employees join an existing company — they don't name a new one.
+    if (!invite && !company_name) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
+
     role_in_company = typeof body.role_in_company === 'string'
       ? body.role_in_company.trim().slice(0, 100) || null
       : null
@@ -30,10 +37,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  // Step 1 of 2: INSERT into companies. Forward-going equivalent of Plan 01's
-  // backfill — every new signup becomes the owner of its own new company
-  // (companies.name is the single source of truth, D-05; business_accounts no
+  // --- INVITE-LINK PATH (D-09a) ---
+  // When invite === true, the employee was brought in via a shareable invite link
+  // for a specific venue. We do NOT auto-create a company for them — company_id
+  // stays NULL until the access-request approval (Plan 04) sets it to the inviting
+  // venue's company. role is 'member' (not 'owner') because they are joining an
+  // existing company, not founding one.
+  if (invite) {
+    const { error: accountError } = await supabaseAdmin
+      .from('business_accounts')
+      .insert({ user_id: user.id, company_id: null, role: 'member', role_in_company })
+
+    if (accountError) {
+      return NextResponse.json(
+        { error: 'business_accounts insert failed', detail: accountError.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ ok: true })
+  }
+
+  // --- DEFAULT PATH (unchanged) ---
+  // Every standard signup becomes the owner of its own new company.
+  // companies.name is the single source of truth (D-05; business_accounts no
   // longer has a company_name column).
+
+  // Step 1 of 2: INSERT into companies. Forward-going equivalent of Plan 01's
+  // backfill — every new signup becomes the owner of its own new company.
   const { data: newCompany, error: companyError } = await supabaseAdmin
     .from('companies')
     .insert({ name: company_name })
