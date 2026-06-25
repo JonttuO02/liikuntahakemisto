@@ -4,15 +4,15 @@ milestone: v3.1
 milestone_name: — Active Milestone
 current_phase: 61
 current_phase_name: Onboarding-vaiheiden uudelleenjärjestys
-status: executing
-stopped_at: Phase 60 execution complete — gap-closure plan 06 done
-last_updated: "2026-06-25T21:03:05.142Z"
-last_activity: 2026-06-25
-last_activity_desc: Phase 60 complete, transitioned to Phase 61
+status: planned
+stopped_at: Phase 61 planned (4 plans, 3 waves) — ready to execute
+last_updated: "2026-06-26T00:00:00.000Z"
+last_activity: 2026-06-26
+last_activity_desc: Phase 61 planned — 4 plans across 3 waves, all 7 requirements covered
 progress:
   total_phases: 7
   completed_phases: 3
-  total_plans: 11
+  total_plans: 15
   completed_plans: 11
   percent: 43
 ---
@@ -119,13 +119,13 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 
 ## Session Continuity
 
-Last session: 2026-06-26
-Stopped at: Phase 60 complete (UAT passed, 5/5 runnable tests pass, VERIFICATION.md written, transitioned to Phase 61)
-Resume file: None
+Last session: 2026-06-25T21:38:28.375Z
+Stopped at: Phase 61 UI-SPEC approved
+Resume file: .planning/phases/61-onboarding-vaiheiden-uudelleenj-rjestys/61-UI-SPEC.md
 
 ## Operator Next Steps
 
-- `/gsd-plan-phase 61` — next in sequence (onboarding step reorder; independent code path)
+- `/gsd-execute-phase 61` — **next** (plans ready: 4 plans, 3 waves, pure frontend refactor)
 - `/gsd-plan-phase 58` — parallel-safe alternative (admin access + map QA)
 - Consider scheduling a dedicated security phase for the `liikuntapaikat` wide-open RLS finding (P59-FOLLOWUP above) before real users arrive
 
