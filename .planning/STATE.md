@@ -4,9 +4,9 @@ milestone: v3.1
 milestone_name: — Active Milestone
 current_phase: 60
 current_phase_name: Hallintaoikeuspyynnöt — backend & sähköposti
-status: executing
-stopped_at: Phase 59 context gathered
-last_updated: "2026-06-25T13:30:07.407Z"
+status: ready_to_plan
+stopped_at: Phase 59 complete, ready to plan Phase 60
+last_updated: "2026-06-25T15:30:00.000Z"
 last_activity: 2026-06-25
 last_activity_desc: Phase 59 complete, transitioned to Phase 60
 progress:
@@ -21,19 +21,19 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-24)
+See: .planning/PROJECT.md (updated 2026-06-25)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 59 — multi-company-skeemamigraatio
+**Current focus:** Phase 60 — Hallintaoikeuspyynnöt — backend & sähköposti
 
 ## Current Position
 
 Phase: 60 — Hallintaoikeuspyynnöt — backend & sähköposti
 Plan: Not started
-Status: Executing Phase 59
+Status: Ready to plan Phase 60
 Last activity: 2026-06-25 — Phase 59 complete, transitioned to Phase 60
 
-Next: `/gsd-plan-phase 58` (or `58` / `59` / `61` — all parallel-safe starting points)
+Next: `/gsd-plan-phase 60` (schema dependency now satisfied), or `58` / `61` (still parallel-safe)
 
 ## v3.1 Roadmap Summary
 
@@ -66,10 +66,12 @@ Next: `/gsd-plan-phase 58` (or `58` / `59` / `61` — all parallel-safe starting
 ## Open Product Decisions (resolve before relevant phase)
 
 - **Phase 60/64 (ACCESS-03):** Venue lookup UX for the requester — venue name search vs. shared deep link? Confirm during `/gsd-discuss-phase` for Phase 60 (research Gap).
-- **Phase 59 (audit log):** Confirm whether an append-only action log ships in Phase 59's schema or is deferred to a fast-follow — recommended "should have," cheap either way (research Gap).
-- **Phase 59 (migration safety):** Confirm exact pre-migration backup/rollback mechanism (Supabase point-in-time recovery vs. manual pg_dump) operationally BEFORE writing the migration (research Flag).
-- **Phase 59 (RLS perf):** Verify with EXPLAIN ANALYZE that the composite index is actually used by the EXISTS-subquery RLS pattern, not just assumed (research Flag).
 - **Phase 62 (VENUEPAGE-02):** Audit which unique content on `app/paikat/[id]` is NOT yet on PaikkaSheet and must migrate before deletion.
+
+**Resolved in Phase 59:**
+- Migration safety mechanism: Supabase PITR confirmed as the backup/rollback mechanism (no pg_dump/down-migration by design, D-01/D-03/D-04). Migration applied directly to the project's single Supabase instance (no separate staging exists) with explicit operator sign-off, given no real users yet.
+- Audit log: NOT included — `companies` table stayed minimal (id, name, created_at per D-06). If Phase 60/64 need an access-change audit trail, it's a new addition, not something already present.
+- RLS perf (EXPLAIN ANALYZE on the EXISTS-subquery pattern): not separately verified — `current_company_id()` is a `STABLE` SQL function the planner can inline, matching the existing `set_business_managed_on_approval()` precedent; revisit if Phase 60/64 sees real query-plan issues.
 
 ## Active Decisions (carried forward)
 
@@ -86,10 +88,11 @@ Next: `/gsd-plan-phase 58` (or `58` / `59` / `61` — all parallel-safe starting
 - **v2.0**: /business/map is a standalone route — does NOT modify Etusivu.tsx
 - **v2.1**: One Claude API call per analysis; `waitUntil` fire-and-forget
 - **v3.0**: liikuntapaikat fully wiped (327/327) on Google Places exit; create-only flow (no claim search), yritysNimi + toimipisteNimi → combined `liikuntapaikat.nimi`
-- **v3.1 (research)**: No new runtime dependencies — companies/role/access-requests are pure Postgres DDL + Supabase RLS + existing Resend; avoid CASL/Oso/Cerbos/Clerk/WorkOS
-- **v3.1 (research)**: Co-management model confirmed (multiple employees per venue), single päähallitsija (owner) approves/removes; ARCHITECTURE.md's hand-off design discarded
-- **v3.1 (research)**: `current_company_id()` SECURITY DEFINER helper avoids same-table RLS recursion (same pattern as existing `set_business_managed_on_approval()`)
+- **v3.1**: No new runtime dependencies — companies/role/access-requests are pure Postgres DDL + Supabase RLS + existing Resend; avoid CASL/Oso/Cerbos/Clerk/WorkOS
+- **v3.1**: Co-management model confirmed (multiple employees per venue), single päähallitsija (owner) approves/removes; ARCHITECTURE.md's hand-off design discarded
+- **v3.1**: `current_company_id()` SECURITY DEFINER helper shipped in Phase 59 (`STABLE`, `SET search_path = public`, explicit `GRANT EXECUTE`) — avoids same-table RLS recursion, same pattern as existing `set_business_managed_on_approval()`
 - **v3.1 (research)**: Replicate `admin/approve` route's `UPDATE ... WHERE status='pending'` + `count:'exact'` concurrency pattern for peer approval — do not reinvent
+- **v3.1**: column-level `REVOKE UPDATE (col) ... FROM authenticated` does NOT work in this codebase's Supabase setup — a pre-existing table-wide GRANT overrides it. Always use `REVOKE UPDATE ON table FROM authenticated` + explicit `GRANT UPDATE (allow-list)` instead. Affects any future column-lockdown work (Phase 59 fixed 5 instances, including a pre-existing `profiles.is_admin` self-elevation hole)
 
 ## Carry-Forward (open items from prior milestones)
 
@@ -98,6 +101,7 @@ Next: `/gsd-plan-phase 58` (or `58` / `59` / `61` — all parallel-safe starting
 - CR-02: `app/api/business/onboarding/submit/route.ts` doesn't filter by `paikka_id` (pre-existing since Phase 38)
 - P53-FOLLOWUP: 2 business accounts (`0f0e024d-...`, `ac22a395-...`) lost claimed venue in the full liikuntapaikat wipe; dashboard degrades gracefully, no re-claim/outreach flow run
 - P57-FOLLOWUP: Consider removing `StepPaikka` intro screen so onboarding starts at AI-analysis — NOTE: now largely subsumed by Phase 61 (ONBOARD-18 removes PaikkaStep entirely); resolve within Phase 61 discuss
+- P59-FOLLOWUP: `liikuntapaikat` row-level RLS write policies (`"Kirjautunut voi kirjoittaa"`, `authenticated_update`, `authenticated_delete`) use `USING (true)` — any authenticated user can write/delete ANY venue row, not just the columns Phase 59 touched. Pre-existing, surfaced (not introduced) during Phase 59's security audit. Needs its own dedicated security phase; not blocking, but real once users exist.
 
 ## Deferred Items
 
@@ -111,12 +115,13 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 
 ## Session Continuity
 
-Last session: 2026-06-25T05:32:33.186Z
-Stopped at: Phase 59 context gathered
-Resume file: .planning/phases/59-multi-company-skeemamigraatio/59-CONTEXT.md
+Last session: 2026-06-25T15:30:00.000Z
+Stopped at: Phase 59 complete, ready to plan Phase 60
+Resume file: None
 
 ## Operator Next Steps
 
 - Review the v3.1 roadmap (`.planning/ROADMAP.md` → "v3.1 — Active Milestone")
-- Start planning: `/gsd-plan-phase 58` (admin/QA), `58`/`59`/`61` are all parallel-safe entry points
-- Phase 59 needs the pre-migration backup mechanism confirmed before its migration is written
+- `/gsd-plan-phase 60` — Phase 60's schema dependency (Phase 59) is now satisfied
+- `58` / `61` remain independent, parallel-safe entry points if you want to work on those instead
+- Consider scheduling a dedicated security phase for the `liikuntapaikat` wide-open RLS finding (P59-FOLLOWUP above) before real users arrive
