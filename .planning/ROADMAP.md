@@ -64,7 +64,11 @@
   3. `business_paikka_links`-rajoite on löysennetty `UNIQUE(business_account_id, paikka_id)`:ksi, jolloin useampi saman yrityksen tili voi linkittyä samaan paikkaan
   4. RLS-politiikat on kirjoitettu uudelleen `current_company_id()`-helpperifunktiolla; olemassaolevat yritykset näkevät edelleen vain omat paikkansa (regressiotestattu kirjautumisella)
 
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 59-01-PLAN.md — Migration: companies table + company_id/role columns + owner backfill + composite UNIQUE + current_company_id() RLS rewrite + staging dry-run gate (Wave 1)
+- [ ] 59-02-PLAN.md — Business-side company_name→companies(name) fixes (create-paikka, reapply, onboarding/submit) + test mock updates (Wave 2)
+- [ ] 59-03-PLAN.md — Admin-side company_name→companies(name) fixes (approve, reject, applications routes + 3 admin UI files) (Wave 2)
+- [ ] 59-04-PLAN.md — Signup company-creation + register.test.ts + profiili anon-key read + deploy runbook (Wave 2)
 
 ### Phase 60: Hallintaoikeuspyynnöt — backend & sähköposti
 
