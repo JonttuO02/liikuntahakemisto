@@ -30,17 +30,45 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  // Insert into business_accounts using verified user.id — never body.user_id
+  // Step 1 of 2: INSERT into companies. Forward-going equivalent of Plan 01's
+  // backfill — every new signup becomes the owner of its own new company
+  // (companies.name is the single source of truth, D-05; business_accounts no
+  // longer has a company_name column).
+  const { data: newCompany, error: companyError } = await supabaseAdmin
+    .from('companies')
+    .insert({ name: company_name })
+    .select('id')
+    .single()
+
+  if (companyError || !newCompany) {
+    return NextResponse.json(
+      { error: 'companies insert failed', detail: companyError?.message },
+      { status: 500 }
+    )
+  }
+
+  const newCompanyId: number = newCompany.id
+
+  // Step 2 of 2: INSERT into business_accounts using verified user.id — never
+  // body.user_id. role: 'owner' is the new enum column (forward-going
+  // equivalent of D-09); role_in_company is the existing free-text field and
+  // is distinct from role — both are set.
   const { error } = await supabaseAdmin
     .from('business_accounts')
-    .insert({ user_id: user.id, company_name, role_in_company })
+    .insert({ user_id: user.id, company_id: newCompanyId, role: 'owner', role_in_company })
 
   if (error) {
-    // Do NOT delete the auth user here. A transient DB error (connectivity,
+    // Rollback: delete the just-created companies row so a retry doesn't leave
+    // an orphan (mirrors create-paikka's insert-then-rollback pattern). Do NOT
+    // delete the auth user here. A transient DB error (connectivity,
     // constraint violation other than duplicate user_id) should not destroy
     // the user's newly-created account. The auth user remains valid so the
     // client can retry the registration. Dangling auth users without a
     // business_accounts row can be cleaned up by a scheduled maintenance job.
+    const { error: rollbackError } = await supabaseAdmin.from('companies').delete().eq('id', newCompanyId)
+    if (rollbackError) {
+      console.error('[register] CRITICAL: rollback delete failed, orphaned companies row id=' + newCompanyId, rollbackError.message)
+    }
     return NextResponse.json(
       { error: 'business_accounts insert failed', detail: error.message },
       { status: 500 }
