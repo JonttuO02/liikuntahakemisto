@@ -71,9 +71,9 @@
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 59-02-PLAN.md — Business-side company_name→companies(name) fixes (create-paikka, reapply, onboarding/submit) + test mock updates (Wave 2)
-- [ ] 59-03-PLAN.md — Admin-side company_name→companies(name) fixes (approve, reject, applications routes + 3 admin UI files) (Wave 2)
-- [ ] 59-04-PLAN.md — Signup company-creation + register.test.ts + profiili anon-key read + deploy runbook (Wave 2)
+- [x] 59-02-PLAN.md — Business-side company_name→companies(name) fixes (create-paikka, reapply, onboarding/submit) + test mock updates (Wave 2)
+- [x] 59-03-PLAN.md — Admin-side company_name→companies(name) fixes (approve, reject, applications routes + 3 admin UI files) (Wave 2)
+- [x] 59-04-PLAN.md — Signup company-creation + register.test.ts + profiili anon-key read + deploy runbook (Wave 2)
 
 ### Phase 60: Hallintaoikeuspyynnöt — backend & sähköposti
 
@@ -408,7 +408,7 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 2/2 | Complete    | 2026-06-24 |
 | 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 1/1 | Complete    | 2026-06-24 |
 | 58. Admin-pääsy & kartta-QA | v3.1 | 1/1 | Complete    | 2026-06-24 |
-| 59. Multi-company-skeemamigraatio | v3.1 | 1/4 | In Progress|  |
+| 59. Multi-company-skeemamigraatio | v3.1 | 4/4 | Complete   | 2026-06-25 |
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 0/? | Not started | - |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 0/? | Not started | - |
 | 62. Venuepage-konsolidaatio | v3.1 | 0/? | Not started | - |
