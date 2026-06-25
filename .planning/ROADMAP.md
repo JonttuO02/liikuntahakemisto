@@ -27,7 +27,7 @@
 **Granularity:** standard · **Coverage:** 25/25 v1 requirements mapped
 
 - [x] **Phase 58: Admin-sijaintikartta** — Admin-hakemuksen yksityiskohtasivulla näytetään paikan sijainti omalla read-only-kartalla (ADMIN-06/QA-01 dropped — ks. CONTEXT.md) (completed 2026-06-24)
-- [ ] **Phase 59: Multi-company-skeemamigraatio** — Yritys-identiteetti irrotetaan login-identiteetistä companies-taululla; gating-edellytys kaikelle hallintaoikeustyölle
+- [x] **Phase 59: Multi-company-skeemamigraatio** — Yritys-identiteetti irrotetaan login-identiteetistä companies-taululla; gating-edellytys kaikelle hallintaoikeustyölle (completed 2026-06-25)
 - [ ] **Phase 60: Hallintaoikeuspyynnöt — backend & sähköposti** — Työntekijä voi pyytää hallintaoikeutta, järjestelmä ilmoittaa sähköpostilla ja estää pääsyn ennen hyväksyntää
 - [ ] **Phase 61: Onboarding-vaiheiden uudelleenjärjestys** — Uusi onboarding-virta: nimi+URL ensin (AI taustalla), sijainti, AI-tarkastelu, ei erillistä preview-vaihetta
 - [ ] **Phase 62: Venuepage-konsolidaatio** — Erillinen paikkasivu poistetaan; kaikki sisältö ja navigointi yhdistetään PaikkaSheet-venuepageen, vanha reitti 404
@@ -408,7 +408,7 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 56. Claim/create-rework — luo alusta + nimikäytäntö | v3.0 | 2/2 | Complete    | 2026-06-24 |
 | 57. Dashboard-redirect-korjaus & Kesken-tila | v3.0 | 1/1 | Complete    | 2026-06-24 |
 | 58. Admin-pääsy & kartta-QA | v3.1 | 1/1 | Complete    | 2026-06-24 |
-| 59. Multi-company-skeemamigraatio | v3.1 | 4/4 | Complete   | 2026-06-25 |
+| 59. Multi-company-skeemamigraatio | v3.1 | 4/4 | Complete    | 2026-06-25 |
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 0/? | Not started | - |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 0/? | Not started | - |
 | 62. Venuepage-konsolidaatio | v3.1 | 0/? | Not started | - |

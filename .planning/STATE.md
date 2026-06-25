@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: — Active Milestone
-current_phase: 59
-current_phase_name: multi-company-skeemamigraatio
+current_phase: 60
+current_phase_name: Hallintaoikeuspyynnöt — backend & sähköposti
 status: executing
 stopped_at: Phase 59 context gathered
-last_updated: "2026-06-25T06:11:02.755Z"
+last_updated: "2026-06-25T13:30:07.407Z"
 last_activity: 2026-06-25
-last_activity_desc: Phase 59 execution started
+last_activity_desc: Phase 59 complete, transitioned to Phase 60
 progress:
   total_phases: 7
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 1
-  percent: 14
+  completed_plans: 5
+  percent: 29
 ---
 
 # Project State
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-24)
 
 ## Current Position
 
-Phase: 59 (multi-company-skeemamigraatio) — EXECUTING
-Plan: 1 of 4
+Phase: 60 — Hallintaoikeuspyynnöt — backend & sähköposti
+Plan: Not started
 Status: Executing Phase 59
-Last activity: 2026-06-25 — Phase 59 execution started
+Last activity: 2026-06-25 — Phase 59 complete, transitioned to Phase 60
 
 Next: `/gsd-plan-phase 58` (or `58` / `59` / `61` — all parallel-safe starting points)
 

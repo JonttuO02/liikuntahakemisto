@@ -1,14 +1,15 @@
 ---
 phase: 59-multi-company-skeemamigraatio
 verified: 2026-06-25T15:00:00Z
-status: human_needed
-score: 9/9 must-haves verified (programmatically); 1 manual-only D-13 login regression outstanding
+status: passed
+score: 9/9 must-haves verified (8 programmatically, 1 via human UAT)
 behavior_unverified: 0
 overrides_applied: 0
 human_verification:
   - test: "D-13 manual login regression — log in as 2-3 real business accounts in production after deploy"
     expected: "Same paikat visible as before migration; /business/profiili resolves (does not redirect to /business); no `permission denied for function current_company_id` in Supabase logs; admin application list/detail show correct company name"
     why_human: "Requires live production login with real business-account credentials and inspection of Supabase logs — not observable via static code/SQL inspection. Explicitly scoped as manual-only in 59-VALIDATION.md and 59-DEPLOY-RUNBOOK.md (D-13); RLS permission-denied errors are sometimes swallowed into empty result sets by PostgREST, so no automated signal exists."
+    result: "PASS — confirmed via 59-UAT.md (2026-06-25)"
 ---
 
 # Phase 59: Multi-company-skeemamigraatio Verification Report
