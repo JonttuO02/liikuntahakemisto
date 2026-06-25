@@ -294,6 +294,14 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **BIZPANEL-04**: `/business` ei ikinä automaattiredirectiä onboarding-sivulle, vaikka tilillä olisi kesken jäänyt `onboarding_draft` — redirect-blokki poistettu `checkState()`:stä — v3.0 (Phase 57)
 - ✓ **BIZPANEL-05**: Kesken jäänyt onboarding näytetään per-paikka harmaalla "Kesken"-badgella (ei amber Pending) + "Jatka"-CTA:lla `/business/onboarding?paikka_id=X`-osoitteeseen; 2+ samanaikaista draft-paikkaa näkyvät erillisinä riveinä — checkpoint-vaiheessa löytyi ja korjattiin precedenssi-aukko (luotu-mutta-ei-koskaan-lähetetty paikka näytti virheellisesti Pendingin Kesken-tilan sijaan): lisätty eksplisiittinen `submitted_at`-aikaleima `business_paikka_links`-tauluun, asetetaan `onboarding/submit`- ja `reapply`-reiteillä — v3.0 (Phase 57)
 
+### Validated (v3.1)
+
+- ✓ **ACCESS-01**: `companies`-taulu + `business_accounts.company_id`/`role`; kaikki olemassaolevat tilit migratoitu omiksi yrityksikseen päähallitsijoina yhdessä transaktiossa — Phase 59
+- ✓ **ACCESS-02**: `business_paikka_links`-uniikkirajoite löysennetty kompositeiksi `(business_account_id, paikka_id)`; RLS uudelleenkirjoitettu `current_company_id()`-helpperillä — Phase 59
+- ✓ **ACCESS-03**: `business_access_requests`-taulu + osittainen UNIQUE-indeksi `(requester_id, paikka_id) WHERE status='pending'`; `POST /api/business/access-request/submit` D-08/D-09/D-10-vartioinneilla + idempotenttisuus; `/business/liity`-kutsulinkkisivu; "Kopioi kutsulinkki" -painike — Phase 60
+- ✓ **ACCESS-05**: Resend-sähköposti-ilmoitukset: `sendAccessRequestNotificationEmail` (omistajalle pyyntöhetkellä) + `sendAccessRequestDecisionEmail` (hakijalle hyväksynnän/hylkäyksen jälkeen) — Phase 60
+- ✓ **ACCESS-06**: RLS-tason pääsynesto; `POST /api/business/access-request/approve` myöntää `company_id` + `business_paikka_links`-rivin concurrency-safe `UPDATE ... WHERE status='pending'`-kuviolla; `POST /api/business/access-request/reject` asettaa `status='rejected'` — Phase 60
+
 ### Future (deferred from v1.1 + v1.7)
 
 - Automaattinen väriteemat kuvista (color extraction Hero + kortit)
@@ -321,7 +329,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ## Context
 
-**Nykytila:** v3.1-milestone käynnissä. Phase 59 (multi-company-skeemamigraatio) valmis 2026-06-25 — ACCESS-01/ACCESS-02 toteutettu: `companies`-taulu + `business_accounts.company_id`/`role`, kaikki olemassaolevat tilit migratoitu omiksi yrityksikseen päähallitsijoina yhdessä transaktiossa, `business_paikka_links`-uniikkirajoite löysennetty kompositeiksi, RLS uudelleenkirjoitettu `current_company_id()`-helpperillä. Migraatio ajettu suoraan ainoaan Supabase-projektiin operaattorin hyväksynnällä (ei käyttäjiä vielä). Verifioinnin yhteydessä löydettiin ja korjattiin todellinen oikeuksien-eskalaatio-bugi (5 saraketta, mukaan lukien admin-self-elevation `profiles.is_admin`-sarakkeessa) kahdella korjausmigraatiolla. D-13-kirjautumisregressio vahvistettu UAT:ssa. Seuraavaksi Phase 60 (hallintaoikeuspyynnöt — backend & sähköposti, ACCESS-03/05/06), joka riippuu tästä vaiheesta.
+**Nykytila:** v3.1-milestone käynnissä. Phase 60 (hallintaoikeuspyynnöt — backend & sähköposti) valmis 2026-06-26 — ACCESS-03/05/06 toteutettu: `business_access_requests`-taulu, submit/approve/reject Route Handlerit concurrency-safe-kuviolla, 2 Resend-sähköpostilähetintä, `/business/liity`-kutsulinkkisivu, "Kopioi kutsulinkki" -painike. Yksi gap-closure-kierros (60-06): `/business/liity` puuttui `isPublicBusinessPath`-poikkeuksesta middlewaressa — korjattu ennen UAT:n loppuunsaattamista. 5/5 suoritettavaa UAT-testiä läpäisi; 3 ohitettu (ei pending-testidataa approve/reject/pending-bannerin testaamiseksi). Seuraavaksi Phase 61 (onboarding-vaiheiden uudelleenjärjestys, ONBOARD-18..24) tai Phase 58 (admin-pääsy + kartta-QA) — molemmat riippumattomia.
 
 **Edellinen:** v3.0 Oma tietokanta (Google Places -irtautuminen) toimitettu 2026-06-24. Kaikki 12 v3.0-vaatimusta toteutettu. Google Places -synkkaus poistettu kokonaan ja kaikki Google-peräinen liikuntapaikka-data tyhjennetty (operaattori valitsi täyden 327/327-tyhjennyksen); onboardingiin uusi Sijainti-vaihe (kartta + osoitehaku-autocomplete, vain lat/lng + kirjoitettu osoite tallennetaan); AI-sivuanalyysi ehdottaa myös laji-kategoriaa käyttäjän vahvistettavaksi; claim-vaihe korvattu create-only-virralla erillisillä yritys-/toimipiste-nimikentillä; `/business`-redirectbugi korjattu ja per-paikka Kesken-tila + Jatka-CTA lisätty. 13 plania (phases 52–57), 2 päivää (2026-06-22 → 2026-06-24).
 

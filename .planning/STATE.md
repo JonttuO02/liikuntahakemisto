@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: — Active Milestone
-current_phase: 60
-current_phase_name: hallintaoikeuspyynn-t-backend-s-hk-posti
+current_phase: 61
+current_phase_name: Onboarding-vaiheiden uudelleenjärjestys
 status: executing
-stopped_at: Phase 60 execution complete (all 6 plans)
-last_updated: "2026-06-25T20:00:55.782Z"
+stopped_at: Phase 60 execution complete — gap-closure plan 06 done
+last_updated: "2026-06-25T21:03:05.142Z"
 last_activity: 2026-06-25
-last_activity_desc: Phase 60 execution started
+last_activity_desc: Phase 60 complete, transitioned to Phase 61
 progress:
   total_phases: 7
   completed_phases: 3
@@ -24,16 +24,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-25)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 60 — hallintaoikeuspyynn-t-backend-s-hk-posti
+**Current focus:** Phase 61 — Onboarding-vaiheiden uudelleenjärjestys
 
 ## Current Position
 
-Phase: 60 (hallintaoikeuspyynn-t-backend-s-hk-posti) — EXECUTING
-Plan: 3 of 5
+Phase: 61 — Onboarding-vaiheiden uudelleenjärjestys
+Plan: Not started
 Status: Ready to execute
-Last activity: 2026-06-25 — Phase 60 execution started
+Last activity: 2026-06-25 — Phase 60 complete, transitioned to Phase 61
 
-Next: `/gsd-plan-phase 60` (schema dependency now satisfied), or `58` / `61` (still parallel-safe)
+Next: `/gsd-plan-phase 61` or `/gsd-plan-phase 58` (both parallel-safe; 61 is the canonical next in sequence)
 
 ## v3.1 Roadmap Summary
 
@@ -65,8 +65,11 @@ Next: `/gsd-plan-phase 60` (schema dependency now satisfied), or `58` / `61` (st
 
 ## Open Product Decisions (resolve before relevant phase)
 
-- **Phase 60/64 (ACCESS-03):** Venue lookup UX for the requester — venue name search vs. shared deep link? Confirm during `/gsd-discuss-phase` for Phase 60 (research Gap).
 - **Phase 62 (VENUEPAGE-02):** Audit which unique content on `app/paikat/[id]` is NOT yet on PaikkaSheet and must migrate before deletion.
+
+**Resolved in Phase 60:**
+
+- ACCESS-03 venue lookup UX: shared deep link (invite URL with `paikka_id`) confirmed — no venue search UI needed for the requester in Phase 60; Phase 64 (dashboard UI) handles the approve/reject side.
 
 **Resolved in Phase 59:**
 
@@ -116,15 +119,14 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 
 ## Session Continuity
 
-Last session: 2026-06-25T20:00:39.910Z
-Stopped at: Phase 60 execution complete — gap-closure plan 06 done
-Resume file: .planning/phases/60-hallintaoikeuspyynn-t-backend-s-hk-posti/60-UI-SPEC.md
+Last session: 2026-06-26
+Stopped at: Phase 60 complete (UAT passed, 5/5 runnable tests pass, VERIFICATION.md written, transitioned to Phase 61)
+Resume file: None
 
 ## Operator Next Steps
 
-- Review the v3.1 roadmap (`.planning/ROADMAP.md` → "v3.1 — Active Milestone")
-- `/gsd-plan-phase 60` — Phase 60's schema dependency (Phase 59) is now satisfied
-- `58` / `61` remain independent, parallel-safe entry points if you want to work on those instead
+- `/gsd-plan-phase 61` — next in sequence (onboarding step reorder; independent code path)
+- `/gsd-plan-phase 58` — parallel-safe alternative (admin access + map QA)
 - Consider scheduling a dedicated security phase for the `liikuntapaikat` wide-open RLS finding (P59-FOLLOWUP above) before real users arrive
 
 ## Performance Metrics
@@ -136,4 +138,6 @@ Resume file: .planning/phases/60-hallintaoikeuspyynn-t-backend-s-hk-posti/60-UI-
 
 ## Decisions
 
-- [Phase ?]: isPublicBusinessPath in middleware.ts extended to include /business/liity — public deep-link invite landing page; its useEffect handles the unauthenticated redirect
+- **v3.1 (Phase 60)**: `isPublicBusinessPath` in middleware.ts extended to include `/business/liity` — public deep-link invite landing page; its `useEffect` handles the unauthenticated redirect to `/business/rekisteroidy`
+- **v3.1 (Phase 60)**: `invite: true` flag in `/api/business/register` skips companies INSERT, creates `business_accounts` with `company_id=null, role='member'` — for invite-link signup path (D-09a)
+- **v3.1 (Phase 60)**: Partial UNIQUE index `(requester_id, paikka_id) WHERE status='pending'` on `business_access_requests` — idempotent duplicate-submission handling at DB layer (D-08)
