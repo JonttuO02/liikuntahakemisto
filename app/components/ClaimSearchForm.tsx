@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
-import SijaintiPicker from './SijaintiPicker'
 
 // ─── Shared class constants ───────────────────────────────────────────────────
 
@@ -24,10 +23,6 @@ export default function ClaimSearchForm() {
   // Create form — only flow left (CLAIM-04): no search, no claim step.
   const [yritysNimi, setYritysNimi] = useState('')
   const [toimipisteNimi, setToimipisteNimi] = useState('')
-  const [createOsoite, setCreateOsoite] = useState('')
-  const [createKaupunki, setCreateKaupunki] = useState('')
-  const [createLat, setCreateLat] = useState<number | null>(null)
-  const [createLng, setCreateLng] = useState<number | null>(null)
 
   // Shared
   const [loading, setLoading] = useState(false)
@@ -40,18 +35,6 @@ export default function ClaimSearchForm() {
 
     if (!yritysNimi.trim()) {
       setError(t('errorNameRequired'))
-      return
-    }
-    if (!createOsoite.trim()) {
-      setError(t('errorAddressRequired'))
-      return
-    }
-    if (createLat === null || createLng === null) {
-      setError(t('sijaintiPakollinen'))
-      return
-    }
-    if (!createKaupunki.trim()) {
-      setError(t('sijaintiVirhe'))
       return
     }
 
@@ -71,10 +54,6 @@ export default function ClaimSearchForm() {
         body: JSON.stringify({
           yritysNimi: yritysNimi.trim(),
           toimipisteNimi: toimipisteNimi.trim(),
-          osoite: createOsoite.trim(),
-          kaupunki: createKaupunki.trim(),
-          latitude: createLat,
-          longitude: createLng,
         }),
       })
 
@@ -120,19 +99,6 @@ export default function ClaimSearchForm() {
         />
         <p className="text-sm text-[rgba(17,17,17,0.45)]">{t('toimipisteNimiHelper')}</p>
 
-        <h3 className="text-sm font-bold text-[#111111]">
-          {t('sijaintiLabel')}
-        </h3>
-
-        <SijaintiPicker
-          onChange={({ lat, lng, address, city }) => {
-            setCreateLat(lat)
-            setCreateLng(lng)
-            setCreateOsoite(address)
-            setCreateKaupunki(city)
-          }}
-        />
-
         {/* Error block */}
         <AnimatePresence>
           {error && (
@@ -151,7 +117,7 @@ export default function ClaimSearchForm() {
         </AnimatePresence>
 
         {/* Create CTA */}
-        <button type="submit" className={CTA_CLASS} disabled={loading || createLat === null}>
+        <button type="submit" className={CTA_CLASS} disabled={loading || !yritysNimi.trim()}>
           {loading ? t('creating') : t('createCta')}
         </button>
       </form>
