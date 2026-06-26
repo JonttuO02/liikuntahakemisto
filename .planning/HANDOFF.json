@@ -1,30 +1,50 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-12T10:05:07.756Z",
-  "phase": "41",
-  "phase_name": "Navigation Foundation",
-  "phase_dir": ".planning/phases/41-navigation-foundation",
-  "plan": 2,
-  "task": 3,
-  "total_tasks": 3,
+  "timestamp": "2026-06-26T05:25:18.339Z",
+  "phase": "61",
+  "phase_name": "Onboarding-vaiheiden uudelleenjärjestys",
+  "phase_dir": ".planning/phases/61-onboarding-vaiheiden-uudelleenj-rjestys",
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
   "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "Add BusinessNav i18n keys to fi.json and en.json", "status": "done", "commit": "451af40"},
-    {"id": 2, "name": "Create BusinessNav.tsx client component", "status": "done", "commit": "c85ac27"},
-    {"id": 3, "name": "Wire BusinessNav into layout.tsx", "status": "done", "commit": "c012a17"},
-    {"id": 4, "name": "Add already-logged-in redirect + extract BusinessKirjauduClient", "status": "done", "commit": "32d55d5"},
-    {"id": 5, "name": "Manual browser verification (checkpoint:human-verify)", "status": "done", "commit": "approved by user 2026-06-12"}
+    {"id": "61-01", "name": "API + i18n foundation", "status": "done", "commit": "cddab23"},
+    {"id": "61-02", "name": "New step components + ClaimSearchForm simplified", "status": "done", "commit": "21e27aa"},
+    {"id": "61-03", "name": "Wizard finalization + StepEsikatselu deleted", "status": "done", "commit": "df168f7"},
+    {"id": "61-04", "name": "Page state machine integration + StepPaikka deleted", "status": "done", "commit": "ccec852"},
+    {"id": "code-review", "name": "High-effort code review — 7 findings written to 61-REVIEW.md", "status": "done", "commit": null}
   ],
-  "remaining_tasks": [],
-  "blockers": [],
-  "human_actions_pending": [],
+  "remaining_tasks": [
+    {"id": "review-fixes", "name": "Apply 7 code review fixes from 61-REVIEW.md", "status": "not_started"},
+    {"id": "verify", "name": "Run /gsd-verify-work 61 after fixes", "status": "not_started"},
+    {"id": "uat", "name": "UAT against running app", "status": "not_started"}
+  ],
+  "blockers": [
+    {
+      "description": "7 code review findings must be fixed before UAT — 1 critical (website clobber), 3 high (resuming-user flows broken), 2 medium, 1 low. See 61-REVIEW.md.",
+      "type": "technical",
+      "workaround": "Run /gsd-code-review 61 --fix or fix manually"
+    }
+  ],
+  "async_jobs": [],
+  "human_actions_pending": [
+    {
+      "action": "Manual UAT of the full onboarding flow in a running browser",
+      "context": "Pure frontend refactor — must verify name+URL step, sijainti step, AI trigger, wizard flow, and submission in the live app",
+      "blocking": false
+    }
+  ],
   "decisions": [
-    {"decision": "Phase 41 fully verified — all 7 checkpoint checks passed", "rationale": "User confirmed manually in browser", "phase": "41"},
-    {"decision": "Fixed ClaimSearchForm to use createBusinessBrowserClient() for claim/create token", "rationale": "Consumer client returned empty session for business-only users causing 401 on claim/create APIs", "phase": "41"},
-    {"decision": "Fixed StepAukioloajat buildOpenDaysObject to skip days with empty time strings", "rationale": "Toggled-open days with no times sent empty strings to isValidAukioloajat validator causing 400", "phase": "41"},
-    {"decision": "joona.orava@gmail.com set as admin + approved business account via SQL", "rationale": "Profiles table was empty after cleanup; needed dual consumer+business access for testing", "phase": "41"}
+    {"decision": "StepEsikatselu.tsx and StepPaikka.tsx deleted from codebase", "rationale": "Intentional per ONBOARD-18/22 — both replaced by new components", "phase": "61"},
+    {"decision": "Worktree cleanup-wave blocked by deletion guard for 61-03 and 61-04 — merged manually via git merge --no-ff", "rationale": "Deletions are intentional; cleanup-wave safety gate treats any deletion as a block requiring human confirmation", "phase": "61"},
+    {"decision": "Website URL saved at step 1 to draft.yhteystiedot.website via fire-and-forget save-step", "rationale": "Plan 04 design: website persists to draft so submit route can write it to varauslinkki (Pitfall 2)", "phase": "61"}
   ],
-  "uncommitted_files": [".planning/STATE.md"],
-  "next_action": "Run /gsd:verify-work 41 to formally close phase, then plan Phase 42",
-  "context_notes": "Phase 41 done and human-verified. Three out-of-scope bug fixes applied this session. ROADMAP phase 41 row needs updating to 2/2 complete. Phase 42 (Dashboard & Map) and Phase 43 (Business Profile) are next in v2.0."
+  "uncommitted_files": [
+    ".planning/STATE.md",
+    ".claude/settings.local.json",
+    ".planning/phases/61-onboarding-vaiheiden-uudelleenj-rjestys/61-REVIEW.md"
+  ],
+  "next_action": "Read 61-REVIEW.md, then run /gsd-code-review 61 --fix to apply the 7 fixes",
+  "context_notes": "All 4 plans executed cleanly. TypeScript clean after every wave merge. Code review found 7 real bugs — most critically: (1) step-4 save-step clobbers the website written at step 1 (UPSERT replaces entire yhteystiedot JSONB column → varauslinkki always null), (2) fast-forward sets websiteUrl=null so resuming users with latitude set bypass AI analyze phase, (3) resuming users land in sijainti with CTA disabled (lat=null in state), (4) back-loop from sijainti after coordinates saved. All 7 fixes needed before UAT."
 }

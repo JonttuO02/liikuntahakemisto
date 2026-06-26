@@ -5,16 +5,16 @@ milestone_name: — Active Milestone
 current_phase: 61
 current_phase_name: Onboarding-vaiheiden uudelleenjärjestys
 status: executing
-stopped_at: Phase 61 planned (4 plans, 3 waves) — ready to execute
-last_updated: "2026-06-26T04:44:54.581Z"
+stopped_at: context exhaustion at 75% (2026-06-26)
+last_updated: "2026-06-26T05:23:01.047Z"
 last_activity: 2026-06-26
 last_activity_desc: Phase 61 execution started
 progress:
   total_phases: 7
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 15
-  completed_plans: 11
-  percent: 43
+  completed_plans: 15
+  percent: 57
 ---
 
 # Project State
@@ -119,8 +119,8 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 
 ## Session Continuity
 
-Last session: 2026-06-25T21:38:28.375Z
-Stopped at: Phase 61 UI-SPEC approved
+Last session: 2026-06-26T05:23:01.039Z
+Stopped at: context exhaustion at 75% (2026-06-26)
 Resume file: .planning/phases/61-onboarding-vaiheiden-uudelleenj-rjestys/61-UI-SPEC.md
 
 ## Operator Next Steps
