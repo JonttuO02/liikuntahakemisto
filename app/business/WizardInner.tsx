@@ -242,6 +242,10 @@ function OnboardingMode({
       if (data.ok) {
         router.push('/business')
       }
+    } else {
+      // Throw so the error propagates to StepYhteystiedot's catch block (F-05/F-06),
+      // which surfaces it via setError — giving the user visible feedback on submit failure.
+      throw new Error(`Submit failed with status ${res.status}`)
     }
   }
 
