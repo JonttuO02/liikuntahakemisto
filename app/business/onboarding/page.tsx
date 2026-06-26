@@ -310,7 +310,7 @@ export default function OnboardingWizardPage() {
     setWebsiteUrl(url)
     setSkipFastForward(false) // user navigated forward — reset back-navigation guard (F-04)
     if (alreadyHasLocation) {
-      setPagePhase(url ? 'analyze' : 'laji-skip')
+      setPagePhase(url ? 'wizard' : 'laji-skip')
     } else {
       setPagePhase('sijainti')
     }
@@ -346,10 +346,10 @@ export default function OnboardingWizardPage() {
   }
 
   // Wizard step 1's "back" button returns here from page.tsx (Pitfall 8) — routes to the
-  // correct pre-phase based on whether a website was provided. With a URL: back to analyze
-  // so the user can re-confirm/re-pick branding. Without: back to laji-skip picker.
+  // correct pre-phase based on whether a website was provided. With a URL: back to sijainti
+  // (analyze is no longer user-visible). Without: back to laji-skip picker.
   function handleBackToPrePhase() {
-    setPagePhase(websiteUrl ? 'analyze' : 'laji-skip')
+    setPagePhase(websiteUrl ? 'sijainti' : 'laji-skip')
   }
 
   return (
@@ -368,7 +368,7 @@ export default function OnboardingWizardPage() {
         {pagePhase === 'sijainti' && paikkaId !== null && (
           <StepSijainti
             paikkaId={paikkaId}
-            onNext={() => (websiteUrl ? setPagePhase('analyze') : handleSkip())}
+            onNext={() => (websiteUrl ? setPagePhase('wizard') : handleSkip())}
             onPrev={() => {
               // Set flag before navigating back so StepNimiJaURLPrePhase suppresses
               // the lat-based fast-forward on re-mount (F-04 back-loop prevention).
