@@ -9,7 +9,7 @@ import { useDebouncedValue } from '@/lib/livePreview/useDebouncedPreviewField'
 
 interface StepYhteystiedotProps {
   paikkaId: number
-  onNext: () => void
+  onNext: () => void | Promise<void>
   onPrev: () => void
   initialYhteystiedot?: {
     puhelin?: string
@@ -144,7 +144,7 @@ export default function StepYhteystiedot({
         return
       }
 
-      onNext()
+      await onNext()
     } catch {
       setError(t('errorGeneric'))
     } finally {
