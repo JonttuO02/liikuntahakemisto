@@ -320,13 +320,18 @@ export default function OnboardingWizardPage() {
         data: { session },
       } = await supabase.auth.getSession()
       const token = session?.access_token ?? ''
-      // Fire-and-forget: background AI analysis (CORRECT route: analyze-website, not ai-analyze)
-      fetch('/api/business/analyze-website', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({ url, paikka_id: paikkaId }),
-      })
-      // Persist website URL to draft so submit route can write it to varauslinkki (Pitfall 2)
+      if (!aiTriggered) {
+        // Fire-and-forget: background AI analysis (CORRECT route: analyze-website, not ai-analyze).
+        // Guarded by aiTriggered so a Back+Next cycle does not re-fire a duplicate request (F-07).
+        fetch('/api/business/analyze-website', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ url, paikka_id: paikkaId }),
+        })
+        setAiTriggered(true)
+      }
+      // Persist website URL to draft so submit route can write it to varauslinkki (Pitfall 2).
+      // Not guarded — always re-persist on retry so the URL is saved even when AI is skipped.
       fetch('/api/business/onboarding/save-step', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
@@ -337,7 +342,6 @@ export default function OnboardingWizardPage() {
           value: { website: url },
         }),
       })
-      setAiTriggered(true)
     }
   }
 
