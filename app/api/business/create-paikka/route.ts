@@ -52,8 +52,9 @@ export async function POST(request: Request) {
         ? body.longitude
         : null
 
-    // toimipisteNimi is optional (D-08) — only yritysNimi is required.
-    if (!yritysNimi || !osoite || !kaupunki || latitude === null || longitude === null) {
+    // toimipisteNimi, osoite, kaupunki, and coordinates are all optional at creation
+    // (ONBOARD-18/20): venue is created from name alone; location is collected in a later step.
+    if (!yritysNimi) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
   } catch {
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
   // business_managed is set to true by the approval trigger (PUB-01) when claim_status='approved'.
   const { data: newPaikka, error: paikkaError } = await supabaseAdmin
     .from('liikuntapaikat')
-    .insert({ nimi, osoite, kaupunki, latitude, longitude, laji: 'Muu', published: false })
+    .insert({ nimi, osoite: osoite || null, kaupunki: kaupunki || null, latitude, longitude, laji: 'Muu', published: false })
     .select('id')
     .single()
 
