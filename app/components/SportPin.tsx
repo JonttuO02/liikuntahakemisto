@@ -4,7 +4,7 @@ import { useId } from 'react'
 import { SPORT_ICONS } from '@/lib/sportIcons'
 
 interface SportPinProps {
-  laji: string
+  laji?: string
   animDelay?: number // 0–1, used as animation-delay multiplier; default 0
 }
 
@@ -31,15 +31,17 @@ export default function SportPin({ laji, animDelay }: SportPinProps) {
         <path d={PIN_PATH} fill={`url(#${gradId})`} />
         {/* White circle — cx=14 cy=14 r=10 matches original */}
         <circle cx="14" cy="14" r="10" fill="white" />
-        {/* Icon clipped to white circle so square PNG corners never bleed outside */}
-        <image
-          href={SPORT_ICONS[laji.toLowerCase()] ?? SPORT_ICONS['fallback']}
-          x="4"
-          y="4"
-          width="20"
-          height="20"
-          clipPath={`url(#${gradId}-c)`}
-        />
+        {/* Icon clipped to white circle — omitted when laji is not provided */}
+        {laji && (
+          <image
+            href={SPORT_ICONS[laji.toLowerCase()] ?? SPORT_ICONS['fallback']}
+            x="4"
+            y="4"
+            width="20"
+            height="20"
+            clipPath={`url(#${gradId}-c)`}
+          />
+        )}
       </svg>
 
       {/* Arc sweep — conic-gradient ring that orbits the white circle edge */}

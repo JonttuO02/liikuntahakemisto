@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
+import SportPin from '@/app/components/SportPin'
 import type { MapMouseEvent } from '@vis.gl/react-google-maps'
 import { motion } from 'framer-motion'
 import { Locate } from 'lucide-react'
@@ -125,19 +126,9 @@ export default function SijaintiPicker({ onChange }: SijaintiPickerProps) {
           {pin && (
             <AdvancedMarker position={pin} draggable onDragEnd={handleDragEnd}>
               <div style={{ position: 'relative', width: 0, height: 0 }}>
-                <svg
-                  width={24}
-                  height={32}
-                  viewBox="0 0 24 32"
-                  style={{ position: 'absolute', left: -12, bottom: 0, pointerEvents: 'none' }}
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M12 0C5.373 0 0 5.373 0 12c0 4.5 2.5 8.5 6.25 10.7L12 32l5.75-9.3C21.5 20.5 24 16.5 24 12 24 5.373 18.627 0 12 0Z"
-                    fill="#111111"
-                  />
-                  <circle cx={12} cy={12} r={4} fill="white" />
-                </svg>
+                <div style={{ position: 'absolute', bottom: 0, left: 0, transform: 'translateX(-50%)' }}>
+                  <SportPin />
+                </div>
               </div>
             </AdvancedMarker>
           )}
