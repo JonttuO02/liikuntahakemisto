@@ -4,11 +4,11 @@ milestone: v3.1
 milestone_name: — Active Milestone
 current_phase: 61
 current_phase_name: Onboarding-vaiheiden uudelleenjärjestys
-status: planned
+status: executing
 stopped_at: Phase 61 planned (4 plans, 3 waves) — ready to execute
-last_updated: "2026-06-26T00:00:00.000Z"
+last_updated: "2026-06-26T04:44:54.581Z"
 last_activity: 2026-06-26
-last_activity_desc: Phase 61 planned — 4 plans across 3 waves, all 7 requirements covered
+last_activity_desc: Phase 61 execution started
 progress:
   total_phases: 7
   completed_phases: 3
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-06-25)
 
 ## Current Position
 
-Phase: 61 — Onboarding-vaiheiden uudelleenjärjestys
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-25 — Phase 60 complete, transitioned to Phase 61
+Phase: 61 (Onboarding-vaiheiden uudelleenjärjestys) — EXECUTING
+Plan: 1 of 4
+Status: Executing Phase 61
+Last activity: 2026-06-26 — Phase 61 execution started
 
 Next: `/gsd-plan-phase 61` or `/gsd-plan-phase 58` (both parallel-safe; 61 is the canonical next in sequence)
 
