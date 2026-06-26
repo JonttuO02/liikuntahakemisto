@@ -72,8 +72,14 @@ function OnboardingMode({
 
   // Branding pick step — shows as step 1 when brandingData is available, before StepMediat.
   const brandingPickEnabled = brandingData?.status === 'analyzed'
-  const [inBrandingPick, setInBrandingPick] = useState(brandingPickEnabled ?? false)
+  // Initialized to false — loadDraft sets it true only for new sessions (savedStep <= 1).
+  // Resumed sessions skip branding pick (user already did it) and set brandingPickDone instead.
+  const [inBrandingPick, setInBrandingPick] = useState(false)
   const [brandingPickDone, setBrandingPickDone] = useState(false)
+  // Non-null while a resume redirect (step=1 → savedStep) is in flight. Keeps the spinner
+  // up until useSearchParams reflects the new URL — prevents the step-1 flash + race where
+  // the user can press Next before the redirect settles.
+  const [redirectingToStep, setRedirectingToStep] = useState<number | null>(null)
   // Laji confirmed in branding pick step — overrides the stale DB value for live preview.
   const [brandingConfirmedLaji, setBrandingConfirmedLaji] = useState<string | null>(null)
 
@@ -157,15 +163,21 @@ function OnboardingMode({
       // Build the resume URL here (not via goToStep) because paikkaId state isn't set yet.
       const savedStep = existingDraft?.current_step ?? 0
       setMaxReachedStep(savedStep)
-      // Post-reorder (50-02): step 1 now means StepMediat (StepPaikka moved to page.tsx as
-      // a pre-phase, no longer rendered here) — this resume-bounce semantics are unchanged.
-      // Clamp to the wizard's valid 1-4 range before redirecting: the AnalysoiSivusto
-      // quick-accept path can transiently persist current_step:6, which would otherwise
-      // push an out-of-range ?step=6 URL for one render cycle (CR-01).
+
+      // Branding pick visibility: only show for new/early sessions (savedStep <= 1).
+      // Resumed sessions treat branding pick as already done so back-navigation works.
+      if (brandingPickEnabled) {
+        if (savedStep <= 1) setInBrandingPick(true)
+        else setBrandingPickDone(true)
+      }
+
+      // Resume redirect: if URL says step=1 but draft is further ahead, bounce to saved step.
+      // Clamp to 1-4 (AnalysoiSivusto quick-accept can transiently persist current_step:6).
       const clampedSavedStep = Math.min(savedStep, 4)
       if (clampedSavedStep > 1 && step === 1) {
         const params = new URLSearchParams({ step: String(clampedSavedStep) })
         if (resolvedPaikkaId) params.set('paikka_id', String(resolvedPaikkaId))
+        setRedirectingToStep(clampedSavedStep)
         router.push('/business/onboarding?' + params.toString())
       }
 
@@ -209,6 +221,13 @@ function OnboardingMode({
     }
     goToStep(stepNum + 1)
   }
+
+  // Clear the redirect-in-flight flag once useSearchParams reflects the new URL.
+  useEffect(() => {
+    if (redirectingToStep !== null && step === redirectingToStep) {
+      setRedirectingToStep(null)
+    }
+  }, [step, redirectingToStep])
 
   // Forward-skip guard: prevent URL manipulation from jumping past unfinished steps.
   // Uses maxReachedStep so natural Next-button navigation is never blocked.
@@ -263,7 +282,7 @@ function OnboardingMode({
     }
   }
 
-  if (loading) {
+  if (loading || redirectingToStep !== null) {
     return (
       <div className="flex items-center justify-center py-24">
         <div className="w-6 h-6 rounded-full border-2 border-[rgba(17,17,17,0.12)] border-t-[#111111] animate-spin" />
