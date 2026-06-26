@@ -32,7 +32,7 @@ function StepNimiJaURLPrePhase({
   onPaikkaInfoResolved,
   skipFastForward = false,
 }: {
-  onNext: (websiteUrl: string | null, alreadyHasLocation?: boolean) => void
+  onNext: (websiteUrl: string | null, alreadyHasLocation?: boolean, resolvedPaikkaId?: number) => void
   onPaikkaIdResolved: (paikkaId: number) => void
   onPaikkaInfoResolved: (info: PaikkaBase) => void
   skipFastForward?: boolean
@@ -95,13 +95,13 @@ function StepNimiJaURLPrePhase({
                 .maybeSingle()
               savedWebsite = (draftRow?.yhteystiedot as { website?: string } | null)?.website ?? null
             }
-            onNext(savedWebsite, true)
+            onNext(savedWebsite, true, resolved)
             return
           }
           // Auto-skip nimi-url step when URL was already provided at creation time (ClaimSearchForm)
           const urlParam = searchParams.get('website_url')
           if (urlParam) {
-            onNext(urlParam)
+            onNext(urlParam, false, resolved)
             return
           }
         }
@@ -337,7 +337,12 @@ export default function OnboardingWizardPage() {
   // background AI analysis (Pitfall 2: website must survive to submit via onboarding_draft).
   // alreadyHasLocation=true when called from the fast-forward path (lat already saved) —
   // skip sijainti entirely and route directly to analyze or laji-skip (F-02/F-03).
-  async function handleNimiUrlNext(url: string | null, alreadyHasLocation = false) {
+  // resolvedPaikkaId is passed explicitly from StepNimiJaURLPrePhase to avoid the stale-closure
+  // problem: when auto-skip fires (ClaimSearchForm path), the parent paikkaId state hasn't been
+  // committed yet, so the closure would capture null. The child resolves the real id first and
+  // passes it here so AI triggering + draft persistence work correctly.
+  async function handleNimiUrlNext(url: string | null, alreadyHasLocation = false, resolvedPaikkaId?: number) {
+    const effectivePaikkaId = resolvedPaikkaId ?? paikkaId
     setWebsiteUrl(url)
     setSkipFastForward(false) // user navigated forward — reset back-navigation guard (F-04)
     if (alreadyHasLocation) {
@@ -345,7 +350,7 @@ export default function OnboardingWizardPage() {
     } else {
       setPagePhase('sijainti')
     }
-    if (url && paikkaId !== null) {
+    if (url && effectivePaikkaId !== null) {
       const supabase = createBusinessBrowserClient()
       const {
         data: { session },
@@ -354,10 +359,12 @@ export default function OnboardingWizardPage() {
       if (!aiTriggered) {
         // Fire-and-forget: background AI analysis (CORRECT route: analyze-website, not ai-analyze).
         // Guarded by aiTriggered so a Back+Next cycle does not re-fire a duplicate request (F-07).
+        // In the ClaimSearchForm path, AI was already fired before redirect — this becomes a no-op
+        // because the endpoint is idempotent; the guard still prevents double-fire on Back+Next.
         fetch('/api/business/analyze-website', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-          body: JSON.stringify({ url, paikka_id: paikkaId }),
+          body: JSON.stringify({ url, paikka_id: effectivePaikkaId }),
         })
         setAiTriggered(true)
       }
@@ -367,7 +374,7 @@ export default function OnboardingWizardPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify({
-          paikka_id: paikkaId,
+          paikka_id: effectivePaikkaId,
           step: 0,
           field: 'yhteystiedot',
           value: { website: url },
