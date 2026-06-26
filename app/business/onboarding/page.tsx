@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import WizardInner from '../WizardInner'
-import AnalysoiSivusto, { LajiPicker } from './AnalysoiSivusto'
+import { LajiPicker } from './AnalysoiSivusto'
 import StepNimiJaURL from './StepNimiJaURL'
 import StepSijainti from './StepSijainti'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { type BrandingResult } from '@/lib/branding/brandingResult'
 import { type PaikkaBase } from '@/lib/onboardingUtils'
 
-type PagePhase = 'nimi-url' | 'sijainti' | 'analyze' | 'laji-skip' | 'wizard'
+type PagePhase = 'nimi-url' | 'sijainti' | 'laji-skip' | 'waiting' | 'wizard'
 
 function PreVaiheSpinner() {
   return (
@@ -84,7 +84,7 @@ function StepNimiJaURLPrePhase({
           setPaikkaInfo(paikka as PaikkaBase)
           onPaikkaInfoResolved(paikka as PaikkaBase)
           // Fast-forward: if location is already set, skip sijainti for resuming users.
-          // Re-hydrate websiteUrl from draft so analyze/laji-skip routing is correct (F-02/F-03).
+          // Re-hydrate websiteUrl from draft so wizard/laji-skip routing is correct (F-02/F-03).
           // skipFastForward suppresses this when the user navigated back from sijainti (F-04).
           if (paikka.latitude !== null && !skipFastForward) {
             const { data: { user: currentUser } } = await supabase.auth.getUser()
@@ -125,77 +125,77 @@ function StepNimiJaURLPrePhase({
   return <StepNimiJaURL paikkaInfo={paikkaInfo} paikkaId={paikkaId} onNext={onNext} />
 }
 
-// PrePhase resolves paikka_id (URL param first, then business_paikka_links lookup) — this
-// component is the Suspense-boundary DESCENDANT that calls useSearchParams(), mirroring
-// WizardInner's OnboardingMode pattern exactly. OnboardingWizardPage (the parent that
-// instantiates the boundary) must never call useSearchParams() itself.
-// `knownPaikkaId` lets the caller pass an already-resolved paikka_id (e.g. from
-// StepNimiJaURLPrePhase, which runs immediately before this phase) to skip the redundant
-// resolution fetch/spinner flash. Falls back to its own resolution logic when absent, so it
-// still works as a defensive fallback / for direct deep-links into the analyze phase.
-function PrePhase({
-  paikkaId: knownPaikkaId,
-  paikkaInfo,
-  onConfirm,
+// WaitingForAI — polls analyze-website GET until status==='analyzed', then hands brandingData
+// to parent so WizardInner mounts with pre-filled AI data. Times out after ~60s → skip.
+function WaitingForAI({
+  paikkaId,
+  onReady,
   onSkip,
-  onPaikkaIdResolved,
 }: {
-  paikkaId: number | null
-  paikkaInfo: PaikkaBase | null
-  onConfirm: (
-    result: BrandingResult,
-    selections: { logoUrl: string | null; gallery: string[]; laji: string | null }
-  ) => void | Promise<void>
+  paikkaId: number
+  onReady: (data: BrandingResult) => void
   onSkip: () => void
-  onPaikkaIdResolved: (paikkaId: number) => void
 }) {
-  const searchParams = useSearchParams()
-  const [paikkaId, setPaikkaId] = useState<number | null>(knownPaikkaId)
+  const cancelledRef = useRef(false)
 
   useEffect(() => {
-    if (knownPaikkaId !== null) return // already resolved by StepNimiJaURLPrePhase
+    cancelledRef.current = false
 
-    let cancelled = false
+    async function run() {
+      const supabase = createBusinessBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token ?? ''
+      let pollCount = 0
+      const MAX_POLLS = 30
 
-    async function resolvePaikkaId() {
-      const urlPaikkaId = searchParams.get('paikka_id')
-      const parsed = urlPaikkaId ? parseInt(urlPaikkaId, 10) : null
-      let resolved: number | null = parsed !== null && !isNaN(parsed) ? parsed : null
-
-      if (!resolved) {
-        const supabase = createBusinessBrowserClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: link } = await supabase
-            .from('business_paikka_links')
-            .select('paikka_id')
-            .eq('business_account_id', user.id)
-            .limit(1)
-            .maybeSingle()
-          if (link) {
-            resolved = link.paikka_id
+      while (!cancelledRef.current && pollCount < MAX_POLLS) {
+        try {
+          const res = await fetch(`/api/business/analyze-website?paikka_id=${paikkaId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (res.ok) {
+            const data = (await res.json()) as BrandingResult
+            if (data.status === 'analyzed') {
+              if (!cancelledRef.current) onReady(data)
+              return
+            }
+            if (data.status === 'failed') {
+              if (!cancelledRef.current) onSkip()
+              return
+            }
           }
+        } catch {
+          // ignore network errors, keep polling
+        }
+        pollCount++
+        if (!cancelledRef.current && pollCount < MAX_POLLS) {
+          await new Promise(r => setTimeout(r, 2000))
         }
       }
 
-      if (!cancelled) {
-        setPaikkaId(resolved)
-        if (resolved !== null) onPaikkaIdResolved(resolved)
-      }
+      if (!cancelledRef.current) onSkip()
     }
 
-    resolvePaikkaId()
+    run()
     return () => {
-      cancelled = true
+      cancelledRef.current = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (paikkaId === null) {
-    return <PreVaiheSpinner />
-  }
-
-  return <AnalysoiSivusto paikkaId={paikkaId} paikkaInfo={paikkaInfo} onConfirm={onConfirm} onSkip={onSkip} />
+  return (
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-6">
+      <div className="w-8 h-8 rounded-full border-2 border-[rgba(17,17,17,0.12)] border-t-[#111111] animate-spin" />
+      <p className="text-sm text-[rgba(17,17,17,0.45)]">Analysoidaan sivustoasi...</p>
+      <button
+        type="button"
+        onClick={onSkip}
+        className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] transition-colors"
+      >
+        Ohita
+      </button>
+    </div>
+  )
 }
 
 export default function OnboardingWizardPage() {
@@ -215,75 +215,6 @@ export default function OnboardingWizardPage() {
   // Suppresses the fast-forward in StepNimiJaURLPrePhase when the user explicitly navigated
   // back from sijainti — prevents a re-mount loop when lat is already set (F-04).
   const [skipFastForward, setSkipFastForward] = useState(false)
-
-  async function handleConfirm(
-    result: BrandingResult,
-    selections: { logoUrl: string | null; gallery: string[]; laji: string | null }
-  ) {
-    setBrandingData(result)
-    setConfirmedLaji(selections.laji)
-
-    // AWAIT the media_urls save-step write BEFORE navigating into the wizard.
-    // WizardInner's OnboardingMode re-fetches the onboarding_draft from Supabase ON MOUNT —
-    // if setPagePhase('wizard') ran before this write landed, that on-mount fetch would read
-    // the stale (pre-write) draft and StepMediat would silently render without the gallery
-    // prefill (no compile error, intermittent). Awaiting here closes that race (T-48-15).
-    if (paikkaId !== null) {
-      try {
-        const supabase = createBusinessBrowserClient()
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-        const token = session?.access_token ?? ''
-        await fetch('/api/business/onboarding/save-step', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + token,
-          },
-          body: JSON.stringify({
-            paikka_id: paikkaId,
-            // step:0 -> save-step sets current_step:1 -> WizardInner's auto-resume
-            // (savedStep > 1 && step === 1) lands the user ON Step 1 (StepMediat),
-            // where the prefilled gallery/logo render. step:1 would skip Step 1 entirely.
-            step: 0,
-            field: 'media_urls',
-            value: { logo: selections.logoUrl, photos: selections.gallery },
-          }),
-        })
-        // AI-06/D-04: laji is staged via save-step (never an immediate PATCH) and only ever
-        // written when explicitly confirmed — never send null/empty (save-step rejects it).
-        if (selections.laji) {
-          await fetch('/api/business/onboarding/save-step', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer ' + token,
-            },
-            body: JSON.stringify({
-              paikka_id: paikkaId,
-              step: 0,
-              field: 'laji',
-              value: selections.laji,
-            }),
-          })
-        }
-      } catch {
-        // Non-blocking: if the write fails, still allow navigation — StepMediat lets the
-        // user re-add photos/logo manually in the wizard.
-      }
-    }
-
-    setPagePhase('wizard')
-  }
-
-  // D-06: the skip path ("Ohita") has no AI suggestion to confirm — route through a small
-  // intermediate manual-picker phase (reusing the same LajiPicker as Vaihda) before the
-  // wizard, so laji doesn't stay permanently stuck at 'Muu' for skip-path users.
-  function handleSkip() {
-    setBrandingData(null)
-    setPagePhase('laji-skip')
-  }
 
   async function handleLajiSkipPick(value: string) {
     if (paikkaId !== null) {
@@ -318,7 +249,7 @@ export default function OnboardingWizardPage() {
   // by the fast-forward when paikka.latitude !== null). Persists the URL and fires the
   // background AI analysis (Pitfall 2: website must survive to submit via onboarding_draft).
   // alreadyHasLocation=true when called from the fast-forward path (lat already saved) —
-  // skip sijainti entirely and route directly to analyze or laji-skip (F-02/F-03).
+  // skip sijainti entirely and route directly to wizard or laji-skip (F-02/F-03).
   // resolvedPaikkaId is passed explicitly from StepNimiJaURLPrePhase to avoid the stale-closure
   // problem: when auto-skip fires (ClaimSearchForm path), the parent paikkaId state hasn't been
   // committed yet, so the closure would capture null. The child resolves the real id first and
@@ -365,11 +296,9 @@ export default function OnboardingWizardPage() {
     }
   }
 
-  // Wizard step 1's "back" button returns here from page.tsx (Pitfall 8) — routes to the
-  // correct pre-phase based on whether a website was provided. With a URL: back to sijainti
-  // (analyze is no longer user-visible). Without: back to laji-skip picker.
+  // Wizard step 1's "back" button returns here from page.tsx (Pitfall 8).
   function handleBackToPrePhase() {
-    setPagePhase(websiteUrl ? 'analyze' : 'laji-skip')
+    setPagePhase(websiteUrl ? 'sijainti' : 'laji-skip')
   }
 
   return (
@@ -388,7 +317,7 @@ export default function OnboardingWizardPage() {
         {pagePhase === 'sijainti' && paikkaId !== null && (
           <StepSijainti
             paikkaId={paikkaId}
-            onNext={() => (websiteUrl ? setPagePhase('analyze') : handleSkip())}
+            onNext={() => setPagePhase(websiteUrl ? 'waiting' : 'laji-skip')}
             onPrev={() => {
               // Set flag before navigating back so StepNimiJaURLPrePhase suppresses
               // the lat-based fast-forward on re-mount (F-04 back-loop prevention).
@@ -397,16 +326,12 @@ export default function OnboardingWizardPage() {
             }}
           />
         )}
-        {pagePhase === 'analyze' && (
-          <Suspense fallback={<PreVaiheSpinner />}>
-            <PrePhase
-              paikkaId={paikkaId}
-              paikkaInfo={paikkaInfo}
-              onConfirm={handleConfirm}
-              onSkip={handleSkip}
-              onPaikkaIdResolved={setPaikkaId}
-            />
-          </Suspense>
+        {pagePhase === 'waiting' && paikkaId !== null && (
+          <WaitingForAI
+            paikkaId={paikkaId}
+            onReady={(data) => { setBrandingData(data); setPagePhase('wizard') }}
+            onSkip={() => { setBrandingData(null); setPagePhase('wizard') }}
+          />
         )}
         {pagePhase === 'laji-skip' && (
           <div className="glass rounded-2xl p-6 w-full max-w-xl mx-auto flex flex-col gap-4">

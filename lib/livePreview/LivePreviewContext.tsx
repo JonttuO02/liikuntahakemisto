@@ -48,6 +48,9 @@ export type PreviewDraft = {
     website?: string
     kuvaus?: string
   } | null
+  // User-selected brand colors from StepBrandingPick — override brandingData defaults
+  brandBgColor?: string | null
+  brandAccentColor?: string | null
 }
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -57,6 +60,7 @@ export type LivePreviewAction =
   | { type: 'SET_AUKIOLOAJAT'; payload: Record<string, { open: string; close: string }> }
   | { type: 'SET_YHTEYSTIEDOT'; payload: Partial<{ puhelin: string; email: string; website: string; kuvaus: string }> }
   | { type: 'SET_MEDIA'; payload: { logo?: string | null; photos?: string[] } }
+  | { type: 'SET_BRAND_COLORS'; payload: { bgColor?: string | null; accentColor?: string | null } }
   | { type: 'RESET'; payload: PreviewDraft }
 
 function livePreviewReducer(state: PreviewDraft, action: LivePreviewAction): PreviewDraft {
@@ -83,6 +87,12 @@ function livePreviewReducer(state: PreviewDraft, action: LivePreviewAction): Pre
               ? action.payload.photos
               : state.media_urls?.photos ?? [],
         },
+      }
+    case 'SET_BRAND_COLORS':
+      return {
+        ...state,
+        brandBgColor: action.payload.bgColor !== undefined ? action.payload.bgColor : state.brandBgColor,
+        brandAccentColor: action.payload.accentColor !== undefined ? action.payload.accentColor : state.brandAccentColor,
       }
     case 'RESET':
       return action.payload
@@ -145,6 +155,9 @@ export function LivePreviewProvider({
       const base = buildBrandingPreview(paikkaInfo, brandingData, state.paikka_id, state.media_urls?.logo)
       return {
         ...base,
+        // Propagate gallery photos selected in StepBrandingPick (buildBrandingPreview
+        // hardcodes photo_urls:null since the old AnalysoiSivusto flow saved them separately)
+        photo_urls: state.media_urls?.photos?.length ? state.media_urls.photos : null,
         hinta_kuvaus: state.hinnasto?.length ? hinnastaToHintaKuvaus(state.hinnasto) : base.hinta_kuvaus,
         aukioloajat: state.aukioloajat ?? base.aukioloajat,
         puhelin: state.yhteystiedot?.puhelin ?? base.puhelin,
@@ -158,13 +171,17 @@ export function LivePreviewProvider({
     return null
   }, [state, paikkaInfo, brandingData])
 
-  // brandColor/accentColor — same sourcing as StepEsikatselu lines 51-61.
+  // brandColor/accentColor: state.brandBgColor/brandAccentColor (set by StepBrandingPick's
+  // SET_BRAND_COLORS dispatch) take priority so live-preview reflects real-time picks
+  // before the PATCH response even returns.
   const brandColor =
+    state.brandBgColor ??
     brandingData?.selected_background_color ??
     brandingData?.colors?.find(c => c.role === 'background')?.hex ??
     undefined
 
   const accentColor =
+    state.brandAccentColor ??
     brandingData?.selected_accent_color ??
     brandingData?.colors?.find(c => c.role === 'accent')?.hex ??
     undefined

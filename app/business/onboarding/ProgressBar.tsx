@@ -8,18 +8,15 @@ interface ProgressBarProps {
   currentStep: number
   completedSteps: number[]
   onStepClick: (step: number) => void
+  hasBrandingStep?: boolean
 }
 
-export default function ProgressBar({ currentStep, completedSteps, onStepClick }: ProgressBarProps) {
+export default function ProgressBar({ currentStep, completedSteps, onStepClick, hasBrandingStep }: ProgressBarProps) {
   const t = useTranslations('Business')
 
-  const stepLabels = [
-    t('stepMedia'),
-    t('stepPricing'),
-    t('stepHours'),
-    t('stepContact'),
-    t('stepSubmit'),
-  ]
+  const stepLabels = hasBrandingStep
+    ? ['AI-löydöt', t('stepMedia'), t('stepPricing'), t('stepHours'), t('stepContact')]
+    : [t('stepMedia'), t('stepPricing'), t('stepHours'), t('stepContact'), t('stepSubmit')]
 
   const isCompleted = (n: number) => completedSteps.includes(n)
   const isCurrent = (n: number) => n === currentStep && !isCompleted(n)

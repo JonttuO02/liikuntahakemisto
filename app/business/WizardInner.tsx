@@ -10,6 +10,7 @@ import { FI_TO_EN } from '@/lib/onboardingUtils'
 import type { Liikuntapaikka } from '@/lib/types'
 import { type BrandingResult } from '@/lib/branding/brandingResult'
 import ProgressBar from './onboarding/ProgressBar'
+import StepBrandingPick, { type BrandingSelections } from './onboarding/StepBrandingPick'
 import StepMediat from './onboarding/StepMediat'
 import StepHinnasto from './onboarding/StepHinnasto'
 import StepAukioloajat from './onboarding/StepAukioloajat'
@@ -62,6 +63,13 @@ function OnboardingMode({
   // Mobile Muokkaa/Esikatselu toggle (D-07). Local UI state, separate from the
   // shared live-preview data context — resets to 'edit' on every step change (D-08).
   const [activeView, setActiveView] = useState<'edit' | 'preview'>('edit')
+
+  // Branding pick step — shows as step 1 when brandingData is available, before StepMediat.
+  const brandingPickEnabled = brandingData?.status === 'analyzed'
+  const [inBrandingPick, setInBrandingPick] = useState(brandingPickEnabled ?? false)
+  const [brandingPickDone, setBrandingPickDone] = useState(false)
+  // Laji confirmed in branding pick step — overrides the stale DB value for live preview.
+  const [brandingConfirmedLaji, setBrandingConfirmedLaji] = useState<string | null>(null)
 
   // URL-based step routing (D-02)
   const rawStep = parseInt(searchParams.get('step') ?? '1', 10)
@@ -257,15 +265,73 @@ function OnboardingMode({
     )
   }
 
-  // Display-only override: the AI-suggested/manually-picked laji is confirmed locally in
-  // page.tsx's OnboardingWizardPage (AnalysoiSivusto confirm/D-06 skip flows) but only ever
-  // persisted to liikuntapaikat.laji at final submit (D-04 deferred-to-submit invariant) — so
-  // paikkaInfo.laji (fetched on mount, pre-onboarding) is stale for the whole wizard session.
-  // confirmedLaji wins when the user picked one this session; falls back to the DB value
-  // otherwise (e.g. direct navigation/resume where nothing was confirmed yet).
-  const livePreviewPaikkaInfo = paikkaInfo && confirmedLaji
-    ? { ...paikkaInfo, laji: confirmedLaji }
+  // confirmedLaji prop (from laji-skip path in page.tsx) OR branding step pick wins over
+  // the stale DB paikkaInfo.laji for live-preview rendering.
+  const effectiveLaji = brandingConfirmedLaji ?? confirmedLaji
+  const livePreviewPaikkaInfo = paikkaInfo && effectiveLaji
+    ? { ...paikkaInfo, laji: effectiveLaji }
     : paikkaInfo
+
+  // Called when user clicks "Jatka →" in StepBrandingPick. Saves media_urls + laji to
+  // draft so StepMediat receives them pre-filled, then re-fetches draft and enters step 1.
+  async function handleBrandingPickNext(selections: BrandingSelections) {
+    if (paikkaId === null) return
+    if (selections.laji) setBrandingConfirmedLaji(selections.laji)
+    try {
+      const supabase = createBusinessBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token ?? ''
+      await fetch('/api/business/onboarding/save-step', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ paikka_id: paikkaId, step: 0, field: 'media_urls', value: { logo: selections.logoUrl, photos: selections.gallery } }),
+      })
+      if (selections.laji) {
+        await fetch('/api/business/onboarding/save-step', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ paikka_id: paikkaId, step: 0, field: 'laji', value: selections.laji }),
+        })
+      }
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: freshDraft } = await supabase
+          .from('onboarding_draft').select('*')
+          .eq('business_account_id', user.id).eq('paikka_id', paikkaId).maybeSingle()
+        if (freshDraft) setDraft(freshDraft as OnboardingDraft)
+      }
+    } catch {
+      // Non-blocking — user can re-pick in StepMediat
+    }
+    setBrandingPickDone(true)
+    setInBrandingPick(false)
+  }
+
+  // Back from step 1 (StepMediat) — return to branding pick if we came through it.
+  function handleBackFromMediat() {
+    if (brandingPickDone) {
+      setInBrandingPick(true)
+      setBrandingPickDone(false)
+    } else {
+      onBackToAnalyze?.()
+    }
+  }
+
+  // ProgressBar step numbers are shifted +1 when branding pick is enabled so AI-löydöt
+  // occupies step 1 and existing wizard steps become 2-5.
+  const progressStep = inBrandingPick ? 1 : (brandingPickEnabled ? step + 1 : step)
+  const progressCompleted = brandingPickEnabled
+    ? [...(brandingPickDone ? [1] : []), ...completedSteps.map(s => s + 1)]
+    : completedSteps
+  function handleProgressStepClick(s: number) {
+    if (brandingPickEnabled) {
+      if (s === 1 && brandingPickDone) { setInBrandingPick(true); setBrandingPickDone(false); return }
+      if (s === 1) return
+      goToStep(s - 1)
+    } else {
+      goToStep(s)
+    }
+  }
 
   return (
     <LivePreviewProvider
@@ -277,9 +343,10 @@ function OnboardingMode({
       <div className="flex gap-6 items-start justify-center">
         <div className="w-full max-w-xl">
           <ProgressBar
-            currentStep={step}
-            completedSteps={completedSteps}
-            onStepClick={goToStep}
+            currentStep={progressStep}
+            completedSteps={progressCompleted}
+            onStepClick={handleProgressStepClick}
+            hasBrandingStep={brandingPickEnabled}
           />
 
           <div className="lg:hidden">
@@ -288,7 +355,7 @@ function OnboardingMode({
 
           <AnimatePresence mode="wait">
             <motion.div
-              key={`${step}-${activeView}`}
+              key={inBrandingPick ? 'branding-pick' : `${step}-${activeView}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -298,6 +365,12 @@ function OnboardingMode({
                 <div className="lg:hidden">
                   <LivePreviewPane />
                 </div>
+              ) : inBrandingPick && brandingData && paikkaId !== null ? (
+                <StepBrandingPick
+                  brandingData={brandingData}
+                  paikkaId={paikkaId}
+                  onNext={handleBrandingPickNext}
+                />
               ) : (
                 <>
                   {step === 1 && paikkaId !== null && (
@@ -305,10 +378,7 @@ function OnboardingMode({
                       paikkaId={paikkaId}
                       initialDraft={draft}
                       onNext={() => saveAndAdvance(1)}
-                      // Step 1 is the wizard's first step (StepPaikka moved to page.tsx as a
-                      // pre-phase) — there is no previous wizard step, so "back" returns to the
-                      // page-level analyze pre-phase instead of navigating within the wizard.
-                      onPrev={() => onBackToAnalyze?.()}
+                      onPrev={handleBackFromMediat}
                     />
                   )}
                   {step === 2 && paikkaId !== null && (

@@ -45,6 +45,12 @@ export default function ClaimSearchForm() {
     const { data: { session } } = await createBusinessBrowserClient().auth.getSession()
     const token = session?.access_token ?? ''
 
+    // Normalize URL: prepend https:// if user typed e.g. "example.fi" or "www.example.fi"
+    let normalizedUrl = websiteUrl.trim()
+    if (normalizedUrl && !normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+      normalizedUrl = 'https://' + normalizedUrl
+    }
+
     try {
       const res = await fetch('/api/business/create-paikka', {
         method: 'POST',
@@ -60,10 +66,17 @@ export default function ClaimSearchForm() {
 
       if (res.ok) {
         const data = await res.json()
-        const trimmedUrl = websiteUrl.trim()
         const params = new URLSearchParams()
         if (data.paikka_id) params.set('paikka_id', String(data.paikka_id))
-        if (trimmedUrl) params.set('website_url', trimmedUrl)
+        if (normalizedUrl) params.set('website_url', normalizedUrl)
+        // Fire-and-forget AI analysis immediately so it runs while user fills in location
+        if (normalizedUrl && data.paikka_id) {
+          fetch('/api/business/analyze-website', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ url: normalizedUrl, paikka_id: data.paikka_id }),
+          })
+        }
         router.push(`/business/onboarding?${params.toString()}`)
         return
       }
@@ -104,7 +117,7 @@ export default function ClaimSearchForm() {
         />
         <p className="text-sm text-[rgba(17,17,17,0.45)]">{t('toimipisteNimiHelper')}</p>
         <input
-          type="url"
+          type="text"
           placeholder={t('websiteUrlPlaceholder')}
           aria-label={t('websiteUrlLabel')}
           className={INPUT_CLASS}

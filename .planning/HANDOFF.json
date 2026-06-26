@@ -1,50 +1,44 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-26T05:25:18.339Z",
+  "timestamp": "2026-06-26T15:00:01.298Z",
   "phase": "61",
-  "phase_name": "Onboarding-vaiheiden uudelleenjärjestys",
+  "phase_name": "Onboarding post-phase ad-hoc fixes",
   "phase_dir": ".planning/phases/61-onboarding-vaiheiden-uudelleenj-rjestys",
   "plan": null,
   "task": null,
   "total_tasks": null,
   "status": "paused",
   "completed_tasks": [
-    {"id": "61-01", "name": "API + i18n foundation", "status": "done", "commit": "cddab23"},
-    {"id": "61-02", "name": "New step components + ClaimSearchForm simplified", "status": "done", "commit": "21e27aa"},
-    {"id": "61-03", "name": "Wizard finalization + StepEsikatselu deleted", "status": "done", "commit": "df168f7"},
-    {"id": "61-04", "name": "Page state machine integration + StepPaikka deleted", "status": "done", "commit": "ccec852"},
-    {"id": "code-review", "name": "High-effort code review — 7 findings written to 61-REVIEW.md", "status": "done", "commit": null}
+    {"id": 1, "name": "ClaimSearchForm: type=text + https:// prepend + fire-and-forget AI", "status": "done"},
+    {"id": 2, "name": "onboarding/page.tsx: analyze-phase poistettu, waiting-phase + WaitingForAI lisätty", "status": "done"},
+    {"id": 3, "name": "StepBrandingPick.tsx: uusi wizard step 1 logo/galleria/värit/laji", "status": "done"},
+    {"id": 4, "name": "WizardInner: StepBrandingPick integroitu, inBrandingPick state, progressBar shift +1", "status": "done"},
+    {"id": 5, "name": "ProgressBar: hasBrandingStep prop, AI-löydöt label", "status": "done"},
+    {"id": 6, "name": "LivePreviewContext: SET_BRAND_COLORS + photo_urls fix + preview toggle fix", "status": "done"}
   ],
   "remaining_tasks": [
-    {"id": "review-fixes", "name": "Apply 7 code review fixes from 61-REVIEW.md", "status": "not_started"},
-    {"id": "verify", "name": "Run /gsd-verify-work 61 after fixes", "status": "not_started"},
-    {"id": "uat", "name": "UAT against running app", "status": "not_started"}
+    {"id": 7, "name": "Venue page preview puuttuu (suunniteltu Phase 63:een)", "status": "deferred"},
+    {"id": 8, "name": "Manuaalinen end-to-end testaus selaimessa", "status": "not_started"},
+    {"id": 9, "name": "laji-skip path testaus (ilman URL:ia)", "status": "not_started"}
   ],
-  "blockers": [
-    {
-      "description": "7 code review findings must be fixed before UAT — 1 critical (website clobber), 3 high (resuming-user flows broken), 2 medium, 1 low. See 61-REVIEW.md.",
-      "type": "technical",
-      "workaround": "Run /gsd-code-review 61 --fix or fix manually"
-    }
-  ],
+  "blockers": [],
   "async_jobs": [],
   "human_actions_pending": [
-    {
-      "action": "Manual UAT of the full onboarding flow in a running browser",
-      "context": "Pure frontend refactor — must verify name+URL step, sijainti step, AI trigger, wizard flow, and submission in the live app",
-      "blocking": false
-    }
+    {"action": "Testaa onboarding flow selaimessa end-to-end", "context": "Vain tsc --noEmit tehty, ei browser-testausta", "blocking": false}
   ],
   "decisions": [
-    {"decision": "StepEsikatselu.tsx and StepPaikka.tsx deleted from codebase", "rationale": "Intentional per ONBOARD-18/22 — both replaced by new components", "phase": "61"},
-    {"decision": "Worktree cleanup-wave blocked by deletion guard for 61-03 and 61-04 — merged manually via git merge --no-ff", "rationale": "Deletions are intentional; cleanup-wave safety gate treats any deletion as a block requiring human confirmation", "phase": "61"},
-    {"decision": "Website URL saved at step 1 to draft.yhteystiedot.website via fire-and-forget save-step", "rationale": "Plan 04 design: website persists to draft so submit route can write it to varauslinkki (Pitfall 2)", "phase": "61"}
+    {"decision": "StepBrandingPick ei URL-routattu, local state inBrandingPick", "rationale": "Ei step-numerointimuutoksia eikä DB-muutoksia", "phase": "61"},
+    {"decision": "Värit: SET_BRAND_COLORS dispatch LivePreviewContextiin", "rationale": "Ei state-nostoa OnboardingModeen", "phase": "61"},
+    {"decision": "photo_urls fix LivePreviewContext.useMemo:ssa", "rationale": "buildBrandingPreview jaettu, turvallisempi korjata kontekstitasolla", "phase": "61"}
   ],
   "uncommitted_files": [
-    ".planning/STATE.md",
-    ".claude/settings.local.json",
-    ".planning/phases/61-onboarding-vaiheiden-uudelleenj-rjestys/61-REVIEW.md"
+    "app/business/WizardInner.tsx",
+    "app/business/onboarding/ProgressBar.tsx",
+    "app/business/onboarding/page.tsx",
+    "app/business/onboarding/StepBrandingPick.tsx",
+    "app/components/ClaimSearchForm.tsx",
+    "lib/livePreview/LivePreviewContext.tsx"
   ],
-  "next_action": "Read 61-REVIEW.md, then run /gsd-code-review 61 --fix to apply the 7 fixes",
-  "context_notes": "All 4 plans executed cleanly. TypeScript clean after every wave merge. Code review found 7 real bugs — most critically: (1) step-4 save-step clobbers the website written at step 1 (UPSERT replaces entire yhteystiedot JSONB column → varauslinkki always null), (2) fast-forward sets websiteUrl=null so resuming users with latitude set bypass AI analyze phase, (3) resuming users land in sijainti with CTA disabled (lat=null in state), (4) back-loop from sijainti after coordinates saved. All 7 fixes needed before UAT."
+  "next_action": "git commit, sitten browser-testaus /business → waiting → StepBrandingPick → wizard",
+  "context_notes": "Ad-hoc Phase 61 -korjaukset. TypeScript puhdas. Preview toggle + värit + galleria korjattu."
 }
