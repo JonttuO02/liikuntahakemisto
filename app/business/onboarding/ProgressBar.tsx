@@ -18,7 +18,7 @@ export default function ProgressBar({ currentStep, completedSteps, onStepClick }
     t('stepPricing'),
     t('stepHours'),
     t('stepContact'),
-    t('stepPreview'),
+    t('stepSubmit'),
   ]
 
   const isCompleted = (n: number) => completedSteps.includes(n)
