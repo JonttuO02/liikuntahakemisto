@@ -31,7 +31,7 @@ function StepNimiJaURLPrePhase({
   onPaikkaIdResolved,
   onPaikkaInfoResolved,
 }: {
-  onNext: (websiteUrl: string | null) => void
+  onNext: (websiteUrl: string | null, alreadyHasLocation?: boolean) => void
   onPaikkaIdResolved: (paikkaId: number) => void
   onPaikkaInfoResolved: (info: PaikkaBase) => void
 }) {
@@ -78,9 +78,21 @@ function StepNimiJaURLPrePhase({
         if (!cancelled && paikka) {
           setPaikkaInfo(paikka as PaikkaBase)
           onPaikkaInfoResolved(paikka as PaikkaBase)
-          // Fast-forward: if location is already set, skip sijainti step for resuming users
+          // Fast-forward: if location is already set, skip sijainti for resuming users.
+          // Re-hydrate websiteUrl from draft so analyze/laji-skip routing is correct (F-02/F-03).
           if (paikka.latitude !== null) {
-            onNext(null)
+            const { data: { user: currentUser } } = await supabase.auth.getUser()
+            let savedWebsite: string | null = null
+            if (currentUser) {
+              const { data: draftRow } = await supabase
+                .from('onboarding_draft')
+                .select('yhteystiedot')
+                .eq('business_account_id', currentUser.id)
+                .eq('paikka_id', resolved)
+                .maybeSingle()
+              savedWebsite = (draftRow?.yhteystiedot as { website?: string } | null)?.website ?? null
+            }
+            onNext(savedWebsite, true)
             return
           }
         }
@@ -286,9 +298,15 @@ export default function OnboardingWizardPage() {
   // handleNimiUrlNext: called when user clicks Next on the nimi-url step (or automatically
   // by the fast-forward when paikka.latitude !== null). Persists the URL and fires the
   // background AI analysis (Pitfall 2: website must survive to submit via onboarding_draft).
-  async function handleNimiUrlNext(url: string | null) {
+  // alreadyHasLocation=true when called from the fast-forward path (lat already saved) —
+  // skip sijainti entirely and route directly to analyze or laji-skip (F-02/F-03).
+  async function handleNimiUrlNext(url: string | null, alreadyHasLocation = false) {
     setWebsiteUrl(url)
-    setPagePhase('sijainti')
+    if (alreadyHasLocation) {
+      setPagePhase(url ? 'analyze' : 'laji-skip')
+    } else {
+      setPagePhase('sijainti')
+    }
     if (url && paikkaId !== null) {
       const supabase = createBusinessBrowserClient()
       const {
