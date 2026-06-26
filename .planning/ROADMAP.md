@@ -29,7 +29,7 @@
 - [x] **Phase 58: Admin-sijaintikartta** — Admin-hakemuksen yksityiskohtasivulla näytetään paikan sijainti omalla read-only-kartalla (ADMIN-06/QA-01 dropped — ks. CONTEXT.md) (completed 2026-06-24)
 - [x] **Phase 59: Multi-company-skeemamigraatio** — Yritys-identiteetti irrotetaan login-identiteetistä companies-taululla; gating-edellytys kaikelle hallintaoikeustyölle (completed 2026-06-25)
 - [x] **Phase 60: Hallintaoikeuspyynnöt — backend & sähköposti** — Työntekijä voi pyytää hallintaoikeutta, järjestelmä ilmoittaa sähköpostilla ja estää pääsyn ennen hyväksyntää (completed 2026-06-25)
-- [ ] **Phase 61: Onboarding-vaiheiden uudelleenjärjestys** — Uusi onboarding-virta: nimi+URL ensin (AI taustalla), sijainti, AI-tarkastelu, ei erillistä preview-vaihetta
+- [x] **Phase 61: Onboarding-vaiheiden uudelleenjärjestys** — Uusi onboarding-virta: nimi+URL ensin (AI taustalla), sijainti, AI-tarkastelu, ei erillistä preview-vaihetta (completed 2026-06-26)
 - [ ] **Phase 62: Venuepage-konsolidaatio** — Erillinen paikkasivu poistetaan; kaikki sisältö ja navigointi yhdistetään PaikkaSheet-venuepageen, vanha reitti 404
 - [ ] **Phase 63: Business-dashboardin & preview-näkymien uudistus** — DiagonaalKortti-pohjainen dashboard ikonipainikkeilla, CalloutCard-preview, venuepage live-previewssä, kaikki previewt visuaalisia
 - [ ] **Phase 64: Hallintaoikeuspyynnöt — dashboard-UI** — Päähallitsija hallitsee pyynnöt ja sub-managerit uudistetussa dashboardissa
@@ -431,7 +431,7 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 58. Admin-pääsy & kartta-QA | v3.1 | 1/1 | Complete    | 2026-06-24 |
 | 59. Multi-company-skeemamigraatio | v3.1 | 4/4 | Complete    | 2026-06-25 |
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 6/6 | Complete    | 2026-06-25 |
-| 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 6/6 | Complete   | 2026-06-26 |
+| 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 6/6 | Complete    | 2026-06-26 |
 | 62. Venuepage-konsolidaatio | v3.1 | 0/? | Not started | - |
 | 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 0/? | Not started | - |
 | 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 0/? | Not started | - |

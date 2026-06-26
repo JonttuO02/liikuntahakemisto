@@ -43,13 +43,13 @@ Requirements for milestone v3.1 (UX/UI-korjaukset & business-parannukset). Each 
 
 ### Onboarding-vaiheiden uudelleenjärjestys
 
-- [ ] **ONBOARD-18**: PaikkaStep (vain nimi + siirry-painike) poistetaan kokonaan onboarding-virrasta
-- [ ] **ONBOARD-19**: Onboardingin uusi step 1 kerää paikan nimen ja verkko-osoitteen yhdessä; verkko-osoitteen syöttö käynnistää AI-sivuanalyysin taustalla heti
-- [ ] **ONBOARD-20**: Sijainti-step (kartta + osoitehaku-autocomplete) siirretään step 2:ksi
-- [ ] **ONBOARD-21**: Jos verkko-osoite annettiin step 1:ssä, AI-analyysin tulokset näytetään tarkasteltavaksi omana stepinä sijainti-stepin jälkeen
-- [ ] **ONBOARD-22**: Lopullinen Preview-step poistetaan kokonaan virrasta (live-preview on aina näkyvissä muutenkin)
-- [ ] **ONBOARD-23**: Yhteystiedot-stepistä poistetaan verkko-osoite-kenttä (kerätty jo step 1:ssä)
-- [ ] **ONBOARD-24**: Onboardingin etenemispalkin poistettu "PREVIEW"-vaihe korvataan "SUBMIT"-vaiheella, joka saavutetaan onboardingin lähetyksen yhteydessä
+- [x] **ONBOARD-18**: PaikkaStep (vain nimi + siirry-painike) poistetaan kokonaan onboarding-virrasta
+- [x] **ONBOARD-19**: Onboardingin uusi step 1 kerää paikan nimen ja verkko-osoitteen yhdessä; verkko-osoitteen syöttö käynnistää AI-sivuanalyysin taustalla heti
+- [x] **ONBOARD-20**: Sijainti-step (kartta + osoitehaku-autocomplete) siirretään step 2:ksi
+- [x] **ONBOARD-21**: Jos verkko-osoite annettiin step 1:ssä, AI-analyysin tulokset näytetään tarkasteltavaksi omana stepinä sijainti-stepin jälkeen
+- [x] **ONBOARD-22**: Lopullinen Preview-step poistetaan kokonaan virrasta (live-preview on aina näkyvissä muutenkin)
+- [x] **ONBOARD-23**: Yhteystiedot-stepistä poistetaan verkko-osoite-kenttä (kerätty jo step 1:ssä)
+- [x] **ONBOARD-24**: Onboardingin etenemispalkin poistettu "PREVIEW"-vaihe korvataan "SUBMIT"-vaiheella, joka saavutetaan onboardingin lähetyksen yhteydessä
 
 ## v2 Requirements
 
@@ -94,13 +94,13 @@ Deferred — not in v3.1 scope.
 | VENUEPAGE-02 | Phase 62 | Pending |
 | VENUEPAGE-03 | Phase 62 | Pending |
 | VENUEPAGE-04 | Phase 62 | Pending |
-| ONBOARD-18 | Phase 61 | Pending |
-| ONBOARD-19 | Phase 61 | Pending |
-| ONBOARD-20 | Phase 61 | Pending |
-| ONBOARD-21 | Phase 61 | Pending |
-| ONBOARD-22 | Phase 61 | Pending |
-| ONBOARD-23 | Phase 61 | Pending |
-| ONBOARD-24 | Phase 61 | Pending |
+| ONBOARD-18 | Phase 61 | Complete |
+| ONBOARD-19 | Phase 61 | Complete |
+| ONBOARD-20 | Phase 61 | Complete |
+| ONBOARD-21 | Phase 61 | Complete |
+| ONBOARD-22 | Phase 61 | Complete |
+| ONBOARD-23 | Phase 61 | Complete |
+| ONBOARD-24 | Phase 61 | Complete |
 
 **Coverage:**
 
