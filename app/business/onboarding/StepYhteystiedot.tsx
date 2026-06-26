@@ -133,6 +133,7 @@ export default function StepYhteystiedot({
           value: {
             puhelin: puhelin.trim(),
             email: email.trim(),
+            website: website.trim(),
             kuvaus: kuvaus.trim(),
           },
         }),
