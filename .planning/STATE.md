@@ -6,15 +6,15 @@ current_phase: 61
 current_phase_name: Onboarding-vaiheiden uudelleenjärjestys
 status: executing
 stopped_at: context exhaustion at 75% (2026-06-26)
-last_updated: "2026-06-26T05:23:01.047Z"
+last_updated: "2026-06-26T09:54:48.155Z"
 last_activity: 2026-06-26
-last_activity_desc: Phase 61 execution started
+last_activity_desc: Phase 61 execution resumed (wave continue)
 progress:
   total_phases: 7
-  completed_phases: 4
-  total_plans: 15
+  completed_phases: 3
+  total_plans: 17
   completed_plans: 15
-  percent: 57
+  percent: 43
 ---
 
 # Project State
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-06-25)
 Phase: 61 (Onboarding-vaiheiden uudelleenjärjestys) — EXECUTING
 Plan: 1 of 4
 Status: Executing Phase 61
-Last activity: 2026-06-26 — Phase 61 execution started
+Last activity: 2026-06-26 — Phase 61 execution resumed (wave continue)
 
 Next: `/gsd-plan-phase 61` or `/gsd-plan-phase 58` (both parallel-safe; 61 is the canonical next in sequence)
 
