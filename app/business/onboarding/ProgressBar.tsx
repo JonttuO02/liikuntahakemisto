@@ -15,7 +15,7 @@ export default function ProgressBar({ currentStep, completedSteps, onStepClick, 
   const t = useTranslations('Business')
 
   const stepLabels = hasBrandingStep
-    ? ['AI-löydöt', t('stepMedia'), t('stepPricing'), t('stepHours'), t('stepContact')]
+    ? ['AI-löydöt', t('stepMedia'), t('stepPricing'), t('stepHours'), t('stepContact'), t('stepSubmit')]
     : [t('stepMedia'), t('stepPricing'), t('stepHours'), t('stepContact'), t('stepSubmit')]
 
   const isCompleted = (n: number) => completedSteps.includes(n)

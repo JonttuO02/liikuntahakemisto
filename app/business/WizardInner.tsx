@@ -35,6 +35,8 @@ type WizardInnerProps =
       brandingData?: BrandingResult | null
       confirmedLaji?: string | null
       onBackToAnalyze?: () => void
+      canRunAnalysis?: boolean
+      onRunAnalysis?: () => void
     }
   | { mode: 'edit'; paikka: Liikuntapaikka; paikkaId: number }
 
@@ -43,10 +45,14 @@ function OnboardingMode({
   brandingData,
   confirmedLaji,
   onBackToAnalyze,
+  canRunAnalysis,
+  onRunAnalysis,
 }: {
   brandingData?: BrandingResult | null
   confirmedLaji?: string | null
   onBackToAnalyze?: () => void
+  canRunAnalysis?: boolean
+  onRunAnalysis?: () => void
 }) {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -373,6 +379,16 @@ function OnboardingMode({
                 />
               ) : (
                 <>
+                  {step === 1 && !inBrandingPick && canRunAnalysis && onRunAnalysis && (
+                    <button
+                      type="button"
+                      onClick={onRunAnalysis}
+                      className="mb-4 w-full glass rounded-2xl px-4 py-3 flex items-center justify-between text-left hover:bg-[rgba(0,0,0,0.02)] transition-colors"
+                    >
+                      <span className="text-sm text-[rgba(17,17,17,0.45)]">AI voi täyttää tiedot automaattisesti</span>
+                      <span className="text-sm font-bold text-[#111111]">Analysoi →</span>
+                    </button>
+                  )}
                   {step === 1 && paikkaId !== null && (
                     <StepMediat
                       paikkaId={paikkaId}
@@ -608,6 +624,8 @@ export default function WizardInner(props: WizardInnerProps) {
         brandingData={props.brandingData}
         confirmedLaji={props.confirmedLaji}
         onBackToAnalyze={props.onBackToAnalyze}
+        canRunAnalysis={props.canRunAnalysis}
+        onRunAnalysis={props.onRunAnalysis}
       />
     )
   }

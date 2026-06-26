@@ -259,6 +259,22 @@ export default function OnboardingWizardPage() {
     setWebsiteUrl(url)
     setSkipFastForward(false) // user navigated forward — reset back-navigation guard (F-04)
     if (alreadyHasLocation) {
+      // Re-hydrate brandingData on resume/refresh — the React state is lost on page reload
+      // but the analysis result lives in the DB. Fetch it now so StepBrandingPick shows.
+      if (url && effectivePaikkaId !== null) {
+        try {
+          const supabase = createBusinessBrowserClient()
+          const { data: { session } } = await supabase.auth.getSession()
+          const token = session?.access_token ?? ''
+          const res = await fetch(`/api/business/analyze-website?paikka_id=${effectivePaikkaId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (res.ok) {
+            const data = (await res.json()) as BrandingResult
+            if (data.status === 'analyzed') setBrandingData(data)
+          }
+        } catch { /* non-blocking — wizard shows without AI data if fetch fails */ }
+      }
       setPagePhase(url ? 'wizard' : 'laji-skip')
     } else {
       setPagePhase('sijainti')
@@ -354,6 +370,8 @@ export default function OnboardingWizardPage() {
               brandingData={brandingData}
               confirmedLaji={confirmedLaji}
               onBackToAnalyze={handleBackToPrePhase}
+              canRunAnalysis={!brandingData && !!websiteUrl && paikkaId !== null}
+              onRunAnalysis={() => setPagePhase('waiting')}
             />
           </Suspense>
         )}
