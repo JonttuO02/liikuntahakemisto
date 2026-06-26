@@ -23,6 +23,7 @@ export default function ClaimSearchForm() {
   // Create form — only flow left (CLAIM-04): no search, no claim step.
   const [yritysNimi, setYritysNimi] = useState('')
   const [toimipisteNimi, setToimipisteNimi] = useState('')
+  const [websiteUrl, setWebsiteUrl] = useState('')
 
   // Shared
   const [loading, setLoading] = useState(false)
@@ -59,7 +60,19 @@ export default function ClaimSearchForm() {
 
       if (res.ok) {
         const data = await res.json()
-        router.push(`/business/onboarding${data.paikka_id ? `?paikka_id=${data.paikka_id}` : ''}`)
+        const trimmedUrl = websiteUrl.trim()
+        if (trimmedUrl && data.paikka_id) {
+          // Fire-and-forget AI analysis — result polled by onboarding page
+          fetch('/api/business/analyze-website', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ url: trimmedUrl, paikka_id: data.paikka_id }),
+          })
+        }
+        const params = new URLSearchParams()
+        if (data.paikka_id) params.set('paikka_id', String(data.paikka_id))
+        if (trimmedUrl) params.set('website_url', trimmedUrl)
+        router.push(`/business/onboarding?${params.toString()}`)
         return
       }
 
@@ -98,6 +111,15 @@ export default function ClaimSearchForm() {
           onChange={e => setToimipisteNimi(e.target.value)}
         />
         <p className="text-sm text-[rgba(17,17,17,0.45)]">{t('toimipisteNimiHelper')}</p>
+        <input
+          type="url"
+          placeholder={t('websiteUrlPlaceholder')}
+          aria-label={t('websiteUrlLabel')}
+          className={INPUT_CLASS}
+          value={websiteUrl}
+          onChange={e => setWebsiteUrl(e.target.value)}
+        />
+        <p className="text-sm text-[rgba(17,17,17,0.45)]">{t('websiteUrlHelper')}</p>
 
         {/* Error block */}
         <AnimatePresence>

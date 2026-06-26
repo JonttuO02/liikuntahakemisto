@@ -98,6 +98,12 @@ function StepNimiJaURLPrePhase({
             onNext(savedWebsite, true)
             return
           }
+          // Auto-skip nimi-url step when URL was already provided at creation time (ClaimSearchForm)
+          const urlParam = searchParams.get('website_url')
+          if (urlParam) {
+            onNext(urlParam)
+            return
+          }
         }
       }
     }
@@ -202,6 +208,31 @@ export default function OnboardingWizardPage() {
   // Suppresses the fast-forward in StepNimiJaURLPrePhase when the user explicitly navigated
   // back from sijainti — prevents a re-mount loop when lat is already set (F-04).
   const [skipFastForward, setSkipFastForward] = useState(false)
+
+  // Poll for AI branding results while in wizard phase — fires when analysis was triggered
+  // but brandingData hasn't arrived yet (e.g. user went directly to wizard, skipping analyze step).
+  useEffect(() => {
+    if (!aiTriggered || paikkaId === null || brandingData !== null) return
+    let cancelled = false
+
+    async function poll() {
+      try {
+        const supabase = createBusinessBrowserClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        const token = session?.access_token ?? ''
+        const res = await fetch(`/api/business/analyze-website?paikka_id=${paikkaId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok || cancelled) return
+        const data: BrandingResult = await res.json()
+        if (!cancelled && data.status === 'analyzed') setBrandingData(data)
+      } catch { /* keep polling */ }
+    }
+
+    poll()
+    const interval = setInterval(poll, 3000)
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [aiTriggered, paikkaId, brandingData])
 
   async function handleConfirm(
     result: BrandingResult,
