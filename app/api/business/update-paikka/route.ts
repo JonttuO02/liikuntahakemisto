@@ -132,6 +132,27 @@ export async function POST(request: Request) {
     // Cap kuvaus at 300 chars server-side
     const kuvaus = typeof d.kuvaus === 'string' ? d.kuvaus.trim().slice(0, 300) : undefined
     updatePayload = { puhelin, varauslinkki, kuvaus }
+  } else if (section === 'sijainti') {
+    // T-61-01 / T-61-02: Ownership already enforced above via business_paikka_links check.
+    // Validate lat/lng: finite + within ±90/±180 range, mirroring create-paikka lines 47–53.
+    const d = data as { osoite?: unknown; kaupunki?: unknown; latitude?: unknown; longitude?: unknown }
+    const lat =
+      typeof d.latitude === 'number' && Number.isFinite(d.latitude) && d.latitude >= -90 && d.latitude <= 90
+        ? d.latitude
+        : null
+    const lng =
+      typeof d.longitude === 'number' && Number.isFinite(d.longitude) && d.longitude >= -180 && d.longitude <= 180
+        ? d.longitude
+        : null
+    if (lat === null || lng === null) {
+      return NextResponse.json({ error: 'Invalid coordinates' }, { status: 400 })
+    }
+    updatePayload = {
+      osoite: typeof d.osoite === 'string' ? d.osoite.trim().slice(0, 500) : null,
+      kaupunki: typeof d.kaupunki === 'string' ? d.kaupunki.trim().slice(0, 500) : null,
+      latitude: lat,
+      longitude: lng,
+    }
   } else {
     return NextResponse.json({ error: 'Invalid section' }, { status: 400 })
   }
