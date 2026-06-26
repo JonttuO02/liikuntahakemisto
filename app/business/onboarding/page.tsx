@@ -30,10 +30,12 @@ function StepNimiJaURLPrePhase({
   onNext,
   onPaikkaIdResolved,
   onPaikkaInfoResolved,
+  skipFastForward = false,
 }: {
   onNext: (websiteUrl: string | null, alreadyHasLocation?: boolean) => void
   onPaikkaIdResolved: (paikkaId: number) => void
   onPaikkaInfoResolved: (info: PaikkaBase) => void
+  skipFastForward?: boolean
 }) {
   const searchParams = useSearchParams()
   const [paikkaId, setPaikkaId] = useState<number | null>(null)
@@ -80,7 +82,8 @@ function StepNimiJaURLPrePhase({
           onPaikkaInfoResolved(paikka as PaikkaBase)
           // Fast-forward: if location is already set, skip sijainti for resuming users.
           // Re-hydrate websiteUrl from draft so analyze/laji-skip routing is correct (F-02/F-03).
-          if (paikka.latitude !== null) {
+          // skipFastForward suppresses this when the user navigated back from sijainti (F-04).
+          if (paikka.latitude !== null && !skipFastForward) {
             const { data: { user: currentUser } } = await supabase.auth.getUser()
             let savedWebsite: string | null = null
             if (currentUser) {
@@ -196,6 +199,9 @@ export default function OnboardingWizardPage() {
   const [websiteUrl, setWebsiteUrl] = useState<string | null>(null)
   // Guards against double-triggering the AI analysis on re-render.
   const [aiTriggered, setAiTriggered] = useState(false)
+  // Suppresses the fast-forward in StepNimiJaURLPrePhase when the user explicitly navigated
+  // back from sijainti — prevents a re-mount loop when lat is already set (F-04).
+  const [skipFastForward, setSkipFastForward] = useState(false)
 
   async function handleConfirm(
     result: BrandingResult,
@@ -302,6 +308,7 @@ export default function OnboardingWizardPage() {
   // skip sijainti entirely and route directly to analyze or laji-skip (F-02/F-03).
   async function handleNimiUrlNext(url: string | null, alreadyHasLocation = false) {
     setWebsiteUrl(url)
+    setSkipFastForward(false) // user navigated forward — reset back-navigation guard (F-04)
     if (alreadyHasLocation) {
       setPagePhase(url ? 'analyze' : 'laji-skip')
     } else {
@@ -350,6 +357,7 @@ export default function OnboardingWizardPage() {
               onNext={handleNimiUrlNext}
               onPaikkaIdResolved={setPaikkaId}
               onPaikkaInfoResolved={setPaikkaInfo}
+              skipFastForward={skipFastForward}
             />
           </Suspense>
         )}
@@ -357,7 +365,12 @@ export default function OnboardingWizardPage() {
           <StepSijainti
             paikkaId={paikkaId}
             onNext={() => (websiteUrl ? setPagePhase('analyze') : handleSkip())}
-            onPrev={() => setPagePhase('nimi-url')}
+            onPrev={() => {
+              // Set flag before navigating back so StepNimiJaURLPrePhase suppresses
+              // the lat-based fast-forward on re-mount (F-04 back-loop prevention).
+              setSkipFastForward(true)
+              setPagePhase('nimi-url')
+            }}
           />
         )}
         {pagePhase === 'analyze' && (
