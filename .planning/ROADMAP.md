@@ -123,7 +123,7 @@ Plans:
 - [x] 61-01-PLAN.md — Data layer & i18n foundation (create-paikka name-only, update-paikka 'sijainti' section, 6 new keys)
 - [x] 61-02-PLAN.md — New entry components (StepNimiJaURL, StepSijainti) + ClaimSearchForm simplification
 - [x] 61-03-PLAN.md — Wizard finalization (remove preview step, inline submit, ProgressBar SUBMIT label)
-- [ ] 61-04-PLAN.md — Onboarding page state machine rewire + delete StepPaikka
+- [x] 61-04-PLAN.md — Onboarding page state machine rewire + delete StepPaikka
 
 ### Phase 62: Venuepage-konsolidaatio
 
@@ -431,7 +431,7 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 58. Admin-pääsy & kartta-QA | v3.1 | 1/1 | Complete    | 2026-06-24 |
 | 59. Multi-company-skeemamigraatio | v3.1 | 4/4 | Complete    | 2026-06-25 |
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 6/6 | Complete    | 2026-06-25 |
-| 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 3/4 | In Progress|  |
+| 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 4/4 | Complete   | 2026-06-26 |
 | 62. Venuepage-konsolidaatio | v3.1 | 0/? | Not started | - |
 | 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 0/? | Not started | - |
 | 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 0/? | Not started | - |
