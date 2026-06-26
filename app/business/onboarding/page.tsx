@@ -40,6 +40,9 @@ function StepNimiJaURLPrePhase({
   const searchParams = useSearchParams()
   const [paikkaId, setPaikkaId] = useState<number | null>(null)
   const [paikkaInfo, setPaikkaInfo] = useState<PaikkaBase | null>(null)
+  // Show spinner until resolution is complete so the user never sees a flash of the URL form
+  // when navigating here from ClaimSearchForm (auto-skip path) or fast-forward (lat already set).
+  const [resolving, setResolving] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -106,6 +109,9 @@ function StepNimiJaURLPrePhase({
           }
         }
       }
+
+      // Resolution done — no auto-skip path taken, show the nimi-url form
+      if (!cancelled) setResolving(false)
     }
 
     resolvePaikkaIdAndInfo()
@@ -115,6 +121,7 @@ function StepNimiJaURLPrePhase({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  if (resolving) return <PreVaiheSpinner />
   return <StepNimiJaURL paikkaInfo={paikkaInfo} paikkaId={paikkaId} onNext={onNext} />
 }
 
@@ -203,36 +210,11 @@ export default function OnboardingWizardPage() {
   const [confirmedLaji, setConfirmedLaji] = useState<string | null>(null)
   // Website URL entered on step 1; persisted to draft + triggers background AI analysis.
   const [websiteUrl, setWebsiteUrl] = useState<string | null>(null)
-  // Guards against double-triggering the AI analysis on re-render.
+  // Guards against double-triggering the AI analysis on Back+Next cycles (F-07).
   const [aiTriggered, setAiTriggered] = useState(false)
   // Suppresses the fast-forward in StepNimiJaURLPrePhase when the user explicitly navigated
   // back from sijainti — prevents a re-mount loop when lat is already set (F-04).
   const [skipFastForward, setSkipFastForward] = useState(false)
-
-  // Poll for AI branding results while in wizard phase — fires when analysis was triggered
-  // but brandingData hasn't arrived yet (e.g. user went directly to wizard, skipping analyze step).
-  useEffect(() => {
-    if (!aiTriggered || paikkaId === null || brandingData !== null) return
-    let cancelled = false
-
-    async function poll() {
-      try {
-        const supabase = createBusinessBrowserClient()
-        const { data: { session } } = await supabase.auth.getSession()
-        const token = session?.access_token ?? ''
-        const res = await fetch(`/api/business/analyze-website?paikka_id=${paikkaId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (!res.ok || cancelled) return
-        const data: BrandingResult = await res.json()
-        if (!cancelled && data.status === 'analyzed') setBrandingData(data)
-      } catch { /* keep polling */ }
-    }
-
-    poll()
-    const interval = setInterval(poll, 3000)
-    return () => { cancelled = true; clearInterval(interval) }
-  }, [aiTriggered, paikkaId, brandingData])
 
   async function handleConfirm(
     result: BrandingResult,
@@ -387,7 +369,7 @@ export default function OnboardingWizardPage() {
   // correct pre-phase based on whether a website was provided. With a URL: back to sijainti
   // (analyze is no longer user-visible). Without: back to laji-skip picker.
   function handleBackToPrePhase() {
-    setPagePhase(websiteUrl ? 'sijainti' : 'laji-skip')
+    setPagePhase(websiteUrl ? 'analyze' : 'laji-skip')
   }
 
   return (
@@ -406,7 +388,7 @@ export default function OnboardingWizardPage() {
         {pagePhase === 'sijainti' && paikkaId !== null && (
           <StepSijainti
             paikkaId={paikkaId}
-            onNext={() => (websiteUrl ? setPagePhase('wizard') : handleSkip())}
+            onNext={() => (websiteUrl ? setPagePhase('analyze') : handleSkip())}
             onPrev={() => {
               // Set flag before navigating back so StepNimiJaURLPrePhase suppresses
               // the lat-based fast-forward on re-mount (F-04 back-loop prevention).

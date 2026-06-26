@@ -61,14 +61,6 @@ export default function ClaimSearchForm() {
       if (res.ok) {
         const data = await res.json()
         const trimmedUrl = websiteUrl.trim()
-        if (trimmedUrl && data.paikka_id) {
-          // Fire-and-forget AI analysis — result polled by onboarding page
-          fetch('/api/business/analyze-website', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ url: trimmedUrl, paikka_id: data.paikka_id }),
-          })
-        }
         const params = new URLSearchParams()
         if (data.paikka_id) params.set('paikka_id', String(data.paikka_id))
         if (trimmedUrl) params.set('website_url', trimmedUrl)
@@ -119,7 +111,6 @@ export default function ClaimSearchForm() {
           value={websiteUrl}
           onChange={e => setWebsiteUrl(e.target.value)}
         />
-        <p className="text-sm text-[rgba(17,17,17,0.45)]">{t('websiteUrlHelper')}</p>
 
         {/* Error block */}
         <AnimatePresence>
