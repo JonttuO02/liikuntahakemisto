@@ -17,7 +17,6 @@ interface StepYhteystiedotProps {
     website?: string
     kuvaus?: string
   } | null
-  initialBrandingWebsite?: string | null
   editMode?: boolean
   onSaveSuccess?: () => void
   onSaveComplete?: (data: { puhelin: string; email: string; website: string; kuvaus: string }) => void
@@ -31,7 +30,6 @@ export default function StepYhteystiedot({
   onNext,
   onPrev,
   initialYhteystiedot,
-  initialBrandingWebsite,
   editMode = false,
   onSaveSuccess,
   onSaveComplete,
@@ -41,7 +39,7 @@ export default function StepYhteystiedot({
 
   const [puhelin, setPuhelin] = useState(initialYhteystiedot?.puhelin ?? '')
   const [email, setEmail] = useState(initialYhteystiedot?.email ?? '')
-  const [website, setWebsite] = useState(initialYhteystiedot?.website ?? initialBrandingWebsite ?? '')
+  const [website, setWebsite] = useState(initialYhteystiedot?.website ?? '')
   const [kuvaus, setKuvaus] = useState(initialYhteystiedot?.kuvaus ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -135,7 +133,6 @@ export default function StepYhteystiedot({
           value: {
             puhelin: puhelin.trim(),
             email: email.trim(),
-            website: website.trim(),
             kuvaus: kuvaus.trim(),
           },
         }),
@@ -179,15 +176,17 @@ export default function StepYhteystiedot({
           className={inputClass}
         />
 
-        {/* Website */}
-        <input
-          type="url"
-          placeholder={t('contactWebsitePlaceholder')}
-          value={website}
-          onChange={e => setWebsite(e.target.value)}
-          disabled={loading}
-          className={inputClass}
-        />
+        {/* Website — visible only in edit mode; collected in StepNimiJaURL during onboarding */}
+        {editMode && (
+          <input
+            type="url"
+            placeholder={t('contactWebsitePlaceholder')}
+            value={website}
+            onChange={e => setWebsite(e.target.value)}
+            disabled={loading}
+            className={inputClass}
+          />
+        )}
 
         {/* Kuvaus + merkkimäärälaskuri */}
         <div className="flex flex-col gap-1">
@@ -280,7 +279,10 @@ export default function StepYhteystiedot({
             whileTap={{ scale: 0.95 }}
             className="bg-[#111111] hover:bg-[#333333] text-white font-bold text-sm rounded-full h-10 px-6 [transition:background-color_150ms_var(--ease-out)] disabled:opacity-60 disabled:pointer-events-none"
           >
-            {t('nextCta')}
+            {loading
+              ? <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+              : t('submitCta')
+            }
           </motion.button>
         )}
       </footer>

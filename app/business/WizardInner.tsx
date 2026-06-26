@@ -14,7 +14,6 @@ import StepMediat from './onboarding/StepMediat'
 import StepHinnasto from './onboarding/StepHinnasto'
 import StepAukioloajat from './onboarding/StepAukioloajat'
 import StepYhteystiedot from './onboarding/StepYhteystiedot'
-import StepEsikatselu from './onboarding/StepEsikatselu'
 import { LivePreviewProvider } from '@/lib/livePreview/LivePreviewContext'
 import LivePreviewPane from './onboarding/LivePreviewPane'
 import LivePreviewToggle from './onboarding/LivePreviewToggle'
@@ -66,21 +65,21 @@ function OnboardingMode({
 
   // URL-based step routing (D-02)
   const rawStep = parseInt(searchParams.get('step') ?? '1', 10)
-  const step = isNaN(rawStep) || rawStep < 1 || rawStep > 5 ? 1 : rawStep
+  const step = isNaN(rawStep) || rawStep < 1 || rawStep > 4 ? 1 : rawStep
 
   function goToStep(n: number) {
-    const clamped = Math.min(Math.max(n, 1), 5)
+    const clamped = Math.min(Math.max(n, 1), 4)
     const params = new URLSearchParams({ step: String(clamped) })
     if (paikkaId !== null) params.set('paikka_id', String(paikkaId))
     router.push('/business/onboarding?' + params.toString())
   }
 
   // completedSteps: steps 1 through current_step-1. Clamp draft.current_step to the wizard's
-  // own valid range (1-5) first — the AnalysoiSivusto quick-accept path can transiently
-  // persist current_step:6 (see save-step/route.ts), which would otherwise mark the
-  // not-yet-visited StepEsikatselu (step 5) as "completed" (CR-01).
+  // own valid range (1-4) first — the AnalysoiSivusto quick-accept path can transiently
+  // persist current_step:6 (see save-step/route.ts), which would otherwise mark a step
+  // as "completed" beyond the 4-step wizard boundary (CR-01).
   const clampedCurrentStep = draft?.current_step
-    ? Math.min(draft.current_step, 5)
+    ? Math.min(draft.current_step, 4)
     : undefined
   const completedSteps: number[] = clampedCurrentStep && clampedCurrentStep > 1
     ? Array.from({ length: clampedCurrentStep - 1 }, (_, i) => i + 1)
@@ -146,10 +145,10 @@ function OnboardingMode({
       setMaxReachedStep(savedStep)
       // Post-reorder (50-02): step 1 now means StepMediat (StepPaikka moved to page.tsx as
       // a pre-phase, no longer rendered here) — this resume-bounce semantics are unchanged.
-      // Clamp to the wizard's valid 1-5 range before redirecting: the AnalysoiSivusto
+      // Clamp to the wizard's valid 1-4 range before redirecting: the AnalysoiSivusto
       // quick-accept path can transiently persist current_step:6, which would otherwise
       // push an out-of-range ?step=6 URL for one render cycle (CR-01).
-      const clampedSavedStep = Math.min(savedStep, 5)
+      const clampedSavedStep = Math.min(savedStep, 4)
       if (clampedSavedStep > 1 && step === 1) {
         const params = new URLSearchParams({ step: String(clampedSavedStep) })
         if (resolvedPaikkaId) params.set('paikka_id', String(resolvedPaikkaId))
@@ -211,26 +210,6 @@ function OnboardingMode({
     setActiveView('edit')
   }, [step])
 
-  // Re-fetch draft when user navigates to step 6 so the preview is always up to date.
-  useEffect(() => {
-    if (step !== 5) return
-    async function refreshDraftForPreview() {
-      try {
-        const supabase = createBusinessBrowserClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
-        let draftQuery = supabase
-          .from('onboarding_draft')
-          .select('*')
-          .eq('business_account_id', user.id)
-        if (paikkaId !== null) draftQuery = draftQuery.eq('paikka_id', paikkaId)
-        const { data: freshDraft } = await draftQuery.maybeSingle()
-        if (freshDraft) setDraft(freshDraft as OnboardingDraft)
-      } catch { /* ignore */ }
-    }
-    refreshDraftForPreview()
-  }, [step, paikkaId])
-
   // Derive branding pre-fill values — only when brandingData is fully analyzed
   const brandingPrices = brandingData?.status === 'analyzed'
     ? (brandingData.raw_analysis?.prices ?? null)
@@ -244,9 +223,27 @@ function OnboardingMode({
         return result
       })()
     : null
-  const brandingWebsite = brandingData?.status === 'analyzed'
-    ? (brandingData.raw_analysis?.website_url || null)
-    : null
+  // Submit callback passed to StepYhteystiedot as onNext — transplanted from StepEsikatselu.
+  // Runs after save-step succeeds inside StepYhteystiedot's handleNext.
+  async function handleYhteystiedotSubmit() {
+    const supabase = createBusinessBrowserClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session || paikkaId === null) return
+    const res = await fetch('/api/business/onboarding/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ paikka_id: paikkaId }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.ok) {
+        router.push('/business')
+      }
+    }
+  }
 
   if (loading) {
     return (
@@ -333,17 +330,8 @@ function OnboardingMode({
                     <StepYhteystiedot
                       paikkaId={paikkaId}
                       initialYhteystiedot={draft?.yhteystiedot}
-                      initialBrandingWebsite={brandingWebsite}
-                      onNext={() => saveAndAdvance(4)}
+                      onNext={handleYhteystiedotSubmit}
                       onPrev={() => goToStep(3)}
-                    />
-                  )}
-                  {step === 5 && (
-                    <StepEsikatselu
-                      draft={draft}
-                      paikkaInfo={livePreviewPaikkaInfo}
-                      brandingData={brandingData}
-                      onPrev={() => goToStep(4)}
                     />
                   )}
                 </>
