@@ -4,12 +4,13 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import WizardInner from '../WizardInner'
 import AnalysoiSivusto, { LajiPicker } from './AnalysoiSivusto'
-import StepPaikka from './StepPaikka'
+import StepNimiJaURL from './StepNimiJaURL'
+import StepSijainti from './StepSijainti'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { type BrandingResult } from '@/lib/branding/brandingResult'
 import { type PaikkaBase } from '@/lib/onboardingUtils'
 
-type PagePhase = 'paikka' | 'analyze' | 'laji-skip' | 'wizard'
+type PagePhase = 'nimi-url' | 'sijainti' | 'analyze' | 'laji-skip' | 'wizard'
 
 function PreVaiheSpinner() {
   return (
@@ -19,16 +20,18 @@ function PreVaiheSpinner() {
   )
 }
 
-// StepPaikkaPrePhase resolves paikka_id (URL param first, then business_paikka_links
-// lookup) EXACTLY like PrePhase below, plus fetches paikkaInfo (nimi/osoite/kaupunki) from
-// liikuntapaikat for StepPaikka's display. It is the FIRST pre-phase (D-01) — renders before
-// AnalysoiSivusto. Must live inside a <Suspense> boundary (calls useSearchParams()).
-function StepPaikkaPrePhase({
+// StepNimiJaURLPrePhase resolves paikka_id (URL param first, then business_paikka_links
+// lookup) EXACTLY like the old StepPaikkaPrePhase, plus fetches paikkaInfo (nimi/osoite/kaupunki)
+// from liikuntapaikat for StepNimiJaURL's display. It is the FIRST pre-phase — renders before
+// AnalysoiSivusto. Fast-forward (Pitfall 10): if paikka.latitude !== null the location step
+// is already done — call onNext(null) immediately to skip the nimi-url interaction.
+// Must live inside a <Suspense> boundary (calls useSearchParams()).
+function StepNimiJaURLPrePhase({
   onNext,
   onPaikkaIdResolved,
   onPaikkaInfoResolved,
 }: {
-  onNext: () => void
+  onNext: (websiteUrl: string | null) => void
   onPaikkaIdResolved: (paikkaId: number) => void
   onPaikkaInfoResolved: (info: PaikkaBase) => void
 }) {
@@ -75,6 +78,11 @@ function StepPaikkaPrePhase({
         if (!cancelled && paikka) {
           setPaikkaInfo(paikka as PaikkaBase)
           onPaikkaInfoResolved(paikka as PaikkaBase)
+          // Fast-forward: if location is already set, skip sijainti step for resuming users
+          if (paikka.latitude !== null) {
+            onNext(null)
+            return
+          }
         }
       }
     }
@@ -86,7 +94,7 @@ function StepPaikkaPrePhase({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  return <StepPaikka paikkaInfo={paikkaInfo} paikkaId={paikkaId} onNext={onNext} />
+  return <StepNimiJaURL paikkaInfo={paikkaInfo} paikkaId={paikkaId} onNext={onNext} />
 }
 
 // PrePhase resolves paikka_id (URL param first, then business_paikka_links lookup) — this
@@ -94,7 +102,7 @@ function StepPaikkaPrePhase({
 // WizardInner's OnboardingMode pattern exactly. OnboardingWizardPage (the parent that
 // instantiates the boundary) must never call useSearchParams() itself.
 // `knownPaikkaId` lets the caller pass an already-resolved paikka_id (e.g. from
-// StepPaikkaPrePhase, which runs immediately before this phase) to skip the redundant
+// StepNimiJaURLPrePhase, which runs immediately before this phase) to skip the redundant
 // resolution fetch/spinner flash. Falls back to its own resolution logic when absent, so it
 // still works as a defensive fallback / for direct deep-links into the analyze phase.
 function PrePhase({
@@ -117,7 +125,7 @@ function PrePhase({
   const [paikkaId, setPaikkaId] = useState<number | null>(knownPaikkaId)
 
   useEffect(() => {
-    if (knownPaikkaId !== null) return // already resolved by StepPaikkaPrePhase
+    if (knownPaikkaId !== null) return // already resolved by StepNimiJaURLPrePhase
 
     let cancelled = false
 
@@ -163,7 +171,7 @@ function PrePhase({
 }
 
 export default function OnboardingWizardPage() {
-  const [pagePhase, setPagePhase] = useState<PagePhase>('paikka')
+  const [pagePhase, setPagePhase] = useState<PagePhase>('nimi-url')
   const [brandingData, setBrandingData] = useState<BrandingResult | null>(null)
   const [paikkaId, setPaikkaId] = useState<number | null>(null)
   const [paikkaInfo, setPaikkaInfo] = useState<PaikkaBase | null>(null)
@@ -172,6 +180,10 @@ export default function OnboardingWizardPage() {
   // just-picked value instead of the stale pre-onboarding liikuntapaikat.laji — the actual DB
   // write still only happens at final submit (D-04), this never feeds any extra persistence.
   const [confirmedLaji, setConfirmedLaji] = useState<string | null>(null)
+  // Website URL entered on step 1; persisted to draft + triggers background AI analysis.
+  const [websiteUrl, setWebsiteUrl] = useState<string | null>(null)
+  // Guards against double-triggering the AI analysis on re-render.
+  const [aiTriggered, setAiTriggered] = useState(false)
 
   async function handleConfirm(
     result: BrandingResult,
@@ -271,23 +283,64 @@ export default function OnboardingWizardPage() {
     setPagePhase('wizard')
   }
 
-  // Wizard step 1's "back" button returns here from page.tsx (D-02/D-03 follow-up) — paikkaId
-  // is already resolved in state, so AnalysoiSivusto re-renders without re-fetching it.
-  function handleBackToAnalyze() {
-    setPagePhase('analyze')
+  // handleNimiUrlNext: called when user clicks Next on the nimi-url step (or automatically
+  // by the fast-forward when paikka.latitude !== null). Persists the URL and fires the
+  // background AI analysis (Pitfall 2: website must survive to submit via onboarding_draft).
+  async function handleNimiUrlNext(url: string | null) {
+    setWebsiteUrl(url)
+    setPagePhase('sijainti')
+    if (url && paikkaId !== null) {
+      const supabase = createBusinessBrowserClient()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const token = session?.access_token ?? ''
+      // Fire-and-forget: background AI analysis (CORRECT route: analyze-website, not ai-analyze)
+      fetch('/api/business/analyze-website', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ url, paikka_id: paikkaId }),
+      })
+      // Persist website URL to draft so submit route can write it to varauslinkki (Pitfall 2)
+      fetch('/api/business/onboarding/save-step', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({
+          paikka_id: paikkaId,
+          step: 0,
+          field: 'yhteystiedot',
+          value: { website: url },
+        }),
+      })
+      setAiTriggered(true)
+    }
+  }
+
+  // Wizard step 1's "back" button returns here from page.tsx (Pitfall 8) — routes to the
+  // correct pre-phase based on whether a website was provided. With a URL: back to analyze
+  // so the user can re-confirm/re-pick branding. Without: back to laji-skip picker.
+  function handleBackToPrePhase() {
+    setPagePhase(websiteUrl ? 'analyze' : 'laji-skip')
   }
 
   return (
     <main className="min-h-screen bg-white flex flex-col items-center px-4 py-12">
       <div className="w-full max-w-xl">
-        {pagePhase === 'paikka' && (
+        {pagePhase === 'nimi-url' && (
           <Suspense fallback={<PreVaiheSpinner />}>
-            <StepPaikkaPrePhase
-              onNext={() => setPagePhase('analyze')}
+            <StepNimiJaURLPrePhase
+              onNext={handleNimiUrlNext}
               onPaikkaIdResolved={setPaikkaId}
               onPaikkaInfoResolved={setPaikkaInfo}
             />
           </Suspense>
+        )}
+        {pagePhase === 'sijainti' && paikkaId !== null && (
+          <StepSijainti
+            paikkaId={paikkaId}
+            onNext={() => (websiteUrl ? setPagePhase('analyze') : handleSkip())}
+            onPrev={() => setPagePhase('nimi-url')}
+          />
         )}
         {pagePhase === 'analyze' && (
           <Suspense fallback={<PreVaiheSpinner />}>
@@ -320,7 +373,7 @@ export default function OnboardingWizardPage() {
               mode="onboarding"
               brandingData={brandingData}
               confirmedLaji={confirmedLaji}
-              onBackToAnalyze={handleBackToAnalyze}
+              onBackToAnalyze={handleBackToPrePhase}
             />
           </Suspense>
         )}
