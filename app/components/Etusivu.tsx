@@ -489,21 +489,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
     setSearchOpen(true)
   }
 
-  function handleCardClick() {
-    try {
-      const scrollTop = searchResultsRef.current?.scrollTop ?? 0
-      const state = {
-        _v: 2,
-        scrollTop,
-        searchHaku,
-        searchLaji,
-        searchKaupunki,
-        searchOpen: true,
-      }
-      sessionStorage.setItem('etusivu-scroll-state', JSON.stringify(state))
-    } catch {}
-  }
-
   async function toggleTodo(id: number): Promise<boolean> {
     if (inFlight.current.has(id)) return false   // debounce concurrent taps
     inFlight.current.add(id)
@@ -1071,7 +1056,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   }
                   return (
                     <motion.div key={p.id} layout transition={LAYOUT_T}>
-                      <DiagonaalKortti paikka={p} isSaved={true} onShowMap={pk => { if (pk.latitude != null && pk.longitude != null) setAutoZoomTarget({ lat: pk.latitude, lng: pk.longitude }) }} onToggleTodo={handleOverlayDelete} />
+                      <DiagonaalKortti paikka={p} isSaved={true} onShowMap={pk => { if (pk.latitude != null && pk.longitude != null) setAutoZoomTarget({ lat: pk.latitude, lng: pk.longitude }) }} onToggleTodo={handleOverlayDelete} onOpen={(p) => { setTodoOpen(false); setValittu(p) }} />
                     </motion.div>
                   )
                 })}
@@ -1468,7 +1453,10 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                           setAutoZoomTarget({ lat: paikka.latitude, lng: paikka.longitude })
                         }
                       }}
-                      onCardClick={handleCardClick}
+                      onOpen={(p) => {
+                        setSearchOpen(false)
+                        setValittu(p)
+                      }}
                     />
                   ))}
                 </div>
