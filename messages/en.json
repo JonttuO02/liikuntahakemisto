@@ -30,7 +30,9 @@
     "noReviews": "No reviews",
     "reviewCountSingular": "1 review",
     "reviewCountPlural": "{count} reviews",
-    "close": "Close"
+    "close": "Close",
+    "location": "Location",
+    "showOnMap": "Show on map"
   },
   "Filters": {
     "all": "All",

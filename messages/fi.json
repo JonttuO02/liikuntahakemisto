@@ -30,7 +30,9 @@
     "noReviews": "Ei arvosteluja",
     "reviewCountSingular": "1 arvostelu",
     "reviewCountPlural": "{count} arvostelua",
-    "close": "Sulje"
+    "close": "Sulje",
+    "location": "Sijainti",
+    "showOnMap": "Näytä kartalla"
   },
   "Filters": {
     "all": "Kaikki",
