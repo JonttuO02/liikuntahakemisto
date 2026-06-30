@@ -2,7 +2,6 @@
 
 import { useRef, useState, useLayoutEffect } from 'react'
 import { motion } from 'framer-motion'
-import Link from 'next/link'
 import { MapPin, BookmarkCheck, Bookmark, Building2, Camera, BadgeCheck } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { SportIcon } from '@/lib/sportIcons'
@@ -30,7 +29,7 @@ interface DiagonaalKorttiProps {
   distanceStr?: string
   isSaved?: boolean
   onShowMap?: (paikka: Liikuntapaikka) => void
-  onCardClick?: () => void
+  onOpen?: (paikka: Liikuntapaikka) => void
   onToggleTodo?: (id: number) => void
   brandColor?: string
   /** Optional user-selected accent color (Phase 48/onboarding follow-up). Used for the sport
@@ -39,7 +38,7 @@ interface DiagonaalKorttiProps {
   accentColor?: string
 }
 
-export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMap, onCardClick, onToggleTodo, brandColor, accentColor }: DiagonaalKorttiProps) {
+export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMap, onOpen, onToggleTodo, brandColor, accentColor }: DiagonaalKorttiProps) {
   const t = useTranslations('PaikkaKortti')
   const tLajit = useTranslations('Lajit')
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
@@ -88,7 +87,17 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
     >
       <div className="absolute inset-0 rounded-2xl overflow-hidden">
       {/* z-10 ensures the MapPin button's z-20 always wins the stacking context */}
-      <Link href={`/paikat/${paikka.id}`} className="absolute inset-0 block z-10" onClick={() => onCardClick?.()}>
+      {onOpen ? (
+        <div
+          role="button"
+          tabIndex={0}
+          className="absolute inset-0 block z-10 cursor-pointer"
+          onClick={() => onOpen(paikka)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpen(paikka) }}
+        />
+      ) : (
+        <div className="absolute inset-0 block z-10" />
+      )}
 
         {/* LEFT: info panel */}
         <div
@@ -243,7 +252,6 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
           </div>
         </div>
 
-      </Link>
       {hasCoords && (
         <button
           onClick={e => { e.stopPropagation(); e.preventDefault(); onShowMap?.(paikka) }}
