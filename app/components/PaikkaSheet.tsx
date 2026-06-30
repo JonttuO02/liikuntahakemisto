@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Phone, ExternalLink, Clock, CircleDollarSign, Info, Bookmark, BookmarkCheck, Camera, ChevronDown, Building2, BadgeCheck } from 'lucide-react'
+import { X, Phone, ExternalLink, Clock, CircleDollarSign, Info, Bookmark, BookmarkCheck, Camera, ChevronDown, Building2, BadgeCheck, MapPin } from 'lucide-react'
 import { hintateksti, cn } from '@/lib/utils'
 import { formatGroupedHours, getOpenStatus } from '@/lib/aukiolo'
 import { isSafeUrl } from '@/lib/urlUtils'
@@ -258,6 +258,18 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => 
           {paikka.kuvaus && (
             <SheetRow icon={<Info className="w-4 h-4" />} label={t('description')}>
               <p className="text-sm text-[rgba(17,17,17,0.65)] leading-relaxed">{paikka.kuvaus}</p>
+            </SheetRow>
+          )}
+
+          {/* Show on map */}
+          {paikka.latitude != null && paikka.longitude != null && !preview && (
+            <SheetRow icon={<MapPin className="w-4 h-4" />} label={t('location')}>
+              <a
+                href={`/?id=${paikka.id}`}
+                className="text-[#111111] hover:text-[rgba(17,17,17,0.6)] text-sm font-bold underline underline-offset-2 [transition:color_150ms_var(--ease-out)]"
+              >
+                {t('showOnMap')}
+              </a>
             </SheetRow>
           )}
 
