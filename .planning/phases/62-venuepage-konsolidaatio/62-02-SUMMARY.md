@@ -138,3 +138,9 @@ None — this plan only changes a client-side callback wiring pattern on an exis
 ---
 *Phase: 62-venuepage-konsolidaatio*
 *Completed: 2026-06-30*
+
+## Self-Check: PASSED
+
+- FOUND: app/components/DiagonaalKortti.tsx
+- FOUND: commit 8d27671 (Task 1)
+- FOUND: commit 751e69f (docs: summary + deferred-items)
