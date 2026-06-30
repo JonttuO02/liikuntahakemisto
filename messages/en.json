@@ -296,16 +296,6 @@
   "Map": {
     "recenter": "Return to my location"
   },
-  "PaikkaPage": {
-    "backToDirectory": "Back to directory",
-    "price": "Price",
-    "hours": "Opening hours",
-    "phone": "Phone",
-    "description": "Description",
-    "bookNow": "Book now",
-    "location": "Location",
-    "showOnMap": "Show on map →"
-  },
   "NotFound": {
     "title": "Page not found.",
     "description": "The page you're looking for doesn't exist or has been moved.",
