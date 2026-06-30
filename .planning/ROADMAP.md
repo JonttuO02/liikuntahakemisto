@@ -137,7 +137,12 @@ Plans:
   3. Kaikki sovelluksen sisäiset polut, jotka aiemmin avasivat erillisen paikkasivun, avaavat sen tilalla venuepagen (bottom sheet) samalla tavalla kuin CalloutCardin klikkaus
   4. Suora osoite poistettuun reittiin palauttaa 404 (ei redirectiä)
 
-**Plans**: TBD
+**Plans**: 3 plans (2 waves)
+
+- [ ] 62-01-PLAN.md — Migrate "Näytä kartalla" to PaikkaSheet as a SheetRow + add PaikkaSheet i18n keys (VENUEPAGE-02) [wave 1]
+- [ ] 62-02-PLAN.md — DiagonaalKortti `onOpen` prop + replace `<Link>` overlay with conditional callback/no-op (VENUEPAGE-03) [wave 1]
+- [ ] 62-03-PLAN.md — Wire `onOpen` in Etusivu + remove handleCardClick + delete `app/paikat/[id]` + remove PaikkaPage i18n (VENUEPAGE-01/03/04) [wave 2]
+
 **UI hint**: yes
 
 ### Phase 63: Business-dashboardin & preview-näkymien uudistus
