@@ -41,19 +41,32 @@ export async function POST(request: Request) {
 
     // SIJAINTI-03: allowlist parse only latitude/longitude — never read place_id,
     // formatted_address, or any other Places/Geocoding field from the body, and
-    // never spread ...body into the insert. Reject (not coerce) non-finite or
-    // out-of-range values; coordinates are mandatory for newly created venues.
-    latitude =
-      typeof body.latitude === 'number' && Number.isFinite(body.latitude) && body.latitude >= -90 && body.latitude <= 90
-        ? body.latitude
-        : null
-    longitude =
-      typeof body.longitude === 'number' && Number.isFinite(body.longitude) && body.longitude >= -180 && body.longitude <= 180
-        ? body.longitude
-        : null
+    // never spread ...body into the insert. toimipisteNimi, osoite, kaupunki, and
+    // coordinates are all optional at creation (ONBOARD-18/20): venue is created
+    // from name alone; location is collected in a later step — the real-world
+    // caller (ClaimSearchForm) omits both fields entirely on first submit. An
+    // omitted pair is accepted as null/null. But a field that is present and
+    // non-finite/out-of-range is rejected (not silently coerced to null), and a
+    // mismatched pair (one given, one missing — including a value that became
+    // `null` over the JSON wire, e.g. NaN) is rejected too, since both signal a
+    // client bug rather than an intentionally-skipped value.
+    const parseCoord = (raw: unknown, min: number, max: number): { value: number | null; invalid: boolean } => {
+      if (raw === undefined || raw === null) return { value: null, invalid: false }
+      if (typeof raw === 'number' && Number.isFinite(raw) && raw >= min && raw <= max) return { value: raw, invalid: false }
+      return { value: null, invalid: true }
+    }
+    const latParsed = parseCoord(body.latitude, -90, 90)
+    const lngParsed = parseCoord(body.longitude, -180, 180)
+    if (
+      latParsed.invalid ||
+      lngParsed.invalid ||
+      (latParsed.value !== null) !== (lngParsed.value !== null)
+    ) {
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+    }
+    latitude = latParsed.value
+    longitude = lngParsed.value
 
-    // toimipisteNimi, osoite, kaupunki, and coordinates are all optional at creation
-    // (ONBOARD-18/20): venue is created from name alone; location is collected in a later step.
     if (!yritysNimi) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }

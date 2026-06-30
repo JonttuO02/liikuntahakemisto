@@ -202,7 +202,7 @@ export default function OnboardingWizardPage() {
   const [pagePhase, setPagePhase] = useState<PagePhase>('nimi-url')
   const [brandingData, setBrandingData] = useState<BrandingResult | null>(null)
   const [paikkaId, setPaikkaId] = useState<number | null>(null)
-  const [paikkaInfo, setPaikkaInfo] = useState<PaikkaBase | null>(null)
+  const [, setPaikkaInfo] = useState<PaikkaBase | null>(null)
   // Display-only: the laji confirmed/picked in AnalysoiSivusto (Vahvista/Vaihda) or the D-06
   // skip-path picker, threaded into WizardInner so its live preview / Step 1 card show the
   // just-picked value instead of the stale pre-onboarding liikuntapaikat.laji — the actual DB
