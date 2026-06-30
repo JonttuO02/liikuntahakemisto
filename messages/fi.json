@@ -299,16 +299,6 @@
   "Map": {
     "recenter": "Palaa omalle sijainnille"
   },
-  "PaikkaPage": {
-    "backToDirectory": "Takaisin hakemistoon",
-    "price": "Hinta",
-    "hours": "Aukioloajat",
-    "phone": "Puhelin",
-    "description": "Kuvaus",
-    "bookNow": "Varaa aika",
-    "location": "Sijainti",
-    "showOnMap": "Näytä kartalla →"
-  },
   "NotFound": {
     "title": "Sivua ei löydy.",
     "description": "Etsimääsi sivua ei ole olemassa tai se on siirretty.",

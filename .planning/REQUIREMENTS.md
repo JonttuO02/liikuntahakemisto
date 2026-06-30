@@ -36,10 +36,10 @@ Requirements for milestone v3.1 (UX/UI-korjaukset & business-parannukset). Each 
 
 ### Venuepage-konsolidaatio
 
-- [ ] **VENUEPAGE-01**: Erillinen paikkasivu (`app/paikat/[id]`) poistetaan kokonaan sovelluksesta
+- [x] **VENUEPAGE-01**: Erillinen paikkasivu (`app/paikat/[id]`) poistetaan kokonaan sovelluksesta
 - [ ] **VENUEPAGE-02**: Poistettavan sivun ainutlaatuinen sisältö (jota ei vielä ole venuepagella) siirretään venuepagelle (PaikkaSheet) ennen poistoa
 - [x] **VENUEPAGE-03**: Kaikki sovelluksen sisäiset polut, jotka aiemmin avasivat erillisen paikkasivun, avaavat sen tilalla venuepagen (bottom sheet) samalla tavalla kuin CalloutCardin klikkaus
-- [ ] **VENUEPAGE-04**: Suora osoite poistettuun reittiin palauttaa 404 (ei redirectiä)
+- [x] **VENUEPAGE-04**: Suora osoite poistettuun reittiin palauttaa 404 (ei redirectiä)
 
 ### Onboarding-vaiheiden uudelleenjärjestys
 
@@ -90,10 +90,10 @@ Deferred — not in v3.1 scope.
 | PREV-04 | Phase 63 | Pending |
 | LIVEPREV-05 | Phase 63 | Pending |
 | PREV-05 | Phase 63 | Pending |
-| VENUEPAGE-01 | Phase 62 | Pending |
+| VENUEPAGE-01 | Phase 62 | Complete |
 | VENUEPAGE-02 | Phase 62 | Pending |
 | VENUEPAGE-03 | Phase 62 | Complete |
-| VENUEPAGE-04 | Phase 62 | Pending |
+| VENUEPAGE-04 | Phase 62 | Complete |
 | ONBOARD-18 | Phase 61 | Complete |
 | ONBOARD-19 | Phase 61 | Complete |
 | ONBOARD-20 | Phase 61 | Complete |
