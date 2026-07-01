@@ -123,27 +123,36 @@ function StepNimiJaURLPrePhase({
 }
 
 // WaitingForAI — polls analyze-website GET until status==='analyzed', then hands brandingData
-// to parent so WizardInner mounts with pre-filled AI data. Times out after ~60s → skip.
+// to parent so WizardInner mounts with pre-filled AI data. On failure or timeout it shows a
+// distinct failure state with an explicit retry, instead of silently reverting to skip.
 function WaitingForAI({
   paikkaId,
   onReady,
   onSkip,
+  onRetry,
 }: {
   paikkaId: number
   onReady: (data: BrandingResult) => void
   onSkip: () => void
+  onRetry: () => void
 }) {
   const cancelledRef = useRef(false)
+  const [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     cancelledRef.current = false
+    setFailed(false)
 
     async function run() {
       const supabase = createBusinessBrowserClient()
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token ?? ''
       let pollCount = 0
-      const MAX_POLLS = 30
+      // 40-second worst-case client-side ceiling (20 polls x 2s). Reduced from 30 — the
+      // route's server-side staleness self-heal (STALE_ANALYZING_MS=12s) now resolves most
+      // stuck runs well before this ceiling is reached.
+      const MAX_POLLS = 20
 
       while (!cancelledRef.current && pollCount < MAX_POLLS) {
         try {
@@ -157,7 +166,7 @@ function WaitingForAI({
               return
             }
             if (data.status === 'failed') {
-              if (!cancelledRef.current) onSkip()
+              if (!cancelledRef.current) setFailed(true)
               return
             }
           }
@@ -170,7 +179,7 @@ function WaitingForAI({
         }
       }
 
-      if (!cancelledRef.current) onSkip()
+      if (!cancelledRef.current) setFailed(true)
     }
 
     run()
@@ -178,7 +187,38 @@ function WaitingForAI({
       cancelledRef.current = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [attempt])
+
+  function handleRetryClick() {
+    onRetry()
+    setAttempt(a => a + 1)
+  }
+
+  if (failed) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-6 px-4 text-center">
+        <p className="text-sm text-[rgba(17,17,17,0.45)]">
+          Analyysi epäonnistui tai kesti liian kauan.
+        </p>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={handleRetryClick}
+            className="text-sm font-bold text-[#111111] bg-[rgba(0,0,0,0.05)] hover:bg-[rgba(0,0,0,0.08)] transition-colors rounded-full px-4 py-2"
+          >
+            Yritä uudelleen
+          </button>
+          <button
+            type="button"
+            onClick={onSkip}
+            className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] transition-colors"
+          >
+            Ohita
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-6">
@@ -313,6 +353,29 @@ export default function OnboardingWizardPage() {
     setPagePhase(websiteUrl ? 'sijainti' : 'laji-skip')
   }
 
+  // handleRunAnalysis: invoked by WizardInner's step-1 "Analysoi →" button (and by
+  // WaitingForAI's "Yritä uudelleen" retry). Fixes UAT gap 3's first missing item — the old
+  // onRunAnalysis prop only flipped pagePhase to 'waiting' without ever starting an analysis,
+  // so WaitingForAI polled a resource that was never triggered. Mirrors handleNimiUrlNext's
+  // AI-trigger fetch shape exactly (same POST body/headers), just invoked from the wizard's
+  // manual (re)trigger path instead of the step-0 auto-trigger path.
+  async function handleRunAnalysis() {
+    // Defensive — mirrors canRunAnalysis's own gate; not reachable in practice since the
+    // button that calls this is only rendered when that gate is already true.
+    if (!websiteUrl || paikkaId === null) return
+    setPagePhase('waiting')
+    const supabase = createBusinessBrowserClient()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    const token = session?.access_token ?? ''
+    fetch('/api/business/analyze-website', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ url: websiteUrl, paikka_id: paikkaId }),
+    })
+  }
+
   return (
     <main className="min-h-screen bg-white flex flex-col items-center px-4 py-12">
       <div className="w-full max-w-xl">
@@ -342,6 +405,7 @@ export default function OnboardingWizardPage() {
             paikkaId={paikkaId}
             onReady={(data) => { setBrandingData(data); setPagePhase('wizard') }}
             onSkip={() => { setBrandingData(null); setPagePhase('wizard') }}
+            onRetry={handleRunAnalysis}
           />
         )}
         {pagePhase === 'laji-skip' && (
@@ -366,7 +430,7 @@ export default function OnboardingWizardPage() {
               confirmedLaji={confirmedLaji}
               onBackToAnalyze={handleBackToPrePhase}
               canRunAnalysis={!brandingData && !!websiteUrl && paikkaId !== null}
-              onRunAnalysis={() => setPagePhase('waiting')}
+              onRunAnalysis={handleRunAnalysis}
             />
           </Suspense>
         )}
