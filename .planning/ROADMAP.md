@@ -180,7 +180,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 63-05-PLAN.md — Wire dashboard cards into /business, remove reapply UI, delete /api/business/reapply route
+- [x] 63-05-PLAN.md — Wire dashboard cards into /business, remove reapply UI, delete /api/business/reapply route
 
 **UI hint**: yes
 
@@ -462,5 +462,5 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 6/6 | Complete    | 2026-06-25 |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 6/6 | Complete    | 2026-06-26 |
 | 62. Venuepage-konsolidaatio | v3.1 | 4/4 | Complete    | 2026-06-30 |
-| 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 4/5 | In Progress|  |
+| 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 5/5 | Complete   | 2026-07-01 |
 | 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 0/? | Not started | - |
