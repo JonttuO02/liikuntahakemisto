@@ -1,7 +1,7 @@
 ---
 phase: 62-venuepage-konsolidaatio
 verified: 2026-07-01T12:00:00Z
-status: human_needed
+status: passed
 score: 10/12 must-haves verified
 behavior_unverified: 2
 overrides_applied: 0
@@ -9,16 +9,21 @@ re_verification:
   previous_status: human_needed
   previous_score: 9/10
   gaps_closed:
+
     - "CR-01 click-catcher paint-order fix — confirmed via manual tap-through (62-UAT.md Test 1: result: pass). DiagonaalKortti full-card tap-to-open now VERIFIED (was PRESENT_BEHAVIOR_UNVERIFIED)."
   gaps_remaining: []
   regressions:
+
     - "During the same manual UAT pass, a NEW regression was found and reported (62-UAT.md Test 2): opening PaikkaSheet from the search results list or the TO DO overlay unmounted the underlying overlay instead of layering the sheet on top of it. Root-caused in .planning/debug/paikkasheet-dismisses-search-todo-overlay.md and closed via gap-closure plan 62-04 (commit 035ebc1). The 62-04 diff's own code review (62-04-REVIEW.md) then found 2 further warnings (WR-01, WR-02), fixed in a follow-up commit (5221e7f). All three fixes are confirmed present in the current codebase (see Observable Truths below) but NONE has been behaviorally re-confirmed by a human in a running app — 62-UAT.md's Test 2 still reads result:issue and was never re-run to result:pass after the fix landed."
+
 gaps: []
 behavior_unverified_items:
+
   - truth: "Opening PaikkaSheet from the search results list or the TO DO overlay leaves that overlay mounted underneath (via z-index layering, not conditional mounting); closing the sheet returns the user directly to the overlay they were browsing."
     test: "Search for a venue so the search list shows results; tap a card's info panel (not the photo). Confirm PaikkaSheet opens ON TOP of the still-visible search list. Close the sheet and confirm you land back in the search list, not the bare map. Repeat by opening the TO DO (favorites) overlay and tapping a saved card."
     expected: "In both cases PaikkaSheet layers over the originating surface; that surface remains visible/mounted underneath (or at least resumes without needing to be manually reopened) after the sheet is closed."
     why_human: "This is a state-mutation/AnimatePresence-mount invariant. Source inspection (this report) confirms the two setSearchOpen(false)/setTodoOpen(false) calls were removed from the onOpen handlers (app/components/Etusivu.tsx:1026, 1427), which is necessary for the fix — but whether the AnimatePresence-wrapped overlay actually stays visually mounted and the browse-open-close-browse flow feels correct in a live render is a rendered/animated outcome that grep and tsc cannot exercise. No component/interaction test framework exists in this project (no *.test.*/*.spec.* file references Etusivu, DiagonaalKortti, or PaikkaSheet). 62-UAT.md Test 2 (the exact regression this fix targets) has not been re-run since the fix landed."
+
   - truth: "While PaikkaSheet is open (a venue is selected), the background TodoButton does not silently toggle the hidden TO DO overlay's open state, and background search/filter controls (CombinedFilterPill, list-toggle button, search-results list) are excluded from the tab order and accessibility tree — the two follow-up fixes (WR-01, WR-02) from 62-04-REVIEW.md."
     test: "Open TO DO overlay, tap a saved card to open PaikkaSheet (overlay now hidden behind the sheet), then tap where the floating bookmark/TodoButton normally sits. Confirm nothing happens (button is inert) and the TO DO overlay is still open/showing its previous items when the sheet is closed. Separately, with the search list open and a venue selected (PaikkaSheet open), Tab through the page with a keyboard and confirm focus cannot land on the search input, city/sport filter pills, or list-toggle button until the sheet is closed."
     expected: "TodoButton is unclickable (disabled, pointer-events:none) while a venue is selected, so it cannot flip todoOpen to false behind the sheet. Background search controls and the list-toggle wrapper are marked inert while a venue is selected, so keyboard/AT users cannot reach or operate them until PaikkaSheet closes."

@@ -18,9 +18,10 @@ result: pass
 
 ### 2. PaikkaSheet should layer over the search/TO DO overlay, not dismiss it
 expected: Opening PaikkaSheet from a card in the search results list or the TO DO overlay should NOT close that underlying list/overlay. The sheet should open on top of it. Closing the sheet should return the user directly to the list/overlay they were browsing, not to the closed/collapsed base state.
-result: issue
-reported: "when opening paikkasheet from the list or todo overlay, the list or todo overlay that was browsed is closed as paikkasheet is opened. Thats bad because when browsing the list the user has to always reopen the list after opening any paikkasheet. So the fix would be that paikkasheet opens over the list or todo overlay, so when its closed again the user can continue browsing"
-severity: major
+result: pass
+originally_reported: "when opening paikkasheet from the list or todo overlay, the list or todo overlay that was browsed is closed as paikkasheet is opened. Thats bad because when browsing the list the user has to always reopen the list after opening any paikkasheet. So the fix would be that paikkasheet opens over the list or todo overlay, so when its closed again the user can continue browsing"
+severity_at_report: major
+resolved_by: "Gap-closure plan 62-04 (commit 035ebc1) removed the setSearchOpen(false)/setTodoOpen(false) calls; re-tested and confirmed in Test 3 (result: pass)"
 
 ### 3. Re-test — PaikkaSheet layers over the search list / TO DO overlay (post-fix)
 expected: Open Etusivu, search so at least one venue renders in the search results list, tap its info panel to open PaikkaSheet, then close the sheet. Confirm the search list is still there / resumes without needing to be manually reopened. Repeat with the TO DO (favorites) overlay: open it, tap a saved card, close the sheet, confirm the TO DO overlay's items are still shown. This re-tests the exact scenario from Test 2 after gap-closure plan 62-04 (commit 035ebc1) removed the setSearchOpen(false)/setTodoOpen(false) calls that caused it.
@@ -33,8 +34,8 @@ result: pass
 ## Summary
 
 total: 4
-passed: 3
-issues: 1
+passed: 4
+issues: 0
 pending: 0
 skipped: 0
 blocked: 0
@@ -42,10 +43,11 @@ blocked: 0
 ## Gaps
 
 - truth: "Opening PaikkaSheet from the search list or TO DO overlay leaves that list/overlay open underneath, so closing the sheet resumes browsing where the user left off."
-  status: failed
+  status: closed
   reason: "User reported: when opening paikkasheet from the list or todo overlay, the list or todo overlay that was browsed is closed as paikkasheet is opened. Thats bad because when browsing the list the user has to always reopen the list after opening any paikkasheet. So the fix would be that paikkasheet opens over the list or todo overlay, so when its closed again the user can continue browsing"
   severity: major
   test: 2
+  closed_by: "Test 3 re-test (result: pass), gap-closure commit 035ebc1"
   root_cause: "app/components/Etusivu.tsx's onOpen callbacks for both DiagonaalKortti usages unconditionally call setSearchOpen(false) (search list, lines 1422-1425) / setTodoOpen(false) (TO DO overlay, line 1026) in the same handler that opens PaikkaSheet via setValittu(clicked). Both overlays are wrapped in <AnimatePresence>{flag && (...)}</AnimatePresence>, so clearing the flag unmounts them instead of leaving them mounted underneath the sheet. PaikkaSheet's own z-index (65/66) is already higher than the search-results list (59) and TO DO overlay (62), so simply not clearing the flag would let it layer correctly with no z-index changes needed. PaikkaSheet's onClose (-> setValittu(null)) also never restores searchOpen/todoOpen, compounding the symptom. Note: this reverses the exact behavior UAT Test 1 (CR-01 fix confirmation) asserted and passed against — Test 1's real intent was that tapping the info panel must trigger onOpen at all, not specifically that it must dismiss the overlay; the fix should update Test 1's phrasing/expectation to match, not just Test 2's."
   artifacts:
     - path: "app/components/Etusivu.tsx"
