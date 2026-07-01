@@ -176,7 +176,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 63-04-PLAN.md — DiagonaalKortti dashboard-variant controls panel + status pill + RejectionReasonPopup component
+- [x] 63-04-PLAN.md — DiagonaalKortti dashboard-variant controls panel + status pill + RejectionReasonPopup component
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -462,5 +462,5 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 6/6 | Complete    | 2026-06-25 |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 6/6 | Complete    | 2026-06-26 |
 | 62. Venuepage-konsolidaatio | v3.1 | 4/4 | Complete    | 2026-06-30 |
-| 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 3/5 | In Progress|  |
+| 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 4/5 | In Progress|  |
 | 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 0/? | Not started | - |
