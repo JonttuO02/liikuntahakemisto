@@ -204,6 +204,8 @@
     "roleOther": "Muu",
     "rejectionReasonLabel": "Hylkäyssyy",
     "reapplyCta": "Hae uudelleen",
+    "fixDetailsCta": "Korjaa tiedot",
+    "showRejectionInfoLabel": "Näytä hylkäyssyy",
     "editTitle": "Muokkaa paikan tietoja",
     "editStep2Label": "Mediat",
     "editStep3Label": "Hinnasto",

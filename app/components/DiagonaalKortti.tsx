@@ -2,7 +2,7 @@
 
 import { useRef, useState, useLayoutEffect } from 'react'
 import { motion } from 'framer-motion'
-import { MapPin, BookmarkCheck, Bookmark, Building2, Camera, BadgeCheck } from 'lucide-react'
+import { MapPin, BookmarkCheck, Bookmark, Building2, Camera, BadgeCheck, Eye, Pencil, Link2, AlertCircle } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
@@ -11,7 +11,7 @@ import { isMembershipOnly, priceItemList } from '@/lib/priceUtils'
 import { useOverflowMarquee } from '@/lib/useOverflowMarquee'
 import type { Liikuntapaikka } from '@/lib/types'
 import { useTranslations } from 'next-intl'
-import { getContrastColor } from '@/lib/branding/brandingResult'
+import { getContrastColor, getPanelShade } from '@/lib/branding/brandingResult'
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1]
 
@@ -36,11 +36,26 @@ interface DiagonaalKorttiProps {
    * pill background and the "show on map" button icon — falls back to the sport's own color
    * and the default muted gray respectively when omitted. */
   accentColor?: string
+  /** Phase 63 (BIZPANEL-06/07): when present, swaps the RIGHT (photo) panel for a permanent
+   * icon-button controls panel + status pill, and makes the LEFT info panel fully inert
+   * (no click-catcher, no onOpen). Absent at every existing call site — behavior/appearance
+   * of those call sites is unchanged. */
+  dashboardActions?: {
+    status: 'kesken' | 'approved' | 'rejected' | 'pending'
+    onPreview: () => void
+    onEditOrContinue: () => void
+    onCopyInviteLink?: () => void
+    copied?: boolean
+    onShowRejectionInfo?: () => void
+  }
 }
 
-export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMap, onOpen, onToggleTodo, brandColor, accentColor }: DiagonaalKorttiProps) {
+export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMap, onOpen, onToggleTodo, brandColor, accentColor, dashboardActions }: DiagonaalKorttiProps) {
   const t = useTranslations('PaikkaKortti')
   const tLajit = useTranslations('Lajit')
+  // Dashboard controls-panel copy (Business namespace) — only rendered when dashboardActions
+  // is present, but the hook itself is cheap/unconditional per next-intl convention.
+  const tBusiness = useTranslations('Business')
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
   const openStatus   = getOpenStatus(paikka.aukioloajat)
   const hintaTeksti  = hintateksti(paikka.hinta_min, paikka.hinta_max)
@@ -54,6 +69,13 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
   // be dark (e.g. black) or light, so the icon must follow the same black/white contrast
   // rule as brandColor's text, not a fixed color.
   const accentContrastText = accentColor ? getContrastColor(accentColor) : undefined
+  // Dashboard controls-panel background/contrast (D-03/D-04): only computed when
+  // dashboardActions is present — every other call site never touches these.
+  const panelShade = dashboardActions && brandColor ? getPanelShade(brandColor) : undefined
+  const panelShadeContrastText = panelShade ? getContrastColor(panelShade) : undefined
+  const panelChipBg = panelShade
+    ? (panelShadeContrastText === '#000000' ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.20)')
+    : undefined
   const { containerRef, measureRef, shouldMarquee } = useOverflowMarquee(priceItems?.join('\n') ?? null)
   const hasCoords    = paikka.latitude != null && paikka.longitude != null
 
@@ -81,7 +103,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
   return (
     <motion.div
       variants={diagonaalKorttiVariants}
-      className="relative glass glass-hover rounded-2xl h-36 cursor-pointer"
+      className={`relative glass glass-hover rounded-2xl h-36${onOpen ? ' cursor-pointer' : ''}`}
       whileHover={{ scale: 1.02, transition: { duration: 0.18, ease: 'easeOut' } }}
       whileTap={{ scale: 0.98, transition: { duration: 0.12, ease: 'easeOut' } }}
     >
@@ -207,42 +229,98 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
           </div>
         </div>
 
-        {/* RIGHT: venue photo or sport-color fallback */}
+        {/* RIGHT: venue photo or sport-color fallback (consumer variant) — replaced by the
+            dashboard controls panel (icon buttons + status pill) when dashboardActions is
+            present. Same wrapping div + clip-path (D-01 — identical diagonal silhouette). */}
         <div
           className="absolute top-0 right-0 bottom-0 overflow-hidden"
           style={{ left: '50%', clipPath: 'polygon(14% 0, 100% 0, 100% 100%, 4% 100%)' }}
         >
-          {(() => {
-            const src = paikka.image_url ?? paikka.photo_urls?.[0] ?? null
-            return src ? (
-              <img
-                src={src}
-                alt={`Kuva: ${paikka.nimi}`}
-                className="w-full h-full object-cover"
-                loading="lazy"
-                onError={(e) => {
-                  const img = e.currentTarget
-                  img.style.display = 'none'
-                  const fallback = img.parentElement?.querySelector('[data-fallback]') as HTMLElement | null
-                  if (fallback) fallback.hidden = false
-                }}
-              />
-            ) : null
-          })()}
-          <div
-            className="w-full h-full flex items-center justify-center bg-[rgba(0,0,0,0.06)]"
-            aria-hidden
-            data-fallback
-            hidden={!!(paikka.image_url ?? paikka.photo_urls?.[0])}
-          >
-            <Camera size={24} className="text-[rgba(0,0,0,0.2)]" />
-          </div>
+          {dashboardActions ? (
+            <div
+              className={`w-full h-full flex items-center justify-center${panelShade ? '' : ' glass'}`}
+              style={panelShade ? { backgroundColor: panelShade } : undefined}
+            >
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={e => { e.stopPropagation(); e.preventDefault(); dashboardActions.onPreview() }}
+                  aria-label={tBusiness('esikatseluCta')}
+                  disabled={dashboardActions.status === 'kesken'}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center [transition:color_150ms_ease] ${dashboardActions.status === 'kesken' ? 'opacity-40 pointer-events-none' : ''} ${panelShade ? '' : 'glass-btn text-[rgba(17,17,17,0.5)] hover:text-[#111111]'}`}
+                  style={panelShade ? { backgroundColor: panelChipBg, color: panelShadeContrastText } : undefined}
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={e => { e.stopPropagation(); e.preventDefault(); dashboardActions.onEditOrContinue() }}
+                  aria-label={dashboardActions.status === 'kesken' ? tBusiness('jatkaCta') : tBusiness('muokkaaCta')}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center [transition:color_150ms_ease] ${panelShade ? '' : 'glass-btn text-[rgba(17,17,17,0.5)] hover:text-[#111111]'}`}
+                  style={panelShade ? { backgroundColor: panelChipBg, color: panelShadeContrastText } : undefined}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+                {dashboardActions.onCopyInviteLink && (
+                  <button
+                    type="button"
+                    onClick={e => { e.stopPropagation(); e.preventDefault(); dashboardActions.onCopyInviteLink?.() }}
+                    aria-label={dashboardActions.copied ? tBusiness('inviteLinkCopied') : tBusiness('copyInviteLinkCta')}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center [transition:color_150ms_ease] ${panelShade ? '' : 'glass-btn text-[rgba(17,17,17,0.5)] hover:text-[#111111]'}`}
+                    style={panelShade ? { backgroundColor: panelChipBg, color: panelShadeContrastText } : undefined}
+                  >
+                    <Link2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {dashboardActions.onShowRejectionInfo && (
+                  <button
+                    type="button"
+                    onClick={e => { e.stopPropagation(); e.preventDefault(); dashboardActions.onShowRejectionInfo?.() }}
+                    aria-label={tBusiness('showRejectionInfoLabel')}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center [transition:color_150ms_ease] ${panelShade ? '' : 'glass-btn text-[rgba(17,17,17,0.5)] hover:text-[#111111]'}`}
+                    style={panelShade ? { backgroundColor: panelChipBg, color: panelShadeContrastText } : undefined}
+                  >
+                    <AlertCircle className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              {(() => {
+                const src = paikka.image_url ?? paikka.photo_urls?.[0] ?? null
+                return src ? (
+                  <img
+                    src={src}
+                    alt={`Kuva: ${paikka.nimi}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      const img = e.currentTarget
+                      img.style.display = 'none'
+                      const fallback = img.parentElement?.querySelector('[data-fallback]') as HTMLElement | null
+                      if (fallback) fallback.hidden = false
+                    }}
+                  />
+                ) : null
+              })()}
+              <div
+                className="w-full h-full flex items-center justify-center bg-[rgba(0,0,0,0.06)]"
+                aria-hidden
+                data-fallback
+                hidden={!!(paikka.image_url ?? paikka.photo_urls?.[0])}
+              >
+                <Camera size={24} className="text-[rgba(0,0,0,0.2)]" />
+              </div>
+            </>
+          )}
         </div>
 
       {/* Click-catcher rendered after LEFT/RIGHT panels so it paints on top of them
           (same z-10 layer, later in DOM order wins) — still below the z-20 action
-          buttons below, which stopPropagation()/preventDefault() on their own clicks. */}
-      {onOpen ? (
+          buttons below, which stopPropagation()/preventDefault() on their own clicks.
+          D-10: the dashboard variant's LEFT panel is fully inert — no click-catcher at all. */}
+      {dashboardActions ? null : onOpen ? (
         <div
           role="button"
           tabIndex={0}
@@ -254,7 +332,29 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
         <div className="absolute inset-0 block z-10" />
       )}
 
-      {hasCoords && (
+      {dashboardActions && (
+        <span
+          className={`absolute bottom-3 right-3 z-20 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full ${
+            dashboardActions.status === 'kesken'
+              ? 'bg-[rgba(17,17,17,0.08)] text-[rgba(17,17,17,0.55)]'
+              : dashboardActions.status === 'approved'
+              ? 'bg-green-100 text-green-700'
+              : dashboardActions.status === 'rejected'
+              ? 'bg-red-50 text-red-600'
+              : 'bg-amber-100 text-amber-700'
+          }`}
+        >
+          {dashboardActions.status === 'kesken'
+            ? tBusiness('statusKesken')
+            : dashboardActions.status === 'approved'
+            ? tBusiness('statusApproved')
+            : dashboardActions.status === 'rejected'
+            ? tBusiness('statusRejected')
+            : tBusiness('statusPending')}
+        </span>
+      )}
+
+      {hasCoords && !dashboardActions && (
         <button
           onClick={e => { e.stopPropagation(); e.preventDefault(); onShowMap?.(paikka) }}
           aria-label={t('showOnMap')}

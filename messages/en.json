@@ -204,6 +204,8 @@
     "roleOther": "Other",
     "rejectionReasonLabel": "Rejection reason",
     "reapplyCta": "Apply again",
+    "fixDetailsCta": "Fix details",
+    "showRejectionInfoLabel": "Show rejection reason",
     "editTitle": "Edit venue information",
     "editStep2Label": "Media",
     "editStep3Label": "Pricing",
