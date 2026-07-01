@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   // E-01: Ownership check — any linked claimant (approved, pending, rejected) may save.
   const { data: linkRow, error: linkError } = await supabaseAdmin
     .from('business_paikka_links')
-    .select('paikka_id')
+    .select('paikka_id, claim_status')
     .eq('business_account_id', user.id)
     .eq('paikka_id', paikka_id)
     .maybeSingle()
@@ -168,6 +168,31 @@ export async function POST(request: Request) {
       { error: 'Update failed', detail: updateError.message },
       { status: 500 }
     )
+  }
+
+  // D-07: Auto-resubmit-on-save — a successful section save on a previously
+  // rejected venue flips claim_status back to pending, clearing rejection_reason.
+  // The decision is derived from the server-side linkRow (never from the request
+  // body) and the WHERE clause carries the same concurrency guard as
+  // reapply/route.ts so only the first of two racing saves performs the flip.
+  // Per D-15, the reapply cooldown check is deliberately NOT ported.
+  if (linkRow.claim_status === 'rejected') {
+    const { error: flipError } = await supabaseAdmin
+      .from('business_paikka_links')
+      .update({
+        claim_status: 'pending',
+        rejection_reason: null,
+        submitted_at: new Date().toISOString(),
+      })
+      .eq('business_account_id', user.id)
+      .eq('paikka_id', paikka_id)
+      .eq('claim_status', 'rejected')
+
+    if (flipError) {
+      // Non-critical: the section save already succeeded and persisted above.
+      // Log the flip failure without masking the 200 response.
+      console.error('[update-paikka] Auto-resubmit flip failed (non-critical):', flipError.message)
+    }
   }
 
   return NextResponse.json({ ok: true })

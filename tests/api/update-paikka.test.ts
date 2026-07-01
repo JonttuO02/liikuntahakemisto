@@ -22,13 +22,23 @@ const mockEqChain = vi.fn()
 const mockUpdate = vi.fn()
 const mockUpdateEq = vi.fn()
 const mockGetUser = vi.fn()
+// D-07: spy for the business_paikka_links auto-resubmit flip UPDATE
+const mockLinkUpdate = vi.fn()
+const mockLinkUpdateEq = vi.fn()
 
 vi.mock('@/lib/supabaseAdmin.server', () => {
-  // Chainable ownership query builder (business_paikka_links)
+  // Chainable ownership query builder (business_paikka_links) — supports BOTH
+  // the existing ownership read chain (.select().eq().eq().maybeSingle())
+  // AND the new D-07 flip chain (.update(payload).eq().eq().eq()).
   const ownershipBuilder = {
     select: () => ownershipBuilder,
+    update: (payload: unknown) => {
+      mockLinkUpdate(payload)
+      return ownershipBuilder
+    },
     eq: (..._args: unknown[]) => ownershipBuilder,
     maybeSingle: () => mockMaybeSingle(),
+    then: (resolve: (v: { error: null }) => unknown) => resolve(mockLinkUpdateEq()),
   }
 
   // Chainable update builder (liikuntapaikat)
@@ -105,11 +115,21 @@ function setOwnershipApproved() {
 }
 
 function mockMaybySingle_approved() {
-  mockMaybeSingle.mockResolvedValue({ data: { paikka_id: 1 }, error: null })
+  mockMaybeSingle.mockResolvedValue({ data: { paikka_id: 1, claim_status: 'approved' }, error: null })
 }
 
 function setUpdateSuccess() {
   mockUpdateEq.mockReturnValue({ error: null })
+}
+
+// D-07: helper to set the ownership row's server-side claim_status
+function mockOwnership(status: 'approved' | 'pending' | 'rejected') {
+  mockMaybeSingle.mockResolvedValue({ data: { paikka_id: 1, claim_status: status }, error: null })
+}
+
+// D-07: default success for the business_paikka_links flip UPDATE chain
+function setLinkFlipSuccess() {
+  mockLinkUpdateEq.mockReturnValue({ error: null })
 }
 
 // ---------------------------------------------------------------------------
@@ -354,5 +374,84 @@ describe('POST /api/business/update-paikka', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body).toEqual({ ok: true })
+  })
+
+  // --- D-07: auto-resubmit-on-save ---------------------------------------
+
+  // 15. Rejected venue + successful save → claim_status flips to pending
+  it('flips claim_status from rejected to pending on a successful save (D-07)', async () => {
+    setAuthSuccess()
+    mockOwnership('rejected')
+    setUpdateSuccess()
+    setLinkFlipSuccess()
+    const req = makeRequest(
+      {
+        paikka_id: 1,
+        section: 'mediat',
+        data: {
+          logo_url: 'https://example.com/logo.png',
+          photo_urls: [],
+        },
+      },
+      VALID_AUTH_HEADER,
+    )
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body).toEqual({ ok: true })
+    expect(mockLinkUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        claim_status: 'pending',
+        rejection_reason: null,
+      }),
+    )
+  })
+
+  // 16. Approved venue + successful save → no flip (no-op)
+  it('does NOT flip claim_status when the venue is approved (D-07 no-op)', async () => {
+    setAuthSuccess()
+    mockOwnership('approved')
+    setUpdateSuccess()
+    const req = makeRequest(
+      {
+        paikka_id: 1,
+        section: 'mediat',
+        data: {
+          logo_url: 'https://example.com/logo.png',
+          photo_urls: [],
+        },
+      },
+      VALID_AUTH_HEADER,
+    )
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body).toEqual({ ok: true })
+    expect(mockLinkUpdate).not.toHaveBeenCalled()
+  })
+
+  // 17. Client-supplied body claim_status is ignored — server-side status governs
+  it('ignores a client-supplied body claim_status field (D-07 security)', async () => {
+    setAuthSuccess()
+    mockOwnership('approved')
+    setUpdateSuccess()
+    const req = makeRequest(
+      {
+        paikka_id: 1,
+        section: 'mediat',
+        // Attacker-controlled body attempts to force a flip via claim_status.
+        claim_status: 'rejected',
+        data: {
+          logo_url: 'https://example.com/logo.png',
+          photo_urls: [],
+        },
+      },
+      VALID_AUTH_HEADER,
+    )
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body).toEqual({ ok: true })
+    expect(mockLinkUpdate).not.toHaveBeenCalled()
   })
 })

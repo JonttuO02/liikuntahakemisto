@@ -32,7 +32,7 @@ Requirements for milestone v3.1 (UX/UI-korjaukset & business-parannukset). Each 
 
 - [ ] **PREV-04**: Business-paikkalistan preview-modaalin vanhentunut PaikkaKortti-näkymä poistetaan, korvataan CalloutCardilla
 - [ ] **LIVEPREV-05**: Edit- ja onboarding-vaiheiden live-preview laajennetaan sisältämään venuepage (PaikkaSheet) CalloutCardin ja DiagonaalKortin lisäksi
-- [ ] **PREV-05**: Kaikki preview-näkymät (business-dashboardin preview-modaali, edit/onboarding-livepreview) ovat puhtaasti visuaalisia — klikkaus ei laukaise navigointia tai toimintoja
+- [x] **PREV-05**: Kaikki preview-näkymät (business-dashboardin preview-modaali, edit/onboarding-livepreview) ovat puhtaasti visuaalisia — klikkaus ei laukaise navigointia tai toimintoja
 
 ### Venuepage-konsolidaatio
 
@@ -89,7 +89,7 @@ Deferred — not in v3.1 scope.
 | BIZPANEL-07 | Phase 63 | Complete |
 | PREV-04 | Phase 63 | Pending |
 | LIVEPREV-05 | Phase 63 | Pending |
-| PREV-05 | Phase 63 | Pending |
+| PREV-05 | Phase 63 | Complete |
 | VENUEPAGE-01 | Phase 62 | Complete |
 | VENUEPAGE-02 | Phase 62 | Complete |
 | VENUEPAGE-03 | Phase 62 | Complete |
