@@ -26,7 +26,7 @@ Requirements for milestone v3.1 (UX/UI-korjaukset & business-parannukset). Each 
 ### Business-dashboard visuaalinen uudistus
 
 - [ ] **BIZPANEL-06**: `/business`-dashboardin paikkalista korvataan DiagonaalKortti-korteilla; status-pillit sijoitetaan kortin kuvan alakulmaan
-- [ ] **BIZPANEL-07**: Hover (desktop) / tap (mobiili) paljastaa kortin oikealta piilotetun lisäosan pyöreillä ikonipainikkeilla (preview/edit/jatka) — ei tekstipainikkeita
+- [x] **BIZPANEL-07**: Hover (desktop) / tap (mobiili) paljastaa kortin oikealta piilotetun lisäosan pyöreillä ikonipainikkeilla (preview/edit/jatka) — ei tekstipainikkeita
 
 ### Preview & live-preview
 
@@ -86,7 +86,7 @@ Deferred — not in v3.1 scope.
 | ACCESS-04 | Phase 64 | Pending |
 | ACCESS-07 | Phase 64 | Pending |
 | BIZPANEL-06 | Phase 63 | Pending |
-| BIZPANEL-07 | Phase 63 | Pending |
+| BIZPANEL-07 | Phase 63 | Complete |
 | PREV-04 | Phase 63 | Pending |
 | LIVEPREV-05 | Phase 63 | Pending |
 | PREV-05 | Phase 63 | Pending |
