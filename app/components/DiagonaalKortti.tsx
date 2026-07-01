@@ -2,7 +2,7 @@
 
 import { useRef, useState, useLayoutEffect } from 'react'
 import { motion } from 'framer-motion'
-import { MapPin, BookmarkCheck, Bookmark, Building2, Camera, BadgeCheck, Eye, Pencil, Link2, AlertCircle } from 'lucide-react'
+import { MapPin, BookmarkCheck, Bookmark, Building2, Camera, BadgeCheck, Eye, Pencil, Link2, AlertCircle, Check } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
@@ -103,7 +103,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
   return (
     <motion.div
       variants={diagonaalKorttiVariants}
-      className={`relative glass glass-hover rounded-2xl h-36${onOpen ? ' cursor-pointer' : ''}`}
+      className={`relative glass glass-hover rounded-2xl h-36 min-w-0${onOpen ? ' cursor-pointer' : ''}`}
       whileHover={{ scale: 1.02, transition: { duration: 0.18, ease: 'easeOut' } }}
       whileTap={{ scale: 0.98, transition: { duration: 0.12, ease: 'easeOut' } }}
     >
@@ -238,7 +238,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
         >
           {dashboardActions ? (
             <div
-              className={`w-full h-full flex items-center justify-center${panelShade ? '' : ' glass'}`}
+              className={`w-full h-full flex items-center justify-center${panelShade ? '' : ' bg-[rgba(0,0,0,0.06)]'}`}
               style={panelShade ? { backgroundColor: panelShade } : undefined}
             >
               <div className="flex items-center gap-2">
@@ -269,7 +269,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
                     className={`w-7 h-7 rounded-full flex items-center justify-center [transition:color_150ms_ease] ${panelShade ? '' : 'glass-btn text-[rgba(17,17,17,0.5)] hover:text-[#111111]'}`}
                     style={panelShade ? { backgroundColor: panelChipBg, color: panelShadeContrastText } : undefined}
                   >
-                    <Link2 className="w-3.5 h-3.5" />
+                    {dashboardActions.copied ? <Check className="w-3.5 h-3.5" /> : <Link2 className="w-3.5 h-3.5" />}
                   </button>
                 )}
                 {dashboardActions.onShowRejectionInfo && (
