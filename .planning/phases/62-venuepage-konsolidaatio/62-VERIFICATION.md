@@ -1,22 +1,36 @@
 ---
 phase: 62-venuepage-konsolidaatio
-verified: 2026-07-01T02:23:33Z
+verified: 2026-07-01T12:00:00Z
 status: human_needed
-score: 9/10 must-haves verified
-behavior_unverified: 1
+score: 10/12 must-haves verified
+behavior_unverified: 2
 overrides_applied: 0
-human_verification:
-  - test: "Open Etusivu, run a search that returns results, and tap a DiagonaalKortti card directly on the LEFT info-panel area (venue name / price / sport badge / open-status text) — not just the RIGHT photo half. Repeat for a card inside the TO DO (favorites) overlay."
-    expected: "PaikkaSheet opens for the tapped venue in both cases, and the search/TO DO overlay is dismissed (not layered underneath the sheet). This must work on a touch device or with mouse click, not only via Tab+Enter/Space keyboard activation."
-    why_human: "This is the CR-01 blocker the code review found and fixed in commit 6f62627 — DiagonaalKortti's click-catcher was originally painted underneath the info panel by CSS stacking order (same z-10, earlier DOM position), so taps on the readable part of the card silently did nothing. Source inspection (this report) confirms the DOM order was corrected — the catcher div now renders after the LEFT/RIGHT panels — but actual click hit-testing is a browser paint/stacking behavior that only a live render can confirm; no component/interaction test framework exists in this project (confirmed: no *.test.*/*.spec.* files reference DiagonaalKortti/PaikkaSheet/PaikkaKortti) so this cannot be proven by grep or by npx tsc/npm run build alone."
+re_verification:
+  previous_status: human_needed
+  previous_score: 9/10
+  gaps_closed:
+    - "CR-01 click-catcher paint-order fix — confirmed via manual tap-through (62-UAT.md Test 1: result: pass). DiagonaalKortti full-card tap-to-open now VERIFIED (was PRESENT_BEHAVIOR_UNVERIFIED)."
+  gaps_remaining: []
+  regressions:
+    - "During the same manual UAT pass, a NEW regression was found and reported (62-UAT.md Test 2): opening PaikkaSheet from the search results list or the TO DO overlay unmounted the underlying overlay instead of layering the sheet on top of it. Root-caused in .planning/debug/paikkasheet-dismisses-search-todo-overlay.md and closed via gap-closure plan 62-04 (commit 035ebc1). The 62-04 diff's own code review (62-04-REVIEW.md) then found 2 further warnings (WR-01, WR-02), fixed in a follow-up commit (5221e7f). All three fixes are confirmed present in the current codebase (see Observable Truths below) but NONE has been behaviorally re-confirmed by a human in a running app — 62-UAT.md's Test 2 still reads result:issue and was never re-run to result:pass after the fix landed."
+gaps: []
+behavior_unverified_items:
+  - truth: "Opening PaikkaSheet from the search results list or the TO DO overlay leaves that overlay mounted underneath (via z-index layering, not conditional mounting); closing the sheet returns the user directly to the overlay they were browsing."
+    test: "Search for a venue so the search list shows results; tap a card's info panel (not the photo). Confirm PaikkaSheet opens ON TOP of the still-visible search list. Close the sheet and confirm you land back in the search list, not the bare map. Repeat by opening the TO DO (favorites) overlay and tapping a saved card."
+    expected: "In both cases PaikkaSheet layers over the originating surface; that surface remains visible/mounted underneath (or at least resumes without needing to be manually reopened) after the sheet is closed."
+    why_human: "This is a state-mutation/AnimatePresence-mount invariant. Source inspection (this report) confirms the two setSearchOpen(false)/setTodoOpen(false) calls were removed from the onOpen handlers (app/components/Etusivu.tsx:1026, 1427), which is necessary for the fix — but whether the AnimatePresence-wrapped overlay actually stays visually mounted and the browse-open-close-browse flow feels correct in a live render is a rendered/animated outcome that grep and tsc cannot exercise. No component/interaction test framework exists in this project (no *.test.*/*.spec.* file references Etusivu, DiagonaalKortti, or PaikkaSheet). 62-UAT.md Test 2 (the exact regression this fix targets) has not been re-run since the fix landed."
+  - truth: "While PaikkaSheet is open (a venue is selected), the background TodoButton does not silently toggle the hidden TO DO overlay's open state, and background search/filter controls (CombinedFilterPill, list-toggle button, search-results list) are excluded from the tab order and accessibility tree — the two follow-up fixes (WR-01, WR-02) from 62-04-REVIEW.md."
+    test: "Open TO DO overlay, tap a saved card to open PaikkaSheet (overlay now hidden behind the sheet), then tap where the floating bookmark/TodoButton normally sits. Confirm nothing happens (button is inert) and the TO DO overlay is still open/showing its previous items when the sheet is closed. Separately, with the search list open and a venue selected (PaikkaSheet open), Tab through the page with a keyboard and confirm focus cannot land on the search input, city/sport filter pills, or list-toggle button until the sheet is closed."
+    expected: "TodoButton is unclickable (disabled, pointer-events:none) while a venue is selected, so it cannot flip todoOpen to false behind the sheet. Background search controls and the list-toggle wrapper are marked inert while a venue is selected, so keyboard/AT users cannot reach or operate them until PaikkaSheet closes."
+    why_human: "The code uses standard, spec-guaranteed platform primitives (disabled attribute, pointerEvents:'none', the HTML inert global attribute — commit 5221e7f, app/components/Etusivu.tsx:1073,1188,1342,1398) which is a strong signal of correctness, but no automated interaction/accessibility test exercises real click-through or Tab-order behavior in this project, and no human re-test has been recorded since the fix landed."
 ---
 
 # Phase 62: Venuepage-konsolidaatio Verification Report
 
 **Phase Goal:** app/paikat/[id] poistettu; sisältö+navigointi yhdistetty PaikkaSheetiin; vanha reitti 404 (Venuepage consolidation — the standalone venue-detail route is deleted, its unique content and navigation are merged into the PaikkaSheet modal, and the old route now 404s)
-**Verified:** 2026-07-01T02:23:33Z
+**Verified:** 2026-07-01T12:00:00Z
 **Status:** human_needed
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — after gap closure (plan 62-04 + its own review-remediation follow-up commit)
 
 ## Goal Achievement
 
@@ -24,86 +38,94 @@ human_verification:
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | Unique content of the deleted venue page (show-on-map) is migrated into PaikkaSheet before deletion (VENUEPAGE-02, roadmap SC1) | ✓ VERIFIED | `app/components/PaikkaSheet.tsx:266-286` — conditional `SheetRow` guarded by `paikka.latitude != null && paikka.longitude != null && !preview`, `MapPin` icon, `t('location')`/`t('showOnMap')`. `messages/fi.json:34-35` and `messages/en.json:34-35` carry the keys under the `PaikkaSheet` namespace with correct values (FI has no trailing arrow). |
-| 2 | Show-on-map row is absent when coordinates are null or the sheet is a preview render | ✓ VERIFIED | Same guard clause as above (`&& !preview`); source assertion confirmed via direct read, not just grep. |
-| 3 | Erillinen paikkasivu (`app/paikat/[id]`) is deleted entirely from the application (VENUEPAGE-01, roadmap SC2) | ✓ VERIFIED | `ls app/paikat` → "No such file or directory"; `npm run build` route table has no `/paikat/[id]` entry (33/33 routes generated, confirmed by fresh build run in this verification, not just the SUMMARY's claim). |
-| 4 | Direct request to the deleted route returns Next.js's automatic 404 with no redirect (VENUEPAGE-04, roadmap SC4) | ✓ VERIFIED | No `app/paikat/[id]/not-found.tsx` (deleted with the directory); `middleware.ts` has no `paikat` reference; `next.config.ts`'s only `redirects()` entry rewrites `/?nakyma=lista` → `/`, unrelated to `/paikat`; a root-level `app/not-found.tsx` exists (pre-existing global 404 UI, not a route-specific override) so Next.js's App Router will render it with a genuine 404 status for any `/paikat/*` request. |
-| 5 | DiagonaalKortti calls `onOpen(paikka)` on click when `onOpen` is provided, with no page navigation, and the click-catcher receives clicks across the full card (including the info-panel region) — CR-01 fix (VENUEPAGE-03) | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | Source confirms the fix: click-catcher `<div role="button" ...>` (app/components/DiagonaalKortti.tsx:245-255) now renders **after** the LEFT (`:90-208`) and RIGHT (`:211-240`) panels inside the shared `z-10` layer, so per CSS paint order it now sits on top of both — this was the exact bug CR-01 identified (catcher previously rendered first, panels painted over it). No `next/link` import remains; no `/paikat/` string remains; `onCardClick` prop fully removed. This is a CSS stacking/paint-order (ordering) invariant — code presence and correct DOM order are necessary but not sufficient; no automated interaction test exists in the repo to exercise a real click/tap and confirm hit-testing in a browser. Routed to human verification below. |
-| 6 | DiagonaalKortti renders an inert, non-navigating overlay when `onOpen` is absent (preview contexts: PreviewModal, LivePreviewPane, admin/[id]) | ✓ VERIFIED | `app/components/DiagonaalKortti.tsx:253-255` — falsy branch renders a plain `<div className="absolute inset-0 block z-10" />` with no `onClick`/`onKeyDown`/`role`. Confirmed all 3 consumer sites (`app/admin/[id]/page.tsx:246`, `app/business/onboarding/LivePreviewPane.tsx:54`, `app/components/PreviewModal.tsx:60`) call `<DiagonaalKortti paikka={...} .../>` without `onOpen`. |
-| 7 | Clicking a card in the search list opens PaikkaSheet and dismisses the search overlay first (no page navigation) | ✓ VERIFIED (wiring) | `app/components/Etusivu.tsx:1422-1425` — `onOpen={(clicked) => { setSearchOpen(false); setValittu(clicked) }}`, dismiss-then-open order matches the `onShowMap` sibling pattern at the same call site. Same CR-01 paint-order caveat applies to the actual click reaching this handler — covered by item 5's human-verification entry, not duplicated here. |
-| 8 | Clicking a card in the TO DO overlay opens PaikkaSheet and dismisses the TO DO overlay first | ✓ VERIFIED (wiring) | `app/components/Etusivu.tsx:1026` — `onOpen={(clicked) => { setTodoOpen(false); setValittu(clicked) }}`. Same click-reachability caveat as item 5/7. |
-| 9 | No dangling references to the deleted route or `PaikkaPage` i18n namespace remain anywhere in the app; `npm run build` passes | ✓ VERIFIED | `grep -rn "/paikat/" app/ --include=*.tsx --include=*.ts` → 0 results (including `PaikkaKortti.tsx`, which the code review's WR-06 flagged as still linking to the dead route — now migrated to the same `onOpen` pattern). `grep -rc "PaikkaPage" messages/fi.json messages/en.json` → 0/0. Fresh `npx tsc --noEmit` → clean. Fresh `npm run build` → green, 33/33 static pages generated. |
-| 10 | The critical code-review regression (CR-01) and all 6 warnings/1 info item from `62-REVIEW.md` are actually fixed in the current codebase, not just claimed in the fix commit message | ✓ VERIFIED (except behavior confirmation of CR-01 itself, see item 5) | WR-01: `searchResultsRef`/`etusivu-scroll-state` effect fully removed from `Etusivu.tsx` (0 grep matches). WR-02: top-level discarded `paikkaInfo` plumbing removed from `app/business/onboarding/page.tsx` (only a legitimate, locally-used `paikkaInfo` remains inside `StepNimiJaURLPrePhase`, passed to `StepNimiJaURL`). WR-03: `PaikkaSheet`'s show-on-map now takes `onShowMap` wired in `Etusivu.tsx` to `setAutoZoomTarget` (client-side, no reload); falls back to `next/link`'s `Link` (not a full-reload `<a>`) when no callback given. WR-04: `contrastText` now applied to `membershipOnly`/`priceComingSoon` spans in `DiagonaalKortti.tsx:135,190`. WR-05: `messages/en.json:125-127` has `websiteUrlLabel`/`websiteUrlPlaceholder`/`websiteUrlHelper`. WR-06: `PaikkaKortti.tsx` migrated to the same optional `onOpen` pattern, no more `/paikat/` links. IN-01: `Etusivu.tsx`'s two `onOpen` callbacks use `clicked`, not shadowed `p`. |
+| 1 | Unique content of the deleted venue page (show-on-map) is migrated into PaikkaSheet before deletion (VENUEPAGE-02, roadmap SC1) | ✓ VERIFIED | `app/components/PaikkaSheet.tsx:268-283` — `MapPin`-icon `SheetRow` guarded by coordinates + `!preview`. `messages/fi.json:34-35`, `messages/en.json:34-35` carry `PaikkaSheet.location`/`PaikkaSheet.showOnMap`. Unchanged since original verification, re-confirmed by direct read. |
+| 2 | Show-on-map row is absent when coordinates are null or the sheet is a preview render | ✓ VERIFIED | Same guard clause, re-confirmed. |
+| 3 | Erillinen paikkasivu (`app/paikat/[id]`) is deleted entirely (VENUEPAGE-01, roadmap SC2) | ✓ VERIFIED | `ls app/paikat` → no such file/directory. Fresh `npm run build` in this re-verification: 33/33 routes, no `/paikat/[id]` entry. |
+| 4 | Direct request to the deleted route returns Next.js's automatic 404 with no redirect (VENUEPAGE-04, roadmap SC4) | ✓ VERIFIED | No `app/paikat/[id]/not-found.tsx` (deleted with the directory); `middleware.ts` has no `paikat` reference; `next.config.mjs`'s only `redirects()` entry is unrelated to `/paikat`; root `app/not-found.tsx` still exists for the global 404 UI. |
+| 5 | DiagonaalKortti's click-catcher receives clicks/taps across the full card (including the info-panel region), not just the photo half — CR-01 fix | ✓ VERIFIED (upgraded from PRESENT_BEHAVIOR_UNVERIFIED) | Source unchanged and correct (`app/components/DiagonaalKortti.tsx:242-255` — catcher div renders after LEFT/RIGHT panels, same z-10 layer). **Now behaviorally confirmed**: `.planning/phases/62-venuepage-konsolidaatio/62-UAT.md` Test 1 records `result: pass` — a human tapped the info-panel area on both a search-list card and a TO DO-overlay card and PaikkaSheet opened in both cases. |
+| 6 | Clicking a card in the search list opens PaikkaSheet (no page navigation) AND leaves the search overlay mounted underneath, so closing the sheet resumes browsing (VENUEPAGE-03) | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | Code fix confirmed: `app/components/Etusivu.tsx:1426-1428` — `onOpen={(clicked) => { setValittu(clicked) }}`, no `setSearchOpen(false)` call (removed in commit `035ebc1`, region-anchored grep confirms no match). z-index math confirmed correct (PaikkaSheet backdrop 65 / sheet 66 > search list 59). But this is a state-transition/mount invariant no automated test exercises, and `62-UAT.md` Test 2 — the exact scenario this fix targets — still reads `result: issue` and was never re-run since the fix landed. Routed to human verification. |
+| 7 | Clicking a card in the TO DO overlay opens PaikkaSheet (no page navigation) AND leaves the TO DO overlay mounted underneath, so closing the sheet resumes browsing (VENUEPAGE-03) | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | Same pattern: `app/components/Etusivu.tsx:1026` — `onOpen={(clicked) => { setValittu(clicked) }}`, `setTodoOpen(false)` removed. Same UAT-not-re-run caveat as truth 6 — bundled into the same human-verification item. |
+| 8 | While PaikkaSheet is open, the floating TodoButton cannot silently flip `todoOpen` to `false` behind the sheet (WR-01 fix, 62-04-REVIEW.md) | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | `app/components/Etusivu.tsx:1188` — `disabled={!!valittu}` and `style={{ ..., pointerEvents: valittu ? 'none' : undefined }}` added in commit `5221e7f`. Diff-verified present; standard, spec-guaranteed DOM behavior (disabled buttons don't fire onClick), but no automated test and no recorded human re-test exercise this exact interaction post-fix. |
+| 9 | While PaikkaSheet is open, background search/filter controls and the list-toggle button are excluded from tab order / accessibility tree (WR-02 fix, 62-04-REVIEW.md) | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | `app/components/Etusivu.tsx:1073,1342,1398` — `inert={!!valittu}` added in commit `5221e7f` on the list-toggle wrapper, `CombinedFilterPill` wrapper, and search-results-list container. Diff-verified present; `inert` is a standard HTML global attribute (removes descendants from tab order, hit-testing, and a11y tree per spec) — `npx tsc --noEmit` compiles clean with this usage in the actual project tsconfig (independently re-verified in this pass by temporarily adding a scratch `<div inert={true} />` and confirming no type error). No automated keyboard/Tab-order test exists to exercise it live. |
+| 10 | DiagonaalKortti renders an inert, non-navigating overlay when `onOpen` is absent (preview contexts) | ✓ VERIFIED | `app/components/DiagonaalKortti.tsx:253-255` — falsy branch, plain `<div>` no handlers. All 3 consumer sites (`app/admin/[id]/page.tsx`, `LivePreviewPane.tsx`, `PreviewModal.tsx`) still call without `onOpen`. Unchanged, re-confirmed. |
+| 11 | No dangling references to the deleted route or `PaikkaPage` i18n namespace remain; build/typecheck/tests green | ✓ VERIFIED | `grep -rn "/paikat/" app/ --include=*.tsx --include=*.ts` → 0 matches. `grep -rc PaikkaPage messages/fi.json messages/en.json` → 0/0. Fresh `npx tsc --noEmit` → clean. Fresh `npm test` → 224/224 passed (21 files). Fresh `npm run build` → green, 33/33 static pages. All re-run independently in this verification pass, not taken from commit messages. |
+| 12 | All findings from `62-REVIEW.md` (original phase review) and `62-04-REVIEW.md` (gap-closure review) are actually fixed in the codebase, not just claimed | ✓ VERIFIED | `62-REVIEW.md` items (CR-01, WR-01..06, IN-01) re-confirmed present (unchanged from original verification). `62-04-REVIEW.md`'s WR-01 and WR-02 confirmed fixed via direct diff inspection of commit `5221e7f` (see truths 8/9); its IN-01 (onShowMap asymmetry) was explicitly scoped "no action required" by the reviewer — not a gap. |
 
-**Score:** 9/10 truths verified (1 present + wired, behavior not exercised)
+**Score:** 10/12 truths verified (2 present + wired, behavior not exercised — truths 6/7 are one behavior-unverified item, truths 8/9 are a second, per the frontmatter `behavior_unverified_items` list)
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `app/components/PaikkaSheet.tsx` | `MapPin` import + conditional show-on-map `SheetRow` | ✓ VERIFIED | Present, wired, guard correct (Task 1, Plan 01); further extended in 6f62627 with `onShowMap` prop (WR-03 fix) |
-| `messages/fi.json` / `messages/en.json` | `PaikkaSheet.location` / `PaikkaSheet.showOnMap` keys | ✓ VERIFIED | Present with correct FI (no arrow) / EN values |
-| `app/components/DiagonaalKortti.tsx` | `onOpen?: (paikka) => void` prop replacing `onCardClick`; conditional overlay | ✓ VERIFIED (existence/wiring); ⚠️ click-reachability behavior unverified | See truth 5/6 |
-| `app/components/Etusivu.tsx` | `onOpen` wired on both `DiagonaalKortti` usages; `handleCardClick` removed | ✓ VERIFIED | 2 `onOpen` sites confirmed, `handleCardClick` fully absent |
-| `app/paikat/[id]/` | Deleted directory | ✓ VERIFIED | Confirmed absent (also parent `app/paikat/` removed as it became empty) |
-| `messages/fi.json` / `messages/en.json` | `PaikkaPage` namespace removed | ✓ VERIFIED | `grep -rc PaikkaPage` → 0 for both files |
+| `app/components/PaikkaSheet.tsx` | show-on-map `SheetRow` | ✓ VERIFIED | Unchanged from prior verification |
+| `messages/fi.json` / `messages/en.json` | `PaikkaSheet.location`/`showOnMap` keys | ✓ VERIFIED | Unchanged |
+| `app/components/DiagonaalKortti.tsx` | `onOpen` prop, click-catcher after LEFT/RIGHT panels, inert overlay when no `onOpen` | ✓ VERIFIED | Unchanged since original verification; CR-01 now behaviorally confirmed (truth 5) |
+| `app/components/Etusivu.tsx` | `onOpen` wired without clearing overlay flags; TodoButton disabled+pointer-events-none while sheet open; background controls `inert` while sheet open | ✓ VERIFIED (existence/wiring); ⚠️ layering + a11y behavior unconfirmed live | See truths 6-9 |
+| `app/paikat/[id]/` | Deleted directory | ✓ VERIFIED | Confirmed absent |
+| `.planning/phases/62-venuepage-konsolidaatio/62-UAT.md` | Test 1 wording reconciled with fixed intent; Test 2 status reflects post-fix reality | ⚠️ PARTIAL | Test 1 wording correctly updated (no longer asserts dismiss-on-open). Test 2 still reads `result: issue` — was never re-run/updated to `pass` after the fix landed. This is expected (re-testing is this verification's job), not a defect, but flagged so the human-verification loop closes it. |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |------|----|----|--------|---------|
-| `DiagonaalKortti` overlay `onClick` | `Etusivu.setValittu` | `onOpen` callback prop | ✓ WIRED (source); ⚠️ click hit-testing unconfirmed in-browser | Correct DOM order post-fix; see truth 5 |
-| `PaikkaSheet` show-on-map | `Etusivu.setAutoZoomTarget` | `onShowMap` callback (WR-03 fix, replaces the original `/?id=` full-reload anchor) | ✓ WIRED | `Etusivu.tsx:1460-1465` |
-| `app/paikat/[id]` route | Next.js 404 | directory deletion, no `not-found.tsx` override, no redirect | ✓ WIRED | Confirmed via directory absence + config inspection + build route table |
+| `DiagonaalKortti` overlay `onClick` | `Etusivu.setValittu` | `onOpen` callback prop | ✓ WIRED (source + human-confirmed click-reachability, per UAT Test 1 pass) | |
+| Search-list/TO DO `onOpen` handlers | overlay-open flags (`searchOpen`/`todoOpen`) | *absence* of a call — the fix is subtractive | ✓ WIRED (source-confirmed) — ⚠️ rendered/mount outcome unconfirmed live | `app/components/Etusivu.tsx:1026,1427` |
+| `TodoButton` onClick | `todoOpen` state | `disabled`/`pointerEvents` guard (WR-01 fix) | ✓ WIRED (source-confirmed) — ⚠️ live click-blocking unconfirmed | `app/components/Etusivu.tsx:1188` |
+| Background search controls | tab order / a11y tree | `inert` attribute (WR-02 fix) | ✓ WIRED (source-confirmed, type-checks) — ⚠️ live keyboard-focus behavior unconfirmed | `app/components/Etusivu.tsx:1073,1342,1398` |
+| `app/paikat/[id]` route | Next.js 404 | directory deletion, no `not-found.tsx` override, no redirect | ✓ WIRED | Re-confirmed via build route table |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 |----------|---------|--------|--------|
 | TypeScript compiles cleanly | `npx tsc --noEmit` | No output (0 errors) | ✓ PASS |
-| Production build succeeds, route table excludes `/paikat/[id]` | `npm run build` | 33/33 static pages generated; no `/paikat/[id]` route listed | ✓ PASS |
-| Message files remain valid JSON | `node -e "JSON.parse(...)"` on both files | `valid` | ✓ PASS |
-| `/paikat/` string fully absent from `app/` | `grep -rn "/paikat/" app/ --include=*.tsx --include=*.ts` | 0 matches | ✓ PASS |
-| Interactive click/tap reaches the DiagonaalKortti overlay in a real browser | — | not run (no server/browser harness available in this environment; no component test suite exists) | ? SKIP — routed to human verification |
+| `inert` prop type-checks against project's actual React/TS setup | scratch `<div inert={true} />` added to `app/components/`, `npx tsc --noEmit`, then removed | No error | ✓ PASS |
+| Full test suite passes | `npm test` | 21 files / 224 tests passed | ✓ PASS |
+| Production build succeeds, route table excludes `/paikat/[id]` | `npm run build` | 33/33 static pages generated; no `/paikat/[id]` route | ✓ PASS |
+| `/paikat/` string fully absent from `app/` | `grep -rn "/paikat/" app/` | 0 matches | ✓ PASS |
+| No test file references the components whose runtime behavior is in question | `grep -rl "DiagonaalKortti\|PaikkaSheet\|Etusivu" --include="*.test.*" --include="*.spec.*" .` | 0 matches | confirms no automated behavioral coverage exists — informs routing to human verification |
+| Live click/tap/keyboard-focus behavior of the layering + WR-01/WR-02 fixes | — | not run (no server/browser harness in this environment; no component/interaction test suite) | ? SKIP — routed to human verification |
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
 |-------------|-------------|--------------|--------|----------|
-| VENUEPAGE-01 | 62-03 | `app/paikat/[id]` deleted entirely | ✓ SATISFIED | Directory confirmed absent |
-| VENUEPAGE-02 | 62-01 | Unique content migrated to PaikkaSheet before deletion | ✓ SATISFIED (code) — **documentation gap**: `.planning/REQUIREMENTS.md` line 40/94 still marks this `[ ]` / "Pending" though the other 3 VENUEPAGE items and the phase itself are marked `[x]`/Complete. This is a stale tracking artifact, not a functional gap — the implementation is present and verified. Recommend updating REQUIREMENTS.md's checkbox and traceability table to `[x]` / "Complete". |
-| VENUEPAGE-03 | 62-02, 62-03 | Internal paths open PaikkaSheet inline instead of navigating | ✓ SATISFIED (wiring); behavior confirmation pending — see truth 5 |
-| VENUEPAGE-04 | 62-03 | Direct URL to deleted route returns 404, no redirect | ✓ SATISFIED | See truth 4 |
+| VENUEPAGE-01 | 62-03 | `app/paikat/[id]` deleted entirely | ✓ SATISFIED | Directory confirmed absent; REQUIREMENTS.md marks `[x]`/Complete |
+| VENUEPAGE-02 | 62-01 | Unique content migrated to PaikkaSheet before deletion | ✓ SATISFIED | Implementation present; REQUIREMENTS.md checkbox now `[x]`/Complete (the prior verification's flagged documentation gap has since been fixed, commit `5cf1757`) |
+| VENUEPAGE-03 | 62-02, 62-03, 62-04 | Internal paths open PaikkaSheet inline instead of navigating, the same way a CalloutCard click does | ✓ SATISFIED (code + partial human confirmation) | No-navigation + inline-open behavior is human-confirmed (UAT Test 1 pass). The additional overlay-preservation requirement surfaced during that same UAT pass (Test 2) is code-fixed but awaiting human re-confirmation — see truths 6/7. |
+| VENUEPAGE-04 | 62-03 | Direct URL to deleted route returns 404, no redirect | ✓ SATISFIED | Re-confirmed |
 
-No orphaned requirements — all 4 phase-mapped IDs (VENUEPAGE-01..04) appear in plan frontmatter `requirements:` fields and in `.planning/REQUIREMENTS.md`'s traceability table under Phase 62.
+No orphaned requirements — all 4 phase-mapped IDs (VENUEPAGE-01..04) appear in plan frontmatter and REQUIREMENTS.md's traceability table under Phase 62, all marked Complete.
 
 ### Anti-Patterns Found
 
-| File | Line | Pattern | Severity | Impact |
-|------|------|---------|----------|--------|
-| `.planning/REQUIREMENTS.md` | 40, 94 | VENUEPAGE-02 checkbox/status not updated to reflect completion | ℹ️ Info | Documentation-only; does not affect functional correctness, ship-blocking, or phase goal achievement. Recommend a follow-up edit. |
-
-No `TBD`/`FIXME`/`XXX`/`TODO`/`HACK`/`PLACEHOLDER` markers found in any phase-modified file (`DiagonaalKortti.tsx`, `Etusivu.tsx`, `PaikkaSheet.tsx`, `PaikkaKortti.tsx`, `app/business/onboarding/page.tsx`, `messages/*.json`). No stub returns, no hardcoded-empty props feeding rendered content, no console.log-only implementations.
+None. No `TBD`/`FIXME`/`XXX`/`TODO`/`HACK`/`PLACEHOLDER` markers in any phase-modified file (`Etusivu.tsx`, `DiagonaalKortti.tsx`, `PaikkaSheet.tsx`, `PaikkaKortti.tsx`, `messages/*.json`). No stub returns, no dangling `onCardClick`/`handleCardClick` references, no console.log-only implementations. The previously-flagged documentation gap (VENUEPAGE-02 checkbox) has already been resolved (commit `5cf1757`, prior to this re-verification).
 
 ### Human Verification Required
 
-### 1. Full-card tap-to-open on DiagonaalKortti (CR-01 regression fix confirmation)
+### 1. PaikkaSheet layers over the search list / TO DO overlay instead of dismissing it
 
-**Test:** Open the app (Etusivu), search for a venue so at least one result renders as a `DiagonaalKortti` card in the search list, and tap directly on the venue name / price / sport badge area (the LEFT info panel — NOT the photo thumbnail). Then open the TO DO (favorites) overlay and repeat on a saved card there.
+**Test:** Open Etusivu, search so at least one venue renders in the search results list, tap its info panel to open PaikkaSheet, then close the sheet. Confirm the search list is still there / resumes without needing to be manually reopened. Repeat with the TO DO (favorites) overlay: open it, tap a saved card, close the sheet, confirm the TO DO overlay's items are still shown.
 
-**Expected:** PaikkaSheet opens for the tapped venue in both cases (search list and TO DO overlay), and the overlay you tapped from (search or TO DO) is dismissed rather than remaining visible underneath the sheet.
+**Expected:** PaikkaSheet opens on top of the still-mounted overlay in both cases; closing the sheet returns the user directly to the overlay they were browsing, not to the bare map.
 
-**Why human:** The code review found a real interaction regression here (CR-01, blocker) caused by CSS stacking order — the click-catcher div was painting underneath the card's own info panel, so taps on most of the visible card silently did nothing (only the photo half worked). The fix commit (`6f62627`) reordered the DOM so the catcher now renders after both panels, which this verification confirmed by direct source inspection. However, whether a real click/tap actually now reaches the catcher in a live browser is a paint/stacking behavior that cannot be proven by source inspection, `tsc`, or `next build` alone — this project has no component/interaction test framework (no `*.test.*`/`*.spec.*` file references `DiagonaalKortti`, `PaikkaSheet`, or `PaikkaKortti`), so a manual tap-through is the only way to close this out.
+**Why human:** This is the exact regression diagnosed in `.planning/debug/paikkasheet-dismisses-search-todo-overlay.md` and closed by gap-closure plan 62-04 (commit `035ebc1`, which removed the two `setSearchOpen(false)`/`setTodoOpen(false)` calls). Source inspection confirms the fix is applied and the z-index math supports correct layering, but this is a rendered AnimatePresence/mount-state outcome that only a live render can confirm. `62-UAT.md` Test 2 (the test that originally caught this regression) has not been re-run since the fix landed — its `result:` field still reads `issue`.
+
+### 2. WR-01/WR-02 follow-up fixes actually block interaction with hidden background controls
+
+**Test:** Open the TO DO overlay, tap a saved card to open PaikkaSheet, then tap where the floating bookmark/TodoButton normally sits (top-right, below the nav pill). Confirm nothing happens and the TO DO overlay's contents are unaffected when the sheet is later closed. Separately, with a search result open and PaikkaSheet showing, use Tab on a keyboard and confirm you cannot focus the (hidden) search input, city/sport filter pills, or list-toggle button until the sheet is closed.
+
+**Expected:** The TodoButton is inert/unclickable while a venue is selected (WR-01). Background search/filter controls are removed from the tab order and accessibility tree while a venue is selected (WR-02).
+
+**Why human:** These fixes (commit `5221e7f`) use standard platform primitives (`disabled`, `pointerEvents:'none'`, the HTML `inert` attribute) that are spec-guaranteed to behave correctly, and this verification independently confirmed the code compiles and the diff is exactly as described — but no automated interaction or accessibility test exists in this project, and no human has exercised these two specific interactions since the fix landed.
 
 ### Gaps Summary
 
-No functional gaps. The phase's 4 roadmap success criteria (unique content migrated, page deleted, internal paths open PaikkaSheet, deleted route 404s) are all satisfied in the codebase, `npm run build` is green, and every item from the phase's own code review (`62-REVIEW.md`, 1 critical + 6 warnings + 1 info) was independently re-confirmed present in the current codebase rather than taken on the fix commit's word.
+No functional gaps remain unaddressed at the code level. All 4 roadmap success criteria for Phase 62 are satisfied in the codebase: unique content migrated (SC1), the standalone page deleted (SC2), internal paths open PaikkaSheet inline without navigation (SC3's core requirement — human-confirmed via UAT Test 1), and the deleted route 404s with no redirect (SC4). `npm run build`, `npx tsc --noEmit`, and `npm test` (224/224) are all green in this independently re-run verification pass.
 
-The phase is held at `human_needed` rather than `passed` for one reason only: the CR-01 click-catcher fix is a CSS paint-order (stacking) correction that source inspection and the build pipeline cannot behaviorally exercise — this needs one manual tap-through in a running app to close out, per the verification methodology's rule that ordering-dependent runtime behavior requires human/behavioral confirmation, not just presence-and-wiring evidence.
-
-Also flagged (non-blocking): `.planning/REQUIREMENTS.md` still shows VENUEPAGE-02 as `[ ]`/"Pending" despite being implemented and verified — a stale documentation checkbox, recommended for cleanup but not a gate on phase completion.
+The phase is held at `human_needed` rather than `passed` because the gap-closure fix (62-04) and its own review-remediation follow-up (WR-01/WR-02) introduce three interaction/state invariants — search/TO DO overlay layering, TodoButton inertness, and background-control keyboard exclusion — that are code-confirmed present and correctly wired but have NOT been behaviorally re-confirmed by a human in a running app since they were written. `62-UAT.md` Test 2, which is the designated re-test for exactly this scenario, still shows `result: issue` from before the fix. This is not evidence the fix is broken — it is the expected state for code that has been fixed but not yet re-tested. Once a human confirms the two verification items above, the phase can be marked `passed` without further code changes (assuming the tests pass as expected).
 
 ---
 
-_Verified: 2026-07-01T02:23:33Z_
+_Verified: 2026-07-01T12:00:00Z_
 _Verifier: Claude (gsd-verifier)_
