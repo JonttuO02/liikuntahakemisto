@@ -1023,7 +1023,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   }
                   return (
                     <motion.div key={p.id} layout transition={LAYOUT_T}>
-                      <DiagonaalKortti paikka={p} isSaved={true} onShowMap={pk => { if (pk.latitude != null && pk.longitude != null) setAutoZoomTarget({ lat: pk.latitude, lng: pk.longitude }) }} onToggleTodo={handleOverlayDelete} onOpen={(clicked) => { setTodoOpen(false); setValittu(clicked) }} />
+                      <DiagonaalKortti paikka={p} isSaved={true} onShowMap={pk => { if (pk.latitude != null && pk.longitude != null) setAutoZoomTarget({ lat: pk.latitude, lng: pk.longitude }) }} onToggleTodo={handleOverlayDelete} onOpen={(clicked) => { setValittu(clicked) }} />
                     </motion.div>
                   )
                 })}
@@ -1420,7 +1420,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                         }
                       }}
                       onOpen={(clicked) => {
-                        setSearchOpen(false)
                         setValittu(clicked)
                       }}
                     />
