@@ -321,7 +321,16 @@ export default function OnboardingWizardPage() {
         data: { session },
       } = await supabase.auth.getSession()
       const token = session?.access_token ?? ''
-      if (!aiTriggered) {
+      // Only auto-fire on the true first-time nimi-url flow (alreadyHasLocation=false) — a
+      // resumed draft (fast-forward path) must NOT silently re-trigger analysis in the
+      // background. It used to fire unconditionally here, which raced against the wizard's
+      // explicit "Analysoi →" button (handleRunAnalysis, gap-closure 63-07): both POSTs UPSERT
+      // the same business_branding row, so WaitingForAI's poll could observe a stale/unrelated
+      // result from this silent auto-fire instead of the user's deliberate retry — landing back
+      // on the wizard with no visible result and no failure screen. Resumed sessions with an
+      // already-completed analysis don't need a re-trigger anyway (handled by the GET re-fetch
+      // above); resumed sessions without one rely solely on the wizard's own button.
+      if (!alreadyHasLocation && !aiTriggered) {
         // Fire-and-forget: background AI analysis (CORRECT route: analyze-website, not ai-analyze).
         // Guarded by aiTriggered so a Back+Next cycle does not re-fire a duplicate request (F-07).
         // In the ClaimSearchForm path, AI was already fired before redirect — this becomes a no-op
