@@ -147,10 +147,15 @@ export async function PATCH(request: Request) {
     }
   }
 
-  // UPSERT — write only the provided fields, scoped to (business_account_id, paikka_id).
+  // UPDATE only — never upsert. Existence of the row was already confirmed above (the
+  // brandingRow fetch 404s if missing), so this only ever needs to touch an existing row.
+  // upsert() was the original implementation, but Postgres validates NOT NULL constraints
+  // (e.g. business_branding.website_url, no default) for the INSERT half of an
+  // "INSERT ... ON CONFLICT DO UPDATE" statement unconditionally, before conflict detection
+  // even runs — so upsert() failed with a website_url NOT NULL violation on every call,
+  // including updates to an already-existing row, since website_url is never part of this
+  // endpoint's payload (63-06/63-07 UAT: brand colors never actually persisted).
   const updatePayload: Record<string, unknown> = {
-    business_account_id: user.id,
-    paikka_id: paikkaId,
     updated_at: new Date().toISOString(),
   }
   if (selected_logo_url !== undefined) updatePayload.selected_logo_url = selected_logo_url
@@ -158,12 +163,14 @@ export async function PATCH(request: Request) {
   if (selected_accent_color !== undefined) updatePayload.selected_accent_color = selected_accent_color
   if (image_urls !== undefined) updatePayload.image_urls = image_urls
 
-  const { error: upsertError } = await supabaseAdmin
+  const { error: updateError } = await supabaseAdmin
     .from('business_branding')
-    .upsert(updatePayload, { onConflict: 'business_account_id,paikka_id' })
+    .update(updatePayload)
+    .eq('business_account_id', user.id)
+    .eq('paikka_id', paikkaId)
 
-  if (upsertError) {
-    return NextResponse.json({ error: 'Upsert failed', detail: upsertError.message }, { status: 500 })
+  if (updateError) {
+    return NextResponse.json({ error: 'Update failed', detail: updateError.message }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })
