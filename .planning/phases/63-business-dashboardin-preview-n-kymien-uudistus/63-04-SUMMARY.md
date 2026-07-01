@@ -144,3 +144,15 @@ None - no external service configuration required.
 ---
 *Phase: 63-business-dashboardin-preview-n-kymien-uudistus*
 *Completed: 2026-07-01*
+
+## Self-Check: PASSED
+
+- FOUND: app/components/DiagonaalKortti.tsx
+- FOUND: app/components/RejectionReasonPopup.tsx
+- FOUND: messages/fi.json
+- FOUND: messages/en.json
+- FOUND: .planning/phases/63-business-dashboardin-preview-n-kymien-uudistus/63-04-SUMMARY.md
+- FOUND commit: 413e903 (Task 1)
+- FOUND commit: c4d8de8 (Task 2)
+- FOUND commit: 2cd54c9 (Task 3)
+- FOUND commit: 5ba23c4 (docs: SUMMARY.md)
