@@ -140,3 +140,10 @@ None - no external service configuration required.
 ---
 *Phase: 63-business-dashboardin-preview-n-kymien-uudistus*
 *Completed: 2026-07-01*
+
+## Self-Check: PASSED
+
+- FOUND: `app/business/page.tsx`
+- CONFIRMED DELETED: `app/api/business/reapply/route.ts`
+- FOUND: `.planning/phases/63-business-dashboardin-preview-n-kymien-uudistus/63-05-SUMMARY.md`
+- FOUND commits: `f4c9319`, `b36b955`, `d1d99ba`
