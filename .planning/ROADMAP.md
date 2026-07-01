@@ -165,7 +165,15 @@ Plans:
   3. Business-paikkalistan preview-modaali käyttää CalloutCardia (vanhentunut PaikkaKortti-näkymä poistettu), ja edit/onboarding-live-preview sisältää venuepagen (PaikkaSheet) CalloutCardin ja DiagonaalKortin lisäksi
   4. Kaikki preview-näkymät (dashboardin preview-modaali, edit/onboarding-livepreview) ovat puhtaasti visuaalisia — klikkaus ei laukaise navigointia tai toimintoja
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 63-01-PLAN.md — getPanelShade() color-derivation foundation (extract darkenHex/lightenHex, add getPanelShade to brandingResult.ts)
+- [ ] 63-02-PLAN.md — Preview-surface composition: CalloutCard in PreviewModal, PaikkaSheet 3rd section in LivePreviewPane, booking-link preview guard fix
+- [ ] 63-03-PLAN.md — update-paikka auto-resubmit-on-save backend (D-07), server-derived + concurrency-guarded
+- [ ] 63-04-PLAN.md — DiagonaalKortti dashboard-variant controls panel + status pill + RejectionReasonPopup component
+- [ ] 63-05-PLAN.md — Wire dashboard cards into /business, remove reapply UI, delete /api/business/reapply route
+
 **UI hint**: yes
 
 ### Phase 64: Hallintaoikeuspyynnöt — dashboard-UI

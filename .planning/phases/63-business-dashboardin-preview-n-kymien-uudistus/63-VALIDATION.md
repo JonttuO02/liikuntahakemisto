@@ -2,8 +2,8 @@
 phase: 63
 slug: business-dashboardin-preview-n-kymien-uudistus
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-07-01
 ---
 
@@ -38,11 +38,18 @@ created: 2026-07-01
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 63-0X-0X | TBD | TBD | BIZPANEL-06 | — | N/A | manual | — | ❌ W0 (no component test harness) | ⬜ pending |
-| 63-0X-0X | TBD | TBD | BIZPANEL-07 | — | N/A | manual | — | ❌ W0 (no component test harness) | ⬜ pending |
-| 63-0X-0X | TBD | TBD | PREV-04 | — | N/A | manual | — | ❌ W0 (no component test harness) | ⬜ pending |
-| 63-0X-0X | TBD | TBD | LIVEPREV-05 | — | N/A | manual | — | ❌ W0 (no component test harness) | ⬜ pending |
-| 63-0X-0X | TBD | TBD | PREV-05 | T-63-01 | update-paikka never trusts client-supplied claim_status; rejection_reason rendered as plain text (no dangerouslySetInnerHTML) | unit + manual | `npx vitest run tests/api/update-paikka.test.ts` | ✅ existing, needs new case | ⬜ pending |
+| 63-01-01 | 63-01 | 1 | BIZPANEL-07 (supports D-03 color foundation) | T-63-01A | getPanelShade never used with a raw/unescaped style sink | unit | `npx vitest run lib/branding/brandingResult.test.ts` | ✅ existing, extended | ⬜ pending |
+| 63-01-02 | 63-01 | 1 | BIZPANEL-07 | — | N/A | type-check | `npx tsc --noEmit` | ✅ existing | ⬜ pending |
+| 63-02-01 | 63-02 | 1 | PREV-04 | — | N/A | type-check + manual | `npx tsc --noEmit` | ✅ existing | ⬜ pending |
+| 63-02-02 | 63-02 | 1 | LIVEPREV-05 | — | N/A | type-check + manual | `npx tsc --noEmit` | ✅ existing | ⬜ pending |
+| 63-02-03 | 63-02 | 1 | PREV-05 | T-63-02A | Booking-link `<a>` gated on `!preview` — no external navigation from a preview surface | type-check + manual | `npx tsc --noEmit` | ✅ existing | ⬜ pending |
+| 63-03-01 | 63-03 | 1 | PREV-05 (D-07 backend half) | T-63-01, T-63-02 | update-paikka derives claim_status server-side only, never trusts request body; flip UPDATE is concurrency-guarded | unit | `npx vitest run tests/api/update-paikka.test.ts` | ✅ existing, extended | ⬜ pending |
+| 63-03-02 | 63-03 | 1 | PREV-05 (D-07 backend half) | T-63-01 | Test asserts client-supplied claim_status is ignored | unit | `npx vitest run tests/api/update-paikka.test.ts` | ✅ existing, extended | ⬜ pending |
+| 63-04-01 | 63-04 | 2 | BIZPANEL-06, BIZPANEL-07 | — | N/A | script | `node -e "require('./messages/fi.json'); require('./messages/en.json')"` | ✅ existing, extended | ⬜ pending |
+| 63-04-02 | 63-04 | 2 | BIZPANEL-06, BIZPANEL-07 | T-63-04C | Dashboard variant left panel has no click-catcher/handler; controls-panel chip contrast derived from getPanelShade | type-check + manual | `npx tsc --noEmit` | ✅ existing | ⬜ pending |
+| 63-04-03 | 63-04 | 2 | BIZPANEL-06 (D-06) | T-63-04A, T-63-04B | rejection_reason rendered as plain JSX text (no dangerouslySetInnerHTML); CTA is a navigation-only `<a href>`, never a fetch call | type-check + manual | `npx tsc --noEmit` | ✅ new file | ⬜ pending |
+| 63-05-01 | 63-05 | 3 | BIZPANEL-06, BIZPANEL-07 | T-63-05B | Icon-button visibility is UI-affordance only; server enforces ownership/authorization independently | type-check + manual | `npx tsc --noEmit` | ✅ existing | ⬜ pending |
+| 63-05-02 | 63-05 | 3 | BIZPANEL-06, BIZPANEL-07 | T-63-05A | Confirmed-dead route removed only after zero callers remain | full suite | `npm test` | ✅ existing | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -67,11 +74,11 @@ created: 2026-07-01
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references (none — existing infra covers everything)
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** plans created (63-01 through 63-05); pending execution
