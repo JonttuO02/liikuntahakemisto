@@ -24,10 +24,10 @@ files_reviewed_list:
   - messages/fi.json
   - tests/api/update-paikka.test.ts
 findings:
-  critical: 5
+  critical: 4  # CR-03 fixed post-review (see finding entry)
   warning: 14
   info: 5
-  total: 24
+  total: 23
 status: issues_found
 ---
 
@@ -117,6 +117,8 @@ if (typeof d.varauslinkki === 'string') {
 and update `updatePayload`'s type/shape to allow `varauslinkki: string | null` so an explicit clear reaches the DB.
 
 ### CR-03 (Pass 2): SSRF blocklist only matches single exact IPs, not the loopback/link-local ranges
+
+**Status: FIXED** — `hostname.startsWith('127.')` and `hostname.startsWith('169.254.')` now used in place of the exact-match checks. Verified via `npx tsc --noEmit` and `npm test` (233/233 passing).
 
 **File:** `lib/branding/ssrfGuard.ts:60-72`
 **Issue:** `isPrivate` blocks `hostname === '127.0.0.1'` and `hostname === '169.254.169.254'`

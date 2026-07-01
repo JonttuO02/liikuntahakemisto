@@ -60,11 +60,11 @@ export function isUrlSafe(url: string): boolean {
   const isPrivate =
     hostname === 'localhost' ||
     hostname === '0.0.0.0' ||
-    hostname === '127.0.0.1' ||
+    hostname.startsWith('127.') ||        // whole 127.0.0.0/8 loopback range, not just 127.0.0.1
     hostname === '::1' ||
     hostname === '[::1]' ||   // bracketed form — this is the actual URL.hostname value
     hostname === '[::]' ||
-    hostname === '169.254.169.254' ||
+    hostname.startsWith('169.254.') ||    // whole 169.254.0.0/16 link-local range (covers AWS ECS metadata at .170.2 too, not just the Azure/GCP .169.254 literal)
     hostname.startsWith('192.168.') ||
     hostname.startsWith('10.') ||
     (isIPv6Literal && (hostname.startsWith('fd') || hostname.startsWith('fc') || hostname.startsWith('[fd') || hostname.startsWith('[fc'))) ||   // IPv6 ULA fd00::/8, fc00::/8
