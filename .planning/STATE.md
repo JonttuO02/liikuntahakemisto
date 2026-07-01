@@ -2,38 +2,38 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: — Active Milestone
-current_phase: 62
-current_phase_name: venuepage-konsolidaatio
-status: executing
-stopped_at: Phase 62 UI-SPEC approved
-last_updated: "2026-06-30T22:01:51.489Z"
-last_activity: 2026-06-30
-last_activity_desc: Phase 62 execution started
+current_phase: 63
+current_phase_name: Business-dashboardin & preview-näkymien uudistus
+status: ready_to_plan
+stopped_at: Phase 62 complete, ready to plan Phase 63
+last_updated: "2026-07-01T08:28:26.765Z"
+last_activity: 2026-07-01
+last_activity_desc: Phase 62 complete, transitioned to Phase 63
 progress:
   total_phases: 7
-  completed_phases: 4
-  total_plans: 20
-  completed_plans: 17
-  percent: 57
+  completed_phases: 5
+  total_plans: 21
+  completed_plans: 21
+  percent: 71
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-25)
+See: .planning/PROJECT.md (updated 2026-07-01)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 62 — venuepage-konsolidaatio
+**Current focus:** Phase 63 — Business-dashboardin & preview-näkymien uudistus
 
 ## Current Position
 
-Phase: 62 (venuepage-konsolidaatio) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 62
-Last activity: 2026-06-30 — Phase 62 execution started
+Phase: 63 — Business-dashboardin & preview-näkymien uudistus
+Plan: Not started
+Status: Ready to plan Phase 63
+Last activity: 2026-07-01 — Phase 62 complete, transitioned to Phase 63
 
-Next: `/gsd-plan-phase 62` — Venuepage-konsolidaatio
+Next: `/gsd-plan-phase 63` — Business-dashboardin & preview-näkymien uudistus
 
 ## v3.1 Roadmap Summary
 
@@ -119,13 +119,14 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 
 ## Session Continuity
 
-Last session: 2026-06-30T21:30:13.287Z
-Stopped at: Phase 62 UI-SPEC approved
-Resume file: .planning/phases/62-venuepage-konsolidaatio/62-UI-SPEC.md
+Last session: 2026-07-01T08:28:26.765Z
+Stopped at: Phase 62 complete, ready to plan Phase 63
+Resume file: None
 
 ## Operator Next Steps
 
-- `/gsd-execute-phase 61` — **next** (plans ready: 4 plans, 3 waves, pure frontend refactor)
+- `/gsd-plan-phase 63` — **next** (Business-dashboardin & preview-näkymien uudistus; depends on Phase 62, now complete)
+- `/gsd-execute-phase 61` — parallel-safe alternative (onboarding reorder, plans ready: 4 plans, 3 waves)
 - `/gsd-plan-phase 58` — parallel-safe alternative (admin access + map QA)
 - Consider scheduling a dedicated security phase for the `liikuntapaikat` wide-open RLS finding (P59-FOLLOWUP above) before real users arrive
 
@@ -141,3 +142,6 @@ Resume file: .planning/phases/62-venuepage-konsolidaatio/62-UI-SPEC.md
 - **v3.1 (Phase 60)**: `isPublicBusinessPath` in middleware.ts extended to include `/business/liity` — public deep-link invite landing page; its `useEffect` handles the unauthenticated redirect to `/business/rekisteroidy`
 - **v3.1 (Phase 60)**: `invite: true` flag in `/api/business/register` skips companies INSERT, creates `business_accounts` with `company_id=null, role='member'` — for invite-link signup path (D-09a)
 - **v3.1 (Phase 60)**: Partial UNIQUE index `(requester_id, paikka_id) WHERE status='pending'` on `business_access_requests` — idempotent duplicate-submission handling at DB layer (D-08)
+- **v3.1 (Phase 62)**: `app/paikat/[id]` deleted entirely; PaikkaSheet is now the only venue-detail surface (no navigation, opens inline from CalloutCard/search list/TO DO overlay)
+- **v3.1 (Phase 62)**: Overlay-preservation fix — PaikkaSheet layers over the search list/TO DO overlay via existing z-index (65/66 > 59/62) rather than conditionally unmounting them; `onOpen` handlers must never clear `searchOpen`/`todoOpen`
+- **v3.1 (Phase 62)**: While PaikkaSheet is open, background controls (TodoButton, filter pills, list-toggle) are `disabled`/`pointerEvents:none`/`inert` to prevent click-through and keep them out of the tab order

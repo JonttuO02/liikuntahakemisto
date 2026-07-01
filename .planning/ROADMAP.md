@@ -30,7 +30,7 @@
 - [x] **Phase 59: Multi-company-skeemamigraatio** — Yritys-identiteetti irrotetaan login-identiteetistä companies-taululla; gating-edellytys kaikelle hallintaoikeustyölle (completed 2026-06-25)
 - [x] **Phase 60: Hallintaoikeuspyynnöt — backend & sähköposti** — Työntekijä voi pyytää hallintaoikeutta, järjestelmä ilmoittaa sähköpostilla ja estää pääsyn ennen hyväksyntää (completed 2026-06-25)
 - [x] **Phase 61: Onboarding-vaiheiden uudelleenjärjestys** — Uusi onboarding-virta: nimi+URL ensin (AI taustalla), sijainti, AI-tarkastelu, ei erillistä preview-vaihetta (completed 2026-06-26)
-- [ ] **Phase 62: Venuepage-konsolidaatio** — Erillinen paikkasivu poistetaan; kaikki sisältö ja navigointi yhdistetään PaikkaSheet-venuepageen, vanha reitti 404
+- [x] **Phase 62: Venuepage-konsolidaatio** — Erillinen paikkasivu poistetaan; kaikki sisältö ja navigointi yhdistetään PaikkaSheet-venuepageen, vanha reitti 404 (completed 2026-07-01)
 - [ ] **Phase 63: Business-dashboardin & preview-näkymien uudistus** — DiagonaalKortti-pohjainen dashboard ikonipainikkeilla, CalloutCard-preview, venuepage live-previewssä, kaikki previewt visuaalisia
 - [ ] **Phase 64: Hallintaoikeuspyynnöt — dashboard-UI** — Päähallitsija hallitsee pyynnöt ja sub-managerit uudistetussa dashboardissa
 
@@ -445,6 +445,6 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 59. Multi-company-skeemamigraatio | v3.1 | 4/4 | Complete    | 2026-06-25 |
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 6/6 | Complete    | 2026-06-25 |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 6/6 | Complete    | 2026-06-26 |
-| 62. Venuepage-konsolidaatio | v3.1 | 4/4 | Complete   | 2026-06-30 |
+| 62. Venuepage-konsolidaatio | v3.1 | 4/4 | Complete    | 2026-06-30 |
 | 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 0/? | Not started | - |
 | 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 0/? | Not started | - |

@@ -301,6 +301,10 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **ACCESS-03**: `business_access_requests`-taulu + osittainen UNIQUE-indeksi `(requester_id, paikka_id) WHERE status='pending'`; `POST /api/business/access-request/submit` D-08/D-09/D-10-vartioinneilla + idempotenttisuus; `/business/liity`-kutsulinkkisivu; "Kopioi kutsulinkki" -painike — Phase 60
 - ✓ **ACCESS-05**: Resend-sähköposti-ilmoitukset: `sendAccessRequestNotificationEmail` (omistajalle pyyntöhetkellä) + `sendAccessRequestDecisionEmail` (hakijalle hyväksynnän/hylkäyksen jälkeen) — Phase 60
 - ✓ **ACCESS-06**: RLS-tason pääsynesto; `POST /api/business/access-request/approve` myöntää `company_id` + `business_paikka_links`-rivin concurrency-safe `UPDATE ... WHERE status='pending'`-kuviolla; `POST /api/business/access-request/reject` asettaa `status='rejected'` — Phase 60
+- ✓ **VENUEPAGE-01**: Erillinen paikkasivu (`app/paikat/[id]`) poistettu kokonaan sovelluksesta — Phase 62
+- ✓ **VENUEPAGE-02**: Poistetun sivun ainutlaatuinen sisältö (show-on-map) siirretty PaikkaSheetiin ennen poistoa — Phase 62
+- ✓ **VENUEPAGE-03**: Sisäiset polut avaavat PaikkaSheetin (ei navigaatiota) samalla tavalla kuin CalloutCard-klikkaus, myös hakulistan/TO DO -overlayn kortit — layerointi overlayn päälle ilman sen sulkemista (gap-closure 62-04) — Phase 62
+- ✓ **VENUEPAGE-04**: Suora osoite poistettuun reittiin palauttaa 404 ilman redirectiä — Phase 62
 
 ### Future (deferred from v1.1 + v1.7)
 
@@ -329,7 +333,7 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ## Context
 
-**Nykytila:** v3.1-milestone käynnissä. Phase 60 (hallintaoikeuspyynnöt — backend & sähköposti) valmis 2026-06-26 — ACCESS-03/05/06 toteutettu: `business_access_requests`-taulu, submit/approve/reject Route Handlerit concurrency-safe-kuviolla, 2 Resend-sähköpostilähetintä, `/business/liity`-kutsulinkkisivu, "Kopioi kutsulinkki" -painike. Yksi gap-closure-kierros (60-06): `/business/liity` puuttui `isPublicBusinessPath`-poikkeuksesta middlewaressa — korjattu ennen UAT:n loppuunsaattamista. 5/5 suoritettavaa UAT-testiä läpäisi; 3 ohitettu (ei pending-testidataa approve/reject/pending-bannerin testaamiseksi). Seuraavaksi Phase 61 (onboarding-vaiheiden uudelleenjärjestys, ONBOARD-18..24) tai Phase 58 (admin-pääsy + kartta-QA) — molemmat riippumattomia.
+**Nykytila:** v3.1-milestone käynnissä. Phase 62 (venuepage-konsolidaatio) valmis 2026-07-01 — VENUEPAGE-01..04 toteutettu: `app/paikat/[id]` poistettu kokonaan (suora osoite → automaattinen Next.js-404, ei redirectiä), show-on-map-sisältö siirretty PaikkaSheetiin, ja kaikki sisäiset polut (CalloutCard, hakulista, TO DO -overlay) avaavat PaikkaSheetin ilman navigointia. Yksi gap-closure-kierros (62-04, commit 035ebc1 + review-followup 5221e7f): korjattiin regressio, jossa PaikkaSheetin avaaminen hakulistan/TO DO-overlayn kortista sulki alla olevan overlayn kokonaan (`setSearchOpen(false)`/`setTodoOpen(false)` poistettu, z-index-pinoaminen riitti); lisäksi taustakontrollit (TodoButton, hakusuodattimet) tehty `inert`/`disabled`-vartioiduiksi kun PaikkaSheet on auki. 4/4 UAT-testiä läpäisi (re-verifioitu 2026-07-01). Seuraavaksi Phase 63 (business-dashboardin & preview-näkymien uudistus) — riippuu Phase 62:sta valmiiksi.
 
 **Edellinen:** v3.0 Oma tietokanta (Google Places -irtautuminen) toimitettu 2026-06-24. Kaikki 12 v3.0-vaatimusta toteutettu. Google Places -synkkaus poistettu kokonaan ja kaikki Google-peräinen liikuntapaikka-data tyhjennetty (operaattori valitsi täyden 327/327-tyhjennyksen); onboardingiin uusi Sijainti-vaihe (kartta + osoitehaku-autocomplete, vain lat/lng + kirjoitettu osoite tallennetaan); AI-sivuanalyysi ehdottaa myös laji-kategoriaa käyttäjän vahvistettavaksi; claim-vaihe korvattu create-only-virralla erillisillä yritys-/toimipiste-nimikentillä; `/business`-redirectbugi korjattu ja per-paikka Kesken-tila + Jatka-CTA lisätty. 13 plania (phases 52–57), 2 päivää (2026-06-22 → 2026-06-24).
 
@@ -395,6 +399,8 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 | Migraatio ajettu suoraan ainoaan Supabase-projektiin staging-ympäristön sijaan | Sovelluksella ei ole vielä oikeita käyttäjiä eikä erillistä staging-projektia; operaattori hyväksyi riskin eksplisiittisesti | ✓ Phase 59 — verifioitu Management API:lla suoraan tuotantotietokantaa vasten |
 | `REVOKE UPDATE (col) ON table FROM authenticated` ei riitä — table-wide grant ohittaa sen | Postgres-semantiikka: sarakekohtainen REVOKE ei kavenna olemassaolevaa taulukohtaista GRANTia; korjaus vaatii `REVOKE UPDATE ON table` + eksplisiittinen sarakelistan `GRANT` | ✓ Phase 59 — löydettiin tämän vaiheen omasta migraatiosta, korjasi myös 4 aiempaa Phase 31:n samalla kuviolla rikkinäistä REVOKEa (mukaan lukien `profiles.is_admin` self-elevation) |
 | `liikuntapaikat`-taulun rivitason RLS (`USING (true)` kirjoituspolitiikoissa) jätetty tietoisesti korjaamatta Phase 59:ssä | Erillinen, laajempi löydös kuin tämän vaiheen scope; minkä tahansa kirjautuneen käyttäjän voi kirjoittaa/poistaa minkä tahansa paikan | ⚠️ Avoin — vaatii oman tietoturvavaiheen, ei seurantatoimenpiteitä toistaiseksi |
+| PaikkaSheet layeroituu hakulistan/TO DO-overlayn päälle sen sijaan että sulkisi sen (z-index, ei conditional unmount) | UAT löysi regression: `setSearchOpen(false)`/`setTodoOpen(false)` onOpen-handlereissa unmounttasi overlayn `<AnimatePresence>`-wrapperin sisällä; PaikkaSheetin z-index (65/66) oli jo overlayjen (59/62) yläpuolella, joten flagien poisto riitti korjaukseksi ilman z-index-muutoksia | ✓ Phase 62 (gap-closure 62-04, commit 035ebc1), re-verifioitu UAT-Test 3:ssa |
+| Taustakontrollit (TodoButton, hakusuodattimet, list-toggle) `disabled`/`pointerEvents:none`/`inert` kun PaikkaSheet auki | 62-04:n oma code review löysi 2 jatkolöydöstä (WR-01/WR-02): ilman näitä käyttäjä pystyi klikkaamaan/Tabbaamaan piilotettuihin tausta-kontrolleihin sheetin ollessa auki | ✓ Phase 62 (commit 5221e7f), re-verifioitu UAT-Test 4:ssä |
 
 ---
 
@@ -417,4 +423,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-06-25 — Phase 59 complete (multi-company-skeemamigraatio, ACCESS-01/02)*
+*Last updated: 2026-07-01 — Phase 62 complete (venuepage-konsolidaatio, VENUEPAGE-01..04)*
