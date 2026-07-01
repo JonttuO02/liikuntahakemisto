@@ -1,14 +1,20 @@
 ---
-status: diagnosed
+status: testing
 phase: 62-venuepage-konsolidaatio
 source: [62-VERIFICATION.md]
 started: 2026-07-01T02:26:23Z
-updated: 2026-07-01T06:56:00Z
+updated: 2026-07-01T08:11:01Z
 ---
 
 ## Current Test
 
-[testing complete]
+number: 3
+name: Re-test — PaikkaSheet layers over the search list / TO DO overlay (post-fix)
+expected: |
+  PaikkaSheet opens on top of the still-mounted overlay in both cases (search list and
+  TO DO overlay); closing the sheet returns the user directly to the overlay they were
+  browsing, not to the bare map.
+awaiting: user response
 
 ## Tests
 
@@ -22,12 +28,20 @@ result: issue
 reported: "when opening paikkasheet from the list or todo overlay, the list or todo overlay that was browsed is closed as paikkasheet is opened. Thats bad because when browsing the list the user has to always reopen the list after opening any paikkasheet. So the fix would be that paikkasheet opens over the list or todo overlay, so when its closed again the user can continue browsing"
 severity: major
 
+### 3. Re-test — PaikkaSheet layers over the search list / TO DO overlay (post-fix)
+expected: Open Etusivu, search so at least one venue renders in the search results list, tap its info panel to open PaikkaSheet, then close the sheet. Confirm the search list is still there / resumes without needing to be manually reopened. Repeat with the TO DO (favorites) overlay: open it, tap a saved card, close the sheet, confirm the TO DO overlay's items are still shown. This re-tests the exact scenario from Test 2 after gap-closure plan 62-04 (commit 035ebc1) removed the setSearchOpen(false)/setTodoOpen(false) calls that caused it.
+result: [pending]
+
+### 4. WR-01/WR-02 follow-up fixes block interaction with hidden background controls
+expected: Open the TO DO overlay, tap a saved card to open PaikkaSheet, then tap where the floating bookmark/TodoButton normally sits (top-right, below the nav pill). Confirm nothing happens and the TO DO overlay's contents are unaffected when the sheet is later closed. Separately, with a search result open and PaikkaSheet showing, use Tab on a keyboard and confirm you cannot focus the (hidden) search input, city/sport filter pills, or list-toggle button until the sheet is closed. This tests the 62-04-REVIEW.md follow-up fixes (commit 5221e7f).
+result: [pending]
+
 ## Summary
 
-total: 2
+total: 4
 passed: 1
 issues: 1
-pending: 0
+pending: 2
 skipped: 0
 blocked: 0
 
