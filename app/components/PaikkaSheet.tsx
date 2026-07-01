@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Phone, ExternalLink, Clock, CircleDollarSign, Info, Bookmark, BookmarkCheck, Camera, ChevronDown, Building2, BadgeCheck, MapPin } from 'lucide-react'
 import { hintateksti, cn } from '@/lib/utils'
@@ -19,10 +20,11 @@ interface Props {
   distanceKm?: number
   onClose?: () => void
   onToggleTodo: (id: number) => void
+  onShowMap?: (paikka: Liikuntapaikka) => void
   preview?: boolean
 }
 
-export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => {}, onToggleTodo, preview = false }: Props) {
+export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => {}, onToggleTodo, onShowMap, preview = false }: Props) {
   const t = useTranslations('PaikkaSheet')
   const tKortti = useTranslations('PaikkaKortti')
   const [reviews, setReviews] = useState<ReviewRow[] | null>(null)
@@ -264,12 +266,22 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => 
           {/* Show on map */}
           {paikka.latitude != null && paikka.longitude != null && !preview && (
             <SheetRow icon={<MapPin className="w-4 h-4" />} label={t('location')}>
-              <a
-                href={`/?id=${paikka.id}`}
-                className="text-[#111111] hover:text-[rgba(17,17,17,0.6)] text-sm font-bold underline underline-offset-2 [transition:color_150ms_var(--ease-out)]"
-              >
-                {t('showOnMap')}
-              </a>
+              {onShowMap ? (
+                <button
+                  type="button"
+                  onClick={() => onShowMap(paikka)}
+                  className="text-[#111111] hover:text-[rgba(17,17,17,0.6)] text-sm font-bold underline underline-offset-2 [transition:color_150ms_var(--ease-out)]"
+                >
+                  {t('showOnMap')}
+                </button>
+              ) : (
+                <Link
+                  href={`/?id=${paikka.id}`}
+                  className="text-[#111111] hover:text-[rgba(17,17,17,0.6)] text-sm font-bold underline underline-offset-2 [transition:color_150ms_var(--ease-out)]"
+                >
+                  {t('showOnMap')}
+                </Link>
+              )}
             </SheetRow>
           )}
 

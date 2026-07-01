@@ -1,7 +1,6 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import Link from 'next/link'
 import { MapPin, Bookmark, BookmarkCheck, BadgeCheck } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { hintateksti } from '@/lib/utils'
@@ -29,9 +28,13 @@ interface PaikkaKorttiProps {
   aukinyt?: boolean
   isTodo?: boolean
   onToggleTodo?: (id: number) => void
+  /** When provided, the venue name and "show details" CTA become clickable and call this
+   * instead of navigating (mirrors DiagonaalKortti's onOpen pattern, VENUEPAGE-03). When
+   * omitted (e.g. PreviewModal's static preview), both render inert — no dead link. */
+  onOpen?: (paikka: Liikuntapaikka) => void
 }
 
-export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isTodo, onToggleTodo }: PaikkaKorttiProps) {
+export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isTodo, onToggleTodo, onOpen }: PaikkaKorttiProps) {
   const t = useTranslations('PaikkaKortti')
   const tLajit = useTranslations('Lajit')
   const laji         = lajiKonfig[paikka.laji] ?? { label: paikka.laji, badgeTw: 'text-white', accentBg: '', color: '#6b7280' }
@@ -87,14 +90,23 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
         </div>
 
         {/* Name */}
-        <Link href={`/paikat/${paikka.id}`}>
-          <h3 className="font-bold text-[#111111] text-sm leading-snug hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]">
+        {onOpen ? (
+          <button type="button" onClick={() => onOpen(paikka)} className="text-left">
+            <h3 className="font-bold text-[#111111] text-sm leading-snug hover:text-[rgba(17,17,17,0.6)] [transition:color_150ms_var(--ease-out)]">
+              {paikka.nimi}
+              {paikka.business_managed && (
+                <BadgeCheck className="w-3.5 h-3.5 ml-1 inline-block align-middle" />
+              )}
+            </h3>
+          </button>
+        ) : (
+          <h3 className="font-bold text-[#111111] text-sm leading-snug">
             {paikka.nimi}
             {paikka.business_managed && (
               <BadgeCheck className="w-3.5 h-3.5 ml-1 inline-block align-middle" />
             )}
           </h3>
-        </Link>
+        )}
 
         {/* Open status */}
         {openStatus.status === 'open' && (
@@ -180,14 +192,21 @@ export default function PaikkaKortti({ paikka, distanceStr, aukinyt = false, isT
 
         {/* Bottom row: CTA + optional distance string */}
         <div className="mt-auto flex items-center justify-between gap-3 pt-3 border-t border-[rgba(0,0,0,0.07)]">
-          <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}>
-            <Link
-              href={`/paikat/${paikka.id}`}
-              className="border border-[rgba(0,0,0,0.12)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.25)] text-sm font-bold py-2 px-4 rounded-full [transition:color_150ms_var(--ease-out),border-color_150ms_var(--ease-out)]"
-            >
+          {onOpen ? (
+            <motion.div whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}>
+              <button
+                type="button"
+                onClick={() => onOpen(paikka)}
+                className="border border-[rgba(0,0,0,0.12)] text-[rgba(17,17,17,0.6)] hover:text-[#111111] hover:border-[rgba(0,0,0,0.25)] text-sm font-bold py-2 px-4 rounded-full [transition:color_150ms_var(--ease-out),border-color_150ms_var(--ease-out)]"
+              >
+                {t('showDetails')}
+              </button>
+            </motion.div>
+          ) : (
+            <span className="border border-[rgba(0,0,0,0.12)] text-[rgba(17,17,17,0.35)] text-sm font-bold py-2 px-4 rounded-full">
               {t('showDetails')}
-            </Link>
-          </motion.div>
+            </span>
+          )}
 
           {distanceStr && (
             <span className="text-xs text-[rgba(17,17,17,0.4)] tabular-nums flex items-center gap-0.5 shrink-0">

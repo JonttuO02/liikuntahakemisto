@@ -424,7 +424,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
   const reviewResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pendingValittuRef = useRef<Liikuntapaikka | null>(null)
   const zoomRef = useRef(14)
-  const searchResultsRef = useRef<HTMLDivElement>(null)
   const suppressAutoOpenRef = useRef(false)
   const [sheetVisible, setSheetVisible] = useState(false)
   const { coords }                  = useGPS({ autoRequest: true })
@@ -579,38 +578,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       }, 1500)
     }
   }
-
-  // Restore scroll position and search state when returning from a venue profile (NAV-01)
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem('etusivu-scroll-state')
-      if (!raw) return
-      sessionStorage.removeItem('etusivu-scroll-state')
-      if (focusId) return  // "Näytä kartalla" route — clear key but don't reopen search list
-      const s = JSON.parse(raw)
-      if (typeof s !== 'object' || s === null) return
-      // D-11: if version mismatch, discard entire state — prevents dead filters from old sessions
-      if (s._v !== 2) { sessionStorage.removeItem('etusivu-scroll-state'); return }
-      if (typeof s.searchHaku === 'string') setSearchHaku(s.searchHaku)
-      if (Array.isArray(s.searchLaji)) setSearchLaji(s.searchLaji)
-      if (typeof s.searchKaupunki === 'string') setSearchKaupunki(s.searchKaupunki)
-      if (s.searchOpen === true) {
-        suppressAutoOpenRef.current = true
-        setSheetVisible(true)
-        setSearchOpen(true)
-      }
-      if (typeof s.scrollTop === 'number' && s.scrollTop > 0) {
-        requestAnimationFrame(() => {
-          if (searchResultsRef.current) {
-            searchResultsRef.current.scrollTop = s.scrollTop
-          }
-        })
-      }
-    } catch (err) {
-      console.warn('[Etusivu] Failed to restore scroll state', err)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // Clear debounce timer on unmount to prevent stale state update after navigation
   useEffect(() => {
@@ -1056,7 +1023,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                   }
                   return (
                     <motion.div key={p.id} layout transition={LAYOUT_T}>
-                      <DiagonaalKortti paikka={p} isSaved={true} onShowMap={pk => { if (pk.latitude != null && pk.longitude != null) setAutoZoomTarget({ lat: pk.latitude, lng: pk.longitude }) }} onToggleTodo={handleOverlayDelete} onOpen={(p) => { setTodoOpen(false); setValittu(p) }} />
+                      <DiagonaalKortti paikka={p} isSaved={true} onShowMap={pk => { if (pk.latitude != null && pk.longitude != null) setAutoZoomTarget({ lat: pk.latitude, lng: pk.longitude }) }} onToggleTodo={handleOverlayDelete} onOpen={(clicked) => { setTodoOpen(false); setValittu(clicked) }} />
                     </motion.div>
                   )
                 })}
@@ -1420,7 +1387,6 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
         {searchOpen && (
           <motion.div
             key="search-results"
-            ref={searchResultsRef}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1453,9 +1419,9 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                           setAutoZoomTarget({ lat: paikka.latitude, lng: paikka.longitude })
                         }
                       }}
-                      onOpen={(p) => {
+                      onOpen={(clicked) => {
                         setSearchOpen(false)
-                        setValittu(p)
+                        setValittu(clicked)
                       }}
                     />
                   ))}
@@ -1491,6 +1457,12 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             distanceKm={distancesMap[valittu.id]}
             onClose={() => setValittu(null)}
             onToggleTodo={toggleTodo}
+            onShowMap={(paikka) => {
+              setValittu(null)
+              if (paikka.latitude != null && paikka.longitude != null) {
+                setAutoZoomTarget({ lat: paikka.latitude, lng: paikka.longitude })
+              }
+            }}
           />
         )}
       </AnimatePresence>

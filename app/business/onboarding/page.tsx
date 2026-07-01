@@ -29,12 +29,10 @@ function PreVaiheSpinner() {
 function StepNimiJaURLPrePhase({
   onNext,
   onPaikkaIdResolved,
-  onPaikkaInfoResolved,
   skipFastForward = false,
 }: {
   onNext: (websiteUrl: string | null, alreadyHasLocation?: boolean, resolvedPaikkaId?: number) => void
   onPaikkaIdResolved: (paikkaId: number) => void
-  onPaikkaInfoResolved: (info: PaikkaBase) => void
   skipFastForward?: boolean
 }) {
   const searchParams = useSearchParams()
@@ -82,7 +80,6 @@ function StepNimiJaURLPrePhase({
           .single()
         if (!cancelled && paikka) {
           setPaikkaInfo(paikka as PaikkaBase)
-          onPaikkaInfoResolved(paikka as PaikkaBase)
           // Fast-forward: if location is already set, skip sijainti for resuming users.
           // Re-hydrate websiteUrl from draft so wizard/laji-skip routing is correct (F-02/F-03).
           // skipFastForward suppresses this when the user navigated back from sijainti (F-04).
@@ -202,7 +199,6 @@ export default function OnboardingWizardPage() {
   const [pagePhase, setPagePhase] = useState<PagePhase>('nimi-url')
   const [brandingData, setBrandingData] = useState<BrandingResult | null>(null)
   const [paikkaId, setPaikkaId] = useState<number | null>(null)
-  const [, setPaikkaInfo] = useState<PaikkaBase | null>(null)
   // Display-only: the laji confirmed/picked in AnalysoiSivusto (Vahvista/Vaihda) or the D-06
   // skip-path picker, threaded into WizardInner so its live preview / Step 1 card show the
   // just-picked value instead of the stale pre-onboarding liikuntapaikat.laji — the actual DB
@@ -325,7 +321,6 @@ export default function OnboardingWizardPage() {
             <StepNimiJaURLPrePhase
               onNext={handleNimiUrlNext}
               onPaikkaIdResolved={setPaikkaId}
-              onPaikkaInfoResolved={setPaikkaInfo}
               skipFastForward={skipFastForward}
             />
           </Suspense>

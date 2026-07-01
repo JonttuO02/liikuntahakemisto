@@ -86,19 +86,6 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
       whileTap={{ scale: 0.98, transition: { duration: 0.12, ease: 'easeOut' } }}
     >
       <div className="absolute inset-0 rounded-2xl overflow-hidden">
-      {/* z-10 ensures the MapPin button's z-20 always wins the stacking context */}
-      {onOpen ? (
-        <div
-          role="button"
-          tabIndex={0}
-          className="absolute inset-0 block z-10 cursor-pointer"
-          onClick={() => onOpen(paikka)}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpen(paikka) }}
-        />
-      ) : (
-        <div className="absolute inset-0 block z-10" />
-      )}
-
         {/* LEFT: info panel */}
         <div
           ref={leftPanelRef}
@@ -145,7 +132,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
               )}
             </p>
             {membershipOnly ? (
-              <span className="text-xs text-[rgba(17,17,17,0.5)]">{t('membershipOnly')}</span>
+              <span className="text-xs text-[rgba(17,17,17,0.5)]" style={contrastText ? { color: contrastText } : undefined}>{t('membershipOnly')}</span>
             ) : priceItems ? (
               <div
                 ref={containerRef}
@@ -200,7 +187,7 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
                 )}
               </div>
             ) : (
-              <span className="text-xs text-[rgba(17,17,17,0.35)]">{t('priceComingSoon')}</span>
+              <span className="text-xs text-[rgba(17,17,17,0.35)]" style={contrastText ? { color: contrastText } : undefined}>{t('priceComingSoon')}</span>
             )}
           </div>
 
@@ -251,6 +238,21 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
             <Camera size={24} className="text-[rgba(0,0,0,0.2)]" />
           </div>
         </div>
+
+      {/* Click-catcher rendered after LEFT/RIGHT panels so it paints on top of them
+          (same z-10 layer, later in DOM order wins) — still below the z-20 action
+          buttons below, which stopPropagation()/preventDefault() on their own clicks. */}
+      {onOpen ? (
+        <div
+          role="button"
+          tabIndex={0}
+          className="absolute inset-0 block z-10 cursor-pointer"
+          onClick={() => onOpen(paikka)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpen(paikka) }}
+        />
+      ) : (
+        <div className="absolute inset-0 block z-10" />
+      )}
 
       {hasCoords && (
         <button
