@@ -1070,6 +1070,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
                 className="flex items-center overflow-hidden shrink-0"
+                inert={!!valittu}
               >
                 <div className="w-px h-4 bg-[rgba(0,0,0,0.1)] shrink-0" />
                 <motion.button
@@ -1175,6 +1176,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
       {/* ── TodoButton — fixed below nav-pill, right side ─────────────── */}
       <motion.button
         whileTap={{ scale: 0.95 }}
+        disabled={!!valittu}
         onClick={() => {
           if (todoOpen) { resetInlineReview(); setTodoOpen(false) }
           else openTodoOverlay()
@@ -1183,7 +1185,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
           ? 'w-10 h-10 rounded-full flex items-center justify-center text-[rgba(17,17,17,0.55)] hover:text-[#111111] [transition:color_150ms_ease]'
           : 'w-10 h-10 glass-btn rounded-full flex items-center justify-center text-[rgba(17,17,17,0.7)] hover:text-[#111111] [transition:color_150ms_ease]'
         }
-        style={{ position: 'fixed', right: 16, top: 'calc(max(12px, env(safe-area-inset-top)) + 48px)', zIndex: 66 }}
+        style={{ position: 'fixed', right: 16, top: 'calc(max(12px, env(safe-area-inset-top)) + 48px)', zIndex: 66, pointerEvents: valittu ? 'none' : undefined }}
         aria-label={todoOpen ? tTodo('closeList') : tTodo('openList')}
       >
         <AnimatePresence mode="wait">
@@ -1337,6 +1339,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             className="fixed"
+            inert={!!valittu}
             style={{
               top: 'max(12px, env(safe-area-inset-top))',
               left: 108,
@@ -1392,6 +1395,7 @@ export default function Etusivu({ paikat }: { paikat: Liikuntapaikka[] }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="fixed overflow-y-auto"
+            inert={!!valittu}
             style={{
               top: 'calc(max(12px, env(safe-area-inset-top)) + 96px)',
               left: 0,
