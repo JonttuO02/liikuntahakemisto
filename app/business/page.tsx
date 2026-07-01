@@ -7,6 +7,8 @@ import { Map } from 'lucide-react'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import ClaimSearchForm from '@/app/components/ClaimSearchForm'
 import PreviewModal from '@/app/components/PreviewModal'
+import DiagonaalKortti from '@/app/components/DiagonaalKortti'
+import RejectionReasonPopup from '@/app/components/RejectionReasonPopup'
 import type { Liikuntapaikka } from '@/lib/types'
 import { deriveVenueStatus } from '@/lib/venueStatus'
 
@@ -44,11 +46,9 @@ type TBusiness = ReturnType<typeof useTranslations<'Business'>>
 function StatusCard({
   venueLinks,
   t,
-  onReapply,
 }: {
   venueLinks: VenueLink[]
   t: TBusiness
-  onReapply: (paikkaId: number) => void
 }) {
   const hasApproved = venueLinks.some(l => l.claim_status === 'approved')
   const allRejected = venueLinks.length > 0 && venueLinks.every(l => l.claim_status === 'rejected')
@@ -71,13 +71,6 @@ function StatusCard({
             ? t('dashboardStatusRejectedBody', { reason: rejectedLink.rejection_reason })
             : t('dashboardStatusRejectedBodyNoReason')}
         </span>
-        <button
-          type="button"
-          onClick={() => onReapply(rejectedLink.paikka_id)}
-          className="text-xs font-bold text-[#111111] underline hover:no-underline text-left w-fit"
-        >
-          {t('reapplyCta')} →
-        </button>
       </div>
     )
   }
@@ -90,19 +83,19 @@ function StatusCard({
   )
 }
 
-// --- VenueRow ---
-function VenueRow({
+// --- DashboardVenueCard ---
+function DashboardVenueCard({
   link,
   t,
   isKesken,
   onPreview,
-  onReapply,
+  onShowRejectionInfo,
 }: {
   link: VenueLink
   t: TBusiness
   isKesken: boolean
   onPreview: (p: Liikuntapaikka) => void
-  onReapply: (paikkaId: number) => void
+  onShowRejectionInfo: (link: VenueLink) => void
 }) {
   const [copied, setCopied] = useState(false)
 
@@ -113,73 +106,22 @@ function VenueRow({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  if (!link.liikuntapaikat) return null
+
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-bold text-[#111111] truncate">
-          {link.liikuntapaikat?.nimi ?? t('venueFallbackName', { id: link.paikka_id })}
-        </span>
-        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full shrink-0 ${
-          isKesken
-            ? 'bg-[rgba(17,17,17,0.08)] text-[rgba(17,17,17,0.55)]'
-            : link.claim_status === 'approved'
-            ? 'bg-green-100 text-green-700'
-            : link.claim_status === 'rejected'
-            ? 'bg-red-50 text-red-600'
-            : 'bg-amber-100 text-amber-700'
-        }`}>
-          {isKesken
-            ? t('statusKesken')
-            : link.claim_status === 'approved'
-            ? t('statusApproved')
-            : link.claim_status === 'rejected'
-            ? t('statusRejected')
-            : t('statusPending')}
-        </span>
-      </div>
-
-      {/* Action buttons — shown for all statuses */}
-      <div className="flex items-center gap-3 mt-1">
-        <button
-          type="button"
-          disabled={isKesken || !link.liikuntapaikat}
-          onClick={() => { if (link.liikuntapaikat) onPreview(link.liikuntapaikat as unknown as Liikuntapaikka) }}
-          className="text-xs text-[rgba(17,17,17,0.45)] hover:text-[#111111] underline-offset-2 hover:underline [transition:color_150ms] disabled:opacity-40 disabled:pointer-events-none"
-        >
-          {t('esikatseluCta')}
-        </button>
-        <a
-          href={isKesken ? '/business/onboarding?paikka_id=' + link.paikka_id : '/business/' + link.paikka_id}
-          className="text-xs font-bold text-[#111111] border border-[rgba(0,0,0,0.12)] hover:border-[rgba(0,0,0,0.25)] rounded-full px-3 py-1 [transition:border-color_150ms_var(--ease-out)]"
-        >
-          {isKesken ? t('jatkaCta') : t('muokkaaCta')}
-        </a>
-        {link.claim_status === 'approved' && !isKesken && (
-          <button
-            type="button"
-            onClick={handleCopyInviteLink}
-            className="text-xs font-bold text-[#111111] border border-[rgba(0,0,0,0.12)] hover:border-[rgba(0,0,0,0.25)] rounded-full px-3 py-1 [transition:border-color_150ms_var(--ease-out)]"
-          >
-            {copied ? t('inviteLinkCopied') : t('copyInviteLinkCta')}
-          </button>
-        )}
-      </div>
-
-      {link.claim_status === 'rejected' && (
-        <div className="flex flex-col gap-2 mt-1">
-          {link.rejection_reason && (
-            <p className="text-xs text-[rgba(17,17,17,0.45)]">{t('rejectionReasonLabel')}: {link.rejection_reason}</p>
-          )}
-          <button
-            type="button"
-            onClick={() => onReapply(link.paikka_id)}
-            className="text-xs font-bold text-[#111111] underline hover:no-underline text-left"
-          >
-            {t('reapplyCta')} →
-          </button>
-        </div>
-      )}
-    </div>
+    <DiagonaalKortti
+      paikka={link.liikuntapaikat as unknown as Liikuntapaikka}
+      dashboardActions={{
+        status: isKesken ? 'kesken' : (link.claim_status as 'approved' | 'rejected' | 'pending'),
+        onPreview: () => { if (link.liikuntapaikat) onPreview(link.liikuntapaikat as unknown as Liikuntapaikka) },
+        onEditOrContinue: () => {
+          window.location.href = isKesken ? '/business/onboarding?paikka_id=' + link.paikka_id : '/business/' + link.paikka_id
+        },
+        onCopyInviteLink: link.claim_status === 'approved' && !isKesken ? handleCopyInviteLink : undefined,
+        copied,
+        onShowRejectionInfo: link.claim_status === 'rejected' ? () => onShowRejectionInfo(link) : undefined,
+      }}
+    />
   )
 }
 
@@ -195,6 +137,7 @@ export default function BusinessPage() {
   const [showAddVenue, setShowAddVenue] = useState(false)
   const [previewPaikka, setPreviewPaikka] = useState<Liikuntapaikka | null>(null)
   const [pendingAccessRequests, setPendingAccessRequests] = useState<PendingAccessRequest[]>([])
+  const [rejectionPopupLink, setRejectionPopupLink] = useState<VenueLink | null>(null)
 
   useEffect(() => {
     async function checkState() {
@@ -248,31 +191,6 @@ export default function BusinessPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function handleReapply(paikkaId: number) {
-    const supabase = createBusinessBrowserClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    const token = session?.access_token ?? ''
-    const res = await fetch('/api/business/reapply', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + token,
-      },
-      body: JSON.stringify({ paikka_id: paikkaId }),
-    })
-    if (res.ok) {
-      setVenueLinks(prev =>
-        prev.map(l =>
-          l.paikka_id === paikkaId
-            ? { ...l, claim_status: 'pending', rejection_reason: null, submitted_at: new Date().toISOString() }
-            : l
-        )
-      )
-    } else {
-      console.error('[reapply] failed', await res.json())
-    }
-  }
-
   if (loading) {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center">
@@ -302,7 +220,7 @@ export default function BusinessPage() {
     return (
       <main className="min-h-screen bg-white pt-16 px-4 pb-24">
         {/* Status card */}
-        <StatusCard venueLinks={venueLinks} t={t} onReapply={handleReapply} />
+        <StatusCard venueLinks={venueLinks} t={t} />
 
         {/* Pending access-request banner — shown when the current account has a
             pending business_access_requests row (requester waiting for owner approval) */}
@@ -320,13 +238,13 @@ export default function BusinessPage() {
           </h2>
           <div className="flex flex-col gap-3">
             {venueLinks.map(link => (
-              <VenueRow
+              <DashboardVenueCard
                 key={link.paikka_id}
                 link={link}
                 t={t}
                 isKesken={deriveVenueStatus(link.claim_status, keskenPaikkaIds.has(link.paikka_id), link.submitted_at) === 'kesken'}
                 onPreview={setPreviewPaikka}
-                onReapply={handleReapply}
+                onShowRejectionInfo={setRejectionPopupLink}
               />
             ))}
           </div>
@@ -376,6 +294,15 @@ export default function BusinessPage() {
             <PreviewModal paikka={previewPaikka} onClose={() => setPreviewPaikka(null)} />
           )}
         </AnimatePresence>
+
+        {/* Rejection reason popup — single page-level instance, opened via the
+            rejection-info icon button on a rejected DashboardVenueCard */}
+        <RejectionReasonPopup
+          open={!!rejectionPopupLink}
+          onClose={() => setRejectionPopupLink(null)}
+          rejectionReason={rejectionPopupLink?.rejection_reason ?? null}
+          editHref={rejectionPopupLink ? '/business/' + rejectionPopupLink.paikka_id : ''}
+        />
       </main>
     )
   }
