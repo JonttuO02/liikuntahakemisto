@@ -40,6 +40,9 @@ The `/business` dashboard's venue list is rebuilt on `DiagonaalKortti` cards wit
 - **D-13:** `PaikkaSheet` (in `preview={true}` mode, fixed 600px height per its existing preview styling) is added as a **third stacked section below** `CalloutCard` and `DiagonaalKortti` in `LivePreviewPane` — same column, same order as `PreviewModal`. No separate mobile sub-tab; the sidebar/mobile toggle view simply scrolls taller.
 - **D-14:** Live-preview's `DiagonaalKortti` keeps showing the **real photo (consumer view)** — it must NOT use the new no-photo dashboard controls variant (D-01/D-02). The dashboard variant is management-only UI; live-preview shows exactly what a customer would see.
 
+### Reapply cooldown resolution (raised by gsd-phase-researcher, resolved post-research)
+- **D-15:** The 24h reapply cooldown (`COOLDOWN_MS` in the old `/api/business/reapply` route, backed by `supabase/migrations/20260610000004_reapply_cooldown.sql`) is **dropped, not ported** into `update-paikka/route.ts`'s new auto-resubmit-on-save logic (D-07). Rationale: no real users yet (STATE.md precedent), and a section save requires deliberate edit effort — lower spam risk than a dedicated one-click reapply button. The migration itself is left in place (harmless — it only added a column/index, not a trigger).
+
 ### Claude's Discretion
 - Exact icon choices for preview/edit/jatka/invite-link/rejection-info buttons (e.g. Eye, Pencil, ArrowRight, Link, Info from `lucide-react`, matching existing icon usage conventions).
 - Whether `/api/business/reapply` route is deleted or repurposed once auto-resubmit-on-save (D-07) is implemented — flag for `gsd-phase-researcher` to investigate current call sites before deciding.
