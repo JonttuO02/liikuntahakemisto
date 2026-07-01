@@ -311,6 +311,23 @@ function OnboardingMode({
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
         body: JSON.stringify({ paikka_id: paikkaId, step: 0, field: 'media_urls', value: { logo: selections.logoUrl, photos: selections.gallery } }),
       })
+      // Persist bg/accent colors (63-06/63-07 UAT follow-up): StepBrandingPick auto-initializes
+      // these from the AI's suggested defaults on mount and shows them in the live preview, but
+      // only assignColorToSlot's per-click autosave actually PATCHes business_branding — a user
+      // who accepts the AI default and never re-clicks a swatch would otherwise never have a
+      // selected_background_color/selected_accent_color persisted at all, leaving the dashboard
+      // card and preview permanently unbranded despite the wizard showing colors throughout.
+      if (selections.bgColor || selections.accentColor) {
+        await fetch('/api/business/branding', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({
+            paikka_id: paikkaId,
+            ...(selections.bgColor ? { selected_background_color: selections.bgColor, background_color_source: selections.bgColorSource } : {}),
+            ...(selections.accentColor ? { selected_accent_color: selections.accentColor, accent_color_source: selections.accentColorSource } : {}),
+          }),
+        })
+      }
       if (selections.laji) {
         await fetch('/api/business/onboarding/save-step', {
           method: 'POST',

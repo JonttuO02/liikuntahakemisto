@@ -15,6 +15,12 @@ export interface BrandingSelections {
   laji: string | null
   bgColor: string | null
   accentColor: string | null
+  /** Source of bgColor/accentColor at the moment "Jatka" was clicked — 'ai' when the value
+   * is still the AI-suggested default that was never explicitly re-clicked (assignColorToSlot
+   * fires per-click autosave, but the initial mount-time default from brandingData.colors
+   * never goes through it, so it would otherwise never be persisted at all). */
+  bgColorSource: 'ai' | 'custom'
+  accentColorSource: 'ai' | 'custom'
 }
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
@@ -209,7 +215,15 @@ export default function StepBrandingPick({
 
   async function handleNext() {
     setSubmitting(true)
-    await onNext({ logoUrl: selectedLogoUrl, gallery: selectedGallery, laji: confirmedLaji, bgColor, accentColor })
+    await onNext({
+      logoUrl: selectedLogoUrl,
+      gallery: selectedGallery,
+      laji: confirmedLaji,
+      bgColor,
+      accentColor,
+      bgColorSource: bgSource,
+      accentColorSource: accentSource,
+    })
     setSubmitting(false)
   }
 
