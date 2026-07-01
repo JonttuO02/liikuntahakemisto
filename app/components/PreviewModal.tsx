@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import type { Liikuntapaikka } from '@/lib/types'
-import PaikkaKortti from '@/app/components/PaikkaKortti'
+import CalloutCard from '@/app/components/CalloutCard'
 import DiagonaalKortti from '@/app/components/DiagonaalKortti'
 import PaikkaSheet from '@/app/components/PaikkaSheet'
 
@@ -44,12 +44,18 @@ export default function PreviewModal({ paikka, onClose }: PreviewModalProps) {
               </button>
             </div>
 
-            {/* Section: PaikkaKortti */}
+            {/* Section: CalloutCard */}
             <div className="flex flex-col gap-2">
               <p className="text-[10px] font-bold uppercase tracking-widest text-[rgba(17,17,17,0.45)]">
-                {t('previewLabelCard')}
+                {t('previewLabelCallout')}
               </p>
-              <PaikkaKortti paikka={paikka} />
+              <CalloutCard
+                p={{
+                  ...paikka,
+                  latitude: paikka.latitude ?? 0,
+                  longitude: paikka.longitude ?? 0,
+                }}
+              />
             </div>
 
             {/* Section: DiagonaalKortti */}

@@ -244,7 +244,7 @@ export default function PaikkaSheet({ paikka, todo, distanceKm, onClose = () => 
           )}
 
           {/* Booking link */}
-          {isSafeUrl(paikka.varauslinkki) && (
+          {isSafeUrl(paikka.varauslinkki) && !preview && (
             <a
               href={paikka.varauslinkki!}
               target="_blank"
