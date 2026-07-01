@@ -8,7 +8,7 @@ import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
 import { isMembershipOnly, priceItemList } from '@/lib/priceUtils'
 import { useOverflowMarquee } from '@/lib/useOverflowMarquee'
-import { getContrastColor } from '@/lib/branding/brandingResult'
+import { getContrastColor, darkenHex, lightenHex } from '@/lib/branding/brandingResult'
 import type { Liikuntapaikka } from '@/lib/types'
 
 const CHAR_VARIANTS = {
@@ -26,34 +26,6 @@ const TEXT_CONTAINER_VARIANTS = {
 // mismatch between the card's clip-path and the backdrop's scaled-up copy, which can leave
 // a hairline gap. A wider margin makes the visible ring more tolerant of that.
 const RING_WIDTH = 8
-
-// Darkens a #rrggbb hex color by `amount` (0-1) — used to build the accent ring's
-// conic-gradient stops (light/mid/dark shades of a single user-picked color), mirroring
-// .pin-arc's light→dark→light blue sweep in globals.css but derived from one input color
-// instead of three hardcoded blues.
-function darkenHex(hex: string, amount: number): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
-  if (!m) return hex
-  const n = parseInt(m[1], 16)
-  const r = Math.round(((n >> 16) & 0xff) * (1 - amount))
-  const g = Math.round(((n >> 8) & 0xff) * (1 - amount))
-  const b = Math.round((n & 0xff) * (1 - amount))
-  return `#${[r, g, b].map(c => Math.max(0, Math.min(255, c)).toString(16).padStart(2, '0')).join('')}`
-}
-
-// Lightens a #rrggbb hex color by `amount` (0-1) toward white — used for the ring's
-// "highlight" gradient stops. Critically this stays fully OPAQUE (unlike an alpha-
-// transparent version of accentColor), which would wash out to near-invisible against the
-// page's plain white background and look like a gap in the ring rather than a highlight.
-function lightenHex(hex: string, amount: number): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
-  if (!m) return hex
-  const n = parseInt(m[1], 16)
-  const r = Math.round(((n >> 16) & 0xff) + (255 - ((n >> 16) & 0xff)) * amount)
-  const g = Math.round(((n >> 8) & 0xff) + (255 - ((n >> 8) & 0xff)) * amount)
-  const b = Math.round((n & 0xff) + (255 - (n & 0xff)) * amount)
-  return `#${[r, g, b].map(c => Math.max(0, Math.min(255, c)).toString(16).padStart(2, '0')).join('')}`
-}
 
 export default function CalloutCard({
   p,
