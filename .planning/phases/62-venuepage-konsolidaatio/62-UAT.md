@@ -13,7 +13,7 @@ updated: 2026-07-01T06:56:00Z
 ## Tests
 
 ### 1. Full-card tap-to-open on DiagonaalKortti (CR-01 regression fix confirmation)
-expected: Open the app (Etusivu), search for a venue so at least one result renders as a DiagonaalKortti card in the search list, and tap directly on the venue name / price / sport badge area (the LEFT info panel — NOT the photo thumbnail). Then open the TO DO (favorites) overlay and repeat on a saved card there. PaikkaSheet should open for the tapped venue in both cases, and the overlay you tapped from should be dismissed rather than remaining visible underneath the sheet.
+expected: Open the app (Etusivu), search for a venue so at least one result renders as a DiagonaalKortti card in the search list, and tap directly on the venue name / price / sport badge area (the LEFT info panel — NOT the photo thumbnail). Then open the TO DO (favorites) overlay and repeat on a saved card there. PaikkaSheet should open for the tapped venue in both cases, layering ON TOP of the overlay while it remains mounted underneath (so closing the sheet resumes browsing).
 result: pass
 
 ### 2. PaikkaSheet should layer over the search/TO DO overlay, not dismiss it
