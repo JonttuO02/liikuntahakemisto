@@ -135,3 +135,7 @@ None - no external service configuration required.
 ---
 *Phase: 63-business-dashboardin-preview-n-kymien-uudistus*
 *Completed: 2026-07-01*
+
+## Self-Check: PASSED
+
+All modified files (`app/components/PreviewModal.tsx`, `app/business/onboarding/LivePreviewPane.tsx`, `app/components/PaikkaSheet.tsx`) and all four commits (`05f86f9`, `93da2e2`, `d7787ef`, `5e4af6b`) verified present on disk / in git log.
