@@ -184,8 +184,8 @@ Plans:
 
 **Wave 4** *(gap closure — UAT Test 1 findings)*
 
-- [ ] 63-06-PLAN.md — Controls-panel neutral-gray fallback, copy-link visible confirmation, /business desktop grid layout
-- [ ] 63-07-PLAN.md — Business-analysis pipeline reliability: parallel uploads, max-duration guard, GET staleness self-heal, wizard retry UI
+- [x] 63-06-PLAN.md — Controls-panel neutral-gray fallback, copy-link visible confirmation, /business desktop grid layout
+- [x] 63-07-PLAN.md — Business-analysis pipeline reliability: parallel uploads, max-duration guard, GET staleness self-heal, wizard retry UI
 
 **UI hint**: yes
 
@@ -467,5 +467,5 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 6/6 | Complete    | 2026-06-25 |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 6/6 | Complete    | 2026-06-26 |
 | 62. Venuepage-konsolidaatio | v3.1 | 4/4 | Complete    | 2026-06-30 |
-| 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 5/7 | In Progress (gap closure) | - |
+| 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 7/7 | Complete   | 2026-07-01 |
 | 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 0/? | Not started | - |
