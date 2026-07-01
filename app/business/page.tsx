@@ -273,7 +273,7 @@ export default function BusinessPage() {
                 viewport widens, instead of resizing them. */}
             <div className="flex flex-wrap gap-3">
               {venueLinks.map(link => (
-                <div key={link.paikka_id} className="w-full sm:w-[360px]">
+                <div key={link.paikka_id} className="w-full sm:w-[396px]">
                   <DashboardVenueCard
                     link={link}
                     isKesken={deriveVenueStatus(link.claim_status, keskenPaikkaIds.has(link.paikka_id), link.submitted_at) === 'kesken'}
