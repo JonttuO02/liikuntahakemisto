@@ -149,7 +149,7 @@ Plans:
 
 **Wave 3** *(gap closure — UAT Test 2 regression)*
 
-- [ ] 62-04-PLAN.md — Stop onOpen handlers unmounting search list / TO DO overlay so PaikkaSheet layers over them (VENUEPAGE-03, gap) [wave 1]
+- [x] 62-04-PLAN.md — Stop onOpen handlers unmounting search list / TO DO overlay so PaikkaSheet layers over them (VENUEPAGE-03, gap) [wave 1]
 
 **UI hint**: yes
 
@@ -445,6 +445,6 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 59. Multi-company-skeemamigraatio | v3.1 | 4/4 | Complete    | 2026-06-25 |
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 6/6 | Complete    | 2026-06-25 |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 6/6 | Complete    | 2026-06-26 |
-| 62. Venuepage-konsolidaatio | v3.1 | 3/3 | Complete   | 2026-06-30 |
+| 62. Venuepage-konsolidaatio | v3.1 | 4/4 | Complete   | 2026-06-30 |
 | 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 0/? | Not started | - |
 | 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 0/? | Not started | - |
