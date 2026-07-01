@@ -31,7 +31,7 @@
 - [x] **Phase 60: Hallintaoikeuspyynnöt — backend & sähköposti** — Työntekijä voi pyytää hallintaoikeutta, järjestelmä ilmoittaa sähköpostilla ja estää pääsyn ennen hyväksyntää (completed 2026-06-25)
 - [x] **Phase 61: Onboarding-vaiheiden uudelleenjärjestys** — Uusi onboarding-virta: nimi+URL ensin (AI taustalla), sijainti, AI-tarkastelu, ei erillistä preview-vaihetta (completed 2026-06-26)
 - [x] **Phase 62: Venuepage-konsolidaatio** — Erillinen paikkasivu poistetaan; kaikki sisältö ja navigointi yhdistetään PaikkaSheet-venuepageen, vanha reitti 404 (completed 2026-07-01)
-- [ ] **Phase 63: Business-dashboardin & preview-näkymien uudistus** — DiagonaalKortti-pohjainen dashboard ikonipainikkeilla, CalloutCard-preview, venuepage live-previewssä, kaikki previewt visuaalisia
+- [x] **Phase 63: Business-dashboardin & preview-näkymien uudistus** — DiagonaalKortti-pohjainen dashboard ikonipainikkeilla, CalloutCard-preview, venuepage live-previewssä, kaikki previewt visuaalisia (completed 2026-07-01)
 - [ ] **Phase 64: Hallintaoikeuspyynnöt — dashboard-UI** — Päähallitsija hallitsee pyynnöt ja sub-managerit uudistetussa dashboardissa
 
 ### Phase 58: Admin-sijaintikartta
@@ -467,5 +467,5 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 6/6 | Complete    | 2026-06-25 |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 6/6 | Complete    | 2026-06-26 |
 | 62. Venuepage-konsolidaatio | v3.1 | 4/4 | Complete    | 2026-06-30 |
-| 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 7/7 | Complete   | 2026-07-01 |
+| 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 7/7 | Complete    | 2026-07-01 |
 | 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 0/? | Not started | - |

@@ -1,9 +1,9 @@
 ---
-status: diagnosed
+status: resolved
 phase: 63-business-dashboardin-preview-n-kymien-uudistus
 source: [63-VERIFICATION.md]
 started: 2026-07-01T18:35:00Z
-updated: 2026-07-01T19:45:00Z
+updated: 2026-07-02T01:00:00Z
 ---
 
 ## Current Test
@@ -46,7 +46,7 @@ blocked: 0
 ## Gaps
 
 - truth: "Controls panel is always visibly two-sided (split layout), even when brandColor is unset — falls back to the same neutral gray as the image placeholder (minus the camera icon) instead of a plain glass panel."
-  status: failed
+  status: resolved
   reason: "User reported: the card should always be sliced into two sides even if the brand colour hasn't been set. When it's not set the background could be the same gray that the image placeholder had, just without the camera icon."
   severity: cosmetic
   test: 1
@@ -60,7 +60,7 @@ blocked: 0
   debug_session: .planning/debug/controls-panel-fallback-color.md
 
 - truth: "Copy-invite-link icon button gives the user visible confirmation that the link was copied."
-  status: failed
+  status: resolved
   reason: "User reported: with approved status there appears a new button on the row but it doesn't do anything when clicking it. User later clarified this was their own misunderstanding — the button is copy-invite-link and it does work, but there is apparently no visible feedback after copying, which made it look broken."
   severity: minor
   test: 1
@@ -76,7 +76,7 @@ blocked: 0
   debug_session: .planning/debug/dashboard-approved-card-dead-button.md
 
 - truth: "Editing a draft venue and re-triggering brand-color analysis completes in reasonable time."
-  status: failed
+  status: resolved
   reason: "User reported: tried to test how the brandcolour works but when trying to edit one of the venue's drafts there was a bug in the analyzing — waited a long time but it never finished the analyze."
   severity: blocker
   test: 1
@@ -94,7 +94,7 @@ blocked: 0
   debug_session: .planning/debug/business-draft-edit-analyze-hang.md
 
 - truth: "Business dashboard is usable on desktop/wide viewports — cards keep a fixed width and lay out in a multi-column grid instead of stretching full-width."
-  status: failed
+  status: resolved
   reason: "User reported: on wider screen the cards are being stretched; they should always keep the same width and on desktop could be organized into rows."
   severity: minor
   test: 1

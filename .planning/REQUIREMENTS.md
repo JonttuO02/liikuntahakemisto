@@ -25,13 +25,13 @@ Requirements for milestone v3.1 (UX/UI-korjaukset & business-parannukset). Each 
 
 ### Business-dashboard visuaalinen uudistus
 
-- [ ] **BIZPANEL-06**: `/business`-dashboardin paikkalista korvataan DiagonaalKortti-korteilla; status-pillit sijoitetaan kortin kuvan alakulmaan
+- [x] **BIZPANEL-06**: `/business`-dashboardin paikkalista korvataan DiagonaalKortti-korteilla; status-pillit sijoitetaan kortin kuvan alakulmaan
 - [x] **BIZPANEL-07**: Hover (desktop) / tap (mobiili) paljastaa kortin oikealta piilotetun lisäosan pyöreillä ikonipainikkeilla (preview/edit/jatka) — ei tekstipainikkeita
 
 ### Preview & live-preview
 
-- [ ] **PREV-04**: Business-paikkalistan preview-modaalin vanhentunut PaikkaKortti-näkymä poistetaan, korvataan CalloutCardilla
-- [ ] **LIVEPREV-05**: Edit- ja onboarding-vaiheiden live-preview laajennetaan sisältämään venuepage (PaikkaSheet) CalloutCardin ja DiagonaalKortin lisäksi
+- [x] **PREV-04**: Business-paikkalistan preview-modaalin vanhentunut PaikkaKortti-näkymä poistetaan, korvataan CalloutCardilla
+- [x] **LIVEPREV-05**: Edit- ja onboarding-vaiheiden live-preview laajennetaan sisältämään venuepage (PaikkaSheet) CalloutCardin ja DiagonaalKortin lisäksi
 - [x] **PREV-05**: Kaikki preview-näkymät (business-dashboardin preview-modaali, edit/onboarding-livepreview) ovat puhtaasti visuaalisia — klikkaus ei laukaise navigointia tai toimintoja
 
 ### Venuepage-konsolidaatio
@@ -85,10 +85,10 @@ Deferred — not in v3.1 scope.
 | ACCESS-06 | Phase 60 | Complete |
 | ACCESS-04 | Phase 64 | Pending |
 | ACCESS-07 | Phase 64 | Pending |
-| BIZPANEL-06 | Phase 63 | Pending |
+| BIZPANEL-06 | Phase 63 | Complete |
 | BIZPANEL-07 | Phase 63 | Complete |
-| PREV-04 | Phase 63 | Pending |
-| LIVEPREV-05 | Phase 63 | Pending |
+| PREV-04 | Phase 63 | Complete |
+| LIVEPREV-05 | Phase 63 | Complete |
 | PREV-05 | Phase 63 | Complete |
 | VENUEPAGE-01 | Phase 62 | Complete |
 | VENUEPAGE-02 | Phase 62 | Complete |
