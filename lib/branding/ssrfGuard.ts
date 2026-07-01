@@ -7,6 +7,17 @@
 // This gap is carried forward as P45-DNS and is explicitly out of scope for this plan.
 
 /**
+ * Prepends https:// when `url` has no recognized protocol, so a bare domain (e.g. "gogo.fi",
+ * typed without a scheme in the onboarding URL field, or saved before this normalization
+ * existed) parses as a valid absolute URL instead of failing isUrlSafe with a generic
+ * "new URL() threw" rejection. Does not affect URLs that already specify a protocol.
+ */
+export function normalizeWebsiteUrl(url: string): string {
+  const trimmed = url.trim()
+  return /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+}
+
+/**
  * Returns true if `url` is safe to fetch: protocol is http(s) and the hostname does not
  * fall into a known private/loopback/link-local/CGNAT range.
  */

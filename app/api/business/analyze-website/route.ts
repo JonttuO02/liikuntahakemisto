@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin.server'
 import { scrapeWebsite } from '@/lib/branding/scraper'
 import { analyzeWithClaude } from '@/lib/branding/analyzer'
 import { uploadLogo, uploadLogoCandidate, uploadGalleryImage } from '@/lib/branding/storage'
-import { isUrlSafe } from '@/lib/branding/ssrfGuard'
+import { isUrlSafe, normalizeWebsiteUrl } from '@/lib/branding/ssrfGuard'
 import { captureHomepageScreenshot } from '@/lib/branding/screenshot'
 
 // Required: sharp is a Node.js native binary — Edge Runtime is incompatible.
@@ -216,6 +216,10 @@ export async function POST(request: Request) {
   if (!url || typeof url !== 'string') {
     return NextResponse.json({ error: 'url is required' }, { status: 400 })
   }
+  // 63-06/63-07 UAT: bare domains (e.g. "gogo.fi", no protocol) typed in the onboarding URL
+  // field — which has no client-side normalization — otherwise fail isUrlSafe's new URL()
+  // parse and 400 with "Invalid or private URL", blocking analysis for real, non-malicious URLs.
+  url = normalizeWebsiteUrl(url)
   if (!Number.isInteger(paikkaId) || paikkaId <= 0) {
     return NextResponse.json({ error: 'paikka_id is required' }, { status: 400 })
   }
