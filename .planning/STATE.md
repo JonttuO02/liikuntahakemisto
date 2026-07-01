@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: — Active Milestone
 current_phase: 63
-current_phase_name: Business-dashboardin & preview-näkymien uudistus
-status: ready_to_execute
+current_phase_name: business-dashboardin-preview-n-kymien-uudistus
+status: executing
 stopped_at: Phase 63 planned (5 plans, 3 waves)
-last_updated: "2026-07-01T15:00:00.000Z"
+last_updated: "2026-07-01T14:48:19.065Z"
 last_activity: 2026-07-01
-last_activity_desc: Phase 63 planned (5 plans, 3 waves), ready to execute
+last_activity_desc: Phase 63 execution started
 progress:
   total_phases: 7
   completed_phases: 5
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-01)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 63 — Business-dashboardin & preview-näkymien uudistus
+**Current focus:** Phase 63 — business-dashboardin-preview-n-kymien-uudistus
 
 ## Current Position
 
-Phase: 63 — Business-dashboardin & preview-näkymien uudistus
-Plan: 5 plans created (3 waves) — verification passed
-Status: Ready to execute Phase 63
-Last activity: 2026-07-01 — Phase 63 planned (5 plans, 3 waves), ready to execute
+Phase: 63 (business-dashboardin-preview-n-kymien-uudistus) — EXECUTING
+Plan: 1 of 5
+Status: Executing Phase 63
+Last activity: 2026-07-01 — Phase 63 execution started
 
 Next: `/gsd-execute-phase 63` — Business-dashboardin & preview-näkymien uudistus
 
