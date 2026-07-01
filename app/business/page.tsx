@@ -87,11 +87,15 @@ function StatusCard({
 function DashboardVenueCard({
   link,
   isKesken,
+  brandColor,
+  accentColor,
   onPreview,
   onShowRejectionInfo,
 }: {
   link: VenueLink
   isKesken: boolean
+  brandColor?: string
+  accentColor?: string
   onPreview: (p: Liikuntapaikka) => void
   onShowRejectionInfo: (link: VenueLink) => void
 }) {
@@ -113,6 +117,8 @@ function DashboardVenueCard({
   return (
     <DiagonaalKortti
       paikka={link.liikuntapaikat as unknown as Liikuntapaikka}
+      brandColor={brandColor}
+      accentColor={accentColor}
       dashboardActions={{
         status: isKesken ? 'kesken' : (link.claim_status as 'approved' | 'rejected' | 'pending'),
         onPreview: () => { if (link.liikuntapaikat) onPreview(link.liikuntapaikat as unknown as Liikuntapaikka) },
@@ -129,6 +135,8 @@ function DashboardVenueCard({
 
 type PendingAccessRequest = { id: string; paikka_id: number; status: string }
 
+type BrandingEntry = { brandColor?: string; accentColor?: string }
+
 // --- Main page ---
 export default function BusinessPage() {
   const t = useTranslations('Business')
@@ -140,6 +148,7 @@ export default function BusinessPage() {
   const [previewPaikka, setPreviewPaikka] = useState<Liikuntapaikka | null>(null)
   const [pendingAccessRequests, setPendingAccessRequests] = useState<PendingAccessRequest[]>([])
   const [rejectionPopupLink, setRejectionPopupLink] = useState<VenueLink | null>(null)
+  const [brandingByPaikkaId, setBrandingByPaikkaId] = useState<Record<number, BrandingEntry>>({})
 
   useEffect(() => {
     async function checkState() {
@@ -177,6 +186,24 @@ export default function BusinessPage() {
 
       setVenueLinks((links as unknown as VenueLink[]) ?? [])
       setKeskenPaikkaIds(keskenSet)
+
+      // Fetch chosen brand colors (business_branding.selected_background_color/selected_accent_color,
+      // scoped per venue since Phase 47's paikka_id re-key). These are picked during onboarding's
+      // StepBrandingPick and were never being read back for display on the dashboard card or preview
+      // — the card/preview rendered with brandColor/accentColor undefined regardless of what the
+      // business owner chose and submitted.
+      const { data: brandingRows } = await supabase
+        .from('business_branding')
+        .select('paikka_id, selected_background_color, selected_accent_color')
+        .eq('business_account_id', user.id)
+      const brandingMap: Record<number, BrandingEntry> = {}
+      for (const row of (brandingRows ?? []) as { paikka_id: number; selected_background_color: string | null; selected_accent_color: string | null }[]) {
+        brandingMap[row.paikka_id] = {
+          brandColor: row.selected_background_color ?? undefined,
+          accentColor: row.selected_accent_color ?? undefined,
+        }
+      }
+      setBrandingByPaikkaId(brandingMap)
 
       // Fetch pending business_access_requests for the current user.
       // RLS scopes the SELECT to requester_id = auth.uid() (Plan 01 migration).
@@ -250,6 +277,8 @@ export default function BusinessPage() {
                   <DashboardVenueCard
                     link={link}
                     isKesken={deriveVenueStatus(link.claim_status, keskenPaikkaIds.has(link.paikka_id), link.submitted_at) === 'kesken'}
+                    brandColor={brandingByPaikkaId[link.paikka_id]?.brandColor}
+                    accentColor={brandingByPaikkaId[link.paikka_id]?.accentColor}
                     onPreview={setPreviewPaikka}
                     onShowRejectionInfo={setRejectionPopupLink}
                   />
@@ -299,7 +328,12 @@ export default function BusinessPage() {
           {/* Preview modal */}
           <AnimatePresence>
             {previewPaikka && (
-              <PreviewModal paikka={previewPaikka} onClose={() => setPreviewPaikka(null)} />
+              <PreviewModal
+                paikka={previewPaikka}
+                brandColor={brandingByPaikkaId[previewPaikka.id]?.brandColor}
+                accentColor={brandingByPaikkaId[previewPaikka.id]?.accentColor}
+                onClose={() => setPreviewPaikka(null)}
+              />
             )}
           </AnimatePresence>
 

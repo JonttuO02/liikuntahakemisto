@@ -9,10 +9,12 @@ import PaikkaSheet from '@/app/components/PaikkaSheet'
 
 interface PreviewModalProps {
   paikka: Liikuntapaikka
+  brandColor?: string
+  accentColor?: string
   onClose: () => void
 }
 
-export default function PreviewModal({ paikka, onClose }: PreviewModalProps) {
+export default function PreviewModal({ paikka, brandColor, accentColor, onClose }: PreviewModalProps) {
   const t = useTranslations('Business')
 
   return (
@@ -55,6 +57,8 @@ export default function PreviewModal({ paikka, onClose }: PreviewModalProps) {
                   latitude: paikka.latitude ?? 0,
                   longitude: paikka.longitude ?? 0,
                 }}
+                brandColor={brandColor}
+                accentColor={accentColor}
               />
             </div>
 
@@ -63,7 +67,7 @@ export default function PreviewModal({ paikka, onClose }: PreviewModalProps) {
               <p className="text-[10px] font-bold uppercase tracking-widest text-[rgba(17,17,17,0.45)]">
                 {t('previewLabelDiag')}
               </p>
-              <DiagonaalKortti paikka={paikka} />
+              <DiagonaalKortti paikka={paikka} brandColor={brandColor} accentColor={accentColor} />
             </div>
 
             {/* Section: PaikkaSheet */}
