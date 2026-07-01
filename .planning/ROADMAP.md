@@ -165,7 +165,7 @@ Plans:
   3. Business-paikkalistan preview-modaali käyttää CalloutCardia (vanhentunut PaikkaKortti-näkymä poistettu), ja edit/onboarding-live-preview sisältää venuepagen (PaikkaSheet) CalloutCardin ja DiagonaalKortin lisäksi
   4. Kaikki preview-näkymät (dashboardin preview-modaali, edit/onboarding-livepreview) ovat puhtaasti visuaalisia — klikkaus ei laukaise navigointia tai toimintoja
 
-**Plans**: 5 plans
+**Plans**: 7 plans (3 waves + 1 gap-closure wave)
 
 Plans:
 **Wave 1**
@@ -181,6 +181,11 @@ Plans:
 **Wave 3** *(blocked on Wave 2 completion)*
 
 - [x] 63-05-PLAN.md — Wire dashboard cards into /business, remove reapply UI, delete /api/business/reapply route
+
+**Wave 4** *(gap closure — UAT Test 1 findings)*
+
+- [ ] 63-06-PLAN.md — Controls-panel neutral-gray fallback, copy-link visible confirmation, /business desktop grid layout
+- [ ] 63-07-PLAN.md — Business-analysis pipeline reliability: parallel uploads, max-duration guard, GET staleness self-heal, wizard retry UI
 
 **UI hint**: yes
 
@@ -462,5 +467,5 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 60. Hallintaoikeuspyynnöt — backend & sähköposti | v3.1 | 6/6 | Complete    | 2026-06-25 |
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 6/6 | Complete    | 2026-06-26 |
 | 62. Venuepage-konsolidaatio | v3.1 | 4/4 | Complete    | 2026-06-30 |
-| 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 5/5 | Complete   | 2026-07-01 |
+| 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 5/7 | In Progress (gap closure) | - |
 | 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 0/? | Not started | - |
