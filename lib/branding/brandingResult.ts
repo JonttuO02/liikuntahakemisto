@@ -86,6 +86,55 @@ export function getContrastColor(hex: string): '#000000' | '#ffffff' {
   return yiq >= 128 ? '#000000' : '#ffffff'
 }
 
+// ─── darkenHex / lightenHex ────────────────────────────────────────────────────
+
+// Darkens a #rrggbb hex color by `amount` (0-1) — used to build the accent ring's
+// conic-gradient stops (light/mid/dark shades of a single user-picked color), mirroring
+// .pin-arc's light→dark→light blue sweep in globals.css but derived from one input color
+// instead of three hardcoded blues.
+export function darkenHex(hex: string, amount: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
+  if (!m) return hex
+  const n = parseInt(m[1], 16)
+  const r = Math.round(((n >> 16) & 0xff) * (1 - amount))
+  const g = Math.round(((n >> 8) & 0xff) * (1 - amount))
+  const b = Math.round((n & 0xff) * (1 - amount))
+  return `#${[r, g, b].map(c => Math.max(0, Math.min(255, c)).toString(16).padStart(2, '0')).join('')}`
+}
+
+// Lightens a #rrggbb hex color by `amount` (0-1) toward white — used for the ring's
+// "highlight" gradient stops. Critically this stays fully OPAQUE (unlike an alpha-
+// transparent version of accentColor), which would wash out to near-invisible against the
+// page's plain white background and look like a gap in the ring rather than a highlight.
+export function lightenHex(hex: string, amount: number): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
+  if (!m) return hex
+  const n = parseInt(m[1], 16)
+  const r = Math.round(((n >> 16) & 0xff) + (255 - ((n >> 16) & 0xff)) * amount)
+  const g = Math.round(((n >> 8) & 0xff) + (255 - ((n >> 8) & 0xff)) * amount)
+  const b = Math.round((n & 0xff) + (255 - (n & 0xff)) * amount)
+  return `#${[r, g, b].map(c => Math.max(0, Math.min(255, c)).toString(16).padStart(2, '0')).join('')}`
+}
+
+// ─── getPanelShade ──────────────────────────────────────────────────────────────
+
+/**
+ * getPanelShade — returns a computed complementary shade of `brandColor` for use as
+ * a controls-panel background (D-03), guaranteed to visibly differ from `brandColor`
+ * itself: light brand colors are darkened, dark brand colors are lightened, using the
+ * same YIQ luminance test as getContrastColor to decide which direction to shade.
+ *
+ * @param brandColor - Hex colour string with or without leading '#' (e.g. '#3b82f6' or '3b82f6')
+ * @param amount - Shade intensity (0-1), defaults to 0.3 (locked default per D-03)
+ * @returns A `#rrggbb` hex string; the original `brandColor` unchanged if it is not a
+ *   valid 6-digit hex (darkenHex/lightenHex regex-guard returns input as-is)
+ */
+export function getPanelShade(brandColor: string, amount = 0.3): string {
+  return getContrastColor(brandColor) === '#000000'
+    ? darkenHex(brandColor, amount)
+    : lightenHex(brandColor, amount)
+}
+
 // ─── buildBrandingPreview ─────────────────────────────────────────────────────
 
 /**
