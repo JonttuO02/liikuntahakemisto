@@ -239,15 +239,21 @@ export default function BusinessPage() {
             <h2 className="text-[10px] font-bold text-[rgba(17,17,17,0.45)] uppercase tracking-widest mb-3">
               {t('dashboardVenuesHeading')}
             </h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {/* flex-wrap with a fixed-width wrapper per card (not CSS Grid columns) — a
+                grid's equal-fraction tracks stretch/shrink each card to fill its column,
+                changing card width by breakpoint. This keeps every card the same fixed
+                width as on mobile (w-full below sm) and just tiles more per row as the
+                viewport widens, instead of resizing them. */}
+            <div className="flex flex-wrap gap-3">
               {venueLinks.map(link => (
-                <DashboardVenueCard
-                  key={link.paikka_id}
-                  link={link}
-                  isKesken={deriveVenueStatus(link.claim_status, keskenPaikkaIds.has(link.paikka_id), link.submitted_at) === 'kesken'}
-                  onPreview={setPreviewPaikka}
-                  onShowRejectionInfo={setRejectionPopupLink}
-                />
+                <div key={link.paikka_id} className="w-full sm:w-[360px]">
+                  <DashboardVenueCard
+                    link={link}
+                    isKesken={deriveVenueStatus(link.claim_status, keskenPaikkaIds.has(link.paikka_id), link.submitted_at) === 'kesken'}
+                    onPreview={setPreviewPaikka}
+                    onShowRejectionInfo={setRejectionPopupLink}
+                  />
+                </div>
               ))}
             </div>
           </section>
