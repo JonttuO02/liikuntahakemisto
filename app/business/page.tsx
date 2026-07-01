@@ -97,11 +97,15 @@ function DashboardVenueCard({
 }) {
   const [copied, setCopied] = useState(false)
 
-  function handleCopyInviteLink() {
+  async function handleCopyInviteLink() {
     const url = window.location.origin + '/business/liity?paikka_id=' + link.paikka_id
-    navigator.clipboard.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard write failed — no false-positive confirmation.
+    }
   }
 
   if (!link.liikuntapaikat) return null
@@ -217,89 +221,91 @@ export default function BusinessPage() {
   if (venueLinks.length > 0) {
     return (
       <main className="min-h-screen bg-white pt-16 px-4 pb-24">
-        {/* Status card */}
-        <StatusCard venueLinks={venueLinks} t={t} />
+        <div className="max-w-5xl mx-auto">
+          {/* Status card */}
+          <StatusCard venueLinks={venueLinks} t={t} />
 
-        {/* Pending access-request banner — shown when the current account has a
-            pending business_access_requests row (requester waiting for owner approval) */}
-        {pendingAccessRequests.length > 0 && (
-          <div className="glass rounded-2xl p-4 flex flex-col gap-1 border-l-4 border-amber-400 mt-4">
-            <span className="text-sm font-bold text-[#111111]">{t('accessRequestPendingTitle')}</span>
-            <span className="text-xs text-[rgba(17,17,17,0.45)]">{t('accessRequestPendingBody')}</span>
-          </div>
-        )}
+          {/* Pending access-request banner — shown when the current account has a
+              pending business_access_requests row (requester waiting for owner approval) */}
+          {pendingAccessRequests.length > 0 && (
+            <div className="glass rounded-2xl p-4 flex flex-col gap-1 border-l-4 border-amber-400 mt-4">
+              <span className="text-sm font-bold text-[#111111]">{t('accessRequestPendingTitle')}</span>
+              <span className="text-xs text-[rgba(17,17,17,0.45)]">{t('accessRequestPendingBody')}</span>
+            </div>
+          )}
 
-        {/* Venue list */}
-        <section className="mt-6">
-          <h2 className="text-[10px] font-bold text-[rgba(17,17,17,0.45)] uppercase tracking-widest mb-3">
-            {t('dashboardVenuesHeading')}
-          </h2>
-          <div className="flex flex-col gap-3">
-            {venueLinks.map(link => (
-              <DashboardVenueCard
-                key={link.paikka_id}
-                link={link}
-                isKesken={deriveVenueStatus(link.claim_status, keskenPaikkaIds.has(link.paikka_id), link.submitted_at) === 'kesken'}
-                onPreview={setPreviewPaikka}
-                onShowRejectionInfo={setRejectionPopupLink}
-              />
-            ))}
-          </div>
-        </section>
+          {/* Venue list */}
+          <section className="mt-6">
+            <h2 className="text-[10px] font-bold text-[rgba(17,17,17,0.45)] uppercase tracking-widest mb-3">
+              {t('dashboardVenuesHeading')}
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {venueLinks.map(link => (
+                <DashboardVenueCard
+                  key={link.paikka_id}
+                  link={link}
+                  isKesken={deriveVenueStatus(link.claim_status, keskenPaikkaIds.has(link.paikka_id), link.submitted_at) === 'kesken'}
+                  onPreview={setPreviewPaikka}
+                  onShowRejectionInfo={setRejectionPopupLink}
+                />
+              ))}
+            </div>
+          </section>
 
-        {/* Add venue */}
-        <section className="mt-6">
-          {showAddVenue ? (
-            <div className="glass rounded-2xl p-4 flex flex-col gap-4">
+          {/* Add venue */}
+          <section className="mt-6">
+            {showAddVenue ? (
+              <div className="glass rounded-2xl p-4 flex flex-col gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddVenue(false)}
+                  className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms] text-left"
+                >
+                  ← {t('backToVenues')}
+                </button>
+                <ClaimSearchForm />
+              </div>
+            ) : (
               <button
                 type="button"
-                onClick={() => setShowAddVenue(false)}
-                className="text-sm text-[rgba(17,17,17,0.45)] hover:text-[#111111] [transition:color_150ms] text-left"
+                onClick={() => setShowAddVenue(true)}
+                className="w-full text-sm font-bold text-[#111111] border border-[rgba(0,0,0,0.12)] hover:border-[rgba(0,0,0,0.25)] rounded-full h-10 px-4 [transition:border-color_150ms_var(--ease-out)]"
               >
-                ← {t('backToVenues')}
+                + {t('addVenueCta')}
               </button>
-              <ClaimSearchForm />
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowAddVenue(true)}
-              className="w-full text-sm font-bold text-[#111111] border border-[rgba(0,0,0,0.12)] hover:border-[rgba(0,0,0,0.25)] rounded-full h-10 px-4 [transition:border-color_150ms_var(--ease-out)]"
+            )}
+          </section>
+
+          {/* Quick actions */}
+          <section className="mt-6 flex flex-col gap-3">
+            <a
+              href="/business/map"
+              className="glass rounded-2xl p-4 flex items-center justify-between gap-3 hover:bg-[rgba(0,0,0,0.02)] [transition:background-color_150ms_ease]"
             >
-              + {t('addVenueCta')}
-            </button>
-          )}
-        </section>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-bold text-[#111111]">{t('dashboardMapCta')}</span>
+                <span className="text-xs text-[rgba(17,17,17,0.45)]">{t('navMap')}</span>
+              </div>
+              <Map className="w-4 h-4 text-[rgba(17,17,17,0.45)]" />
+            </a>
+          </section>
 
-        {/* Quick actions */}
-        <section className="mt-6 flex flex-col gap-3">
-          <a
-            href="/business/map"
-            className="glass rounded-2xl p-4 flex items-center justify-between gap-3 hover:bg-[rgba(0,0,0,0.02)] [transition:background-color_150ms_ease]"
-          >
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-bold text-[#111111]">{t('dashboardMapCta')}</span>
-              <span className="text-xs text-[rgba(17,17,17,0.45)]">{t('navMap')}</span>
-            </div>
-            <Map className="w-4 h-4 text-[rgba(17,17,17,0.45)]" />
-          </a>
-        </section>
+          {/* Preview modal */}
+          <AnimatePresence>
+            {previewPaikka && (
+              <PreviewModal paikka={previewPaikka} onClose={() => setPreviewPaikka(null)} />
+            )}
+          </AnimatePresence>
 
-        {/* Preview modal */}
-        <AnimatePresence>
-          {previewPaikka && (
-            <PreviewModal paikka={previewPaikka} onClose={() => setPreviewPaikka(null)} />
-          )}
-        </AnimatePresence>
-
-        {/* Rejection reason popup — single page-level instance, opened via the
-            rejection-info icon button on a rejected DashboardVenueCard */}
-        <RejectionReasonPopup
-          open={!!rejectionPopupLink}
-          onClose={() => setRejectionPopupLink(null)}
-          rejectionReason={rejectionPopupLink?.rejection_reason ?? null}
-          editHref={rejectionPopupLink ? '/business/' + rejectionPopupLink.paikka_id : ''}
-        />
+          {/* Rejection reason popup — single page-level instance, opened via the
+              rejection-info icon button on a rejected DashboardVenueCard */}
+          <RejectionReasonPopup
+            open={!!rejectionPopupLink}
+            onClose={() => setRejectionPopupLink(null)}
+            rejectionReason={rejectionPopupLink?.rejection_reason ?? null}
+            editHref={rejectionPopupLink ? '/business/' + rejectionPopupLink.paikka_id : ''}
+          />
+        </div>
       </main>
     )
   }
