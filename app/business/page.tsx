@@ -86,13 +86,11 @@ function StatusCard({
 // --- DashboardVenueCard ---
 function DashboardVenueCard({
   link,
-  t,
   isKesken,
   onPreview,
   onShowRejectionInfo,
 }: {
   link: VenueLink
-  t: TBusiness
   isKesken: boolean
   onPreview: (p: Liikuntapaikka) => void
   onShowRejectionInfo: (link: VenueLink) => void
@@ -241,7 +239,6 @@ export default function BusinessPage() {
               <DashboardVenueCard
                 key={link.paikka_id}
                 link={link}
-                t={t}
                 isKesken={deriveVenueStatus(link.claim_status, keskenPaikkaIds.has(link.paikka_id), link.submitted_at) === 'kesken'}
                 onPreview={setPreviewPaikka}
                 onShowRejectionInfo={setRejectionPopupLink}
