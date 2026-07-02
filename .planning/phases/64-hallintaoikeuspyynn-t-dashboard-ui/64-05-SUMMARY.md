@@ -116,3 +116,12 @@ None - no external service configuration required.
 ---
 *Phase: 64-hallintaoikeuspyynn-t-dashboard-ui*
 *Completed: 2026-07-02*
+
+## Self-Check: PASSED
+
+- FOUND: lib/teamManagement.ts
+- FOUND: lib/teamManagement.test.ts
+- FOUND: .planning/phases/64-hallintaoikeuspyynn-t-dashboard-ui/64-05-SUMMARY.md
+- FOUND: commit 0fe486d (test)
+- FOUND: commit e71a276 (feat)
+- FOUND: commit ad56cd8 (docs — this SUMMARY)
