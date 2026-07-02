@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 64-hallintaoikeuspyynn-t-dashboard-ui
 source: [64-VERIFICATION.md]
 started: 2026-07-02T13:35:00Z
@@ -46,7 +46,10 @@ blocked: 0
   reason: "User reported: works well except one little fix. When approving request the member isnt added to the list below right after clicking, you need to reopen the popup tp see the updated list. To get better feeling it should happen right after."
   severity: minor
   test: 3
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "app/components/TeamManagementPopup.tsx handleApprove (lines 117-143) updates only pendingRequests state on success (setPendingRequests filter) but never updates teamMembers state. teamMembers is only repopulated by the fetch effect that runs on popup open, so the approved member doesn't show until the popup is closed and reopened. handleConfirmRemove correctly updates its list (setTeamMembers filter); handleApprove is the only mutation handler that needs to move a row between two lists and fails to do so."
+  artifacts:
+    - path: "app/components/TeamManagementPopup.tsx"
+      issue: "handleApprove success branch missing setTeamMembers update to append the newly-approved member"
+  missing:
+    - "In handleApprove's res.ok branch, look up the approved row from pendingRequests by requestId and append a constructed TeamMemberRow ({ userId: row.requesterId, name: row.name, email: row.email, role: 'member', isSelf: false }) into teamMembers via setTeamMembers(prev => [...prev, newRow]), mirroring the optimistic-update pattern already used in handleConfirmRemove."
+  debug_session: ".planning/debug/team-list-no-refresh-approve.md"
