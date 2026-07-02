@@ -18,10 +18,10 @@ Requirements for milestone v3.1 (UX/UI-korjaukset & business-parannukset). Each 
 - [x] **ACCESS-01**: `companies`-taulu + `business_accounts.company_id`/`role` (owner/member); olemassaolevat tilit migratoidaan päähallitsijoiksi yhtenä transaktiona, varmuuskopio otettu ennen ajoa
 - [x] **ACCESS-02**: `business_paikka_links.UNIQUE(paikka_id)` löysennetty `UNIQUE(business_account_id, paikka_id)`:ksi; RLS-politiikat päivitetty `current_company_id()`-helpperifunktiolla
 - [x] **ACCESS-03**: Saman yrityksen työntekijä voi hakea hallintaoikeutta paikkaan, jota toinen yrityksen henkilö jo hallinnoi (hakee paikan nimellä/osoitteella)
-- [ ] **ACCESS-04**: Paikan päähallitsija näkee odottavat hallintaoikeuspyynnöt `/business`-dashboardissa ja voi hyväksyä/hylätä; sub-managerit eivät voi hyväksyä toisten pyyntöjä
+- [x] **ACCESS-04**: Paikan päähallitsija näkee odottavat hallintaoikeuspyynnöt `/business`-dashboardissa ja voi hyväksyä/hylätä; sub-managerit eivät voi hyväksyä toisten pyyntöjä
 - [x] **ACCESS-05**: Resend-sähköposti-ilmoitus päähallitsijalle pyynnön saapuessa, ja pyytäjälle päätöksestä (hylkäyssyy valinnainen)
 - [x] **ACCESS-06**: Pyytäjä näkee selkeän "odottaa hyväksyntää" -tilan; ei pääsyä paikan hallintaan ennen hyväksyntää (RLS-tasolla estetty)
-- [ ] **ACCESS-07**: Päähallitsija voi poistaa sub-managerin hallintaoikeuden paikasta; päähallitsijaa itseään ei voi poistaa tämän virran kautta
+- [x] **ACCESS-07**: Päähallitsija voi poistaa sub-managerin hallintaoikeuden paikasta; päähallitsijaa itseään ei voi poistaa tämän virran kautta
 
 ### Business-dashboard visuaalinen uudistus
 
@@ -83,8 +83,8 @@ Deferred — not in v3.1 scope.
 | ACCESS-03 | Phase 60 | Complete |
 | ACCESS-05 | Phase 60 | Complete |
 | ACCESS-06 | Phase 60 | Complete |
-| ACCESS-04 | Phase 64 | Pending |
-| ACCESS-07 | Phase 64 | Pending |
+| ACCESS-04 | Phase 64 | Complete |
+| ACCESS-07 | Phase 64 | Complete |
 | BIZPANEL-06 | Phase 63 | Complete |
 | BIZPANEL-07 | Phase 63 | Complete |
 | PREV-04 | Phase 63 | Complete |
