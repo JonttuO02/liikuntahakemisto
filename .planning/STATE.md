@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: — Active Milestone
 current_phase: 64
-current_phase_name: Hallintaoikeuspyynnöt — dashboard-UI
+current_phase_name: hallintaoikeuspyynn-t-dashboard-ui
 status: executing
 stopped_at: Phase 64 UI-SPEC approved
-last_updated: "2026-07-02T12:31:07.419Z"
-last_activity: 2026-07-01
-last_activity_desc: Phase 63 complete, transitioned to Phase 64
+last_updated: "2026-07-02T12:36:29.393Z"
+last_activity: 2026-07-02
+last_activity_desc: Phase 64 execution started
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 28
+  total_plans: 32
   completed_plans: 28
   percent: 86
 ---
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-01)
 
 **Core value:** Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloajat, ja pääset liikkumaan — ilman hakua, ilman kirjautumista.
-**Current focus:** Phase 63 — business-dashboardin-preview-n-kymien-uudistus
+**Current focus:** Phase 64 — hallintaoikeuspyynn-t-dashboard-ui
 
 ## Current Position
 
-Phase: 64 — Hallintaoikeuspyynnöt — dashboard-UI
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-07-01 — Phase 63 complete, transitioned to Phase 64
+Phase: 64 (hallintaoikeuspyynn-t-dashboard-ui) — EXECUTING
+Plan: 1 of 4
+Status: Executing Phase 64
+Last activity: 2026-07-02 — Phase 64 execution started
 
 Next: `/gsd-execute-phase 63` — Business-dashboardin & preview-näkymien uudistus
 

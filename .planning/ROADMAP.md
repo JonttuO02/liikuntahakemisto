@@ -204,9 +204,9 @@ Plans:
 **Plans**: 4 plans (2 waves)
 **Wave 1**
 
-- [ ] 64-01-PLAN.md — List Route Handler (pending requests + team read, service-role, ACCESS-04) [W1]
-- [ ] 64-02-PLAN.md — Removal Route Handler (venue-scoped, self-block, ACCESS-07) [W1]
-- [ ] 64-03-PLAN.md — display_name migration + schema push + invite-signup wiring fix (D-05/D-15) [W1]
+- [x] 64-01-PLAN.md — List Route Handler (pending requests + team read, service-role, ACCESS-04) [W1]
+- [x] 64-02-PLAN.md — Removal Route Handler (venue-scoped, self-block, ACCESS-07) [W1]
+- [x] 64-03-PLAN.md — display_name migration + schema push + invite-signup wiring fix (D-05/D-15) [W1]
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -478,4 +478,4 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 6/6 | Complete    | 2026-06-26 |
 | 62. Venuepage-konsolidaatio | v3.1 | 4/4 | Complete    | 2026-06-30 |
 | 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 7/7 | Complete    | 2026-07-01 |
-| 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 0/? | Not started | - |
+| 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 3/4 | In Progress|  |
