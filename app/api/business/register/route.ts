@@ -15,6 +15,7 @@ export async function POST(request: Request) {
   // Parse and validate request body
   let company_name: string
   let role_in_company: string | null
+  let display_name: string | null
   let invite: boolean
   try {
     const body = await request.json()
@@ -33,6 +34,13 @@ export async function POST(request: Request) {
     role_in_company = typeof body.role_in_company === 'string'
       ? body.role_in_company.trim().slice(0, 100) || null
       : null
+
+    // display_name (D-05): only meaningful on the invite path — collected
+    // by app/business/rekisteroidy for a brand-new invite-link employee.
+    // 100-char cap mirrors role_in_company (Assumption A3).
+    display_name = typeof body.display_name === 'string'
+      ? body.display_name.trim().slice(0, 100) || null
+      : null
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
@@ -46,7 +54,7 @@ export async function POST(request: Request) {
   if (invite) {
     const { error: accountError } = await supabaseAdmin
       .from('business_accounts')
-      .insert({ user_id: user.id, company_id: null, role: 'member', role_in_company })
+      .insert({ user_id: user.id, company_id: null, role: 'member', role_in_company, display_name })
 
     if (accountError) {
       return NextResponse.json(

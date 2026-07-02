@@ -169,4 +169,43 @@ describe('POST /api/business/register', () => {
     expect(mockCompaniesInsert).not.toHaveBeenCalled()
     expect(mockBusinessAccountsInsert).not.toHaveBeenCalled()
   })
+
+  describe('invite-link path (invite: true)', () => {
+    it('creates a business_accounts row with company_id: null, role: member, and does not insert a companies row', async () => {
+      setHappyPathMocks()
+      const req = makeRequest(
+        { invite: true, role_in_company: 'Johtaja' },
+        VALID_AUTH_HEADER,
+      )
+      const res = await POST(req)
+      expect(res.status).toBe(200)
+      expect(mockCompaniesInsert).not.toHaveBeenCalled()
+      expect(mockBusinessAccountsInsert).toHaveBeenCalledWith({
+        user_id: VALID_USER.id,
+        company_id: null,
+        role: 'member',
+        role_in_company: 'Johtaja',
+        display_name: null,
+      })
+    })
+
+    it('trims and caps display_name to 100 chars, and does not insert a companies row', async () => {
+      setHappyPathMocks()
+      const longName = 'a'.repeat(150)
+      const req = makeRequest(
+        { invite: true, role_in_company: 'Johtaja', display_name: '  ' + longName + '  ' },
+        VALID_AUTH_HEADER,
+      )
+      const res = await POST(req)
+      expect(res.status).toBe(200)
+      expect(mockCompaniesInsert).not.toHaveBeenCalled()
+      expect(mockBusinessAccountsInsert).toHaveBeenCalledWith({
+        user_id: VALID_USER.id,
+        company_id: null,
+        role: 'member',
+        role_in_company: 'Johtaja',
+        display_name: 'a'.repeat(100),
+      })
+    })
+  })
 })
