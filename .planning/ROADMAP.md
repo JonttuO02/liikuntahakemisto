@@ -214,7 +214,7 @@ Plans:
 
 **Gap closure** *(from UAT Test 3)*
 
-- [ ] 64-05-PLAN.md — Approve flow: append approved member to Current team immediately (ACCESS-04) [gap]
+- [x] 64-05-PLAN.md — Approve flow: append approved member to Current team immediately (ACCESS-04) [gap]
 
 **UI hint**: yes
 
@@ -482,7 +482,7 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 6/6 | Complete    | 2026-06-26 |
 | 62. Venuepage-konsolidaatio | v3.1 | 4/4 | Complete    | 2026-06-30 |
 | 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 7/7 | Complete    | 2026-07-01 |
-| 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 4/4 | Complete   | 2026-07-02 |
+| 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 5/5 | Complete   | 2026-07-02 |
 
 ## Backlog
 
@@ -516,4 +516,5 @@ outright? auto-reject other pending claims for the same venue when one is approv
 warn the admin and require confirmation?).
 
 Plans:
+
 - [ ] TBD (promote with /gsd-review-backlog when ready)

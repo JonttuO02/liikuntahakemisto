@@ -6,14 +6,14 @@ current_phase: 64
 current_phase_name: hallintaoikeuspyynn-t-dashboard-ui
 status: executing
 stopped_at: Phase 64 UI-SPEC approved
-last_updated: "2026-07-02T12:36:29.393Z"
+last_updated: "2026-07-02T14:12:30.394Z"
 last_activity: 2026-07-02
-last_activity_desc: Phase 64 execution started
+last_activity_desc: Phase 64 execution resumed (wave continue)
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 32
-  completed_plans: 28
+  total_plans: 33
+  completed_plans: 32
   percent: 86
 ---
 
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-07-01)
 Phase: 64 (hallintaoikeuspyynn-t-dashboard-ui) — EXECUTING
 Plan: 1 of 4
 Status: Executing Phase 64
-Last activity: 2026-07-02 — Phase 64 execution started
+Last activity: 2026-07-02 — Phase 64 execution resumed (wave continue)
 
 Next: `/gsd-execute-phase 63` — Business-dashboardin & preview-näkymien uudistus
 
