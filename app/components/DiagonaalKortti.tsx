@@ -2,7 +2,7 @@
 
 import { useRef, useState, useLayoutEffect } from 'react'
 import { motion } from 'framer-motion'
-import { MapPin, BookmarkCheck, Bookmark, Building2, Camera, BadgeCheck, Eye, Pencil, Link2, AlertCircle, Check } from 'lucide-react'
+import { MapPin, BookmarkCheck, Bookmark, Building2, Camera, BadgeCheck, Eye, Pencil, Link2, AlertCircle, Check, Users } from 'lucide-react'
 import { lajiKonfig } from '@/lib/lajit'
 import { SportIcon } from '@/lib/sportIcons'
 import { hintateksti } from '@/lib/utils'
@@ -47,6 +47,7 @@ interface DiagonaalKorttiProps {
     onCopyInviteLink?: () => void
     copied?: boolean
     onShowRejectionInfo?: () => void
+    onManageTeam?: () => void
   }
 }
 
@@ -281,6 +282,17 @@ export default function DiagonaalKortti({ paikka, distanceStr, isSaved, onShowMa
                     style={panelShade ? { backgroundColor: panelChipBg, color: panelShadeContrastText } : undefined}
                   >
                     <AlertCircle className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {dashboardActions.onManageTeam && (
+                  <button
+                    type="button"
+                    onClick={e => { e.stopPropagation(); e.preventDefault(); dashboardActions.onManageTeam?.() }}
+                    aria-label={tBusiness('manageTeamCta')}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center [transition:color_150ms_ease] ${panelShade ? '' : 'glass-btn text-[rgba(17,17,17,0.5)] hover:text-[#111111]'}`}
+                    style={panelShade ? { backgroundColor: panelChipBg, color: panelShadeContrastText } : undefined}
+                  >
+                    <Users className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
