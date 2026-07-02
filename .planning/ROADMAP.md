@@ -210,7 +210,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 64-04-PLAN.md — TeamManagementPopup + DiagonaalKortti icon + dashboard wiring (ACCESS-04/07) [W2]
+- [x] 64-04-PLAN.md — TeamManagementPopup + DiagonaalKortti icon + dashboard wiring (ACCESS-04/07) [W2]
 
 **UI hint**: yes
 
@@ -478,4 +478,4 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 61. Onboarding-vaiheiden uudelleenjärjestys | v3.1 | 6/6 | Complete    | 2026-06-26 |
 | 62. Venuepage-konsolidaatio | v3.1 | 4/4 | Complete    | 2026-06-30 |
 | 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 7/7 | Complete    | 2026-07-01 |
-| 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 3/4 | In Progress|  |
+| 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 4/4 | Complete   | 2026-07-02 |
