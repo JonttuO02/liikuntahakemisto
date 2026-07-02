@@ -114,6 +114,8 @@
     "errorGeneric": "Something went wrong. Please try again.",
     "errorCheckEmail": "Check your email to confirm your account.",
     "errorAccountCreationFailed": "Account creation failed. Please try again.",
+    "inviteNameLabel": "Name",
+    "inviteNamePlaceholder": "First and last name",
     "dashboardTitle": "Welcome to the dashboard",
     "dashboardComingSoon": "Features coming soon.",
     "claimTitle": "Create a venue",
