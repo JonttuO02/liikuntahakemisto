@@ -45,11 +45,13 @@ vi.mock('@/lib/supabaseAdmin.server', () => {
       Promise.resolve(mockTeamMembersResult()).then(resolve, reject),
   }
 
-  let linkSelectCallCount = 0
+  // Call count tracked via a vi.fn() (not a plain closure variable) so that
+  // vi.clearAllMocks() in beforeEach resets it between tests.
+  const mockLinkSelectCall = vi.fn()
   const businessPaikkaLinksTable = {
     select: () => {
-      linkSelectCallCount += 1
-      return linkSelectCallCount === 1 ? ownerProbeChain : teamMembersChain
+      mockLinkSelectCall()
+      return mockLinkSelectCall.mock.calls.length === 1 ? ownerProbeChain : teamMembersChain
     },
   }
 
