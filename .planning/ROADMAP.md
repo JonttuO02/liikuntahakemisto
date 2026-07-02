@@ -201,7 +201,11 @@ Plans:
   3. Päähallitsija voi poistaa sub-managerin hallintaoikeuden paikasta
   4. Päähallitsijaa itseään ei voi poistaa tämän virran kautta (kova esto)
 
-**Plans**: TBD
+**Plans**: 4 plans (2 waves)
+- [ ] 64-01-PLAN.md — List Route Handler (pending requests + team read, service-role, ACCESS-04) [W1]
+- [ ] 64-02-PLAN.md — Removal Route Handler (venue-scoped, self-block, ACCESS-07) [W1]
+- [ ] 64-03-PLAN.md — display_name migration + schema push + invite-signup wiring fix (D-05/D-15) [W1]
+- [ ] 64-04-PLAN.md — TeamManagementPopup + DiagonaalKortti icon + dashboard wiring (ACCESS-04/07) [W2]
 **UI hint**: yes
 
 ### v3.1 Dependency Graph
