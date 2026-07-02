@@ -125,3 +125,12 @@ None - no external service configuration required.
 ---
 *Phase: 64-hallintaoikeuspyynn-t-dashboard-ui*
 *Completed: 2026-07-02*
+
+## Self-Check: PASSED
+
+- FOUND: app/api/business/access-request/list/route.ts
+- FOUND: tests/api/access-request-list.test.ts
+- FOUND: .planning/phases/64-hallintaoikeuspyynn-t-dashboard-ui/64-01-SUMMARY.md
+- FOUND commit: d6107cf (test)
+- FOUND commit: ba1d2a7 (feat)
+- FOUND commit: bc4fb11 (docs)
