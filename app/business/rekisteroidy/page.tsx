@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
@@ -11,9 +11,18 @@ import { mapBusinessError } from './mapBusinessError'
 export default function BusinessRekisteroidyPage() {
   const t = useTranslations('Business')
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Invite-link path (D-15): a paikka_id query param means this signup came
+  // from a "liity" invite link and must round-trip back there so the access
+  // request actually fires, instead of becoming the owner of a bogus company.
+  const rawPaikkaId = searchParams.get('paikka_id')
+  const paikkaId = rawPaikkaId ? parseInt(rawPaikkaId, 10) : NaN
+  const isInvitePath = !!rawPaikkaId && !isNaN(paikkaId)
 
   const [companyName, setCompanyName] = useState('')
   const [roleInCompany, setRoleInCompany] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -100,7 +109,12 @@ export default function BusinessRekisteroidyPage() {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + accessToken,
         },
-        body: JSON.stringify({ company_name: companyName.trim(), role_in_company: roleInCompany }),
+        body: JSON.stringify({
+          company_name: companyName.trim(),
+          role_in_company: roleInCompany,
+          invite: isInvitePath,
+          display_name: displayName.trim(),
+        }),
       })
 
       if (!response.ok) {
@@ -109,9 +123,10 @@ export default function BusinessRekisteroidyPage() {
         return
       }
 
-      // Success: navigate to business dashboard
+      // Success: invite-link signups round-trip back to /business/liity so the
+      // access request actually fires (D-15); default signups go to the dashboard.
       // Do NOT call setLoading(false) here -- navigation will unmount the component
-      router.push('/business')
+      router.push(isInvitePath ? '/business/liity?paikka_id=' + paikkaId : '/business')
     } catch {
       setError(t('errorGeneric'))
       setLoading(false)
@@ -154,15 +169,30 @@ export default function BusinessRekisteroidyPage() {
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <input
-              type="text"
-              placeholder={t('companyNamePlaceholder')}
-              value={companyName}
-              onChange={e => setCompanyName(e.target.value)}
-              required
-              disabled={loading}
-              className={inputClass}
-            />
+            {/* Invite path (D-15): joining an existing company -- collect the
+                person's name instead of a new company name. */}
+            {isInvitePath ? (
+              <input
+                type="text"
+                aria-label={t('inviteNameLabel')}
+                placeholder={t('inviteNamePlaceholder')}
+                value={displayName}
+                onChange={e => setDisplayName(e.target.value)}
+                required
+                disabled={loading}
+                className={inputClass}
+              />
+            ) : (
+              <input
+                type="text"
+                placeholder={t('companyNamePlaceholder')}
+                value={companyName}
+                onChange={e => setCompanyName(e.target.value)}
+                required
+                disabled={loading}
+                className={inputClass}
+              />
+            )}
             <select
               value={roleInCompany}
               onChange={e => setRoleInCompany(e.target.value)}

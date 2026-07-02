@@ -114,6 +114,8 @@
     "errorGeneric": "Jokin meni pieleen. Yritä uudelleen.",
     "errorCheckEmail": "Tarkista sähköpostisi ja vahvista tili.",
     "errorAccountCreationFailed": "Tilin luonti epäonnistui. Yritä uudelleen.",
+    "inviteNameLabel": "Nimi",
+    "inviteNamePlaceholder": "Etu- ja sukunimi",
     "dashboardTitle": "Tervetuloa hallintapaneeliin",
     "dashboardComingSoon": "Ominaisuudet lisätään pian.",
     "claimTitle": "Luo paikka",
