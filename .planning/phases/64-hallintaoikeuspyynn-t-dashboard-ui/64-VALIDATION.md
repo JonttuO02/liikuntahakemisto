@@ -2,7 +2,7 @@
 phase: 64
 slug: hallintaoikeuspyynn-t-dashboard-ui
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-07-02
 ---

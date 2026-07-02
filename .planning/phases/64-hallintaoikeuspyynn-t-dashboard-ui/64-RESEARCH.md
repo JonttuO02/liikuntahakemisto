@@ -477,7 +477,7 @@ Not applicable in the "external tech evolved" sense — this phase makes no use 
 | A3 | `display_name` should be a nullable `TEXT` column with a reasonable client-side length cap (e.g. 100 chars, mirroring `role_in_company`'s existing `.slice(0, 100)` convention in `register/route.ts`) | Code Examples, Don't Hand-Roll | Low — a length cap is a defensive default, not a hard requirement from CONTEXT.md; adjusting the cap later is a one-line change |
 | A4 | Fixing the `rekisteroidy` → `register` → `liity` invite-wiring gap should be bundled into Phase 64 rather than deferred, because D-05's name field has no reachable code path for brand-new invite-link users without it | Summary, Common Pitfalls (Pitfall 1), Open Questions (Q1) | **High if wrong in the other direction** — if the user actually wants this deferred and Phase 64 ships only the name-field UI without the wiring fix, the new field will be dead code for the primary "brand-new employee joins via invite link" scenario, and the underlying company-mis-assignment bug persists silently. This should be explicitly confirmed with the user during planning, not silently decided by the planner. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should Phase 64 fix the confirmed `rekisteroidy`/`register`/`liity` invite-wiring gap (paikka_id drop, missing `invite:true`, wrong post-registration redirect), or is that explicitly separate deferred work?**
    - What we know: The gap is real and independently confirmed this session via full file reads and repo-wide grep (zero call sites send `invite: true`; `rekisteroidy/page.tsx` never reads `paikka_id`). Phase 60's own research flagged this exact risk as a Medium-risk assumption (A2) that appears to have materialized.
