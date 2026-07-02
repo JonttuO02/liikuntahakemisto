@@ -5,8 +5,8 @@ milestone_name: — Active Milestone
 current_phase: 64
 current_phase_name: Hallintaoikeuspyynnöt — dashboard-UI
 status: executing
-stopped_at: Phase 64 context gathered
-last_updated: "2026-07-02T11:37:55.214Z"
+stopped_at: Phase 64 UI-SPEC approved
+last_updated: "2026-07-02T12:31:07.419Z"
 last_activity: 2026-07-01
 last_activity_desc: Phase 63 complete, transitioned to Phase 64
 progress:
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-07-01)
 
 Phase: 64 — Hallintaoikeuspyynnöt — dashboard-UI
 Plan: Not started
-Status: Executing Phase 63
+Status: Ready to execute
 Last activity: 2026-07-01 — Phase 63 complete, transitioned to Phase 64
 
 Next: `/gsd-execute-phase 63` — Business-dashboardin & preview-näkymien uudistus
@@ -119,9 +119,9 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 
 ## Session Continuity
 
-Last session: 2026-07-02T11:37:55.205Z
-Stopped at: Phase 64 context gathered
-Resume file: .planning/phases/64-hallintaoikeuspyynn-t-dashboard-ui/64-CONTEXT.md
+Last session: 2026-07-02T12:04:57.797Z
+Stopped at: Phase 64 UI-SPEC approved
+Resume file: .planning/phases/64-hallintaoikeuspyynn-t-dashboard-ui/64-UI-SPEC.md
 
 ## Operator Next Steps
 
