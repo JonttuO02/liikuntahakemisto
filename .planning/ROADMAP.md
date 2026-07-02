@@ -201,7 +201,7 @@ Plans:
   3. Päähallitsija voi poistaa sub-managerin hallintaoikeuden paikasta
   4. Päähallitsijaa itseään ei voi poistaa tämän virran kautta (kova esto)
 
-**Plans**: 4 plans (2 waves)
+**Plans**: 5 plans (2 waves + 1 gap-closure)
 **Wave 1**
 
 - [x] 64-01-PLAN.md — List Route Handler (pending requests + team read, service-role, ACCESS-04) [W1]
@@ -211,6 +211,10 @@ Plans:
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 64-04-PLAN.md — TeamManagementPopup + DiagonaalKortti icon + dashboard wiring (ACCESS-04/07) [W2]
+
+**Gap closure** *(from UAT Test 3)*
+
+- [ ] 64-05-PLAN.md — Approve flow: append approved member to Current team immediately (ACCESS-04) [gap]
 
 **UI hint**: yes
 
