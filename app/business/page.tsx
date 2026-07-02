@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { AnimatePresence } from 'framer-motion'
 import { Map } from 'lucide-react'
@@ -9,6 +9,7 @@ import ClaimSearchForm from '@/app/components/ClaimSearchForm'
 import PreviewModal from '@/app/components/PreviewModal'
 import DiagonaalKortti from '@/app/components/DiagonaalKortti'
 import RejectionReasonPopup from '@/app/components/RejectionReasonPopup'
+import TeamManagementPopup from '@/app/components/TeamManagementPopup'
 import type { Liikuntapaikka } from '@/lib/types'
 import { deriveVenueStatus } from '@/lib/venueStatus'
 
@@ -41,6 +42,11 @@ type VenueLink = {
 }
 
 type TBusiness = ReturnType<typeof useTranslations<'Business'>>
+
+// D-02 visibility gate summary — sourced from the same Plan 64-01 service-role
+// list endpoint the popup uses, computed once per approved-and-not-kesken venue
+// at dashboard-render time (no separate/second gate fetch path).
+type TeamSummary = { pendingCount: number; memberBeyondOwnerCount: number }
 
 // --- StatusCard ---
 function StatusCard({
@@ -91,6 +97,8 @@ function DashboardVenueCard({
   accentColor,
   onPreview,
   onShowRejectionInfo,
+  onManageTeam,
+  teamSummary,
 }: {
   link: VenueLink
   isKesken: boolean
@@ -98,6 +106,8 @@ function DashboardVenueCard({
   accentColor?: string
   onPreview: (p: Liikuntapaikka) => void
   onShowRejectionInfo: (link: VenueLink) => void
+  onManageTeam: (paikkaId: number) => void
+  teamSummary?: TeamSummary
 }) {
   const [copied, setCopied] = useState(false)
 
@@ -128,6 +138,15 @@ function DashboardVenueCard({
         onCopyInviteLink: link.claim_status === 'approved' && !isKesken ? handleCopyInviteLink : undefined,
         copied,
         onShowRejectionInfo: link.claim_status === 'rejected' ? () => onShowRejectionInfo(link) : undefined,
+        // D-02: icon shows only when the venue has >=1 pending request OR >=1
+        // team member beyond the owner — an approved-but-empty (owner-only,
+        // zero pending) venue passes undefined and shows no icon.
+        onManageTeam:
+          link.claim_status === 'approved' &&
+          !isKesken &&
+          ((teamSummary?.pendingCount ?? 0) >= 1 || (teamSummary?.memberBeyondOwnerCount ?? 0) >= 1)
+            ? () => onManageTeam(link.paikka_id)
+            : undefined,
       }}
     />
   )
@@ -149,9 +168,10 @@ export default function BusinessPage() {
   const [pendingAccessRequests, setPendingAccessRequests] = useState<PendingAccessRequest[]>([])
   const [rejectionPopupLink, setRejectionPopupLink] = useState<VenueLink | null>(null)
   const [brandingByPaikkaId, setBrandingByPaikkaId] = useState<Record<number, BrandingEntry>>({})
+  const [teamPopupPaikkaId, setTeamPopupPaikkaId] = useState<number | null>(null)
+  const [teamSummaryByPaikkaId, setTeamSummaryByPaikkaId] = useState<Record<number, TeamSummary>>({})
 
-  useEffect(() => {
-    async function checkState() {
+  const checkState = useCallback(async () => {
       const supabase = createBusinessBrowserClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
@@ -184,8 +204,44 @@ export default function BusinessPage() {
         .eq('business_account_id', user.id)
         .order('created_at', { ascending: true })
 
-      setVenueLinks((links as unknown as VenueLink[]) ?? [])
+      const venueLinksData = (links as unknown as VenueLink[]) ?? []
+      setVenueLinks(venueLinksData)
       setKeskenPaikkaIds(keskenSet)
+
+      // D-02 visibility gate data: pending-request count + team-members-beyond-owner
+      // count per approved-and-not-kesken venue, sourced from the SAME service-role
+      // read the popup uses (Plan 64-01 GET .../access-request/list) — no separate/
+      // second fetch path (no anon-client count query, no new count endpoint).
+      // pendingAccessRequests below is requester-scoped only and does NOT reflect
+      // other users' pending requests to an owned venue, so it cannot drive this gate.
+      const approvedNotKeskenVenues = venueLinksData.filter(
+        l => l.claim_status === 'approved' && deriveVenueStatus(l.claim_status, keskenSet.has(l.paikka_id), l.submitted_at) !== 'kesken'
+      )
+      const { data: { session: gateSession } } = await supabase.auth.getSession()
+      const gateToken = gateSession?.access_token ?? ''
+      const summaryEntries = await Promise.all(
+        approvedNotKeskenVenues.map(async (l): Promise<[number, TeamSummary]> => {
+          try {
+            const res = await fetch(`/api/business/access-request/list?paikka_id=${l.paikka_id}`, {
+              headers: { Authorization: 'Bearer ' + gateToken },
+            })
+            if (!res.ok) throw new Error('gate fetch failed')
+            const json = await res.json() as { pendingRequests?: unknown[]; teamMembers?: { isSelf: boolean }[] }
+            return [
+              l.paikka_id,
+              {
+                pendingCount: json.pendingRequests?.length ?? 0,
+                memberBeyondOwnerCount: (json.teamMembers ?? []).filter(m => !m.isSelf).length,
+              },
+            ]
+          } catch {
+            // Fail closed: a transient per-venue error never surfaces a broken control —
+            // the icon simply stays hidden for that venue until the next checkState() run.
+            return [l.paikka_id, { pendingCount: 0, memberBeyondOwnerCount: 0 }]
+          }
+        })
+      )
+      setTeamSummaryByPaikkaId(Object.fromEntries(summaryEntries))
 
       // Fetch chosen brand colors (business_branding.selected_background_color/selected_accent_color,
       // scoped per venue since Phase 47's paikka_id re-key). These are picked during onboarding's
@@ -215,10 +271,12 @@ export default function BusinessPage() {
       setPendingAccessRequests((pendingReqs as PendingAccessRequest[]) ?? [])
 
       setLoading(false)
-    }
-    checkState()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    checkState()
+  }, [checkState])
 
   if (loading) {
     return (
@@ -281,6 +339,8 @@ export default function BusinessPage() {
                     accentColor={brandingByPaikkaId[link.paikka_id]?.accentColor}
                     onPreview={setPreviewPaikka}
                     onShowRejectionInfo={setRejectionPopupLink}
+                    onManageTeam={setTeamPopupPaikkaId}
+                    teamSummary={teamSummaryByPaikkaId[link.paikka_id]}
                   />
                 </div>
               ))}
@@ -344,6 +404,17 @@ export default function BusinessPage() {
             onClose={() => setRejectionPopupLink(null)}
             rejectionReason={rejectionPopupLink?.rejection_reason ?? null}
             editHref={rejectionPopupLink ? '/business/' + rejectionPopupLink.paikka_id : ''}
+          />
+
+          {/* Team management popup — single page-level instance, opened via the
+              Users icon button on an approved DashboardVenueCard (D-01/D-02).
+              onChanged re-runs checkState() so the D-02 summaries + icon gate
+              refresh after an approve/reject/remove. */}
+          <TeamManagementPopup
+            open={teamPopupPaikkaId !== null}
+            paikkaId={teamPopupPaikkaId}
+            onClose={() => setTeamPopupPaikkaId(null)}
+            onChanged={() => { checkState() }}
           />
         </div>
       </main>
