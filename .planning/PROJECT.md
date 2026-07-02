@@ -305,6 +305,8 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - ✓ **VENUEPAGE-02**: Poistetun sivun ainutlaatuinen sisältö (show-on-map) siirretty PaikkaSheetiin ennen poistoa — Phase 62
 - ✓ **VENUEPAGE-03**: Sisäiset polut avaavat PaikkaSheetin (ei navigaatiota) samalla tavalla kuin CalloutCard-klikkaus, myös hakulistan/TO DO -overlayn kortit — layerointi overlayn päälle ilman sen sulkemista (gap-closure 62-04) — Phase 62
 - ✓ **VENUEPAGE-04**: Suora osoite poistettuun reittiin palauttaa 404 ilman redirectiä — Phase 62
+- ✓ **ACCESS-04**: Päähallitsija näkee odottavat hallintaoikeuspyynnöt ja hyväksyy/hylkää ne `TeamManagementPopup`-komponentissa `/business`-dashboardissa; hyväksytty jäsen siirtyy "Current team" -listaan samassa render-passissa ilman popupin uudelleenavausta (gap-closure 64-05) — Phase 64
+- ✓ **ACCESS-07**: Päähallitsija voi poistaa sub-managerin hallintaoikeuden paikasta (`POST /api/business/access-request/remove`, venue-scoped, literal DELETE); itsensä poistaminen estetty kovalla server-side-tarkistuksella ennen tietokantakutsua — Phase 64
 
 ### Future (deferred from v1.1 + v1.7)
 
@@ -423,4 +425,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-07-02 — Phase 63 complete (business-dashboardin & preview-näkymien uudistus, BIZPANEL-06/07, PREV-04/05, LIVEPREV-05)*
+*Last updated: 2026-07-02 — Phase 64 complete (hallintaoikeuspyynnöt — dashboard-UI, ACCESS-04/07, incl. gap-closure 64-05). All 7 phases of v3.1 (58–64) now complete — milestone ready for `/gsd-complete-milestone`.*
