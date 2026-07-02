@@ -182,3 +182,12 @@ ACCESS-04 and ACCESS-07 are both code-complete: `npx tsc --noEmit` passes clean 
 ---
 *Phase: 64-hallintaoikeuspyynn-t-dashboard-ui*
 *Completed: 2026-07-02*
+
+## Self-Check: PASSED
+
+- FOUND: app/components/TeamManagementPopup.tsx
+- FOUND: .planning/phases/64-hallintaoikeuspyynn-t-dashboard-ui/64-04-SUMMARY.md
+- FOUND: 720c8ea (Task 1 commit)
+- FOUND: 67dd1ea (Task 2 commit)
+- FOUND: 323c506 (Task 3 commit)
+- FOUND: b835457 (SUMMARY.md commit)
