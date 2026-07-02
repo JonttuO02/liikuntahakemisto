@@ -367,6 +367,47 @@
 
 ---
 
+## Milestone: v3.1 — UX/UI-korjaukset & business-parannukset
+
+**Shipped:** 2026-07-02
+**Phases:** 7 (phases 58–64) | **Plans:** 33 | **Timeline:** 8 days (2026-06-24 → 2026-07-02)
+**Files changed:** 68 | **Lines:** +5,375 / -1,366 (excl. worktree/planning artifacts) | **Commits:** 297
+
+### What Was Built
+- Multi-company data model: `companies` table + `business_accounts.company_id`/`role`, owner backfill in one transaction, `business_paikka_links` UNIQUE loosened to `(business_account_id, paikka_id)`, RLS rewritten with a `current_company_id()` SECURITY DEFINER helper
+- Full hallintaoikeuspyyntö (access-request) lifecycle: `business_access_requests` table, Resend owner-notification + requester-decision emails, concurrency-safe approve/reject Route Handlers, RLS-level access gating (not just UI), invite-link deep-link signup path
+- `TeamManagementPopup` dashboard-UI: owner approves/rejects pending requests and removes sub-managers, with a hard server-side self-removal block
+- Onboarding reordered: name+URL step first (AI analysis fires in background), location step second, separate Preview step removed entirely, "SUBMIT" replaces "PREVIEW" milestone
+- Separate venue page (`app/paikat/[id]`) deleted entirely; all content and navigation consolidated into PaikkaSheet (venuepage), old route now 404s
+- `/business` dashboard redesigned around DiagonaalKortti cards with hover/tap-revealed icon-button controls; every preview surface (dashboard modal, edit/onboarding live-preview) now purely visual and includes the consolidated venuepage
+
+### What Worked
+- Running independent phases in parallel (58 admin-map and 61 onboarding-reorder touched disjoint code paths from the 59→60→64 and 62→63→64 critical-path chains) kept the 7-phase milestone to 8 days
+- Worktree-based execution (`use_worktrees: true`) for wave-parallel plans within a phase, visible in the large number of `chore: merge executor worktree` commits — let independent plan waves land without manual branch juggling
+- Gap-closure plans caught real regressions cheaply: Phase 62's onOpen handlers unmounting the overlay underneath PaikkaSheet (62-04) and Phase 64's stale "Pending"→"Current team" list (64-05) were both one-render-pass fixes once UAT surfaced them
+
+### What Was Inefficient
+- Two phases (61, 63) needed a second round of gap-closure plans after their first UAT pass — Phase 61's ROADMAP wording ("AI results as their own step") didn't match what UAT approved (background AI, straight to wizard), and Phase 63 needed 63-06/63-07 for dashboard-grid and analysis-pipeline reliability fixes not caught in the original plan
+- At milestone close, the pre-close audit flagged 3 "open" items that were actually already resolved in code — a debug session (`paikkasheet-dismisses-search-todo-overlay`) whose fix landed in 62-04 but whose own status field was never updated, and a Phase 61 UAT file stuck at `status: diagnosed` despite VERIFICATION.md scoring 12/12 passed. Neither blocked anything, but both cost a manual cross-check at close time that closing the loop mid-phase would have avoided
+- Phase 59's column-level `REVOKE UPDATE (col) ... FROM authenticated` silently failed to restrict anything because a pre-existing table-wide GRANT overrode it — cost a dedicated investigation to discover, and turned out to affect 5 pre-existing instances including a `profiles.is_admin` self-elevation hole
+
+### Patterns Established
+- `current_company_id()` STABLE SECURITY DEFINER helper with explicit `SET search_path = public` + `GRANT EXECUTE` — the standard way to avoid same-table RLS recursion in this codebase, reusing the `set_business_managed_on_approval()` precedent
+- `REVOKE UPDATE ON table FROM authenticated` + explicit `GRANT UPDATE (allow-list)` is the only pattern that actually restricts column writes here — column-level REVOKE alone does nothing when a table-wide GRANT exists
+- onOpen callback contract for DiagonaalKortti instances: select the venue only (`setValittu`), never clear an overlay's own visibility flag in the same handler — z-index stacking (PaikkaSheet 65/66 > overlays 59/62) does the layering, not conditional (un)mounting
+
+### Key Lessons
+1. A debug session or UAT file's `status:` frontmatter needs to be updated the moment its fix lands elsewhere in the codebase — otherwise it resurfaces as a false-positive blocker at the next milestone-close audit, costing a manual re-investigation to confirm it's actually resolved
+2. Before adding a column-level `REVOKE`/`GRANT` restriction, check for a pre-existing table-wide `GRANT` — Postgres semantics mean the wider grant silently wins, and this pattern has now bitten the project twice in the same migration (Phase 59 found and fixed 5 instances)
+3. When a ROADMAP success criterion is written before UAT reveals a better UX (e.g., "AI results as their own step" vs. "AI runs in background, straight to wizard"), treat the UAT-approved behavior as the source of truth and update the ROADMAP text at gap-closure time, not just the code — stale success-criteria wording otherwise reads as an unresolved gap at verification/audit time
+
+### Cost Observations
+- Model mix: Sonnet 4.6/5 throughout, adaptive model profile
+- Sessions: 8 days, multiple sessions per day, heavy use of parallel worktree execution for wave-based plans
+- Notable: highest commit-to-plan ratio yet (297 commits / 33 plans ≈ 9) — reflects the worktree-merge overhead (one merge commit per wave/plan) rather than actual churn; the excl.-worktree diff stat (+5,375/-1,366 across 68 files) is a more honest measure of shipped code size
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution

@@ -1,18 +1,19 @@
 # Liikuntahakemisto
 
-## Current Milestone: v3.1 UX/UI-korjaukset & business-parannukset
+## Current State
 
-**Goal:** Korjata admin-pääsy ja kartta-QA, lisätä saman yrityksen sisäinen hallintaoikeuspyyntö, ja yhtenäistää business-dashboardin/preview-näkymien ja paikkasivun ulkoasu venuepage-arkkitehtuurin ympärille.
+**Shipped through v3.1** (2026-07-02). Awaiting next milestone — run `/gsd-new-milestone` to scope v3.2.
 
-**Target features:**
-- Admin-bugin (/admin ei avaudu) juurisyyn selvitys ja korjaus + admin-hyväksyttyjen paikkojen kartta-/sijainti-QA
-- Saman yrityksen toisen työntekijän hallintaoikeuspyyntö olemassaolevaan paikkaan (uusi per-työntekijä-tili linkitettynä yritykseen; nykyinen hallitsija hyväksyy/hylkää /business-näkymässä, Resend-ilmoitus)
-- /business-dashboard: paikkalista → DiagonaalKortti-kortit, status-pillit kortin kuvan alakulmaan, hover/tap paljastaa ikonipainike-lisäosan (preview/edit/continue)
-- Preview-modaalin vanhentunut PaikkaKortti → CalloutCard
-- Edit/onboarding live-preview laajennus: + venuepage (PaikkaSheet)
-- Erillisen paikkasivun (app/paikat/[id]) poisto; sisältö siirretty venuepagelle; vanha reitti 404
-- Kaikki preview-kortit/-sivut puhtaasti visuaalisiksi (ei klikkaustoimintoja)
-- Onboarding-vaiheiden uudelleenjärjestys: PaikkaStep pois, nimi+URL ensin (AI taustalla), sijainti seuraavaksi, AI-analyysin tarkastelu, Preview-step pois, Contact-stepistä URL pois, "PREVIEW" → "SUBMIT"
+## Next Milestone Goals (candidates)
+
+- **ACCESS-08/09/10** (deferred from v3.1): fine-grained role levels beyond owner/member, audit log for access-request history, expiry/reminders for long-pending requests
+- Real gap surfaced during v3.1 (Phase 58 checkpoint, todo `block-business-accounts-from-logging-into-customer-site`): business accounts can currently sign into the consumer-facing `AuthModal` — no access-control gate exists, only cookie-namespace isolation. Needs its own discussion/phase.
+- Backlog Phase 999.1: venue-exclusivity guard missing in `admin/approve` — two companies can end up both `approved` for the same venue since Phase 59 loosened the UNIQUE constraint; needs a product decision (block outright / auto-reject other pending claims / admin warning) before fixing.
+- P59-FOLLOWUP (still open): `liikuntapaikat` RLS write policies use `USING (true)` — any authenticated user can write/delete any venue row, not just their own. Needs a dedicated security phase before real users arrive.
+
+## Shipped: v3.1 UX/UI-korjaukset & business-parannukset (2026-07-02)
+
+**Delivered:** Multi-company-tietomalli (`companies`-taulu + `role`-sarake + `current_company_id()` RLS-helpperi) mahdollistaa saman yrityksen useita työntekijätilejä; täysi hallintaoikeuspyyntö-virta (pyyntö → Resend-ilmoitus → hyväksyntä/hylkäys → RLS-tason pääsynesto) päättyen `TeamManagementPopup`-dashboard-UI:hin, jossa päähallitsija hyväksyy/hylkää pyynnöt ja poistaa sub-managereita (self-removal kova esto). Onboarding uudelleenjärjestetty: nimi+URL ensin (AI-analyysi taustalla), sijainti seuraavaksi, erillinen preview-vaihe poistettu kokonaan, "SUBMIT" korvaa "PREVIEW"-virstanpylvään. Erillinen paikkasivu (`app/paikat/[id]`) poistettu kokonaan — kaikki sisältö ja navigointi yhdistetty PaikkaSheet-venuepageen (vanha reitti 404). `/business`-dashboard uudistettu DiagonaalKortti-korteilla + hover/tap-ikonipainikkeilla; kaikki preview-näkymät (CalloutCard, PaikkaSheet) puhtaasti visuaalisia. 24/24 aktiivista v1-vaatimusta toimitettu (2 pudotettu ei-toistuvana bugina), 7 vaihetta (58–64), 33 plania, 297 committia, 8 päivää (2026-06-24 → 2026-07-02).
 
 ## Shipped: v3.0 Oma tietokanta (Google Places -irtautuminen) (2026-06-24)
 
@@ -296,6 +297,19 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 
 ### Validated (v3.1)
 
+- ✓ **ADMIN-07**: `/admin/[id]`-hakemussivulla oma read-only "Sijainti"-kartta (Map + AdvancedMarker + SportPin + CalloutCard, kiinteä zoom 15); pinin klikkaus näyttää CalloutCardin muttei avaa venuepagea — Phase 58 (ADMIN-06/QA-01 dropped 2026-06-24, ei toistunut/manuaalisesti vahvistettu)
+- ✓ **ONBOARD-18**: PaikkaStep (vain nimi + siirry-painike) poistettu kokonaan onboarding-virrasta — Phase 61
+- ✓ **ONBOARD-19**: Uusi step 1 (StepNimiJaURL) kerää nimen + verkko-osoitteen; URL käynnistää AI-sivuanalyysin taustalla heti — Phase 61
+- ✓ **ONBOARD-20**: Sijainti-step (StepSijainti, kartta + osoitehaku) step 2:na — Phase 61
+- ✓ **ONBOARD-21**: Virta menee suoraan sijainti-stepiltä wizardiin (ei erillistä näkyvää analyze-vaihetta); AI-tulokset valmiina wizardissa — hyväksytty tuotepäätös, poikkeaa alkuperäisestä ROADMAP-sanamuodosta ("omana stepinä"), UAT-hyväksytty (61-VERIFICATION.md) — Phase 61
+- ✓ **ONBOARD-22**: Erillinen Preview-step poistettu kokonaan; live-preview aina näkyvissä — Phase 61
+- ✓ **ONBOARD-23**: Yhteystiedot-stepistä poistettu verkko-osoite-kenttä (kerätty jo step 1:ssä) — Phase 61
+- ✓ **ONBOARD-24**: ProgressBarin "PREVIEW"-vaihe korvattu "SUBMIT"-vaiheella — Phase 61
+- ✓ **BIZPANEL-06**: `/business`-dashboardin paikkalista korvattu DiagonaalKortti-korteilla, status-pillit kortin kuvan alakulmassa — Phase 63
+- ✓ **BIZPANEL-07**: Hover (desktop) / tap (mobiili) paljastaa ikonipainike-lisäosan (preview/edit/jatka) — ei tekstipainikkeita — Phase 63
+- ✓ **PREV-04**: Preview-modaalin vanhentunut PaikkaKortti-näkymä korvattu CalloutCardilla — Phase 63
+- ✓ **LIVEPREV-05**: Edit-/onboarding-live-preview laajennettu sisältämään venuepage (PaikkaSheet) CalloutCardin ja DiagonaalKortin lisäksi — Phase 63
+- ✓ **PREV-05**: Kaikki preview-näkymät (dashboardin preview-modaali, edit/onboarding-livepreview) puhtaasti visuaalisia — klikkaus ei laukaise navigointia — Phase 63
 - ✓ **ACCESS-01**: `companies`-taulu + `business_accounts.company_id`/`role`; kaikki olemassaolevat tilit migratoitu omiksi yrityksikseen päähallitsijoina yhdessä transaktiossa — Phase 59
 - ✓ **ACCESS-02**: `business_paikka_links`-uniikkirajoite löysennetty kompositeiksi `(business_account_id, paikka_id)`; RLS uudelleenkirjoitettu `current_company_id()`-helpperillä — Phase 59
 - ✓ **ACCESS-03**: `business_access_requests`-taulu + osittainen UNIQUE-indeksi `(requester_id, paikka_id) WHERE status='pending'`; `POST /api/business/access-request/submit` D-08/D-09/D-10-vartioinneilla + idempotenttisuus; `/business/liity`-kutsulinkkisivu; "Kopioi kutsulinkki" -painike — Phase 60
@@ -317,6 +331,14 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - Kartta: etäisyyspohjainen suodatus
 - Käyttäjäprofiili ja asetukset (laaja)
 
+### Future (deferred from v3.1)
+
+- **ACCESS-08**: Roolitasojen laajennus (owner/member-jaon lisäksi hienojakoisemmat oikeudet)
+- **ACCESS-09**: Audit-loki hallintaoikeuspyyntöjen ja -muutosten historiasta
+- **ACCESS-10**: Pyyntöjen vanheneminen/muistutusviestit pitkään odottaneille pyynnöille
+- Business-tilien esto kuluttajapuolen `AuthModal`-kirjautumiselta (todo: `block-business-accounts-from-logging-into-customer-site`, havaittu Phase 58:n aikana) — vain cookie-nimiavaruusero tällä hetkellä, ei access-control-porttia
+- Phase 999.1 (backlog): venue-exclusivity guard puuttuu `admin/approve`-reitiltä (kaksi yritystä voi molemmat päätyä `approved`-tilaan samalle paikalle Phase 59:n löysennetyn UNIQUE-rajoitteen jälkeen)
+
 ### Cleanup candidates (deferred at v2.2 close — fold into a small early phase of next milestone)
 
 - **P23-GAP** (never fixed, found in Phase 23 verification): `AktiiviLogo.tsx` redesigned correctly but orphaned — never imported in `Etusivu.tsx`; bottom sheet still shows the old static SVG watermark (lines 906-933). A prior wiring attempt was reverted in Phase 16.
@@ -332,10 +354,14 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 - Klusterointi (cluster markers) — korvattu zoom-perusteisella pin→kortti-muutoksella
 - Push-ilmoitukset — ei tarvetta v1.1:ssä
 - Anonyymi Supabase-tili — suosikit vaativat oikean kirjautumisen
+- Cross-company hallintaoikeuspyynnöt (toisen yrityksen paikkaan) — käyttäjä rajasi: vain saman yrityksen sisäinen pyyntö (v3.1)
+- Domain-perusteinen automaattihyväksyntä hallintaoikeuspyynnöille (esim. @yritys.fi) — epäluotettava, turvallisuusriski suomalaisille gmail/outlook-käyttäjille (v3.1)
+- In-app-ilmoitusbadge hallintaoikeuspyynnöistä — sähköposti riittää tämän kokoluokan sovellukselle (v3.1)
+- Erillisen paikkasivun URL:n redirect-uudelleenohjaus — 404 valittiin yksinkertaisimpana ratkaisuna (v3.1)
 
 ## Context
 
-**Nykytila:** v3.1-milestone käynnissä. Phase 62 (venuepage-konsolidaatio) valmis 2026-07-01 — VENUEPAGE-01..04 toteutettu: `app/paikat/[id]` poistettu kokonaan (suora osoite → automaattinen Next.js-404, ei redirectiä), show-on-map-sisältö siirretty PaikkaSheetiin, ja kaikki sisäiset polut (CalloutCard, hakulista, TO DO -overlay) avaavat PaikkaSheetin ilman navigointia. Yksi gap-closure-kierros (62-04, commit 035ebc1 + review-followup 5221e7f): korjattiin regressio, jossa PaikkaSheetin avaaminen hakulistan/TO DO-overlayn kortista sulki alla olevan overlayn kokonaan (`setSearchOpen(false)`/`setTodoOpen(false)` poistettu, z-index-pinoaminen riitti); lisäksi taustakontrollit (TodoButton, hakusuodattimet) tehty `inert`/`disabled`-vartioiduiksi kun PaikkaSheet on auki. 4/4 UAT-testiä läpäisi (re-verifioitu 2026-07-01). Seuraavaksi Phase 63 (business-dashboardin & preview-näkymien uudistus) — riippuu Phase 62:sta valmiiksi.
+**Nykytila:** v3.1-milestone toimitettu 2026-07-02 (kaikki 7 vaihetta, 58–64). Multi-company-tietomalli (companies-taulu, current_company_id() RLS-helpperi) ja täysi hallintaoikeuspyyntö-virta ovat tuotannossa; `/business`-dashboard ja onboarding on uudistettu DiagonaalKortti-pohjaiseksi; erillinen paikkasivu on poistettu venuepage-konsolidaation myötä. Seuraava milestone ei ole vielä skoopattu — käynnistä `/gsd-new-milestone`. Tunnetut avoimet kohteet ennen seuraavaa työtä: `liikuntapaikat`-RLS-kirjoituspolitiikkojen kovennus (P59-FOLLOWUP), venue-exclusivity-guard admin/approve-reitille (Phase 999.1 backlog), ja business-tilien esto kuluttajapuolen kirjautumiselta (ks. Future-lista).
 
 **Edellinen:** v3.0 Oma tietokanta (Google Places -irtautuminen) toimitettu 2026-06-24. Kaikki 12 v3.0-vaatimusta toteutettu. Google Places -synkkaus poistettu kokonaan ja kaikki Google-peräinen liikuntapaikka-data tyhjennetty (operaattori valitsi täyden 327/327-tyhjennyksen); onboardingiin uusi Sijainti-vaihe (kartta + osoitehaku-autocomplete, vain lat/lng + kirjoitettu osoite tallennetaan); AI-sivuanalyysi ehdottaa myös laji-kategoriaa käyttäjän vahvistettavaksi; claim-vaihe korvattu create-only-virralla erillisillä yritys-/toimipiste-nimikentillä; `/business`-redirectbugi korjattu ja per-paikka Kesken-tila + Jatka-CTA lisätty. 13 plania (phases 52–57), 2 päivää (2026-06-22 → 2026-06-24).
 
@@ -403,6 +429,10 @@ Löydät läheltäsi minkä tahansa liikuntapalvelun, näet hinnan ja aukioloaja
 | `liikuntapaikat`-taulun rivitason RLS (`USING (true)` kirjoituspolitiikoissa) jätetty tietoisesti korjaamatta Phase 59:ssä | Erillinen, laajempi löydös kuin tämän vaiheen scope; minkä tahansa kirjautuneen käyttäjän voi kirjoittaa/poistaa minkä tahansa paikan | ⚠️ Avoin — vaatii oman tietoturvavaiheen, ei seurantatoimenpiteitä toistaiseksi |
 | PaikkaSheet layeroituu hakulistan/TO DO-overlayn päälle sen sijaan että sulkisi sen (z-index, ei conditional unmount) | UAT löysi regression: `setSearchOpen(false)`/`setTodoOpen(false)` onOpen-handlereissa unmounttasi overlayn `<AnimatePresence>`-wrapperin sisällä; PaikkaSheetin z-index (65/66) oli jo overlayjen (59/62) yläpuolella, joten flagien poisto riitti korjaukseksi ilman z-index-muutoksia | ✓ Phase 62 (gap-closure 62-04, commit 035ebc1), re-verifioitu UAT-Test 3:ssa |
 | Taustakontrollit (TodoButton, hakusuodattimet, list-toggle) `disabled`/`pointerEvents:none`/`inert` kun PaikkaSheet auki | 62-04:n oma code review löysi 2 jatkolöydöstä (WR-01/WR-02): ilman näitä käyttäjä pystyi klikkaamaan/Tabbaamaan piilotettuihin tausta-kontrolleihin sheetin ollessa auki | ✓ Phase 62 (commit 5221e7f), re-verifioitu UAT-Test 4:ssä |
+| Onboarding-virta menee suoraan sijainti-stepiltä wizardiin ilman erillistä näkyvää analyze-vaihetta | ROADMAP:n alkuperäinen sanamuoto ("AI-tulokset omana stepinä") osoittautui huonoksi UX:ksi UAT-testissä; AI käynnistyy taustalla NimiJaURL-vaiheessa ja tulokset ovat jo valmiina wizardissa | ✓ Phase 61 (gap-closure 61-05/61-06), hyväksytty tuotepäätös |
+| update-paikka auto-flippaa hylätyn paikan claim_statuksen takaisin pendingiksi onnistuneen tallennuksen yhteydessä (D-07) | Yritys ei enää tarvitse erillistä "hae uudelleen" -toimintoa; jokainen korjaava tallennus laukaisee automaattisen uudelleentarkastuksen, concurrency-suojattu eikä luota client-inputtiin | ✓ Phase 63, 17 Vitest-testiä (14 vanhaa + 3 uutta) |
+| `business_accounts.display_name` (service-role-write-only) lisätty ja invite-link-signup korjattu | Kutsulinkin kautta liittyvät työntekijät päätyivät virheellisesti oman (bogus) yrityksen omistajiksi eivätkä kutsujan yrityksen pending-jäseniksi | ✓ Phase 64 (64-03) |
+| TeamManagementPopup-hyväksyntä siirtää jäsenen "Pending"→"Current team" -listaan samassa render-passissa | UAT Test 3 löysi stale-list-gapin: popup näytti vanhaa dataa hyväksynnän jälkeen ennen uudelleenavausta | ✓ Phase 64 (gap-closure 64-05) |
 
 ---
 
@@ -425,4 +455,4 @@ This document evolves at phase transitions and milestone boundaries.
 
 ---
 
-*Last updated: 2026-07-02 — Phase 64 complete (hallintaoikeuspyynnöt — dashboard-UI, ACCESS-04/07, incl. gap-closure 64-05). All 7 phases of v3.1 (58–64) now complete — milestone ready for `/gsd-complete-milestone`.*
+*Last updated: 2026-07-02 — v3.1 milestone archived. All 7 phases (58–64) shipped; 24/24 active v1 requirements delivered. Next: `/gsd-new-milestone`.*

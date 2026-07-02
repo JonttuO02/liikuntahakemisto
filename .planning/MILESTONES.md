@@ -1,5 +1,40 @@
 # Milestones — Liikuntahakemisto
 
+## v3.1 UX/UI-korjaukset & business-parannukset (Shipped: 2026-07-02)
+
+**Phases completed:** 7 phases, 33 plans, 62 tasks
+
+**Key accomplishments:**
+
+- Read-only interactive Sijainti map on /admin/[id] with a zoom-driven pin↔CalloutCard transition, matching the main map's behavior after fixing a real overflow:hidden + CSS filter compositing bug.
+- human-verify (blocking gate, `gate="blocking"` per plan frontmatter Task 3) — RESOLVED
+- human-action (blocking gate, `gate="blocking"` per plan frontmatter Task 4) — RESOLVED
+- business_access_requests-taulu RLS:llä (2 SELECT + 1 INSERT, ei UPDATE-polkua), D-08 osittainen UNIQUE-indeksi idempotenssia varten ja business_accounts.company_id nollattavaksi (D-09a) — pushattu live-Supabaseen
+- Kaksi uutta Resend-sähköpostifunktiota hallintaoikeuspyynnoille — omistajailmoitus saapuvasta pyynnöstä ja päätösilmoitus pyytäjälle — käyttäen sub()/esc()-suojauksia (T-60-05/T-60-06).
+- D-08/D-09/D-10 access-request submit endpoint with idempotent insert and venue-scoped owner notification email; register endpoint extended with invite-link path (company_id=NULL, role='member') per D-09a.
+- 1. [Rule 2 - Missing functionality] Pending banner in both render branches
+- Kaksi uutta pre-wizard-askelta (nimi+URL, sijainti) sekä SijaintiPickerin poisto ClaimSearchFormista — lokalisointiin perustuvat uudet avaimet jo lisätty Plan 01:ssä.
+- Onboarding wizard supistettiin 5 askeleesta 4:ään siirtämällä submit-logiikka StepEsikatselu:sta StepYhteystiedot:iin ja poistamalla erillinen esikatselu-askel.
+- Task 1 — Add disableDefaultUI and custom location pin to SijaintiPicker
+- Added a conditional "Näytä kartalla" SheetRow (MapPin icon, `/?id=X` anchor) to PaikkaSheet plus matching `location`/`showOnMap` i18n keys in fi+en, completing the content-migration prerequisite for deleting `app/paikat/[id]`
+- Replaced DiagonaalKortti's invisible `next/link` navigation overlay with a prop-conditional `onOpen` callback div — interactive when wired by a consumer, inert no-op in preview contexts.
+- Completed the venuepage consolidation: both DiagonaalKortti card sites now open PaikkaSheet inline (dismissing the relevant overlay first), `app/paikat/[id]` is deleted so the route auto-404s, and the orphaned `PaikkaPage` i18n namespace is gone from both message files.
+- Removed two one-line state mutations in Etusivu.tsx so PaikkaSheet layers over the search results list and TO DO overlay (via existing z-index stacking) instead of unmounting them; reconciled UAT Test 1's wording with the corrected behavior.
+- Extracted darkenHex/lightenHex from CalloutCard into a shared brandingResult.ts module and added getPanelShade(brandColor) — a YIQ-based complementary-shade helper for the dashboard controls-panel background (D-03).
+- PreviewModal swapped PaikkaKortti for CalloutCard, LivePreviewPane gained a third PaikkaSheet(preview) section, and PaikkaSheet's booking link is now gated on `!preview` across every preview surface.
+- update-paikka now auto-flips a rejected venue's claim_status back to pending on any successful section save, concurrency-guarded and never trusting client input, with 17 Vitest cases (14 existing + 3 new) all green.
+- Built the `dashboardActions` prop bundle on `DiagonaalKortti` (permanent icon-button controls panel + status pill, replacing the right photo panel) and a new `RejectionReasonPopup` component, both in isolation ahead of Plan 05's wiring into `/business`.
+- Replaced /business dashboard's plain-text VenueRow/StatusCard reapply UI with DiagonaalKortti dashboardActions cards and a single page-level RejectionReasonPopup; deleted the now-dead /api/business/reapply route.
+- Fixed-width (396px) non-stretching dashboard card grid, neutral-gray controls-panel fallback, genuine copy-link confirmation, and a full end-to-end fix for brand colors never actually persisting from onboarding to the dashboard/preview.
+- Fixed the wizard's "Analysoi ->" button to actually start analysis, hardened the pipeline against Vercel's ~10s waitUntil kill with a controlled failure path, fixed a resumed-draft race condition, and fixed real-world bare-domain URLs (no protocol) being rejected outright by the SSRF guard.
+- New service-role `GET /api/business/access-request/list` Route Handler returning a venue's pending access requests and current approved team with resolved identity, gated by venue-scoped owner authorization — the read side of ACCESS-04.
+- New service-role `POST /api/business/access-request/remove` endpoint lets an approved venue owner DELETE a sub-manager's `business_paikka_links` row, with a server-side self-removal hard-block and venue-scoped authorization — TDD RED/GREEN, six Vitest cases, no email notification (D-11).
+- Added business_accounts.display_name (TEXT, service-role-write-only) and repaired the invite-link signup round-trip so new invite-link employees become pending members of the inviting venue instead of owners of a bogus new company.
+- TeamManagementPopup gives venue owners a single Users-icon-triggered dialog to approve/reject pending access requests and remove sub-managers, gated by a D-02 render-time visibility check reusing the existing service-role list endpoint.
+- Pure `pendingRowToTeamMember` mapper wired into `handleApprove` so the approved member moves from "Pending requests" to "Current team" in the same render pass, closing UAT Test 3's stale-list gap.
+
+---
+
 ## v3.0 Oma tietokanta (Google Places -irtautuminen) (Shipped: 2026-06-24)
 
 **Phases completed:** 6 phases, 13 plans, 13 tasks

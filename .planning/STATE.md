@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: — Active Milestone
-current_phase: 64
-current_phase_name: hallintaoikeuspyynn-t-dashboard-ui
-status: executing
+current_phase: 1
+status: Awaiting next milestone
 stopped_at: Phase 64 UI-SPEC approved
-last_updated: "2026-07-02T14:12:30.394Z"
+last_updated: "2026-07-02T15:16:28.395Z"
 last_activity: 2026-07-02
-last_activity_desc: Phase 64 execution resumed (wave continue)
+last_activity_desc: Milestone v3.1 completed and archived
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 33
-  completed_plans: 32
-  percent: 86
+  completed_plans: 33
+  percent: 100
+current_phase_name: BACKLOG
 ---
 
 # Project State
@@ -28,12 +28,10 @@ See: .planning/PROJECT.md (updated 2026-07-01)
 
 ## Current Position
 
-Phase: 64 (hallintaoikeuspyynn-t-dashboard-ui) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 64
-Last activity: 2026-07-02 — Phase 64 execution resumed (wave continue)
-
-Next: `/gsd-execute-phase 63` — Business-dashboardin & preview-näkymien uudistus
+Phase: Milestone v3.1 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-07-02 — Milestone v3.1 completed and archived
 
 ## v3.1 Roadmap Summary
 
@@ -117,6 +115,14 @@ Pre-existing verification/UAT gaps from phases 20-44 (mostly `human_needed` manu
 | verification_gap | Phases 20-22, 25-27, 32, 34, 38-40, 44 | human_needed (unconfirmed manual checkpoints) |
 | uat_gap | Phases 02, 04, 20, 32, 33, 39 | partial / in_progress |
 
+Items acknowledged and deferred at v3.1 milestone close on 2026-07-02:
+
+| Category | Item | Status |
+|----------|------|--------|
+| debug | paikkasheet-dismisses-search-todo-overlay | diagnosed — code fix already landed (Phase 62-04, commit 035ebc1), only the human-visual-confirmation UAT step remains unmarked |
+| uat_gap | Phase 61: 61-UAT.md | stale bookkeeping — 0 pending scenarios, Phase 61 VERIFICATION.md scored 12/12 passed; original 2 issues closed by gap-closure plans 61-05/61-06 |
+| todo | block-business-accounts-from-logging-into-customer-site | genuinely out of v3.1 scope — real known gap (business accounts can log into the consumer site), needs its own future phase |
+
 ## Session Continuity
 
 Last session: 2026-07-02T12:04:57.797Z
@@ -125,10 +131,7 @@ Resume file: .planning/phases/64-hallintaoikeuspyynn-t-dashboard-ui/64-UI-SPEC.m
 
 ## Operator Next Steps
 
-- `/gsd-execute-phase 63` — **next** (Business-dashboardin & preview-näkymien uudistus; 5 plans, 3 waves, verification passed)
-- `/gsd-execute-phase 61` — parallel-safe alternative (onboarding reorder, plans ready: 4 plans, 3 waves)
-- `/gsd-plan-phase 58` — parallel-safe alternative (admin access + map QA)
-- Consider scheduling a dedicated security phase for the `liikuntapaikat` wide-open RLS finding (P59-FOLLOWUP above) before real users arrive
+- Start the next milestone with /gsd-new-milestone
 
 ## Performance Metrics
 
