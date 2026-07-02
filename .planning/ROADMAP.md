@@ -483,3 +483,37 @@ Full archive: `.planning/milestones/v3.0-ROADMAP.md`
 | 62. Venuepage-konsolidaatio | v3.1 | 4/4 | Complete    | 2026-06-30 |
 | 63. Business-dashboardin & preview-näkymien uudistus | v3.1 | 7/7 | Complete    | 2026-07-01 |
 | 64. Hallintaoikeuspyynnöt — dashboard-UI | v3.1 | 4/4 | Complete   | 2026-07-02 |
+
+## Backlog
+
+### Phase 999.1: Venue-exclusivity guard missing in admin claim approval (BACKLOG)
+
+**Goal:** [Captured for future planning]
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Context: `app/api/admin/approve/route.ts` only guards against double-approving the
+*same* `business_paikka_links` row (`claim_status !== 'pending'` + `count: 'exact'`).
+It never checks whether the venue (`paikka_id`) already has a *different* approved
+owner. Before Phase 59's migration `20260625000000_companies_role_rls.sql`, the
+DB-level `UNIQUE(paikka_id)` constraint on `business_paikka_links` silently prevented
+this. That migration intentionally loosened the constraint to
+`UNIQUE(business_account_id, paikka_id)` for the multi-company model, but no
+application-level check was added to replace the venue-exclusivity guard.
+
+Result: two different companies can both end up with an `approved`
+`business_paikka_links` row for the same `paikka_id`. This breaks any code that
+assumes at most one approved owner per venue — confirmed:
+`app/api/business/access-request/submit/route.ts`'s `.maybeSingle()` query throws
+`"JSON object requested, multiple (or no) rows returned"` when this happens.
+
+Discovered while testing Phase 64 Plan 64-05 UAT (venue `paikka_id 363` had two
+approved owners — one legitimate `created` link from 2026-06-23, one erroneous
+`claim` link approved 2026-07-02).
+
+Needs a product decision on correct behavior before fixing (block a second claim
+outright? auto-reject other pending claims for the same venue when one is approved?
+warn the admin and require confirmation?).
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
