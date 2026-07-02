@@ -1,9 +1,9 @@
 ---
-status: diagnosed
+status: resolved
 phase: 64-hallintaoikeuspyynn-t-dashboard-ui
 source: [64-VERIFICATION.md]
 started: 2026-07-02T13:35:00Z
-updated: 2026-07-02T13:55:00Z
+updated: 2026-07-02T17:55:00Z
 ---
 
 ## Current Test
@@ -42,7 +42,8 @@ blocked: 0
 ## Gaps
 
 - truth: "After approving a pending request, the approved member appears in the 'Current team' list immediately, without reopening the popup"
-  status: failed
+  status: resolved
+  resolved_by: "64-05-PLAN.md"
   reason: "User reported: works well except one little fix. When approving request the member isnt added to the list below right after clicking, you need to reopen the popup tp see the updated list. To get better feeling it should happen right after."
   severity: minor
   test: 3
