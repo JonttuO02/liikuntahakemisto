@@ -148,3 +148,12 @@ None - no external service configuration required.
 ---
 *Phase: 64-hallintaoikeuspyynn-t-dashboard-ui*
 *Completed: 2026-07-02*
+
+## Self-Check: PASSED
+
+- FOUND: app/api/business/access-request/remove/route.ts
+- FOUND: tests/api/access-request-remove.test.ts
+- FOUND: .planning/phases/64-hallintaoikeuspyynn-t-dashboard-ui/64-02-SUMMARY.md
+- FOUND commit: ad32f98
+- FOUND commit: a823178
+- FOUND commit: a9b26b7
