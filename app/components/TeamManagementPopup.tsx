@@ -5,27 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { createBusinessBrowserClient } from '@/lib/supabase-business'
+import { pendingRowToTeamMember, type PendingRequestRow, type TeamMemberRow } from '@/lib/teamManagement'
 
 interface TeamManagementPopupProps {
   open: boolean
   paikkaId: number | null
   onClose: () => void
   onChanged?: () => void
-}
-
-type PendingRequestRow = {
-  id: number
-  requesterId: string
-  name: string
-  email: string | null
-}
-
-type TeamMemberRow = {
-  userId: string
-  name: string
-  email: string | null
-  role: string | null
-  isSelf: boolean
 }
 
 /**
@@ -127,7 +113,15 @@ export default function TeamManagementPopup({ open, paikkaId, onClose, onChanged
         body: JSON.stringify({ request_id: requestId }),
       })
       if (res.ok) {
+        const approved = pendingRequests.find(r => r.id === requestId)
         setPendingRequests(prev => prev.filter(r => r.id !== requestId))
+        if (approved) {
+          setTeamMembers(prev =>
+            prev.some(m => m.userId === approved.requesterId)
+              ? prev
+              : [...prev, pendingRowToTeamMember(approved)]
+          )
+        }
         onChanged?.()
       } else if (res.status === 409) {
         setActionError(t('teamAlreadyProcessed'))
